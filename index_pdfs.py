@@ -9,9 +9,34 @@ from pypdf import PdfReader
 import re
 
 def clean_text(text):
-    """Clean and normalize text for better searching"""
-    # Remove excessive whitespace
+    """Clean and normalize text for better searching, removing 'gibberish' artifacts"""
+    if not text:
+        return ""
+        
+    # 1. Normalize common Unicode ligatures (fi, fl, etc.)
+    ligatures = {
+        "\ufb00": "ff", "\ufb01": "fi", "\ufb02": "fl", 
+        "\ufb03": "ffi", "\ufb04": "ffl", "\ufb05": "ft", "\ufb06": "st"
+    }
+    for ligature, replacement in ligatures.items():
+        text = text.replace(ligature, replacement)
+        
+    # 2. Remove control characters and non-printable noise
+    # We keep standard printable ASCII (32-126) and some common punctuation
+    text = "".join(char for char in text if 31 < ord(char) < 127 or char in "\n\r\t")
+    
+    # 3. Handle broken words (hyphenated at end of line)
+    # This matches "word- " or "word-\n" and joins them
+    text = re.sub(r'(\w+)-\s+(\w+)', r'\1\2', text)
+    
+    # 4. Remove obvious "noise" (e.g., long strings of symbols, page numbers alone)
+    # Remove single characters that are likely artifacts
+    text = re.sub(r'\s+[b-zB-Z]\s+', ' ', text)
+    
+    # 5. Collapse excessive whitespace
     text = re.sub(r'\s+', ' ', text)
+    
+    # 6. Final strip
     return text.strip()
 
 def extract_pdf_content(pdf_path, book_name):
