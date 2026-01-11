@@ -1,0 +1,427 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PDF Search - Med Exam Resources</title>
+    <link rel="stylesheet" href="style.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link
+        href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Poppins:wght@400;600;800&display=swap"
+        rel="stylesheet">
+    <style>
+        .search-hero {
+            background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
+            padding: 60px 20px;
+            text-align: center;
+            color: white;
+            margin-bottom: 40px;
+        }
+
+        .search-hero h1 {
+            margin: 0 0 15px 0;
+            font-size: 2.5rem;
+            font-weight: 800;
+        }
+
+        .search-hero p {
+            font-size: 1.1rem;
+            opacity: 0.95;
+            max-width: 600px;
+            margin: 0 auto;
+        }
+
+        .search-box-large {
+            max-width: 700px;
+            margin: 30px auto;
+            position: relative;
+        }
+
+        .search-box-large input {
+            width: 100%;
+            padding: 20px 60px 20px 24px;
+            font-size: 1.2rem;
+            border: none;
+            border-radius: 50px;
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.15);
+            outline: none;
+        }
+
+        .search-box-large input:focus {
+            box-shadow: 0 10px 50px rgba(10, 147, 150, 0.3);
+        }
+
+        .search-icon {
+            position: absolute;
+            right: 24px;
+            top: 50%;
+            transform: translateY(-50%);
+            font-size: 1.5rem;
+            color: var(--secondary-color);
+        }
+
+        .loading {
+            text-align: center;
+            padding: 40px;
+            color: #666;
+        }
+
+        .spinner {
+            border: 3px solid #f3f3f3;
+            border-top: 3px solid var(--secondary-color);
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 20px;
+        }
+
+        @keyframes spin {
+            0% {
+                transform: rotate(0deg);
+            }
+
+            100% {
+                transform: rotate(360deg);
+            }
+        }
+
+        .results-container {
+            max-width: 900px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+
+        .result-card {
+            background: var(--card-bg);
+            backdrop-filter: blur(4px);
+            border-radius: var(--border-radius);
+            padding: 24px;
+            margin-bottom: 20px;
+            box-shadow: var(--shadow);
+            border: var(--glass-border);
+            transition: all 0.3s ease;
+        }
+
+        .result-card:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 12px 40px 0 rgba(31, 38, 135, 0.15);
+        }
+
+        .result-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            margin-bottom: 15px;
+        }
+
+        .result-book {
+            font-size: 1.2rem;
+            font-weight: 700;
+            color: var(--primary-color);
+            margin-bottom: 5px;
+        }
+
+        .result-subject {
+            font-size: 0.9rem;
+            color: #666;
+            font-weight: 500;
+        }
+
+        .result-page {
+            background: linear-gradient(135deg, var(--accent-color), var(--secondary-color));
+            color: white;
+            padding: 8px 16px;
+            border-radius: 20px;
+            font-size: 0.85rem;
+            font-weight: 700;
+            white-space: nowrap;
+        }
+
+        .result-snippet {
+            background: rgba(148, 210, 189, 0.1);
+            padding: 15px;
+            border-radius: 8px;
+            font-size: 0.95rem;
+            line-height: 1.6;
+            margin-bottom: 15px;
+            border-left: 4px solid var(--accent-color);
+        }
+
+        .result-snippet mark {
+            background: #ffeb3b;
+            padding: 2px 4px;
+            border-radius: 3px;
+            font-weight: 600;
+        }
+
+        .result-actions {
+            display: flex;
+            gap: 10px;
+        }
+
+        .btn-open-pdf {
+            background: var(--secondary-color);
+            color: white;
+            padding: 10px 20px;
+            border-radius: 8px;
+            text-decoration: none;
+            font-weight: 600;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            transition: all 0.2s;
+        }
+
+        .btn-open-pdf:hover {
+            background: var(--primary-color);
+            transform: scale(1.05);
+        }
+
+        .no-results {
+            text-align: center;
+            padding: 60px 20px;
+        }
+
+        .no-results-icon {
+            font-size: 4rem;
+            margin-bottom: 20px;
+            opacity: 0.3;
+        }
+
+        .no-results h2 {
+            color: var(--primary-color);
+            margin-bottom: 10px;
+        }
+
+        .no-results p {
+            color: #666;
+            font-size: 1.1rem;
+        }
+
+        .quick-searches {
+            margin-top: 20px;
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+            justify-content: center;
+        }
+
+        .quick-search-btn {
+            background: rgba(10, 147, 150, 0.1);
+            color: var(--primary-color);
+            padding: 8px 16px;
+            border-radius: 20px;
+            border: none;
+            cursor: pointer;
+            font-size: 0.9rem;
+            font-weight: 600;
+            transition: all 0.2s;
+        }
+
+        .quick-search-btn:hover {
+            background: var(--secondary-color);
+            color: white;
+        }
+
+        .back-link {
+            display: inline-block;
+            margin: 20px;
+            color: var(--secondary-color);
+            text-decoration: none;
+            font-weight: 600;
+        }
+
+        .back-link:hover {
+            text-decoration: underline;
+        }
+    </style>
+</head>
+
+<body>
+
+    <div class="search-hero">
+        <div class="container">
+            <h1>🔍 Search Medical Textbooks</h1>
+            <p>Search across all 8 textbooks instantly. Perfect for last-minute exam prep!</p>
+
+            <div class="search-box-large">
+                <input type="text" id="search-query" placeholder="Search for cases, symptoms, conditions..." autofocus>
+                <span class="search-icon">🔍</span>
+            </div>
+
+            <div class="quick-searches">
+                <button class="quick-search-btn" onclick="quickSearch('anemia')">Anemia</button>
+                <button class="quick-search-btn" onclick="quickSearch('diabetes')">Diabetes</button>
+                <button class="quick-search-btn" onclick="quickSearch('pneumonia')">Pneumonia</button>
+                <button class="quick-search-btn" onclick="quickSearch('hernia')">Hernia</button>
+                <button class="quick-search-btn" onclick="quickSearch('cataract')">Cataract</button>
+            </div>
+        </div>
+    </div>
+
+    <div class="container">
+        <a href="index.html" class="back-link">← Back to Resources</a>
+    </div>
+
+    <div id="loading" class="loading" style="display: none;">
+        <div class="spinner"></div>
+        <p>Searching through textbooks...</p>
+    </div>
+
+    <div id="results" class="results-container"></div>
+
+    <script>
+        let pdfIndex = null;
+
+        // Load PDF index
+        async function loadIndex() {
+            try {
+                const response = await fetch('pdf_index.json');
+                pdfIndex = await response.json();
+                console.log('PDF index loaded:', Object.keys(pdfIndex).length, 'books');
+            } catch (error) {
+                console.error('Failed to load PDF index:', error);
+                document.getElementById('results').innerHTML = `
+                    <div class="no-results">
+                        <div class="no-results-icon">⚠️</div>
+                        <h2>Index Not Available</h2>
+                        <p>The PDF search index hasn't been generated yet. Please run the indexing script first.</p>
+                    </div>
+                `;
+            }
+        }
+
+        // Search function
+        function searchPDFs(query) {
+            if (!pdfIndex || !query || query.trim().length < 2) {
+                return [];
+            }
+
+            const searchTerm = query.toLowerCase().trim();
+            const results = [];
+
+            for (const [filename, book] of Object.entries(pdfIndex)) {
+                for (const page of book.pages) {
+                    const text = page.text.toLowerCase();
+                    if (text.includes(searchTerm)) {
+                        // Find context around the match
+                        const index = text.indexOf(searchTerm);
+                        const start = Math.max(0, index - 100);
+                        const end = Math.min(text.length, index + searchTerm.length + 100);
+                        const snippet = page.text.substring(start, end);
+
+                        results.push({
+                            book: book.name,
+                            subject: book.subject,
+                            icon: book.icon,
+                            filename: filename,
+                            page: page.page,
+                            snippet: snippet,
+                            query: query
+                        });
+                    }
+                }
+            }
+
+            return results;
+        }
+
+        // Highlight search term in snippet
+        function highlightText(text, query) {
+            const regex = new RegExp(`(${query})`, 'gi');
+            return text.replace(regex, '<mark>$1</mark>');
+        }
+
+        // Display results
+        function displayResults(results, query) {
+            const resultsDiv = document.getElementById('results');
+
+            if (results.length === 0) {
+                resultsDiv.innerHTML = `
+                    <div class="no-results">
+                        <div class="no-results-icon">📚</div>
+                        <h2>No results found for "${query}"</h2>
+                        <p>Try different keywords or check the spelling.</p>
+                        <div class="quick-searches" style="margin-top: 30px;">
+                            <p style="color: #666; margin-bottom: 15px;">Try these common searches:</p>
+                            <button class="quick-search-btn" onclick="quickSearch('anemia')">Anemia</button>
+                            <button class="quick-search-btn" onclick="quickSearch('diabetes')">Diabetes</button>
+                            <button class="quick-search-btn" onclick="quickSearch('pneumonia')">Pneumonia</button>
+                            <button class="quick-search-btn" onclick="quickSearch('hernia')">Hernia</button>
+                        </div>
+                    </div>
+                `;
+                return;
+            }
+
+            let html = `<h2 style="color: var(--primary-color); margin-bottom: 20px;">Found ${results.length} result${results.length !== 1 ? 's' : ''} for "${query}"</h2>`;
+
+            results.forEach(result => {
+                html += `
+                    <div class="result-card">
+                        <div class="result-header">
+                            <div>
+                                <div class="result-book">${result.icon} ${result.book}</div>
+                                <div class="result-subject">${result.subject}</div>
+                            </div>
+                            <div class="result-page">Page ${result.page}</div>
+                        </div>
+                        <div class="result-snippet">
+                            ${highlightText(result.snippet, result.query)}
+                        </div>
+                        <div class="result-actions">
+                            <a href="pdfs/${result.filename}#page=${result.page}" class="btn-open-pdf" target="_blank">
+                                📖 Open PDF at Page ${result.page}
+                            </a>
+                        </div>
+                    </div>
+                `;
+            });
+
+            resultsDiv.innerHTML = html;
+        }
+
+        // Handle search
+        function performSearch() {
+            const query = document.getElementById('search-query').value;
+
+            if (!query || query.trim().length < 2) {
+                document.getElementById('results').innerHTML = '';
+                return;
+            }
+
+            document.getElementById('loading').style.display = 'block';
+            document.getElementById('results').innerHTML = '';
+
+            // Simulate slight delay for better UX
+            setTimeout(() => {
+                const results = searchPDFs(query);
+                document.getElementById('loading').style.display = 'none';
+                displayResults(results, query);
+            }, 300);
+        }
+
+        // Quick search
+        function quickSearch(term) {
+            document.getElementById('search-query').value = term;
+            performSearch();
+        }
+
+        // Event listeners
+        document.getElementById('search-query').addEventListener('input', performSearch);
+        document.getElementById('search-query').addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') {
+                performSearch();
+            }
+        });
+
+        // Load index on page load
+        loadIndex();
+    </script>
+
+</body>
+
+</html>

@@ -1,0 +1,33 @@
+# PDFs (too large for git)
+pdfs/
+*.pdf
+
+# Generated index
+pdf_index.json
+
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+env/
+venv/
+*.egg-info/
+
+# OS
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# Temporary files
+*.tmp
+*.log
+download_pdfs.py
+download_pdfs_v2.py
