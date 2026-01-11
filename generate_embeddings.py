@@ -3,12 +3,15 @@ import os
 import numpy as np
 from sentence_transformers import SentenceTransformer
 import time
+import base64
 
 # Configuration
 INPUT_INDEX = 'pdf_index.json'
-OUTPUT_VECTORS = 'vector_index.bin'
-OUTPUT_METADATA = 'vector_metadata.json'
-MODEL_NAME = 'all-MiniLM-L6-v2'  # 384 dimensions, very fast and compatible with transformers.js
+OUTPUT_VECTORS_BIN = 'vector_index.bin'
+OUTPUT_VECTORS_JS = 'vector_index.js'
+OUTPUT_METADATA_JSON = 'vector_metadata.json'
+OUTPUT_METADATA_JS = 'vector_metadata.js'
+MODEL_NAME = 'all-MiniLM-L6-v2'
 
 def generate_embeddings():
     print(f"--- AI Semantic Indexing Started ---")
@@ -28,9 +31,7 @@ def generate_embeddings():
     print("Preparing text for embedding...")
     for filename, book in pdf_index.items():
         for page in book['pages']:
-            # Combine book name, subject and page text for better semantic context
             context_text = f"Book: {book['name']}. Subject: {book['subject']}. Content: {page['text']}"
-            
             texts_to_embed.append(context_text)
             all_pages_data.append({
                 'filename': filename,
@@ -38,31 +39,40 @@ def generate_embeddings():
                 'subject': book['subject'],
                 'icon': book['icon'],
                 'page': page['page'],
-                # We store a short snippet for display without needing the full index
                 'snippet': page['text'][:200] + '...'
             })
 
-    print(f"Generating embeddings for {len(texts_to_embed)} pages. This may take a few minutes...")
+    print(f"Generating embeddings for {len(texts_to_embed)} pages...")
     start_time = time.time()
     
     # Generate embeddings
     embeddings = model.encode(texts_to_embed, show_progress_bar=True, convert_to_numpy=True)
-    
-    # Save vectors as Float32 binary for high-performance loading in browser
     embeddings = embeddings.astype('float32')
-    embeddings.tofile(OUTPUT_VECTORS)
     
-    # Save metadata
-    with open(OUTPUT_METADATA, 'w', encoding='utf-8') as f:
+    # 1. Save Binary (for standard fetch)
+    embeddings.tofile(OUTPUT_VECTORS_BIN)
+    
+    # 2. Save JS-wrapped Base64 (for local file/CORS bypass)
+    # Browsers have limits on script size, but 3.7MB is usually okay.
+    # We'll export it as a base64 string that can be decoded to a Float32Array.
+    v_base64 = base64.b64encode(embeddings.tobytes()).decode('utf-8')
+    with open(OUTPUT_VECTORS_JS, 'w', encoding='utf-8') as f:
+        f.write(f"const VECTOR_INDEX_BASE64 = '{v_base64}';")
+
+    # 3. Save Metadata JSON
+    with open(OUTPUT_METADATA_JSON, 'w', encoding='utf-8') as f:
         json.dump(all_pages_data, f, indent=2)
+        
+    # 4. Save Metadata JS
+    with open(OUTPUT_METADATA_JS, 'w', encoding='utf-8') as f:
+        f.write(f"const VECTOR_METADATA = {json.dumps(all_pages_data)};")
 
     duration = time.time() - start_time
     print(f"\n[SUCCESS] Semantic Indexing Complete!")
-    print(f"  Vectors saved: {OUTPUT_VECTORS} ({os.path.getsize(OUTPUT_VECTORS) / 1024 / 1024:.2f} MB)")
-    print(f"  Metadata saved: {OUTPUT_METADATA}")
+    print(f"  Vectors: {OUTPUT_VECTORS_BIN} & {OUTPUT_VECTORS_JS}")
+    print(f"  Metadata: {OUTPUT_METADATA_JSON} & {OUTPUT_METADATA_JS}")
     print(f"  Total pages: {len(all_pages_data)}")
     print(f"  Time taken: {duration:.2f} seconds")
-    print("\nNext step: Update search.html to use Transformers.js and these vectors.")
 
 if __name__ == "__main__":
     generate_embeddings()

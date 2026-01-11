@@ -278,6 +278,11 @@
 
     <div id="results" class="results-container"></div>
 
+    <!-- Fallback Data Loaders -->
+    <script src="pdf_index.js"></script>
+    <script src="vector_index.js"></script>
+    <script src="vector_metadata.js"></script>
+
     <!-- Transformers.js Integration -->
     <script type="module">
         import { pipeline, env } from 'https://cdn.jsdelivr.net/npm/@xenova/transformers@2.17.2';
@@ -299,7 +304,6 @@
         async function init() {
             // Load traditional index
             try {
-                // We use global variables if loaded via script tag, or fetch
                 if (typeof PDF_INDEX !== 'undefined') {
                     pdfIndex = PDF_INDEX;
                 } else {
@@ -331,23 +335,43 @@
 
             status.textContent = "Loading AI Brain (~20MB)...";
             try {
-                // Load Model
+                // 1. Load Model (Infrence)
                 pipeline_instance = await pipeline('feature-extraction', 'Xenova/all-MiniLM-L6-v2');
 
-                // Load Vectors
+                // 2. Load Vector Index (Try JS fallback first for local files)
                 status.textContent = "Loading Knowledge Base...";
-                const vectorResp = await fetch('vector_index.bin');
-                const vectorBuffer = await vectorResp.arrayBuffer();
-                vectorIndex = new Float32Array(vectorBuffer);
 
-                const metaResp = await fetch('vector_metadata.json');
-                vectorMetadata = await metaResp.json();
+                // Handle vectors
+                if (typeof VECTOR_INDEX_BASE64 !== 'undefined') {
+                    console.log("Loading vectors from JS fallback...");
+                    const binaryString = atob(VECTOR_INDEX_BASE64);
+                    const bytes = new Uint8Array(binaryString.length);
+                    for (let i = 0; i < binaryString.length; i++) {
+                        bytes[i] = binaryString.charCodeAt(i);
+                    }
+                    vectorIndex = new Float32Array(bytes.buffer);
+                } else {
+                    console.log("Loading vectors from fetch...");
+                    const vectorResp = await fetch('vector_index.bin');
+                    const vectorBuffer = await vectorResp.arrayBuffer();
+                    vectorIndex = new Float32Array(vectorBuffer);
+                }
+
+                // Handle metadata
+                if (typeof VECTOR_METADATA !== 'undefined') {
+                    vectorMetadata = VECTOR_METADATA;
+                } else {
+                    const metaResp = await fetch('vector_metadata.json');
+                    vectorMetadata = await metaResp.json();
+                }
 
                 status.textContent = "AI Ready! ✨";
+                console.log("AI Model and Vectors loaded successfully.");
                 setTimeout(() => { if (!isAiMode) status.style.display = 'none'; }, 2000);
             } catch (e) {
                 console.error("AI Init failed", e);
                 status.textContent = "AI Load Failed. Falling back to Keywords.";
+                alert("AI Search failed to load. This usually happens on local files if you haven't run a local server (like Live Server or python -m http.server). Falling back to normal search.");
                 document.getElementById('ai-mode-toggle').checked = false;
                 isAiMode = false;
             }
@@ -395,7 +419,7 @@
                             snippet: snippet + '...',
                             score: 1.0
                         });
-                        if (results.length > 50) break; // Limit for speed
+                        if (results.length > 50) break;
                     }
                 }
             }
@@ -403,41 +427,40 @@
         }
 
         async function doSemanticSearch(query) {
-            // 1. Embed query
-            const output = await pipeline_instance(query, { pooling: 'mean', normalize: true });
-            const queryVector = output.data;
+            try {
+                // 1. Embed query
+                const output = await pipeline_instance(query, { pooling: 'mean', normalize: true });
+                const queryVector = output.data;
 
-            // 2. Compute Cosine Similarity
-            const numVectors = vectorMetadata.length;
-            const dim = 384;
-            const scores = [];
+                // 2. Compute Cosine Similarity
+                const numVectors = vectorMetadata.length;
+                const dim = 384;
+                const scores = [];
 
-            for (let i = 0; i < numVectors; i++) {
-                let sim = 0;
-                const offset = i * dim;
-                for (let j = 0; j < dim; j++) {
-                    sim += queryVector[j] * vectorIndex[offset + j];
+                for (let i = 0; i < numVectors; i++) {
+                    let sim = 0;
+                    const offset = i * dim;
+                    for (let j = 0; j < dim; j++) {
+                        sim += queryVector[j] * vectorIndex[offset + j];
+                    }
+
+                    if (sim > 0.4) { // Slightly lower threshold for semantic nuances
+                        scores.push({ idx: i, score: sim });
+                    }
                 }
 
-                if (sim > 0.45) { // Threshold for relevance
-                    scores.push({
-                        idx: i,
-                        score: sim
-                    });
-                }
+                // 3. Sort and Map
+                scores.sort((a, b) => b.score - a.score);
+                const topResults = scores.slice(0, 30).map(s => {
+                    const meta = vectorMetadata[s.idx];
+                    return { ...meta, score: s.score };
+                });
+
+                displayResults(topResults, query);
+            } catch (e) {
+                console.error("Semantic search failed", e);
+                doKeywordSearch(query);
             }
-
-            // 3. Sort and Map
-            scores.sort((a, b) => b.score - a.score);
-            const topResults = scores.slice(0, 30).map(s => {
-                const meta = vectorMetadata[s.idx];
-                return {
-                    ...meta,
-                    score: s.score
-                };
-            });
-
-            displayResults(topResults, query);
         }
 
         // --- UI Rendering ---
@@ -468,7 +491,7 @@
                         <div class="result-snippet">${highlightText(res.snippet, query)}</div>
                         <div style="display: flex; gap: 10px;">
                             <a href="pdfs/${res.filename}#page=${res.page}" class="btn-open-pdf" target="_blank">📖 Open PDF</a>
-                            <button class="btn-bookmark ${isBookmarked ? 'active' : ''}" onclick="window.toggleBookmark('${res.filename}', '${res.book}', ${res.page}, '${res.snippet.replace(/'/g, "\\'")}')">
+                            <button class="btn-bookmark ${isBookmarked ? 'active' : ''}" onclick="window.toggleBookmark('${res.filename}', '${res.book}', ${res.page}, '${res.snippet.replace(/'/g, "\\'")}')" title="Bookmark this page">
                                 ${isBookmarked ? '⭐' : '☆'}
                             </button>
                         </div>
@@ -479,12 +502,12 @@
         }
 
         function highlightText(text, query) {
-            if (!query || isAiMode) return text; // AI search finds concepts, literal highlighting might not apply
+            if (!query || isAiMode) return text;
             const regex = new RegExp(`(${query})`, 'gi');
             return text.replace(regex, '<mark>$1</mark>');
         }
 
-        // --- Bookmarks (Exposed to window) ---
+        // --- Bookmarks ---
         window.toggleBookmark = function (filename, book, page, snippet) {
             const bookmarkId = `${filename}-${page}`;
             const index = bookmarks.findIndex(b => b.id === bookmarkId);
@@ -506,12 +529,12 @@
             if (bookmarks.length === 0) { section.style.display = 'none'; return; }
             section.style.display = 'block';
             grid.innerHTML = bookmarks.map(b => `
-                <div class="bookmark-item">
+                <div class="bookmark-item" title="${b.snippet}">
                     <a href="pdfs/${b.filename}#page=${b.page}" target="_blank" style="text-decoration:none; color:inherit; flex-grow:1;">
                         <div style="font-size:0.85rem; font-weight:700;">${b.book}</div>
                         <div style="font-size:0.75rem; opacity:0.7;">Page ${b.page}</div>
                     </a>
-                    <button onclick="window.toggleBookmark('${b.filename}', '', ${b.page}, '')" style="background:none; border:none; cursor:pointer; color:#ef4444;">✕</button>
+                    <button onclick="window.toggleBookmark('${b.filename}', '', ${b.page}, '')" style="background:none; border:none; cursor:pointer; color:#ef4444; font-size:1.2rem;">✕</button>
                 </div>
             `).join('');
         }
