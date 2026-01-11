@@ -4,7 +4,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>PDF Search - Med Exam Resources</title>
+    <title>AI Search - Med Exam Resources</title>
     <link rel="stylesheet" href="style.css">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -12,6 +12,7 @@
         href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Poppins:wght@400;600;800&display=swap"
         rel="stylesheet">
     <style>
+        /* Embed search-specific styles directly for performance and overrides */
         .search-hero {
             background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
             padding: 60px 20px;
@@ -51,10 +52,6 @@
             color: var(--text-color);
         }
 
-        .search-box-large input:focus {
-            box-shadow: 0 10px 50px rgba(10, 147, 150, 0.3);
-        }
-
         .search-icon {
             position: absolute;
             right: 24px;
@@ -62,6 +59,114 @@
             transform: translateY(-50%);
             font-size: 1.5rem;
             color: var(--secondary-color);
+        }
+
+        .result-card {
+            background: var(--card-bg);
+            border-radius: var(--border-radius);
+            padding: 24px;
+            margin-bottom: 20px;
+            box-shadow: var(--shadow);
+            border: var(--glass-border);
+            position: relative;
+        }
+
+        .result-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            margin-bottom: 15px;
+            gap: 15px;
+        }
+
+        .result-book {
+            font-size: 1.2rem;
+            font-weight: 700;
+            color: var(--primary-color);
+        }
+
+        .result-page {
+            background: linear-gradient(135deg, var(--accent-color), var(--secondary-color));
+            color: white;
+            padding: 8px 16px;
+            border-radius: 20px;
+            font-size: 0.85rem;
+            font-weight: 700;
+        }
+
+        .result-snippet {
+            background: rgba(148, 210, 189, 0.05);
+            padding: 15px;
+            border-radius: 8px;
+            font-size: 0.95rem;
+            line-height: 1.6;
+            margin-bottom: 15px;
+            border-left: 4px solid var(--accent-color);
+            color: var(--text-color);
+        }
+
+        .result-snippet mark {
+            background: #ffeb3b;
+            color: black;
+            padding: 2px 4px;
+            border-radius: 3px;
+        }
+
+        .btn-bookmark {
+            background: rgba(255, 255, 255, 0.1);
+            border: 1px solid var(--accent-color);
+            color: var(--primary-color);
+            width: 44px;
+            height: 44px;
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+        }
+
+        .btn-bookmark.active {
+            background: var(--accent-color);
+            color: white;
+        }
+
+        .btn-open-pdf {
+            background: var(--secondary-color);
+            color: white;
+            padding: 10px 20px;
+            border-radius: 8px;
+            text-decoration: none;
+            font-weight: 600;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .quick-searches {
+            margin-top: 20px;
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+            justify-content: center;
+        }
+
+        .quick-search-btn {
+            background: rgba(10, 147, 150, 0.1);
+            color: var(--primary-color);
+            padding: 8px 16px;
+            border-radius: 20px;
+            border: none;
+            cursor: pointer;
+            font-size: 0.9rem;
+            font-weight: 600;
+        }
+
+        .back-link {
+            display: inline-block;
+            margin: 20px 0;
+            color: var(--secondary-color);
+            text-decoration: none;
+            font-weight: 600;
         }
 
         .loading {
@@ -91,199 +196,12 @@
             }
         }
 
-        .results-container {
-            max-width: 900px;
-            margin: 0 auto;
-            padding: 20px;
-        }
-
-        .result-card {
-            background: var(--card-bg);
-            backdrop-filter: blur(4px);
-            border-radius: var(--border-radius);
-            padding: 24px;
-            margin-bottom: 20px;
-            box-shadow: var(--shadow);
-            border: var(--glass-border);
-            transition: all 0.3s ease;
-            position: relative;
-        }
-
-        .result-card:hover {
-            transform: translateY(-4px);
-            box-shadow: 0 12px 40px 0 rgba(31, 38, 135, 0.15);
-        }
-
-        .result-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: flex-start;
-            margin-bottom: 15px;
-            gap: 15px;
-        }
-
-        .result-book {
-            font-size: 1.2rem;
-            font-weight: 700;
-            color: var(--primary-color);
-            margin-bottom: 5px;
-        }
-
-        .result-subject {
-            font-size: 0.9rem;
-            color: var(--text-color);
-            opacity: 0.7;
-            font-weight: 500;
-        }
-
-        .result-page {
-            background: linear-gradient(135deg, var(--accent-color), var(--secondary-color));
-            color: white;
-            padding: 8px 16px;
-            border-radius: 20px;
-            font-size: 0.85rem;
-            font-weight: 700;
-            white-space: nowrap;
-        }
-
-        .result-snippet {
-            background: rgba(148, 210, 189, 0.05);
-            padding: 15px;
-            border-radius: 8px;
-            font-size: 0.95rem;
-            line-height: 1.6;
-            margin-bottom: 15px;
-            border-left: 4px solid var(--accent-color);
-            color: var(--text-color);
-        }
-
-        .result-snippet mark {
-            background: #ffeb3b;
-            padding: 2px 4px;
-            border-radius: 3px;
-            font-weight: 600;
-            color: black;
-        }
-
-        .result-actions {
-            display: flex;
-            gap: 10px;
-            align-items: center;
-        }
-
-        .btn-open-pdf {
-            background: var(--secondary-color);
-            color: white;
-            padding: 10px 20px;
-            border-radius: 8px;
-            text-decoration: none;
-            font-weight: 600;
-            display: inline-flex;
-            align-items: center;
-            gap: 8px;
-            transition: all 0.2s;
-        }
-
-        .btn-open-pdf:hover {
-            background: var(--primary-color);
-            transform: scale(1.02);
-        }
-
-        .btn-bookmark {
-            background: rgba(255, 255, 255, 0.1);
-            border: 1px solid var(--accent-color);
-            color: var(--primary-color);
-            width: 44px;
-            height: 44px;
-            border-radius: 8px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            cursor: pointer;
-            font-size: 1.2rem;
-            transition: all 0.2s;
-        }
-
-        .btn-bookmark.active {
-            background: var(--accent-color);
-            color: white;
-        }
-
-        .btn-bookmark:hover {
-            transform: scale(1.1);
-        }
-
-        .no-results {
-            text-align: center;
-            padding: 60px 20px;
-        }
-
-        .no-results-icon {
-            font-size: 4rem;
-            margin-bottom: 20px;
-            opacity: 0.3;
-        }
-
-        .no-results h2 {
-            color: var(--primary-color);
-            margin-bottom: 10px;
-        }
-
-        .no-results p {
-            color: var(--text-color);
-            opacity: 0.7;
-            font-size: 1.1rem;
-        }
-
-        .quick-searches {
-            margin-top: 20px;
-            display: flex;
-            gap: 10px;
-            flex-wrap: wrap;
-            justify-content: center;
-        }
-
-        .quick-search-btn {
-            background: rgba(10, 147, 150, 0.1);
-            color: var(--primary-color);
-            padding: 8px 16px;
-            border-radius: 20px;
-            border: none;
-            cursor: pointer;
-            font-size: 0.9rem;
-            font-weight: 600;
-            transition: all 0.2s;
-        }
-
-        .quick-search-btn:hover {
-            background: var(--secondary-color);
-            color: white;
-        }
-
-        .back-link {
-            display: inline-block;
-            margin: 20px 0;
-            color: var(--secondary-color);
-            text-decoration: none;
-            font-weight: 600;
-        }
-
         .bookmarks-section {
             margin-bottom: 40px;
             background: rgba(148, 210, 189, 0.05);
             border-radius: var(--border-radius);
             padding: 20px;
             border: 1px dashed var(--accent-color);
-        }
-
-        .bookmarks-title {
-            font-family: var(--font-heading);
-            font-size: 1.2rem;
-            color: var(--primary-color);
-            margin-bottom: 15px;
-            display: flex;
-            align-items: center;
-            gap: 10px;
         }
 
         .bookmarks-grid {
@@ -296,53 +214,17 @@
             background: var(--card-bg);
             padding: 12px 16px;
             border-radius: 10px;
-            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
             display: flex;
             justify-content: space-between;
             align-items: center;
             border: var(--glass-border);
         }
 
-        .bookmark-info {
-            display: flex;
-            flex-direction: column;
-            gap: 2px;
-        }
-
-        .bookmark-book {
-            font-size: 0.85rem;
-            font-weight: 700;
+        .bookmarks-title {
+            font-family: var(--font-heading);
+            font-size: 1.2rem;
+            margin-bottom: 15px;
             color: var(--primary-color);
-        }
-
-        .bookmark-page {
-            font-size: 0.75rem;
-            color: var(--text-color);
-            opacity: 0.7;
-        }
-
-        .btn-remove-bookmark {
-            background: none;
-            border: none;
-            color: #ef4444;
-            cursor: pointer;
-            font-size: 1.1rem;
-            padding: 5px;
-            opacity: 0.6;
-            transition: opacity 0.2s;
-        }
-
-        .btn-remove-bookmark:hover {
-            opacity: 1;
-        }
-
-        .bookmark-link {
-            text-decoration: none;
-            color: inherit;
-            flex-grow: 1;
-            display: flex;
-            align-items: center;
-            gap: 10px;
         }
     </style>
 </head>
@@ -351,20 +233,31 @@
 
     <div class="search-hero">
         <div class="container">
-            <h1>🔍 Search Medical Textbooks</h1>
-            <p>Search across all 8 textbooks instantly. Perfect for last-minute exam prep!</p>
+            <h1>🔍 AI-Powered Search</h1>
+            <p>Find concepts, symptoms, and cases instantly. Powered by Vector Search.</p>
 
             <div class="search-box-large">
-                <input type="text" id="search-query" placeholder="Search for cases, symptoms, conditions..." autofocus>
+                <input type="text" id="search-query" placeholder="Search (e.g., 'yellow eyes' to find Jaundice)..."
+                    autofocus>
                 <span class="search-icon">🔍</span>
             </div>
 
+            <div class="ai-toggle-container">
+                <span class="ai-label">Keyword Search</span>
+                <label class="ai-switch">
+                    <input type="checkbox" id="ai-mode-toggle">
+                    <span class="slider"></span>
+                </label>
+                <span class="ai-label">Magic AI Search ✨</span>
+            </div>
+            <div id="ai-status" class="ai-status-indicator">Initializing AI Model...</div>
+
             <div class="quick-searches">
                 <button class="quick-search-btn" onclick="quickSearch('anemia')">Anemia</button>
-                <button class="quick-search-btn" onclick="quickSearch('diabetes')">Diabetes</button>
-                <button class="quick-search-btn" onclick="quickSearch('pneumonia')">Pneumonia</button>
-                <button class="quick-search-btn" onclick="quickSearch('hernia')">Hernia</button>
-                <button class="quick-search-btn" onclick="quickSearch('cataract')">Cataract</button>
+                <button class="quick-search-btn" onclick="quickSearch('yellowish eyes')">Yellow Eyes</button>
+                <button class="quick-search-btn" onclick="quickSearch('pregnancy diabetes')">Gestational
+                    Diabetes</button>
+                <button class="quick-search-btn" onclick="quickSearch('chest pain')">Chest Pain</button>
             </div>
         </div>
     </div>
@@ -372,234 +265,273 @@
     <div class="container">
         <a href="index.html" class="back-link">← Back to Resources</a>
 
-        <!-- Bookmarks Section -->
         <div id="bookmarks-section" class="bookmarks-section" style="display: none;">
             <h3 class="bookmarks-title">⭐ My Saved Pages</h3>
-            <div id="bookmarks-grid" class="bookmarks-grid">
-                <!-- Bookmarks will be injected here -->
-            </div>
+            <div id="bookmarks-grid" class="bookmarks-grid"></div>
         </div>
     </div>
 
     <div id="loading" class="loading" style="display: none;">
         <div class="spinner"></div>
-        <p>Searching through textbooks...</p>
+        <p id="loading-text">Searching through textbooks...</p>
     </div>
 
     <div id="results" class="results-container"></div>
 
-    <script src="pdf_index.js"></script>
-    <script>
-        // Apply dark mode on load
+    <!-- Transformers.js Integration -->
+    <script type="module">
+        import { pipeline, env } from 'https://cdn.jsdelivr.net/npm/@xenova/transformers@2.17.2';
+
+        // --- State Management ---
+        let pipeline_instance = null;
+        let vectorIndex = null;
+        let vectorMetadata = null;
+        let pdfIndex = null;
+        let isAiMode = false;
+        let bookmarks = JSON.parse(localStorage.getItem('med-exam-bookmarks')) || [];
+
+        // Apply dark mode
         if (localStorage.getItem('med-exam-dark-mode') === 'enabled') {
             document.body.classList.add('dark-mode');
         }
 
-        let pdfIndex = typeof PDF_INDEX !== 'undefined' ? PDF_INDEX : null;
-        let bookmarks = JSON.parse(localStorage.getItem('med-exam-bookmarks')) || [];
+        // --- Initialization ---
+        async function init() {
+            // Load traditional index
+            try {
+                // We use global variables if loaded via script tag, or fetch
+                if (typeof PDF_INDEX !== 'undefined') {
+                    pdfIndex = PDF_INDEX;
+                } else {
+                    const resp = await fetch('pdf_index.json');
+                    pdfIndex = await resp.json();
+                }
+            } catch (e) { console.error("Traditional index fail", e); }
 
-        // Verify index loading
-        function checkIndex() {
-            if (!pdfIndex) {
-                console.error('Failed to load PDF index via script tag.');
-                document.getElementById('results').innerHTML = `
-                    <div class="no-results">
-                        <div class="no-results-icon">⚠️</div>
-                        <h2>Index Not Available</h2>
-                        <p>The PDF search index hasn't been generated yet or failed to load. Please run 'python index_pdfs.py' first.</p>
-                    </div>
-                `;
-            } else {
-                console.log('PDF index loaded:', Object.keys(pdfIndex).length, 'books');
-                displayBookmarks();
-            }
-        }
-
-        // Bookmarks functions
-        function toggleBookmark(filename, book, page, snippet) {
-            const bookmarkId = `${filename}-${page}`;
-            const index = bookmarks.findIndex(b => b.id === bookmarkId);
-
-            if (index > -1) {
-                bookmarks.splice(index, 1);
-            } else {
-                bookmarks.push({
-                    id: bookmarkId,
-                    filename,
-                    book,
-                    page,
-                    snippet: snippet.substring(0, 100) + '...'
-                });
-            }
-
-            localStorage.setItem('med-exam-bookmarks', JSON.stringify(bookmarks));
             displayBookmarks();
 
-            // Re-render currently visible search results to update star buttons
-            const query = document.getElementById('search-query').value;
-            if (query) performSearch();
+            // Setup Listeners
+            document.getElementById('search-query').addEventListener('input', debounce(performSearch, 400));
+            document.getElementById('ai-mode-toggle').addEventListener('change', (e) => {
+                isAiMode = e.target.checked;
+                const status = document.getElementById('ai-status');
+                if (isAiMode) {
+                    status.style.display = 'block';
+                    loadAiModel();
+                } else {
+                    status.style.display = 'none';
+                }
+                performSearch();
+            });
         }
 
-        function displayBookmarks() {
-            const section = document.getElementById('bookmarks-section');
-            const grid = document.getElementById('bookmarks-grid');
+        async function loadAiModel() {
+            const status = document.getElementById('ai-status');
+            if (pipeline_instance) return;
 
-            if (bookmarks.length === 0) {
-                section.style.display = 'none';
+            status.textContent = "Loading AI Brain (~20MB)...";
+            try {
+                // Load Model
+                pipeline_instance = await pipeline('feature-extraction', 'Xenova/all-MiniLM-L6-v2');
+
+                // Load Vectors
+                status.textContent = "Loading Knowledge Base...";
+                const vectorResp = await fetch('vector_index.bin');
+                const vectorBuffer = await vectorResp.arrayBuffer();
+                vectorIndex = new Float32Array(vectorBuffer);
+
+                const metaResp = await fetch('vector_metadata.json');
+                vectorMetadata = await metaResp.json();
+
+                status.textContent = "AI Ready! ✨";
+                setTimeout(() => { if (!isAiMode) status.style.display = 'none'; }, 2000);
+            } catch (e) {
+                console.error("AI Init failed", e);
+                status.textContent = "AI Load Failed. Falling back to Keywords.";
+                document.getElementById('ai-mode-toggle').checked = false;
+                isAiMode = false;
+            }
+        }
+
+        // --- Search Logic ---
+        async function performSearch() {
+            const query = document.getElementById('search-query').value.trim();
+            const resultsDiv = document.getElementById('results');
+            const loading = document.getElementById('loading');
+
+            if (!query || query.length < 2) {
+                resultsDiv.innerHTML = '';
                 return;
             }
 
-            section.style.display = 'block';
-            grid.innerHTML = bookmarks.map(b => `
-                <div class="bookmark-item">
-                    <a href="pdfs/${b.filename}#page=${b.page}" class="bookmark-link" target="_blank">
-                        <div class="bookmark-info">
-                            <div class="bookmark-book">${b.book}</div>
-                            <div class="bookmark-page">Page ${b.page}</div>
-                        </div>
-                    </a>
-                    <button class="btn-remove-bookmark" onclick="toggleBookmark('${b.filename}', '', ${b.page}, '')" title="Remove bookmark">✕</button>
-                </div>
-            `).join('');
-        }
+            loading.style.display = 'block';
 
-        // Search function
-        function searchPDFs(query) {
-            if (!pdfIndex || !query || query.trim().length < 2) {
-                return [];
+            if (isAiMode && pipeline_instance && vectorIndex) {
+                await doSemanticSearch(query);
+            } else {
+                doKeywordSearch(query);
             }
 
-            const searchTerm = query.toLowerCase().trim();
+            loading.style.display = 'none';
+        }
+
+        function doKeywordSearch(query) {
+            if (!pdfIndex) return;
+            const searchTerm = query.toLowerCase();
             const results = [];
 
             for (const [filename, book] of Object.entries(pdfIndex)) {
                 for (const page of book.pages) {
                     const text = page.text.toLowerCase();
                     if (text.includes(searchTerm)) {
-                        // Find context around the match
-                        const index = text.indexOf(searchTerm);
-                        const start = Math.max(0, index - 100);
-                        const end = Math.min(text.length, index + searchTerm.length + 100);
-                        const snippet = page.text.substring(start, end);
-
+                        const idx = text.indexOf(searchTerm);
+                        const snippet = page.text.substring(Math.max(0, idx - 100), Math.min(text.length, idx + 100));
                         results.push({
                             book: book.name,
                             subject: book.subject,
                             icon: book.icon,
                             filename: filename,
                             page: page.page,
-                            snippet: snippet,
-                            query: query
+                            snippet: snippet + '...',
+                            score: 1.0
                         });
+                        if (results.length > 50) break; // Limit for speed
                     }
                 }
             }
-
-            return results;
+            displayResults(results, query);
         }
 
-        // Highlight search term in snippet
-        function highlightText(text, query) {
-            const regex = new RegExp(`(${query})`, 'gi');
-            return text.replace(regex, '<mark>$1</mark>');
+        async function doSemanticSearch(query) {
+            // 1. Embed query
+            const output = await pipeline_instance(query, { pooling: 'mean', normalize: true });
+            const queryVector = output.data;
+
+            // 2. Compute Cosine Similarity
+            const numVectors = vectorMetadata.length;
+            const dim = 384;
+            const scores = [];
+
+            for (let i = 0; i < numVectors; i++) {
+                let sim = 0;
+                const offset = i * dim;
+                for (let j = 0; j < dim; j++) {
+                    sim += queryVector[j] * vectorIndex[offset + j];
+                }
+
+                if (sim > 0.45) { // Threshold for relevance
+                    scores.push({
+                        idx: i,
+                        score: sim
+                    });
+                }
+            }
+
+            // 3. Sort and Map
+            scores.sort((a, b) => b.score - a.score);
+            const topResults = scores.slice(0, 30).map(s => {
+                const meta = vectorMetadata[s.idx];
+                return {
+                    ...meta,
+                    score: s.score
+                };
+            });
+
+            displayResults(topResults, query);
         }
 
-        // Display results
+        // --- UI Rendering ---
         function displayResults(results, query) {
             const resultsDiv = document.getElementById('results');
-
             if (results.length === 0) {
-                resultsDiv.innerHTML = `
-                    <div class="no-results">
-                        <div class="no-results-icon">📚</div>
-                        <h2>No results found for "${query}"</h2>
-                        <p>Try different keywords or check the spelling.</p>
-                        <div class="quick-searches" style="margin-top: 30px;">
-                            <p style="color: #666; margin-bottom: 15px;">Try these common searches:</p>
-                            <button class="quick-search-btn" onclick="quickSearch('anemia')">Anemia</button>
-                            <button class="quick-search-btn" onclick="quickSearch('diabetes')">Diabetes</button>
-                            <button class="quick-search-btn" onclick="quickSearch('pneumonia')">Pneumonia</button>
-                            <button class="quick-search-btn" onclick="quickSearch('hernia')">Hernia</button>
-                        </div>
-                    </div>
-                `;
+                resultsDiv.innerHTML = `<div class="no-results"><h2>No results found</h2><p>Try different keywords or enable AI mode.</p></div>`;
                 return;
             }
 
-            let html = `<h2 style="color: var(--primary-color); margin-bottom: 20px;">Found ${results.length} result${results.length !== 1 ? 's' : ''} for "${query}"</h2>`;
+            let html = `<h2 style="color: var(--primary-color); margin-bottom: 20px;">Found ${results.length} results</h2>`;
+            results.forEach(res => {
+                const isBookmarked = bookmarks.some(b => b.id === `${res.filename}-${res.page}`);
+                const scorePercent = Math.round(res.score * 100);
 
-            results.forEach(result => {
-                const isBookmarked = bookmarks.some(b => b.id === `${result.filename}-${result.page}`);
                 html += `
                     <div class="result-card">
                         <div class="result-header">
                             <div>
-                                <div class="result-book">${result.icon} ${result.book}</div>
-                                <div class="result-subject">${result.subject}</div>
+                                <div class="result-book">${res.icon} ${res.book}</div>
+                                <div style="font-size: 0.9rem; opacity: 0.7;">${res.subject}</div>
                             </div>
-                            <div class="result-page">Page ${result.page}</div>
+                            <div style="display: flex; flex-direction: column; align-items: flex-end; gap: 5px;">
+                                <div class="result-page">Page ${res.page}</div>
+                                ${isAiMode ? `<span class="match-score">${scorePercent}% Match</span>` : ''}
+                            </div>
                         </div>
-                        <div class="result-snippet">
-                            ${highlightText(result.snippet, result.query)}
-                        </div>
-                        <div class="result-actions">
-                            <a href="pdfs/${result.filename}#page=${result.page}" class="btn-open-pdf" target="_blank">
-                                📖 Open PDF at Page ${result.page}
-                            </a>
-                            <button class="btn-bookmark ${isBookmarked ? 'active' : ''}" 
-                                onclick="toggleBookmark('${result.filename}', '${result.book}', ${result.page}, '${result.snippet.replace(/'/g, "\\'")}')"
-                                title="${isBookmarked ? 'Remove Bookmark' : 'Add Bookmark'}">
+                        <div class="result-snippet">${highlightText(res.snippet, query)}</div>
+                        <div style="display: flex; gap: 10px;">
+                            <a href="pdfs/${res.filename}#page=${res.page}" class="btn-open-pdf" target="_blank">📖 Open PDF</a>
+                            <button class="btn-bookmark ${isBookmarked ? 'active' : ''}" onclick="window.toggleBookmark('${res.filename}', '${res.book}', ${res.page}, '${res.snippet.replace(/'/g, "\\'")}')">
                                 ${isBookmarked ? '⭐' : '☆'}
                             </button>
                         </div>
                     </div>
                 `;
             });
-
             resultsDiv.innerHTML = html;
         }
 
-        // Handle search
-        function performSearch() {
-            const query = document.getElementById('search-query').value;
-
-            if (!query || query.trim().length < 2) {
-                document.getElementById('results').innerHTML = '';
-                return;
-            }
-
-            document.getElementById('loading').style.display = 'block';
-
-            // If we're already re-rendering from a bookmark toggle, don't clear so it doesn't flicker
-            const currentResults = document.getElementById('results').innerHTML;
-            if (!currentResults) document.getElementById('results').innerHTML = '';
-
-            // Simulate slight delay for better UX
-            setTimeout(() => {
-                const results = searchPDFs(query);
-                document.getElementById('loading').style.display = 'none';
-                displayResults(results, query);
-            }, 300);
+        function highlightText(text, query) {
+            if (!query || isAiMode) return text; // AI search finds concepts, literal highlighting might not apply
+            const regex = new RegExp(`(${query})`, 'gi');
+            return text.replace(regex, '<mark>$1</mark>');
         }
 
-        // Quick search
-        function quickSearch(term) {
+        // --- Bookmarks (Exposed to window) ---
+        window.toggleBookmark = function (filename, book, page, snippet) {
+            const bookmarkId = `${filename}-${page}`;
+            const index = bookmarks.findIndex(b => b.id === bookmarkId);
+
+            if (index > -1) {
+                bookmarks.splice(index, 1);
+            } else {
+                bookmarks.push({ id: bookmarkId, filename, book, page, snippet });
+            }
+
+            localStorage.setItem('med-exam-bookmarks', JSON.stringify(bookmarks));
+            displayBookmarks();
+            performSearch();
+        };
+
+        function displayBookmarks() {
+            const section = document.getElementById('bookmarks-section');
+            const grid = document.getElementById('bookmarks-grid');
+            if (bookmarks.length === 0) { section.style.display = 'none'; return; }
+            section.style.display = 'block';
+            grid.innerHTML = bookmarks.map(b => `
+                <div class="bookmark-item">
+                    <a href="pdfs/${b.filename}#page=${b.page}" target="_blank" style="text-decoration:none; color:inherit; flex-grow:1;">
+                        <div style="font-size:0.85rem; font-weight:700;">${b.book}</div>
+                        <div style="font-size:0.75rem; opacity:0.7;">Page ${b.page}</div>
+                    </a>
+                    <button onclick="window.toggleBookmark('${b.filename}', '', ${b.page}, '')" style="background:none; border:none; cursor:pointer; color:#ef4444;">✕</button>
+                </div>
+            `).join('');
+        }
+
+        // Helper
+        function debounce(func, wait) {
+            let timeout;
+            return function (...args) {
+                clearTimeout(timeout);
+                timeout = setTimeout(() => func.apply(this, args), wait);
+            };
+        }
+
+        window.quickSearch = function (term) {
             document.getElementById('search-query').value = term;
             performSearch();
         }
 
-        // Event listeners
-        document.getElementById('search-query').addEventListener('input', performSearch);
-        document.getElementById('search-query').addEventListener('keypress', (e) => {
-            if (e.key === 'Enter') {
-                performSearch();
-            }
-        });
-
-        // Check index state on page load
-        checkIndex();
+        init();
     </script>
-
 </body>
 
 </html>
