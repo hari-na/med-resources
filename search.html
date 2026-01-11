@@ -273,26 +273,26 @@
 
     <div id="results" class="results-container"></div>
 
+    <script src="pdf_index.js"></script>
     <script>
-        let pdfIndex = null;
+        let pdfIndex = typeof PDF_INDEX !== 'undefined' ? PDF_INDEX : null;
 
-        // Load PDF index
-        async function loadIndex() {
-            try {
-                const response = await fetch('pdf_index.json');
-                pdfIndex = await response.json();
-                console.log('PDF index loaded:', Object.keys(pdfIndex).length, 'books');
-            } catch (error) {
-                console.error('Failed to load PDF index:', error);
+        // Verify index loading
+        function checkIndex() {
+            if (!pdfIndex) {
+                console.error('Failed to load PDF index via script tag.');
                 document.getElementById('results').innerHTML = `
                     <div class="no-results">
                         <div class="no-results-icon">⚠️</div>
                         <h2>Index Not Available</h2>
-                        <p>The PDF search index hasn't been generated yet. Please run the indexing script first.</p>
+                        <p>The PDF search index hasn't been generated yet or failed to load. Please run 'python index_pdfs.py' first.</p>
                     </div>
                 `;
+            } else {
+                console.log('PDF index loaded:', Object.keys(pdfIndex).length, 'books');
             }
         }
+
 
         // Search function
         function searchPDFs(query) {
@@ -418,8 +418,8 @@
             }
         });
 
-        // Load index on page load
-        loadIndex();
+        // Check index state on page load
+        checkIndex();
     </script>
 
 </body>

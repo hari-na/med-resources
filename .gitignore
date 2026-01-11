@@ -4,6 +4,7 @@ pdfs/
 
 # Generated index
 pdf_index.json
+pdf_index.js
 
 # Python
 __pycache__/
