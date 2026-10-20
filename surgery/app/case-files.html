@@ -310,28 +310,66 @@ label.fld {
   // layer: everything written is tagged with subject and case.
 
   var SUBJECT = "General Surgery";
-  var CASE = { id: "inguinal-hernia", num: "01", name: "Inguinal Hernia" };
-
-  // The other twenty-four guides live in reference/ and are built into dist/ with their own
-  // viva drills and PDFs. Wiring them into this hub is not a cosmetic change: build_artifact()
-  // inlines the stylesheet and reader into this page and ships each guide body as a separate
-  // published sidecar (see SIDECARS in build.py), so every case added here needs its own
-  // sidecar entry and adds its body to what gets published. Left to a deliberate decision
-  // about the size of the published artifact rather than done piecemeal.
-  var OTHERS = [
-    "Thyroid Swelling", "Breast Lump", "Gastric Outlet Obstruction", "Obstructive Jaundice",
-    "Right Iliac Fossa Mass", "Liver Secondaries", "Varicose Veins",
-    "Peripheral Vascular Disease", "Ulcer", "Sinus and Fistula", "Lipoma and Sebaceous Cyst",
-    "Cervical Lymphadenopathy", "Neck Swellings", "Salivary Swelling", "Oral Cavity Lesions",
-    "Hydrocele", "Varicocele", "Undescended Testis", "Dysphagia", "Testicular Tumour",
-    "Lymphoedema", "Carcinoma of the Penis", "Benign Prostatic Hyperplasia",
-    "Haemorrhoids, Fissure and Fistula-in-Ano"
+  // Every guide in reference/ is built into dist/ as a standalone page, a body fragment and a
+  // PDF, and publish_site.py discovers all three from dist/ rather than naming them, so adding a
+  // case here needs nothing else. Two naming rules, both set by publish_site.py: the body
+  // fragment keeps its number prefix, the PDF loses it.
+  //   id   must equal the guide's data-doc attribute, because the reader stores a student's
+  //        highlights and notes against it.
+  //   bank is true only where this hub has a scored question bank for the case. The guides all
+  //        carry their own viva as tap-to-reveal questions; the scored drill is separate.
+  var CASES = [
+    {num:"01", id:"inguinal-hernia", name:"Inguinal Hernia", kind:"long", bank:true},
+    {num:"02", id:"thyroid-swelling", name:"Thyroid Swelling", kind:"long"},
+    {num:"03", id:"breast-lump", name:"Breast Lump", kind:"long"},
+    {num:"04", id:"gastric-outlet-obstruction", name:"Gastric Outlet Obstruction", kind:"long"},
+    {num:"05", id:"obstructive-jaundice", name:"Obstructive Jaundice", kind:"long"},
+    {num:"06", id:"right-iliac-fossa-mass", name:"Right Iliac Fossa Mass", kind:"long"},
+    {num:"07", id:"liver-secondaries", name:"Liver Secondaries", kind:"long"},
+    {num:"08", id:"varicose-veins", name:"Varicose Veins", kind:"long"},
+    {num:"09", id:"peripheral-vascular-disease", name:"Peripheral Vascular Disease", kind:"long"},
+    {num:"10", id:"ulcer", name:"Ulcer", kind:"short"},
+    {num:"11", id:"sinus-and-fistula", name:"Sinus and Fistula", kind:"short"},
+    {num:"12", id:"lipoma-and-sebaceous-cyst", name:"Lipoma and Sebaceous Cyst", kind:"short"},
+    {num:"13", id:"cervical-lymphadenopathy", name:"Cervical Lymphadenopathy", kind:"short"},
+    {num:"14", id:"neck-swellings", name:"Neck Swellings", kind:"short"},
+    {num:"15", id:"salivary-swelling", name:"Salivary Swelling", kind:"short"},
+    {num:"16", id:"oral-cavity-lesions", name:"Oral Cavity Lesions", kind:"short"},
+    {num:"17", id:"hydrocele", name:"Hydrocele", kind:"short"},
+    {num:"18", id:"varicocele", name:"Varicocele", kind:"short"},
+    {num:"19", id:"undescended-testis", name:"Undescended Testis", kind:"short"},
+    {num:"20", id:"dysphagia", name:"Dysphagia", kind:"short"},
+    {num:"21", id:"testicular-tumour", name:"Testicular Tumour", kind:"short"},
+    {num:"22", id:"lymphoedema", name:"Lymphoedema", kind:"short"},
+    {num:"23", id:"carcinoma-penis", name:"Carcinoma of the Penis", kind:"short"},
+    {num:"24", id:"benign-prostatic-hyperplasia", name:"Benign Prostatic Hyperplasia", kind:"short"},
+    {num:"25", id:"anorectal-conditions", name:"Haemorrhoids, Fissure and Fistula-in-Ano", kind:"short"}
   ];
+
+  // One line each, shown on the case page. Where a case has none, the generic line is used.
+  var BLURB = {
+    "inguinal-hernia":
+      "The most commonly allotted surgical long case, and the one where the examiner is least " +
+      "interested in your diagnosis. He can see the lump. What he wants is the reasoning behind " +
+      "each question you asked and each test you performed.",
+    "peripheral-vascular-disease":
+      "Two pains to separate, claudication from rest pain, and then one decision: is this limb " +
+      "threatened? The staging systems your examiner asks for are not the ones the current " +
+      "edition uses, and section 1 sets out how to answer both."
+  };
+
+  var CASE = CASES[0];
+
+  function caseById(id) {
+    for (var i = 0; i < CASES.length; i++) if (CASES[i].id === id) return CASES[i];
+    return null;
+  }
+
   // claude.ai refuses to serve a published sibling file as a top-level document
   // (ERR_BLOCKED_BY_RESPONSE), so the guide is fetched and rendered inside this page
   // and the PDF is handed over through the downloads capability.
-  var GUIDE_BODY = "01-inguinal-hernia.body.html";
-  var PDF        = "inguinal-hernia.pdf";
+  function guideBodyFile(c) { return c.num + "-" + c.id + ".body.html"; }
+  function pdfFile(c)       { return c.id + ".pdf"; }
 
   var BANK = [
     {id:"h01", lv:1, type:"Anatomy", q:"Define a hernia.",
@@ -631,6 +669,17 @@ label.fld {
 
   // ------------------------------------------------------------------ index
 
+  function tilesFor(kind) {
+    return CASES.filter(function (c) { return c.kind === kind; }).map(function (c) {
+      return '<button class="tile" id="case-' + c.id + '">' +
+             '<span class="ico">' + c.num + '</span>' +
+             '<span class="t-name">' + esc(c.name) + '</span>' +
+             '<span class="t-desc">' + (c.kind === "long" ? "Long case" : "Short case") +
+             '. Study guide and printable PDF' + (c.bank ? ', plus the scored viva drill' : '') +
+             '.</span><span class="t-go">&rarr;</span></button>';
+    }).join("");
+  }
+
   function screenIndex() {
     app.innerHTML =
       '<div class="who"><span>Signed in as <b>' + esc(student.name) + '</b></span>' +
@@ -640,26 +689,17 @@ label.fld {
       '<p class="sub">History and examination with the reasoning attached to every step, ' +
       'management with the rationale for every decision, and a viva drill that tracks what you ' +
       'keep getting wrong. Built from S Das, Bailey &amp; Love and SRB.</p>' +
-      '<div class="tiles">' +
-        '<button class="tile" id="case1">' +
-          '<span class="ico">' + CASE.num + '</span>' +
-          '<span class="t-name">' + esc(CASE.name) + '</span>' +
-          '<span class="t-desc">Long case. Study guide, viva drill and printable PDF.</span>' +
-          '<span class="t-go">&rarr;</span>' +
-        '</button>' +
-        '<div class="tile muted"><span class="ico">+24</span>' +
-          '<span class="t-name">' + esc(OTHERS.join(", ")) + '</span>' +
-          '<span class="t-desc">Twenty-four further guides are built, each with its own viva ' +
-          'drill and printable PDF. They are not yet wired into this hub: the artifact cannot ' +
-          'link out to sibling files, so each guide has to travel in the page as a sidecar.' +
-          '</span><span class="t-go">&middot;</span></div>' +
-      '</div>' +
+      '<div class="tiles">' + tilesFor("long") + '</div>' +
+      '<h2 style="margin-top:1.6rem">Short cases</h2>' +
+      '<div class="tiles">' + tilesFor("short") + '</div>' +
       '<div class="srckey">' +
         '<span><i style="background:#005f73"></i> S Das 13e: clinical method</span>' +
         '<span><i style="background:#5b4a8a"></i> Bailey &amp; Love 28e: mechanism and management</span>' +
         '<span><i style="background:#1f6b5c"></i> SRB 6e: exam framework</span>' +
       '</div>';
-    on("case1", "click", function () { go(screenCase); });
+    CASES.forEach(function (c) {
+      on("case-" + c.id, "click", function () { CASE = c; go(screenCase); });
+    });
     on("swapWho", "click", function () { reset(screenWelcome); });
   }
 
@@ -674,12 +714,16 @@ label.fld {
         (studs.length === 1 ? 'person' : 'people') + '.'
       : 'Nothing drilled yet. The viva marks itself against your own honesty, so answer out loud first.';
 
+    var blurb = BLURB[CASE.id] ||
+      ("Full case with the reasoning attached to every history question, examination finding, " +
+       "investigation and treatment decision, and the amber boxes wherever S Das, Bailey & Love " +
+       "and SRB disagree.");
+
     app.innerHTML =
-      '<p class="eyebrow">Long case ' + CASE.num + '</p>' +
+      '<p class="eyebrow">' + (CASE.kind === "long" ? "Long case " : "Short case ") + CASE.num +
+      '</p>' +
       '<h1>' + esc(CASE.name) + '</h1>' +
-      '<p class="sub">The most commonly allotted surgical long case, and the one where the ' +
-      'examiner is least interested in your diagnosis. He can see the lump. What he wants is the ' +
-      'reasoning behind each question you asked and each test you performed.</p>' +
+      '<p class="sub">' + esc(blurb) + '</p>' +
       '<div class="tiles">' +
         '<button class="tile" id="goGuide">' +
           '<span class="ico">READ</span><span class="t-name">Study guide</span>' +
@@ -687,11 +731,18 @@ label.fld {
           'finding, investigation and treatment decision. Set it up how you like to read, and ' +
           'highlight, annotate or write on it.</span>' +
           '<span class="t-go">&rarr;</span></button>' +
-        '<button class="tile" id="goViva">' +
-          '<span class="ico">VIVA</span><span class="t-name">Viva drill</span>' +
-          '<span class="t-desc">' + BANK.length + ' questions across three levels. Tracks which ' +
-          'kinds of question you miss and tells you what to revise.</span>' +
-          '<span class="t-go">&rarr;</span></button>' +
+        (CASE.bank
+          ? '<button class="tile" id="goViva">' +
+            '<span class="ico">VIVA</span><span class="t-name">Viva drill</span>' +
+            '<span class="t-desc">' + BANK.length + ' questions across three levels. Tracks ' +
+            'which kinds of question you miss and tells you what to revise.</span>' +
+            '<span class="t-go">&rarr;</span></button>'
+          : '<div class="tile muted">' +
+            '<span class="ico">VIVA</span><span class="t-name">Viva drill</span>' +
+            '<span class="t-desc">No scored drill for this case yet. The study guide ends with ' +
+            'its own viva section: the questions are there with the answers hidden until you tap ' +
+            'them, so answer out loud first.</span>' +
+            '<span class="t-go">&middot;</span></div>') +
         '<button class="tile" id="goProgress">' +
           '<span class="ico">STATS</span><span class="t-name">Your progress</span>' +
           '<span class="t-desc">Everything drilled so far: coverage, accuracy by topic, and ' +
@@ -699,15 +750,15 @@ label.fld {
           '<span class="t-go">&rarr;</span></button>' +
         '<button class="tile" id="goPdf">' +
           '<span class="ico">PDF</span><span class="t-name">Printable PDF</span>' +
-          '<span class="t-desc" id="pdfDesc">30 pages, the whole study guide laid out for ' +
-          'paper.</span>' +
+          '<span class="t-desc" id="pdfDesc">The whole study guide laid out for paper, with ' +
+          'every answer opened.</span>' +
           '<span class="t-go">&darr;</span></button>' +
       '</div>' +
       '<p class="meta-line">' + line + '</p>';
 
     on("goGuide", "click", function () { go(screenGuide); });
     on("goPdf", "click", savePdf);
-    on("goViva", "click", function () { go(screenLevels); });
+    if (CASE.bank) on("goViva", "click", function () { go(screenLevels); });
     on("goProgress", "click", function () { go(screenProgress); });
   }
 
@@ -980,7 +1031,7 @@ label.fld {
 
   // ------------------------------------------------------------------ study guide
 
-  var guideHtml = null;
+  var guideCache = {};   // keyed by case id: the hub keeps every guide the student has opened
 
   function screenGuide() {
     app.innerHTML = '<div class="loading">Opening the study guide…</div>';
@@ -994,11 +1045,12 @@ label.fld {
       else if (window.Reader && window.Reader.remount) window.Reader.remount(opts);
     }
 
-    if (guideHtml) { mount(guideHtml); return; }
+    var id = CASE.id;
+    if (guideCache[id]) { mount(guideCache[id]); return; }
 
-    fetch(GUIDE_BODY)
+    fetch(guideBodyFile(CASE))
       .then(function (r) { if (!r.ok) throw new Error(r.status); return r.text(); })
-      .then(function (t) { guideHtml = t; mount(t); })
+      .then(function (txt) { guideCache[id] = txt; mount(txt); })
       .catch(function () {
         app.innerHTML =
           '<h2>The study guide could not load</h2>' +
@@ -1019,24 +1071,26 @@ label.fld {
     function say(msg) { if (d) d.textContent = msg; }
 
     // On the web the sandbox restrictions do not apply, so just open it.
+    var file = pdfFile(CASE);
+
     if (!IN_ARTIFACT) {
-      window.open(PDF, "_blank", "noopener");
+      window.open(file, "_blank", "noopener");
       return;
     }
 
     say("Fetching the PDF…");
-    fetch(PDF)
+    fetch(file)
       .then(function (r) { if (!r.ok) throw new Error(r.status); return r.blob(); })
       .then(function (blob) {
         return window.claude.use("downloads").then(function (dl) {
           if (!dl) throw new Error("not granted");
-          return dl.save({ filename: "inguinal-hernia.pdf", data: blob });
+          return dl.save({ filename: file, data: blob });
         });
       })
-      .then(function () { say("Saved. 30 pages, the whole study guide laid out for paper."); })
+      .then(function () { say("Saved. The whole study guide laid out for paper."); })
       .catch(function () {
         say("Could not save it here, open the study guide above and print it instead, " +
-            "which produces the same 30 pages.");
+            "which produces the same pages.");
       });
   }
 
