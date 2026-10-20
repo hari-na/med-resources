@@ -79,7 +79,33 @@ ELLIPSIS = "… "
 CITE_RE = re.compile(r'<cite\s+class="src\s+([a-z0-9_-]+)"\s*>(.*?)</cite>', re.I | re.S)
 
 # A page reference: "p.594", "p.740-741" (any dash), optionally in a comma list.
-PAGE_REF_RE = re.compile(r"p\.\s*(\d+)\s*(?:[-‐-―]\s*(\d+))?")
+# A page clause: "p.594", "pp.434, 435", "p.740-741", "pp.1123, 1124, 1130".
+#
+# This used to require "p." in front of every number, so a chip written "pp.434, 435" resolved
+# to page 434 alone and the second page was silently dropped. 67 chips were written that way,
+# and because the dropped page was never looked up, the build still reported "unresolved
+# refs: 0" and exited 0. The pane then showed the reader less than the author had cited.
+PAGE_CLAUSE_RE = re.compile(r"pp?\.\s*([0-9]{1,4}(?:\s*(?:[-‐-―]|,)\s*[0-9]{1,4})*)")
+PAGE_RANGE_RE = re.compile(r"^\s*(\d+)\s*[-‐-―]\s*(\d+)\s*$")
+
+
+def pages_in(segment: str):
+    """Every printed page a chip segment refers to, in the order written."""
+    out = []
+    for clause in PAGE_CLAUSE_RE.findall(segment):
+        for part in clause.split(","):
+            part = part.strip()
+            if not part:
+                continue
+            m = PAGE_RANGE_RE.match(part)
+            if m:
+                first, last = int(m.group(1)), int(m.group(2))
+                if last < first:        # nonsense range; take the single page given
+                    last = first
+                out.extend(range(first, last + 1))
+            elif part.isdigit():
+                out.append(int(part))
+    return out
 
 # "ch.1" inside a trailing segment, e.g. "Das 38 p.602; ch.1 p.8" -> second chapter.
 CHAPTER_OVERRIDE_RE = re.compile(r"ch\.\s*(\d+)")
@@ -138,13 +164,8 @@ def parse_chip(book: str, text: str):
             continue
         if chapter not in chapters:
             chapters.append(chapter)
-        for start, end in PAGE_REF_RE.findall(segment):
-            first = int(start)
-            last = int(end) if end else first
-            if last < first:  # nonsense range; treat as the single page given
-                last = first
-            for page in range(first, last + 1):
-                refs.append((chapter, page))
+        for page in pages_in(segment):
+            refs.append((chapter, page))
 
     # Dedupe while preserving order (a chip may repeat a page).
     seen = set()
@@ -614,6 +635,7 @@ def main(argv=None):
     pages_out: dict[str, dict] = {}
     page_claims: dict[str, list[str]] = {}   # which sentences cite each page
     unresolved: list[str] = []          # (chip, reason)
+    parse_gaps: list[str] = []          # chips whose digits were not all used
     collisions: list[str] = []
     chip_count = 0
     unknown_books = set()
@@ -636,6 +658,21 @@ def main(argv=None):
 
             key = citation_key(book, text)
             refs, chapters = parse_chip(book, text)
+
+            # Every number in a chip is either its chapter or one of its pages. If some digit
+            # was never consumed, the chip was parsed by a rule that does not cover how it was
+            # written, and the reader quietly gets less than the author cited. That is exactly
+            # how "pp.434, 435" resolved to one page while the build reported no problems.
+            digits = set(DIGITS_RE.findall(text))
+            accounted = {str(p) for _c, p in refs} | set(chapters)
+            for a, b in zip([p for _c, p in refs], [p for _c, p in refs][1:]):
+                pass
+            # a range like p.740-741 expands to every page between, so account for the ends too
+            unaccounted = {d for d in digits if d not in accounted and int(d) not in
+                           {p for _c, p in refs}}
+            if unaccounted:
+                parse_gaps.append(f"{text}  [numbers not accounted for: "
+                                  f"{', '.join(sorted(unaccounted))}]")
             if not refs:
                 unresolved.append(f"{text}  [no page reference parsed]")
                 continue
@@ -713,6 +750,10 @@ def main(argv=None):
     print(f"unresolved refs     : {len(unresolved)}")
     for item in unresolved:
         print(f"  ! {item}")
+    if parse_gaps:
+        print(f"chips parsed partly : {len(parse_gaps)}")
+        for item in parse_gaps[:20]:
+            print(f"  ! {item}")
     if collisions:
         print(f"key collisions      : {len(collisions)}")
         for item in collisions:
@@ -720,6 +761,27 @@ def main(argv=None):
     if unknown_books:
         print(f"unknown book ids    : {', '.join(sorted(unknown_books))}")
     print(f"output              : {out_path} ({size:,} bytes, {size / 1024:.1f} KiB)")
+
+    # Exit non-zero on anything that means the citation layer is wrong, so a broken build
+    # cannot be published while reporting success. A run against missing sources used to exit
+    # 0 and write a perfectly valid file with zero citations in it.
+    problems = []
+    if unresolved:
+        problems.append(f"{len(unresolved)} unresolved reference(s)")
+    if parse_gaps:
+        problems.append(f"{len(parse_gaps)} chip(s) only partly parsed")
+    if collisions:
+        problems.append(f"{len(collisions)} key collision(s)")
+    if chip_count and not citations:
+        problems.append("no citation resolved at all")
+    if not pages_out and chip_count:
+        problems.append("no source pages resolved; are sources/ extracted?")
+
+    if problems and "--allow-problems" not in sys.argv:
+        print("\nREFUSING to certify this build: " + "; ".join(problems), file=sys.stderr)
+        print("Fix them, or pass --allow-problems if you know why they are there.",
+              file=sys.stderr)
+        return 1
     return 0
 
 

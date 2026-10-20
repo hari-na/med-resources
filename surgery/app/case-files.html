@@ -291,6 +291,14 @@ label.fld {
 .ask .row { margin-top: 0.6rem; }
 .asknote { font-size: 0.8rem; color: var(--ink-soft); margin: 0.6rem 0 0; min-height: 1.1em; }
 
+.storagewarn {
+  position: fixed; left: 0; right: 0; bottom: 0; z-index: 90;
+  background: var(--miss-dim); color: var(--ink);
+  border-top: 2px solid var(--miss);
+  padding: 0.8rem 1rem; font-size: 0.85rem; line-height: 1.45;
+  padding-bottom: max(0.8rem, env(safe-area-inset-bottom, 0px));
+}
+
 .who { display: flex; justify-content: space-between; align-items: center; gap: 0.8rem;
        font-size: 0.78rem; color: var(--ink-soft); margin-bottom: 1rem; }
 
@@ -512,11 +520,48 @@ label.fld {
 
   var LS = "surgery-case-files-v2";
 
+  // Storage used to fail in silence. A quota error, private browsing, or blocked site data
+  // made save() a no-op, and because pushAnswers reads the batch back out of storage, nothing
+  // was stored and nothing was sent either: a finished drill simply evaporated and the
+  // progress page said "nothing drilled yet". A parse error was worse, because store()
+  // returned {} and the next write replaced every student on the device.
+  var storeBroken = false;
+
   function store() {
-    try { return JSON.parse(localStorage.getItem(LS) || "{}"); } catch (e) { return {}; }
+    var raw = null;
+    try { raw = localStorage.getItem(LS); } catch (e) { storeBroken = true; return {}; }
+    if (!raw) return {};
+    try { return JSON.parse(raw); } catch (e) {
+      // keep the damaged blob rather than overwriting it; it may be recoverable by hand
+      try { localStorage.setItem(LS + ":corrupt:" + Date.now(), raw); } catch (e2) {}
+      storeBroken = true;
+      return {};
+    }
   }
+
   function save(o) {
-    try { localStorage.setItem(LS, JSON.stringify(o)); } catch (e) {}
+    try {
+      localStorage.setItem(LS, JSON.stringify(o));
+      storeBroken = false;
+      return true;
+    } catch (e) {
+      storeBroken = true;
+      warnStorage();
+      return false;
+    }
+  }
+
+  // Said once, plainly, and only when it is true. This is the opposite of the "saved on this
+  // device" footers: it is worth interrupting someone for, because their work is not being kept.
+  function warnStorage() {
+    if (document.getElementById("storagewarn")) return;
+    var el = document.createElement("div");
+    el.id = "storagewarn";
+    el.className = "storagewarn";
+    el.textContent = "This browser is not letting the page save anything, so your answers and "
+                   + "notes will be lost when you leave. Private browsing or full storage is "
+                   + "the usual cause.";
+    document.body.appendChild(el);
   }
   function keyOf(name) { return String(name).trim().toLowerCase().replace(/\s+/g, " "); }
 
@@ -933,6 +978,21 @@ label.fld {
   // ------------------------------------------------------------------ levels
 
   function screenLevels() {
+    // Only case 01 has a bank. Without this, "Start a session" on any other case ran the
+    // hernia questions and filed them under that case's id.
+    if (!CASE.bank) {
+      app.innerHTML =
+        '<div class="who"><span>' + esc(CASE.name) + '</span></div>' +
+        '<h2>No scored drill yet</h2>' +
+        '<p class="sub">This case has its study guide and its PDF. The scored viva, with ' +
+        'levels and progress, has only been written for Inguinal Hernia so far.</p>' +
+        '<div class="row"><button class="btn primary" id="read">Open the study guide</button>' +
+        '<button class="btn" id="back2">Back</button></div>' + askHtml();
+      on("read", "click", function () { replace(screenGuide); });
+      on("back2", "click", function () { back(); });
+      wireAsk();
+      return;
+    }
     var rec = studentRec(student.key);
     var hist = rec ? rec.sessions : [];
     var mine = hist.filter(function (s) { return s.caseId === CASE.id; });
@@ -972,7 +1032,7 @@ label.fld {
   function startDrill(lv, inPlace) {
     level = lv;
     queue = shuffle(BANK.filter(function (q) { return q.lv === lv; }).slice());
-    idx = 0; results = [];
+    idx = 0; results = []; results.recorded = false;
     // back from any question returns to the level list, not the previous question
     if (inPlace) replace(screenQuestion); else go(screenQuestion);
   }
@@ -1040,7 +1100,13 @@ label.fld {
       seen: results.map(function (r) { return r.id; }),
       at: new Date().toISOString()
     };
-    recordSession(rec);
+    // screenSummary is a render function and Back re-runs it, so recording here without a
+    // guard wrote the same session again on every return, inflating attempts and the
+    // completed-levels list and posting a duplicate row each time.
+    if (!results.recorded) {
+      results.recorded = true;
+      recordSession(rec);
+    }
 
     var html =
       '<div class="who"><span>Session complete · <b>' + esc(student.name) + '</b></span></div>' +

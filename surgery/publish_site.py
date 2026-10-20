@@ -21,6 +21,56 @@ ROOT = pathlib.Path(__file__).resolve().parent
 DIST = ROOT / "dist"
 
 # published name -> file produced by build.py
+
+CITE_KEY_RE = re.compile(r'<cite\s+class="src\s+([a-z0-9_-]+)"\s*>(.*?)</cite>', re.I | re.S)
+DIGITS_RE = re.compile(r"\d+")
+TAG_RE = re.compile(r"<[^>]+>")
+
+
+def check_citations(out: pathlib.Path) -> bool:
+    """Every chip in the published fragments must have an entry in citations.json.
+
+    The key the browser derives is the chip's book class plus every run of digits in its text,
+    joined by hyphens, which is what reader.js computes at runtime. Recomputing it here is the
+    only way to know the published pages and the published citation data agree.
+    """
+    cj = out / "citations.json"
+    if not cj.exists():
+        print("  !  citations.json is missing; refusing to publish", file=sys.stderr)
+        return False
+
+    data = json.loads(cj.read_text(encoding="utf-8"))
+    known = set(data.get("citations", {}))
+    if not known:
+        print("  !  citations.json contains no citations at all.", file=sys.stderr)
+        print("     That is what a build with no sources/ produces. Re-run "
+              "build_citations.py with the textbooks present.", file=sys.stderr)
+        return False
+
+    missing, chips = {}, 0
+    for frag in sorted(out.glob("*.body.html")):
+        html = frag.read_text(encoding="utf-8", errors="replace")
+        for cls, inner in CITE_KEY_RE.findall(html):
+            chips += 1
+            text = TAG_RE.sub("", inner).replace("&middot;", "\u00b7").replace("&amp;", "&")
+            key = "-".join([cls.lower()] + DIGITS_RE.findall(text))
+            if key not in known:
+                missing.setdefault(frag.name, []).append(text.strip())
+
+    if missing:
+        total = sum(len(v) for v in missing.values())
+        print(f"  !  {total} citation chip(s) have no entry in citations.json, so they would "
+              f"be dead on the site:", file=sys.stderr)
+        for name, items in list(missing.items())[:5]:
+            print(f"       {name}: {len(items)}, e.g. {items[0]!r}", file=sys.stderr)
+        print("     Re-run build_citations.py, then build.py, then publish again.",
+              file=sys.stderr)
+        return False
+
+    print(f"  citations: {chips} chips across {len(list(out.glob('*.body.html')))} cases, "
+          f"all resolve")
+    return True
+
 def site_files() -> dict:
     """What gets served, discovered from dist/ rather than listed by hand.
 
@@ -145,6 +195,15 @@ def main() -> int:
             print("     refusing to publish; Vercel would reject the build and keep "
                   "serving the previous deployment", file=sys.stderr)
             return 1
+
+    # Is the citation layer actually current for the pages being shipped?
+    #
+    # build.py never calls build_citations.py, and nothing compared the two, so editing a case
+    # and publishing left every new chip inert: the reader marks a chip clickable only when its
+    # key is in citations.json, and a missing key fails silently. Worse, a build run without
+    # sources/ writes a valid file with zero citations in it, which would publish happily.
+    if not check_citations(out):
+        return 1
     print(f"\nsite assembled in {out}")
     return 0
 
