@@ -406,9 +406,38 @@
     hlHead: "data-hl-head", hlWhy: "data-hl-why", hlTerm: "data-hl-term", recall: "data-recall"
   };
 
+  var RECALL_SEL = ".why, dl.findings dd, .viva .ans";
+
+  // In recall mode the answers are hidden until they are tapped, and tapping was the only
+  // way: no tabindex, no role, no key handler, so a reader working by keyboard could not
+  // use the mode at all. These become real buttons while the mode is on, and ordinary
+  // prose again when it is off.
+  function armRecall() {
+    if (!guide) return;
+    var on = state.recall === "on";
+    [].forEach.call(guide.querySelectorAll(RECALL_SEL), function (el) {
+      if (on) {
+        el.tabIndex = 0;
+        el.setAttribute("role", "button");
+        el.setAttribute("aria-expanded", el.classList.contains("revealed") ? "true" : "false");
+      } else {
+        el.removeAttribute("tabindex");
+        el.removeAttribute("role");
+        el.removeAttribute("aria-expanded");
+        el.classList.remove("revealed");
+      }
+    });
+  }
+
+  function toggleRecall(el) {
+    var shown = el.classList.toggle("revealed");
+    el.setAttribute("aria-expanded", shown ? "true" : "false");
+  }
+
   function applySettings() {
     if (!guide) return;
     Object.keys(ATTR).forEach(function (k) { guide.setAttribute(ATTR[k], state[k]); });
+    armRecall();
     if (state.face === "hyper" || state.face === "sans") ensureFont(state.face);
     syncHostTheme();
     layoutInk();
@@ -985,8 +1014,21 @@
     // recall mode: tap a hidden answer to show it
     guide.addEventListener("click", function (ev) {
       if (state.recall !== "on") return;
-      var t = ev.target.closest(".why, dl.findings dd, .viva .ans");
-      if (t && guide.contains(t)) t.classList.toggle("revealed");
+      // A drag to select text inside a revealed answer ends in a click, which hid it
+      // again, so the answer could not be highlighted or copied.
+      var sel = window.getSelection && window.getSelection();
+      if (sel && !sel.isCollapsed) return;
+      var t = ev.target.closest(RECALL_SEL);
+      if (t && guide.contains(t)) toggleRecall(t);
+    });
+
+    guide.addEventListener("keydown", function (ev) {
+      if (state.recall !== "on") return;
+      if (ev.key !== "Enter" && ev.key !== " ") return;
+      var t = ev.target.closest && ev.target.closest(RECALL_SEL);
+      if (!t || !guide.contains(t)) return;
+      ev.preventDefault();
+      toggleRecall(t);
     });
 
     // tapping a highlight removes it; tapping a note opens it

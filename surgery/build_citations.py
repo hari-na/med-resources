@@ -356,13 +356,23 @@ def clean_text(raw: str, page: int | None, heads: set, book_heads: set = frozens
     out = []
     for i, line in enumerate(kept):
         nxt = kept[i + 1] if i + 1 < len(kept) else ""
-        # The PDFs break a word at the line end with a soft hyphen rather than a
-        # real one, and that is only ever a hyphenation point, so rejoin it
-        # whatever follows. Removing it later instead left the halves separated by
-        # the line's own space, which is how "essential" reached the published
-        # excerpts as "essen tial" in all three books.
+        # The PDFs break a word at the line end with a soft hyphen rather than a real
+        # one. Removing it later instead left the halves separated by the line's own
+        # space, which is how "essential" reached the published excerpts as
+        # "essen tial" in all three books.
+        #
+        # Usually the soft hyphen is only a typesetting break and the halves join up.
+        # Sometimes it is a real hyphen that happened to fall at the line end, and
+        # joining those gave "longterm" and "yearold". The books themselves settle it:
+        # if the joined form appears nowhere in them while both halves are ordinary
+        # words, the hyphen was real. That is 149 of 8,673 breaks.
         if line.endswith("­"):
-            out.append(line[:-1])
+            head = re.search(r"([A-Za-z]+)$", line[:-1])
+            tail = re.match(r"([A-Za-z]+)", nxt)
+            if head and tail and real_hyphen(head.group(1), tail.group(1)):
+                out.append(line[:-1] + "-")
+            else:
+                out.append(line[:-1])
             continue
         # Rejoin a word hyphenated across the line break ("paraum-" + "bilical").
         # Only when a letter precedes the hyphen and the continuation starts
@@ -384,6 +394,31 @@ def clean_text(raw: str, page: int | None, heads: set, book_heads: set = frozens
     text = re.sub(r"\(\s+", "(", text)
     text = re.sub(r"\s+\)", ")", text)
     return text.strip()
+
+
+
+_VOCAB = None
+
+
+def book_vocabulary() -> collections.Counter:
+    """Every word in the three books, used to tell a hyphenation break from a real hyphen."""
+    global _VOCAB
+    if _VOCAB is None:
+        _VOCAB = collections.Counter()
+        word = re.compile(r"[a-z]{2,}")
+        root = os.path.dirname(os.path.abspath(__file__))
+        for path in glob.glob(os.path.join(root, "sources", "*", "*.txt")):
+            with open(path, encoding="utf-8", errors="replace") as fh:
+                _VOCAB.update(word.findall(fh.read().lower()))
+    return _VOCAB
+
+
+def real_hyphen(head: str, tail: str) -> bool:
+    """True when the hyphen was part of the word rather than a line break."""
+    v = book_vocabulary()
+    return (v.get((head + tail).lower(), 0) == 0
+            and v.get(head.lower(), 0) >= 3
+            and v.get(tail.lower(), 0) >= 3)
 
 
 def tail_context(text: str, n=CONTEXT_CHARS) -> str:
