@@ -22,7 +22,7 @@ for book,d in DIRS.items():
 # which then fails to resolve with a nonsense key. Cheap to catch here.
 
 TAGS = ('div','dl','dt','dd','details','summary','span','table','tr','td','th',
-        'cite','b','i','tbody','thead','footer','header','p')
+        'cite','b','i','tbody','thead','footer','header','p','strong','em','u')
 
 
 def check_tags():
