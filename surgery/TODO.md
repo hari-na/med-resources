@@ -95,3 +95,15 @@ the book contradicts elsewhere is reconciled to the book, and said to be a typo.
 
 - [ ] Rebuild, verify, publish, confirm live.
 - [ ] Start a fresh blank-slate review and repeat.
+
+---
+
+## Blocked on you
+
+- [ ] **`wrangler` auth expired mid-session** (`code: 7403`, "the given account is not valid or
+      is not authorized"). Re-run `npm exec wrangler login` from `C:\Users\swaac\Coding\rx\worker`.
+      Until then I cannot deploy the Worker or run SQL. Two things are waiting on it:
+      - the clock-skew clamp on the Worker (reject or clamp a client timestamp far in the
+        future, and report a discarded write honestly instead of answering `ok`);
+      - clearing the underscore-prefixed test rows (`_pulltest` and friends) from D1. They are
+        test identities, not real students, so they are harmless meanwhile.

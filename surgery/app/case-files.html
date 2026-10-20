@@ -570,6 +570,44 @@ label.fld {
     return out;
   }
 
+  // Reading the history back, which never happened before.
+  //
+  // Answers only ever went up. A second device, or the same device after iOS evicted its
+  // storage, showed an empty progress page even though the rows were sitting in the database,
+  // and worse, its first answer posted attempts:1 over the server's attempts:12 and destroyed
+  // the history, because the worker compares timestamps and that write was genuinely newer.
+  //
+  // Pulling on sign-in fixes both: the device starts from what the server holds, so there is
+  // nothing to overwrite. Merging is per question and takes whichever side was written last.
+  function pullAnswers(done) {
+    if (!SYNC || !student.key) { if (done) done(); return; }
+    fetch(SYNC + "/api/answers?student=" + encodeURIComponent(student.key))
+      .then(function (r) { return r.ok ? r.json() : null; })
+      .then(function (j) {
+        if (!j || !j.answers) return;
+        var s = store();
+        s.students = s.students || {};
+        var rec = s.students[student.key] || { name: student.name, sessions: [] };
+        rec.questions = rec.questions || {};
+        var merged = 0;
+        j.answers.forEach(function (a) {
+          var k = qKey(a.caseId, a.questionId);
+          var mine = rec.questions[k];
+          if (!mine || !mine.at || (a.at && a.at > mine.at)) {
+            rec.questions[k] = { t: a.type, n: a.attempts, ok: a.correct,
+                                 last: a.lastOk ? 1 : 0, at: a.at, synced: true };
+            merged++;
+          }
+        });
+        if (merged) {
+          s.students[student.key] = rec;
+          save(s);
+        }
+      })
+      .catch(function () { /* offline: the local copy stands, and pushes when it can */ })
+      .then(function () { if (done) done(); });
+  }
+
   var answerTimer = null;
 
   function pushAnswersLater() {
@@ -1037,6 +1075,12 @@ label.fld {
   // ------------------------------------------------------------------ progress
 
   function screenProgress() {
+    // a pull may still be in flight from sign-in; repaint once it lands
+    if (SYNC && student.key && !screenProgress._pulled) {
+      screenProgress._pulled = true;
+      pullAnswers(function () { if (stack[stack.length - 1] === screenProgress) paint(); });
+    }
+
     var rec = studentRec(student.key);
     var sessions = (rec ? rec.sessions : []).filter(function (s) { return s.caseId === CASE.id; });
     sessions = sessions.slice().sort(function (a, b) { return new Date(b.at) - new Date(a.at); });
@@ -1243,8 +1287,12 @@ label.fld {
 
     fetch(guideBodyFile(CASE))
       .then(function (r) { if (!r.ok) throw new Error(r.status); return r.text(); })
-      .then(function (txt) { guideCache[id] = txt; mount(txt); })
-      .catch(function () {
+      .then(function (txt) { guideCache[id] = txt; return txt; })
+      // mount separately: chaining it meant any error it threw was reported as "the request
+      // did not come back", which sent me hunting a network fault for a plain ReferenceError
+      .then(function (txt) { mount(txt); })
+      .catch(function (err) {
+        if (window.console && console.error) console.error("guide failed to open:", err);
         app.innerHTML =
           '<h2>The study guide could not load</h2>' +
           '<p class="sub">It is published alongside this page but the request did not ' +
@@ -1320,6 +1368,10 @@ label.fld {
       st.lastStudent = student.key;
       save(st);
       if (window.Reader && window.Reader.setStudent) window.Reader.setStudent(student.key);
+      // take what the server already has before this device writes anything, so a fresh or
+      // evicted browser cannot push its empty counters over a real history
+      pullAnswers();
+      sendAsks();
       reset(screenIndex);
     }
     on("go", "click", function () { enter(document.getElementById("nm").value); });

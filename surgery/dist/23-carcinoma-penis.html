@@ -2077,9 +2077,30 @@ body.guide { margin: 0; -webkit-text-size-adjust: 100%; }
   // work the server has not got yet, which is what makes a retry possible at all: without it
   // a push that failed, or one that was overtaken while in flight, was simply lost from the
   // remote copy with nothing left to say so.
-  var syncTimer = null, syncing = false, syncedAt = 0, retryMs = 4000;
+  // Sync state belongs to one (student, document) pair, not to the module.
+  //
+  // It used to be three globals. Open guide A, go back, open guide B before A's GET returns,
+  // and A's response was applied to B: B's notes were replaced by A's, written to storage,
+  // and pushed to the server as B. That was reproduced, not theorised. syncedAt leaking the
+  // other way was quieter but worse, because B could read as "already synced" on a value that
+  // described A, and B's real work then never left the device.
+  //
+  // So every request captures the pair it was issued for and drops its own result if the
+  // reader has moved on.
+  var syncTimer = null;
+  var sync = { key: "", syncing: false, syncedAt: 0, retryMs: 4000 };
 
   function syncOn() { return !!SYNC_ENDPOINT && student && student !== "_"; }
+
+  function syncKey() { return student + "::" + DOC; }
+
+  function syncCtx() {
+    if (sync.key !== syncKey()) {
+      sync = { key: syncKey(), syncing: false, syncedAt: 0, retryMs: 4000 };
+      clearTimeout(syncTimer);
+    }
+    return sync;
+  }
 
   function syncSay(msg) {
     var el2 = document.getElementById("rdrSyncSay");
@@ -2089,19 +2110,21 @@ body.guide { margin: 0; -webkit-text-size-adjust: 100%; }
   // pull once when a guide opens, and adopt the remote copy only if it is newer
   function syncPull() {
     if (!syncOn()) return Promise.resolve(false);
+    var c = syncCtx(), mine = c.key;
     var u = SYNC_ENDPOINT + "/api/state?student=" + encodeURIComponent(student) +
             "&doc=" + encodeURIComponent(DOC);
     return fetch(u, { method: "GET" })
       .then(function (r) { return r.ok ? r.json() : null; })
       .then(function (j) {
+        if (mine !== syncKey()) return false;          // the reader moved on; not ours to apply
         if (!j || !j.found || !j.state) {
           // the worker has nothing for this document, so everything local is unsent
           syncLater(600);
           return false;
         }
-        syncedAt = j.updatedAt || 0;        // what the server demonstrably holds
-        var mine = state.updatedAt || 0;
-        if (!(j.updatedAt > mine)) {
+        c.syncedAt = j.updatedAt || 0;                 // what the server demonstrably holds
+        var local = state.updatedAt || 0;
+        if (!(j.updatedAt > local)) {
           // ours is the same or newer: push anything it has not seen, instead of sitting on
           // work that would otherwise only leave this device at the next edit
           syncLater(600);
@@ -2116,15 +2139,19 @@ body.guide { margin: 0; -webkit-text-size-adjust: 100%; }
         syncSay("Picked up newer work from another device.");
         return true;
       })
-      .catch(function () { syncLater(retryMs); return false; });
+      .catch(function () {
+        if (mine === syncKey()) syncLater(sync.retryMs);
+        return false;
+      });
   }
 
-  function syncDirty() { return (state.updatedAt || 0) > syncedAt; }
+  function syncDirty() { return (state.updatedAt || 0) > syncCtx().syncedAt; }
 
   function syncPush() {
     if (!syncOn() || !syncDirty()) return;
-    if (syncing) { syncLater(400); return; }   // overtaken; come back for the newer state
-    syncing = true;
+    var c = syncCtx(), mine = c.key;
+    if (c.syncing) { syncLater(400); return; }   // overtaken; come back for the newer state
+    c.syncing = true;
 
     // snapshot the stamp being sent: edits can land while this is in flight, and confirming
     // those as synced because an older push succeeded is how work goes missing
@@ -2136,22 +2163,37 @@ body.guide { margin: 0; -webkit-text-size-adjust: 100%; }
       headers: { "content-type": "application/json" },
       body: JSON.stringify({ state: state, updatedAt: at })
     }).then(function (r) {
-      syncing = false;
-      if (r.ok) {
-        syncedAt = Math.max(syncedAt, at);
-        retryMs = 4000;
+      if (mine !== syncKey()) return;
+      c.syncing = false;
+      if (!r.ok) {
         syncSay("");
-        if (syncDirty()) syncLater(400);       // changed again while in flight
-      } else {
-        syncSay("");
-        syncLater(retryMs);                    // server said no; try again later
-        retryMs = Math.min(retryMs * 2, 60000);
+        syncLater(c.retryMs);                    // server said no; try again later
+        c.retryMs = Math.min(c.retryMs * 2, 60000);
+        return;
       }
+      return r.json().then(function (j) {
+        if (mine !== syncKey()) return;
+        // The worker answers ok even when it discarded the write as stale, and tells us the
+        // stamp it actually holds. Believing the status alone is how a device with a wrong
+        // clock, or one racing a second device, marked itself synced while the server kept
+        // someone else's copy. Only treat it as stored if the server agrees it is.
+        var stored = j && j.updatedAt;
+        if (stored && stored !== at) {
+          c.syncedAt = stored;
+          syncLater(1200);                       // ours lost; the pull on next open reconciles
+          return;
+        }
+        c.syncedAt = Math.max(c.syncedAt, at);
+        c.retryMs = 4000;
+        syncSay("");
+        if (syncDirty()) syncLater(400);         // changed again while in flight
+      });
     }).catch(function () {
-      syncing = false;
-      syncSay("");                             // offline is normal; say nothing
-      syncLater(retryMs);
-      retryMs = Math.min(retryMs * 2, 60000);
+      if (mine !== syncKey()) return;
+      c.syncing = false;
+      syncSay("");                               // offline is normal; say nothing
+      syncLater(c.retryMs);
+      c.retryMs = Math.min(c.retryMs * 2, 60000);
     });
   }
 
