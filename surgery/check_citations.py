@@ -15,6 +15,33 @@ for book,d in DIRS.items():
         if not m: continue
         nums=[int(x) for x in re.findall(r'\[\[ book p\.(\d+)',open(p,encoding='utf-8',errors='replace').read())]
         if nums: ranges[(book,int(m.group(1)))]=(min(nums),max(nums),set(nums))
+# ---------------------------------------------------------------------------
+# Tag balance
+# ---------------------------------------------------------------------------
+# An unclosed </cite> silently swallows the following prose into a citation chip,
+# which then fails to resolve with a nonsense key. Cheap to catch here.
+
+TAGS = ('div','dl','dt','dd','details','summary','span','table','tr','td','th',
+        'cite','b','i','tbody','thead','footer','header','p')
+
+
+def check_tags():
+    bad = 0
+    for g in sorted(glob.glob('reference/*.html')):
+        probs = []
+        html = open(g, encoding='utf-8').read()
+        for t in TAGS:
+            o = len(re.findall(r'<' + t + r'[ >]', html))
+            c = len(re.findall(r'</' + t + r'>', html))
+            if o != c and t != 'p':   # <p> is legitimately left unclosed in places
+                probs.append(f'{t}: {o} open vs {c} close')
+        if probs:
+            bad += len(probs)
+            print(f'  ! {os.path.basename(g)}: ' + '; '.join(probs))
+    print(f'tag imbalances: {bad}')
+    return bad
+
+
 CITE=re.compile(r'<cite\s+class="src\s+([a-z]+)"\s*>(.*?)</cite>',re.S)
 bad=0
 for g in sorted(glob.glob('reference/*.html')):
@@ -42,3 +69,5 @@ for g in sorted(glob.glob('reference/*.html')):
             if pg not in r[2]:
                 print(f'  ! {os.path.basename(g)}: {book} ch.{chap} p.{pg} outside chapter range {r[0]}-{r[1]}  [{txt}]'); bad+=1
 print(f'\nchapter/page mismatches: {bad}')
+print()
+check_tags()
