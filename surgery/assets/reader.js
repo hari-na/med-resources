@@ -132,7 +132,7 @@
       if (r.ok) {
         syncedAt = Math.max(syncedAt, at);
         retryMs = 4000;
-        syncSay(syncDirty() ? "" : "Saved to your name.");
+        syncSay("");
         if (syncDirty()) syncLater(400);       // changed again while in flight
       } else {
         syncSay("");
@@ -481,14 +481,55 @@
             Math.round(guide.getBoundingClientRect().width)].join("|");
   }
 
-  var MAX_CANVAS_PX = 60000000;   // browsers refuse to allocate much beyond this
+  // Two separate ceilings, and the old code only knew about one of them.
+  //
+  // Area was capped at 60M, but a browser also refuses a canvas whose *side* is too long, and
+  // a long case is far taller than it is wide. Case 01 at 320px is about 287 x 69,679, which
+  // is only 20M pixels and sails past an area check, while 69,679 exceeds Chrome's 65,535
+  // limit outright: Chrome then renders its broken-canvas placeholder over the guide and the
+  // page goes white. The text was intact underneath the whole time.
+  //
+  // The old fallback was worse than nothing, too. It truncated the canvas height, so on any
+  // guide over the cap the lower part of the page silently could not be inked.
+  //
+  // So nothing is truncated now. The canvas keeps the document's full CSS size and the
+  // backing store is scaled to fit inside both ceilings, with the context transformed to
+  // match. Strokes stay in document coordinates and keep working. Where there is headroom the
+  // scale goes the other way, up to devicePixelRatio, which is also what makes ink sharp on a
+  // retina screen instead of soft.
+  var MAX_CANVAS_DIM = 32767;     // comfortably inside Chrome's 65535 and Safari's lower bound
+  var MAX_CANVAS_PX = 16000000;   // iOS Safari refuses much beyond ~16.7M
+
+  function inkScale(w, h) {
+    var s = window.devicePixelRatio || 1;
+    s = Math.min(s, MAX_CANVAS_DIM / Math.max(1, w), MAX_CANVAS_DIM / Math.max(1, h));
+    s = Math.min(s, Math.sqrt(MAX_CANVAS_PX / Math.max(1, w * h)));
+    return Math.max(0.08, s);
+  }
 
   function sizeCanvas(c, w, h, left, top) {
-    c.width = w; c.height = h;
+    // CSS size is always the true size, so stroke coordinates remain document pixels
     c.style.width = w + "px";
     c.style.height = h + "px";
     c.style.left = left + "px";
     c.style.top = top + "px";
+
+    var s = inkScale(w, h);
+    c.width = Math.max(1, Math.round(w * s));
+    c.height = Math.max(1, Math.round(h * s));
+    c.inkScale = s;
+    var g = c.getContext("2d");
+    if (g) g.setTransform(s, 0, 0, s, 0, 0);
+    return s;
+  }
+
+  // clearRect runs through the transform, so clearing has to be done in untransformed space
+  function wipe(c, g) {
+    if (!c || !g) return;
+    g.save();
+    g.setTransform(1, 0, 0, 1, 0, 0);
+    g.clearRect(0, 0, c.width, c.height);
+    g.restore();
   }
 
   function layoutInk() {
@@ -497,7 +538,6 @@
     var r = wrap.getBoundingClientRect();
     var w = Math.round(r.width);
     var h = Math.round(wrap.scrollHeight || r.height);
-    if (w * h > MAX_CANVAS_PX) h = Math.floor(MAX_CANVAS_PX / Math.max(1, w));
     sizeCanvas(canvas, w, h, wrap.offsetLeft, wrap.offsetTop);
     sizeCanvas(live, w, h, wrap.offsetLeft, wrap.offsetTop);
     redrawInk();
@@ -521,7 +561,7 @@
 
   function redrawInk() {
     if (!ctx) return;
-    ctx.clearRect(0, 0, canvas.width, canvas.height);
+    wipe(canvas, ctx);
     // highlighter first, so pen marks sit on top of it rather than under
     for (var i = 0; i < state.ink.length; i++) {
       if (state.ink[i].k === "hl") pathStroke(ctx, state.ink[i]);
@@ -643,7 +683,7 @@
     if (!stroke) return;          // a move with no stroke in progress
     stroke.pts.push.apply(stroke.pts, pts);
     // the whole stroke, redrawn on the live layer only, so alpha applies once
-    lctx.clearRect(0, 0, live.width, live.height);
+    wipe(live, lctx);
     pathStroke(lctx, stroke);
   }
 
@@ -658,7 +698,7 @@
       updateLock();
     }
     stroke = null;
-    if (lctx) lctx.clearRect(0, 0, live.width, live.height);
+    wipe(live, lctx);
     redrawInk();
   }
 

@@ -189,39 +189,14 @@ LIGATURES = {
 
 # Bailey & Love 28e separately needs repairing. Its embedded font maps the ff/fi/fl ligature
 # glyphs to a bare "f", so the second letter is lost before any Unicode normalisation can see
-# a ligature at all: "fistula" extracts as "fstula", "superficial" as "superfcial". It is
-# confined to that book, and it was showing up 400-odd times across the citation panes.
+# a ligature at all: "fistula" extracts as "fstula", "FNAC" as "fnac".
 #
-# Every entry here is a non-word in English, so an exact whole-word match cannot damage real
-# text. Anything ambiguous is deliberately left alone and simply stays slightly wrong.
-DROPPED_LIGATURE = {
-    "afected": "affected", "afects": "affects", "artifcial": "artificial",
-    "benefcial": "beneficial", "beneft": "benefit", "benefts": "benefits",
-    "classifcation": "classification", "classifed": "classified",
-    "confrm": "confirm", "confrmed": "confirmed", "defciency": "deficiency",
-    "defcit": "deficit", "defne": "define", "defned": "defined",
-    "diferent": "different", "diferentiation": "differentiation",
-    "dificult": "difficult", "dificulty": "difficulty", "difuse": "diffuse",
-    "difusion": "diffusion", "efect": "effect", "efective": "effective",
-    "efectively": "effectively", "efects": "effects", "efusion": "effusion",
-    "fap": "flap", "faps": "flaps", "fexion": "flexion", "fexor": "flexor",
-    "fbrosis": "fibrosis", "fbrous": "fibrous", "fbrin": "fibrin",
-    "fstula": "fistula", "fstulae": "fistulae", "fstulas": "fistulas",
-    "fxation": "fixation", "fxed": "fixed", "fnd": "find", "fndings": "findings",
-    "frst": "first", "fuid": "fluid", "fuids": "fluids",
-    "infammation": "inflammation", "infammatory": "inflammatory",
-    "infltration": "infiltration", "infltrating": "infiltrating",
-    "insufcient": "insufficient", "ofen": "often", "ofer": "offer",
-    "ofers": "offers", "profle": "profile", "refux": "reflux",
-    "signifcant": "significant", "signifcantly": "significantly",
-    "specifc": "specific", "specifcally": "specifically",
-    "specifcity": "specificity", "stif": "stiff", "stifness": "stiffness",
-    "sufcient": "sufficient", "suficient": "sufficient",
-    "superfcial": "superficial", "superfcially": "superficially",
-    "identifed": "identified", "modifed": "modified", "notifed": "notified",
-    "simplifed": "simplified", "verifed": "verified", "magnifcation": "magnification",
-    "calcifcation": "calcification", "ossifcation": "ossification",
-}
+# The table is derived, not hand-written, by derive_ligatures.py: a Bailey word is repaired
+# only when it is not itself a known word and exactly one restored letter turns it into one,
+# judged against the vocabulary of S Das and SRB, which do not have the fault. The earlier
+# hand-written list of ~80 words missed more than six thousand occurrences, "fstula" among
+# them 241 times, and was checked against itself so the gap never showed.
+from ligature_repairs import LIGATURE_REPAIRS as DROPPED_LIGATURE
 
 DROPPED_LIGATURE_RE = re.compile(
     r"\b(" + "|".join(sorted(DROPPED_LIGATURE, key=len, reverse=True)) + r")\b",

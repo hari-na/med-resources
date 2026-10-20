@@ -131,12 +131,44 @@ def render_pdfs(pages) -> None:
 # published page will look like, that skeleton has to be reproduced here. Serve dist/preview/
 # over http and the relative links resolve exactly as they do once published.
 
-SKELETON_HEAD = (
-    "<!doctype html><html><head><meta charset=utf8>"
-    '<meta name=viewport content="width=device-width,initial-scale=1,viewport-fit=cover">'
-    "<style>:root{color-scheme:light}body{margin:0;font:14px system-ui}"
-    "img{max-width:100%}[hidden]{display:none!important}</style></head><body>"
-)
+# The document wrapper for anywhere this page is served as a page in its own right.
+#
+# It used to be applied to the local preview only, while the copy published to the website got
+# none of it. So every local test ran against a page with a correct viewport and the live site
+# had no viewport tag at all: phones laid it out at about 980px and shrank it to roughly 38%,
+# and every `max-width:640px` rule in the stylesheet was dead. That is the whole of the
+# "it looks wrong on iPhone" report.
+#
+# `viewport-fit=cover` is on so the `env(safe-area-inset-*)` rules already in the stylesheet
+# start working on a notched phone; the hub's own padding accounts for the top inset.
+def skeleton(title: str = "Surgery Case Files") -> str:
+    return (
+        '<!doctype html>\n<html lang="en">\n<head>\n'
+        '<meta charset="utf-8">\n'
+        '<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">\n'
+        '<meta name="color-scheme" content="light dark">\n'
+        f"<title>{title}</title>\n"
+        "<style>:root{color-scheme:light dark}body{margin:0;font:14px system-ui}"
+        "img{max-width:100%}[hidden]{display:none!important}</style>\n"
+        "</head>\n<body>\n"
+    )
+
+
+TITLE_RE = re.compile(r"<title>(.*?)</title>", re.I | re.S)
+
+
+def as_document(body_html: str) -> str:
+    """Wrap the artifact body in a real document, lifting its <title> into the head."""
+    m = TITLE_RE.search(body_html)
+    title = m.group(1).strip() if m else "Surgery Case Files"
+    if m:
+        body_html = body_html[:m.start()] + body_html[m.end():]
+    # the claude-only meta means nothing to a browser and is misleading in served HTML
+    body_html = re.sub(r'<meta name="claude:[^>]*>\s*', "", body_html, count=1)
+    return skeleton(title) + body_html + "\n</body>\n</html>\n"
+
+
+SKELETON_HEAD = skeleton()
 
 def sidecars() -> dict:
     """published name -> file in dist/, discovered rather than listed.
@@ -175,7 +207,14 @@ def build_artifact() -> pathlib.Path | None:
     art.mkdir(parents=True, exist_ok=True)
     out = art / "case-files.html"
     out.write_text(html, encoding="utf-8")
+
+    # The same page as a standalone document, which is what the website serves. Kept separate
+    # so the artifact copy stays a bare fragment for the artifact viewer's own skeleton.
+    doc = art / "index.html"
+    doc.write_text(as_document(html), encoding="utf-8")
+
     print(f"  artifact page -> dist/artifact/{out.name}  ({len(html) // 1024} KB)")
+    print(f"  served document -> dist/artifact/{doc.name}  (doctype + viewport)")
     return out
 
 
@@ -185,10 +224,8 @@ def build_preview() -> None:
         return
     preview = OUT / "preview"
     preview.mkdir(parents=True, exist_ok=True)
-    (preview / "index.html").write_text(
-        SKELETON_HEAD + app.read_text(encoding="utf-8") + "</body></html>",
-        encoding="utf-8",
-    )
+    # byte-identical to what the website serves, so a local test means something
+    (preview / "index.html").write_bytes((OUT / "artifact" / "index.html").read_bytes())
     missing = []
     for published, built in sidecars().items():
         src = OUT / built

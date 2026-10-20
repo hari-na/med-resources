@@ -560,15 +560,91 @@ body.guide { margin: 0; -webkit-text-size-adjust: 100%; }
 }
 .rdr-pal .rdr-sw.on { border-color: var(--ink, #222); }
 
+/* ---------- the rail on a phone ----------
+   The row of tools plus the colour palette comes to about 416px of content. Centring that
+   with left:50% and translateX(-50%) on a 375px screen pushed the Reading settings button off
+   the left edge and the last swatches off the right, so the one control that reaches text
+   size, theme and backup was unreachable on exactly the devices this is read on.
+   It is pinned to both edges now, and scrolls horizontally if the tools still do not fit. */
 @media (max-width: 640px) {
   .rdr-rail {
-    right: auto; left: 50%; top: auto;
-    bottom: max(10px, env(safe-area-inset-bottom, 0px));
-    transform: translateX(-50%);
-    flex-direction: row; align-items: center;
+    right: max(8px, env(safe-area-inset-right, 0px));
+    left: max(8px, env(safe-area-inset-left, 0px));
+    top: auto;
+    bottom: max(8px, env(safe-area-inset-bottom, 0px));
+    transform: none;
+    flex-direction: row;
+    align-items: center;
+    justify-content: flex-start;
+    gap: 2px;
+    overflow-x: auto;
+    overscroll-behavior-x: contain;
+    scrollbar-width: none;
+    -webkit-overflow-scrolling: touch;
+  }
+  .rdr-rail::-webkit-scrollbar { display: none; }
+  .rdr-rail button { flex: 0 0 auto; }
+  .rdr-pal { flex-direction: row; margin: 0 0 0 4px; flex: 0 0 auto;
+             padding: 0 0 0 6px; border-top: none; border-left: 1px solid var(--rule, #ddd); }
+}
+
+/* A landscape phone is wider than 640px, so it used to get the tall vertical rail: about
+   416px of buttons in a 390px-high window, with the top and bottom items simply unreachable.
+   Height, not width, is what decides this. */
+@media (max-height: 520px) and (orientation: landscape) {
+  .rdr-rail {
+    right: max(8px, env(safe-area-inset-right, 0px));
+    left: max(8px, env(safe-area-inset-left, 0px));
+    top: auto;
+    bottom: max(8px, env(safe-area-inset-bottom, 0px));
+    transform: none;
+    flex-direction: row; align-items: center; justify-content: flex-start;
+    overflow-x: auto; scrollbar-width: none;
   }
   .rdr-pal { flex-direction: row; margin: 0 0 0 4px;
              padding: 0 0 0 6px; border-top: none; border-left: 1px solid var(--rule, #ddd); }
+}
+
+/* ---------- touch targets ----------
+   Everything the reader taps was built for a mouse: 34px tool buttons, 22px swatches, and
+   citation chips about 16px tall, which are the main interaction in the guide. The visual
+   size stays as designed; the hit area is grown to 44px underneath it. */
+@media (pointer: coarse) {
+  .rdr-rail button,
+  .rdr-erase-modes button,
+  .rdr-bubble button,
+  .rdr-seg button,
+  .rdr-ne-row button,
+  .rdr-close,
+  .rdr-src-close,
+  .rdr-clear { min-width: 44px; min-height: 44px; }
+
+  /* the swatch gets its 44px from padding alone; the generic minimum above would stack with
+     it and make each colour a 70px slab, which pushes the tools off a phone again */
+  .rdr-pal .rdr-sw {
+    width: 22px; height: 22px; min-width: 0; min-height: 0;
+    padding: 11px; background-clip: content-box;
+    box-sizing: content-box;
+  }
+
+  .guide cite.src[data-cite-key],
+  .rdr-note { position: relative; }
+  .guide cite.src[data-cite-key]::after,
+  .rdr-note::after {
+    content: ""; position: absolute; inset: -14px -8px;
+  }
+
+  .guide .viva summary,
+  .guide details.conflict > summary { min-height: 44px; }
+}
+
+/* Hover belongs to pointers. On a touch screen these stick after a tap and leave a button
+   looking permanently active. */
+@media (hover: none) {
+  .rdr-rail button:hover,
+  .rdr-seg button:hover,
+  .guide details.conflict > summary:hover { background: none; }
+  .rdr-rail button:hover { color: var(--ink-soft, #666); border-color: transparent; }
 }
 
 /* ---------- selection bubble ---------- */
@@ -673,8 +749,23 @@ body.guide { margin: 0; -webkit-text-size-adjust: 100%; }
 }
 .rdr-ne-head { font-size: 0.68rem; font-weight: 700; letter-spacing: 0.1em;
                text-transform: uppercase; color: var(--accent, #005f73); margin-bottom: 0.5rem; }
+
+/* Centred vertically, the Save, Cancel and Delete row lands underneath the on-screen keyboard
+   on a phone, so the editor can be typed into but not finished. Anchoring it to the top keeps
+   the whole dialog in the part of the screen the keyboard leaves alone. */
+@media (max-width: 640px), (max-height: 560px) {
+  .rdr-noteedit {
+    top: max(10px, env(safe-area-inset-top, 0px));
+    transform: translateX(-50%);
+    max-height: 70dvh;
+    overflow-y: auto;
+    overscroll-behavior: contain;
+  }
+}
 .rdr-noteedit textarea {
-  width: 100%; font: inherit; font-size: 0.92rem;
+  /* 16px exactly. Anything smaller and iOS Safari zooms the page in on focus and leaves it
+     zoomed, which on a phone means the note editor you are typing into walks off screen. */
+  width: 100%; font: inherit; font-size: 16px;
   color: var(--ink, #222); background: var(--bg, transparent);
   border: 1px solid var(--rule, #ddd); border-radius: 6px;
   padding: 0.6rem 0.7rem; resize: vertical;

@@ -1,0 +1,3570 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Gastric Outlet Obstruction, Long Case</title>
+<style>
+/* Stylesheet for the surgery reference documents.
+
+   Every rule is scoped under .guide, so the same sheet works in two places: the standalone
+   document (where <body class="guide">) and inside the Claude artifact (where the guide is a
+   <div class="guide"> alongside the app's own interface).
+
+   Everything a reader might want to change is a token on .guide, switched by data attributes.
+   Students read very differently from one another, line length, type size and contrast are
+   not decoration here, they decide whether someone can sit with a document for an hour. */
+
+/* ============================== tokens ============================== */
+
+.guide {
+  /* colour: light is the base; the themes below redefine these */
+  --paper:       #fbfaf7;
+  --ink:         #1b1f22;
+  --ink-soft:    #5a6269;
+  --rule:        #ddd8ce;
+  --accent:      #005f73;
+  --accent-soft: #e3eef0;
+  --flag:        #8a5a2b;
+  --flag-soft:   #f6ece0;
+  --cite:        #7d8891;
+  --mark:        #fff3bf;
+  --bl:          #5b4a8a;
+  --srb:         #1f6b5c;
+
+  /* typography */
+  --face-body: "Spectral", Georgia, "Times New Roman", serif;
+  --face-ui:  "Inter", system-ui, -apple-system, "Segoe UI", sans-serif;
+  --fs:       17px;
+  --lh:       1.62;
+  --track:    0em;
+
+  /* measure */
+  --measure: 42rem;
+
+  font-family: var(--face-body);
+  font-size: var(--fs);
+  line-height: var(--lh);
+  letter-spacing: var(--track);
+  color: var(--ink);
+  background: var(--paper);
+  position: relative;          /* the ink canvas anchors to this */
+}
+
+/* ---------- reader: line width ---------- */
+.guide[data-width="narrow"] { --measure: 34rem; }
+.guide[data-width="medium"] { --measure: 42rem; }
+.guide[data-width="wide"]   { --measure: 54rem; }
+.guide[data-width="full"]   { --measure: 100%; }
+
+/* ---------- reader: type size ---------- */
+.guide[data-size="1"] { --fs: 15px; }
+.guide[data-size="2"] { --fs: 16px; }
+.guide[data-size="3"] { --fs: 17px; }
+.guide[data-size="4"] { --fs: 19px; }
+.guide[data-size="5"] { --fs: 21px; }
+.guide[data-size="6"] { --fs: 24px; }
+
+/* ---------- reader: line spacing ---------- */
+.guide[data-leading="tight"]  { --lh: 1.42; }
+.guide[data-leading="normal"] { --lh: 1.62; }
+.guide[data-leading="loose"]  { --lh: 1.9; }
+
+/* ---------- reader: typeface ----------
+   Hyperlegible is included because it was drawn for low-vision readers; it also suits
+   anyone who finds a serif tiring on a screen. Mono suits people who read code all day. */
+.guide[data-face="serif"] { --face-body: "Spectral", Georgia, "Times New Roman", serif; }
+.guide[data-face="sans"]  { --face-body: "Inter", system-ui, -apple-system, sans-serif;
+                            --face-ui: "Inter", system-ui, -apple-system, sans-serif; }
+.guide[data-face="hyper"] { --face-body: "Atkinson Hyperlegible", system-ui, sans-serif;
+                            --face-ui: "Atkinson Hyperlegible", system-ui, sans-serif;
+                            --track: 0.005em; }
+.guide[data-face="mono"]  { --face-body: ui-monospace, "SFMono-Regular", Menlo, Consolas, monospace;
+                            --fs: 15px; }
+
+/* ---------- reader: colour themes ---------- */
+
+.guide[data-theme="sepia"] {
+  --paper: #f4ecd8; --ink: #433422; --ink-soft: #6f5f4a; --rule: #ddd0b4;
+  --accent: #7a4a1e; --accent-soft: #ece0c8; --flag: #8a5a2b; --flag-soft: #ece0c8;
+  --cite: #8a7b63; --mark: #f5d98a; --bl: #6a4a7a; --srb: #3f6b4a;
+  color-scheme: light;
+}
+
+.guide[data-theme="dark"] {
+  --paper: #15181a; --ink: #e8e6e1; --ink-soft: #a3abb2; --rule: #2e3338;
+  --accent: #6fc3d2; --accent-soft: #1b2a2e; --flag: #d9a36a; --flag-soft: #2a2119;
+  --cite: #78828a; --mark: #4a4120; --bl: #a893dd; --srb: #6fc3a8;
+  color-scheme: dark;
+}
+
+.guide[data-theme="contrast"] {
+  --paper: #000000; --ink: #ffffff; --ink-soft: #d8d8d8; --rule: #6a6a6a;
+  --accent: #6fe3ff; --accent-soft: #10242b; --flag: #ffc46b; --flag-soft: #2a2008;
+  --cite: #bdbdbd; --mark: #4a4a00; --bl: #d0b8ff; --srb: #7fe8c0;
+  color-scheme: dark;
+}
+
+/* follow the operating system when the reader has not chosen */
+@media (prefers-color-scheme: dark) {
+  .guide[data-theme="auto"] {
+    --paper: #15181a; --ink: #e8e6e1; --ink-soft: #a3abb2; --rule: #2e3338;
+    --accent: #6fc3d2; --accent-soft: #1b2a2e; --flag: #d9a36a; --flag-soft: #2a2119;
+    --cite: #78828a; --mark: #4a4120; --bl: #a893dd; --srb: #6fc3a8;
+    color-scheme: dark;
+  }
+}
+
+/* ============================== layout ============================== */
+
+.guide * { box-sizing: border-box; }
+
+.guide .wrap {
+  max-width: var(--measure);
+  margin: 0 auto;
+  padding-left: max(18px, env(safe-area-inset-left, 0px));
+  padding-right: max(18px, env(safe-area-inset-right, 0px));
+  padding-block: 2.5rem 5rem;
+}
+
+body.guide { margin: 0; -webkit-text-size-adjust: 100%; }
+
+/* ============================== masthead ============================== */
+
+.guide .eyebrow {
+  font-family: var(--face-ui);
+  font-size: 0.7rem; font-weight: 600; letter-spacing: 0.12em;
+  text-transform: uppercase; color: var(--accent); margin: 0 0 0.6rem;
+}
+
+.guide h1 {
+  font-family: var(--face-body);
+  font-size: 2.1rem; font-weight: 600; line-height: 1.15;
+  letter-spacing: -0.015em; text-wrap: balance; margin: 0 0 0.7rem;
+}
+
+.guide .standfirst { font-size: 1.02rem; color: var(--ink-soft); margin: 0 0 1.6rem; }
+
+.guide .masthead {
+  border-bottom: 2px solid var(--ink);
+  padding-bottom: 1.4rem; margin-bottom: 2.2rem;
+}
+
+/* ============================== structure ============================== */
+
+.guide h2 {
+  font-family: var(--face-ui);
+  font-size: 0.78rem; font-weight: 700; letter-spacing: 0.14em;
+  text-transform: uppercase; color: var(--ink);
+  margin: 3.2rem 0 0.2rem; padding-bottom: 0.45rem;
+  border-bottom: 1px solid var(--rule);
+}
+.guide h2 .n { color: var(--accent); margin-right: 0.5rem; }
+
+.guide h3 {
+  font-family: var(--face-body);
+  font-size: 1.22rem; font-weight: 600; margin: 2.1rem 0 0.1rem; text-wrap: balance;
+}
+
+.guide h4 {
+  font-family: var(--face-ui);
+  font-size: 0.86rem; font-weight: 650; margin: 1.5rem 0 0.4rem; color: var(--ink);
+}
+
+.guide p { margin: 0.75rem 0; }
+.guide a { color: var(--accent); }
+
+/* ---------- reader: emphasise headings ---------- */
+.guide[data-hl-head="on"] h2 {
+  background: var(--accent-soft);
+  border-bottom-color: var(--accent);
+  padding: 0.5rem 0.6rem;
+  border-radius: 3px 3px 0 0;
+}
+.guide[data-hl-head="on"] h3 {
+  border-left: 3px solid var(--accent);
+  padding-left: 0.6rem;
+}
+
+/* ============================== step + rationale ============================== */
+
+.guide .step {
+  margin: 1.35rem 0; padding-left: 0.95rem; border-left: 2px solid var(--rule);
+}
+.guide .step > .ask { font-weight: 600; }
+
+.guide .step > .why {
+  display: block;
+  font-family: var(--face-ui);
+  font-size: 0.88em; line-height: 1.55;
+  color: var(--ink-soft); margin-top: 0.35rem;
+}
+.guide .why b, .guide .why strong { color: var(--ink); font-weight: 650; }
+
+.guide .why .label {
+  font-size: 0.68em; font-weight: 700; letter-spacing: 0.09em;
+  text-transform: uppercase; color: var(--accent); margin-right: 0.4rem;
+}
+.guide .why .label.out { color: var(--flag); }
+
+/* ---------- reader: emphasise the reasoning ----------
+   The rationale is the point of this document, so some readers want it to dominate
+   rather than sit quietly under each step. */
+.guide[data-hl-why="on"] .step {
+  border-left-color: var(--accent);
+  background: var(--accent-soft);
+  padding: 0.75rem 0.9rem;
+  border-radius: 0 4px 4px 0;
+}
+.guide[data-hl-why="on"] .step > .why { color: var(--ink); }
+
+/* ---------- reader: recall mode ----------
+   Hides every answer and rationale until tapped, which turns the reference into a
+   self-test without needing a separate deck. */
+.guide[data-recall="on"] .step > .why,
+.guide[data-recall="on"] dl.findings dd,
+.guide[data-recall="on"] .viva .ans {
+  background: var(--rule);
+  color: transparent;
+  border-radius: 3px;
+  cursor: pointer;
+  user-select: none;
+}
+.guide[data-recall="on"] .step > .why *,
+.guide[data-recall="on"] dl.findings dd *,
+.guide[data-recall="on"] .viva .ans * { visibility: hidden; }
+.guide[data-recall="on"] .revealed,
+.guide[data-recall="on"] .revealed * {
+  background: none !important;
+  color: inherit !important;
+  visibility: visible !important;
+  user-select: auto;
+}
+.guide[data-recall="on"] .revealed .label { color: var(--accent) !important; }
+.guide[data-recall="on"] .revealed .label.out { color: var(--flag) !important; }
+
+/* ============================== finding lists ============================== */
+
+.guide dl.findings { margin: 1.1rem 0; }
+.guide dl.findings dt { font-weight: 600; margin-top: 1rem; }
+.guide dl.findings dd {
+  margin: 0.2rem 0 0 0;
+  font-family: var(--face-ui);
+  font-size: 0.88em; line-height: 1.55; color: var(--ink-soft);
+}
+
+/* ---------- reader: emphasise key terms ---------- */
+.guide[data-hl-term="on"] b,
+.guide[data-hl-term="on"] strong {
+  background: var(--mark);
+  padding: 0 0.15em;
+  border-radius: 2px;
+}
+.guide[data-hl-term="on"] .why b,
+.guide[data-hl-term="on"] dl.findings dd b { color: var(--ink); }
+
+/* ============================== callouts ============================== */
+
+.guide .pearl {
+  background: var(--accent-soft); border-left: 3px solid var(--accent);
+  padding: 0.85rem 1rem; margin: 1.6rem 0; font-size: 0.95em;
+}
+.guide .pearl .tag {
+  display: block; font-family: var(--face-ui);
+  font-size: 0.66em; font-weight: 700; letter-spacing: 0.1em;
+  text-transform: uppercase; color: var(--accent); margin-bottom: 0.3rem;
+}
+
+.guide .unverified {
+  background: var(--flag-soft); border-left: 3px solid var(--flag);
+  padding: 0.85rem 1rem; margin: 1.6rem 0;
+  font-family: var(--face-ui); font-size: 0.86em; line-height: 1.55;
+}
+.guide .unverified .tag {
+  display: block; font-size: 0.66em; font-weight: 700; letter-spacing: 0.1em;
+  text-transform: uppercase; color: var(--flag); margin-bottom: 0.3rem;
+}
+
+/* ============================== viva ============================== */
+
+.guide .viva { margin: 1.2rem 0; }
+.guide .viva details { border-bottom: 1px solid var(--rule); padding: 0.7rem 0; }
+.guide .viva summary {
+  cursor: pointer; font-weight: 600; font-size: 0.98em;
+  list-style: none; display: flex; gap: 0.6rem; align-items: baseline;
+}
+.guide .viva summary::-webkit-details-marker { display: none; }
+.guide .viva summary::before {
+  content: "Q"; font-family: var(--face-ui);
+  font-size: 0.64em; font-weight: 700; letter-spacing: 0.08em;
+  color: var(--accent); border: 1px solid var(--accent); border-radius: 2px;
+  padding: 0.08rem 0.3rem; flex: none; transform: translateY(-0.1em);
+}
+.guide .viva details[open] summary { color: var(--accent); }
+.guide .viva .ans {
+  font-family: var(--face-ui); font-size: 0.89em; line-height: 1.6;
+  color: var(--ink-soft); margin: 0.55rem 0 0.2rem 1.9rem;
+}
+
+/* ============================== citations ============================== */
+
+.guide cite.src {
+  font-family: var(--face-ui); font-style: normal;
+  font-size: 0.66em; font-weight: 600; letter-spacing: 0.02em;
+  color: var(--cite); white-space: nowrap;
+  border: 1px solid var(--rule); border-radius: 2px;
+  padding: 0.05rem 0.28rem; margin-left: 0.3rem; vertical-align: 0.12em;
+}
+.guide cite.src.das { border-color: var(--accent); color: var(--accent); }
+.guide cite.src.bl  { border-color: var(--bl);     color: var(--bl); }
+.guide cite.src.srb { border-color: var(--srb);    color: var(--srb); }
+
+.guide[data-cite="off"] cite.src { display: none; }
+
+/* ============================== discrepancies ============================== */
+
+.guide details.conflict {
+  border: 1px solid var(--rule); border-left: 3px solid var(--flag);
+  border-radius: 0 4px 4px 0; background: var(--flag-soft); margin: 1.5rem 0;
+}
+.guide details.conflict > summary {
+  cursor: pointer; list-style: none; display: flex; gap: 0.55rem; align-items: baseline;
+  padding: 0.7rem 0.9rem; font-family: var(--face-ui);
+  font-size: 0.82em; line-height: 1.45; color: var(--ink);
+}
+.guide details.conflict > summary::-webkit-details-marker { display: none; }
+.guide details.conflict > summary::before {
+  content: "*"; color: var(--flag); font-size: 1em; font-weight: 700;
+  line-height: 1; flex: none; transform: translateY(0.22em);
+}
+.guide details.conflict > summary::after {
+  content: "expand"; margin-left: auto; flex: none;
+  font-size: 0.66em; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase;
+  color: var(--flag); border: 1px solid var(--flag); border-radius: 3px; padding: 0.1rem 0.35rem;
+}
+.guide details.conflict[open] > summary::after { content: "close"; }
+.guide details.conflict > summary:hover { color: var(--flag); }
+.guide details.conflict .what { font-weight: 650; }
+.guide details.conflict .who { color: var(--ink-soft); font-weight: 400; }
+.guide details.conflict .body {
+  padding: 0 0.9rem 0.9rem 2.05rem; border-top: 1px solid var(--rule);
+  margin-top: -1px; padding-top: 0.8rem;
+}
+.guide details.conflict dl { margin: 0; }
+.guide details.conflict dt {
+  font-family: var(--face-ui); font-size: 0.76em; font-weight: 700;
+  color: var(--ink); margin-top: 0.65rem;
+}
+.guide details.conflict dt:first-child { margin-top: 0; }
+.guide details.conflict dd {
+  margin: 0.15rem 0 0; font-family: var(--face-ui);
+  font-size: 0.86em; line-height: 1.55; color: var(--ink-soft);
+}
+.guide details.conflict .ruling {
+  display: block; margin-top: 0.85rem; padding-top: 0.7rem;
+  border-top: 1px solid var(--rule); font-family: var(--face-ui);
+  font-size: 0.86em; line-height: 1.55; color: var(--ink-soft);
+}
+.guide details.conflict .ruling b { color: var(--ink); }
+
+.guide[data-conflicts="off"] details.conflict { display: none; }
+
+/* ============================== source key ============================== */
+
+.guide .srckey {
+  display: flex; flex-wrap: wrap; gap: 0.5rem 1.1rem;
+  font-family: var(--face-ui); font-size: 0.74em; color: var(--ink-soft);
+  margin: 1.2rem 0 0; padding-top: 0.9rem; border-top: 1px solid var(--rule);
+}
+.guide .srckey span { display: inline-flex; align-items: center; gap: 0.35rem; }
+.guide .srckey i { width: 9px; height: 9px; border-radius: 2px; flex: none; }
+
+/* ============================== tables ============================== */
+
+.guide .scroll { overflow-x: auto; margin: 1.4rem 0; }
+.guide table {
+  border-collapse: collapse; width: 100%;
+  font-size: 0.9em; font-family: var(--face-ui); min-width: 0;
+}
+.guide th, .guide td {
+  text-align: left; vertical-align: top;
+  padding: 0.5rem 0.7rem 0.5rem 0; border-bottom: 1px solid var(--rule);
+}
+.guide th {
+  font-size: 0.68em; font-weight: 700; letter-spacing: 0.09em;
+  text-transform: uppercase; color: var(--accent); border-bottom: 1px solid var(--ink);
+}
+
+/* ============================== figures ============================== */
+
+.guide figure { margin: 1.8rem 0; padding: 0; }
+.guide figure img {
+  display: block; max-width: 100%; height: auto;
+  border: 1px solid var(--rule); border-radius: 2px; background: #fff;
+}
+.guide figcaption {
+  font-family: var(--face-ui); font-size: 0.78em; line-height: 1.5;
+  color: var(--ink-soft); margin-top: 0.5rem;
+}
+
+/* ============================== colophon ============================== */
+
+.guide .colophon {
+  margin-top: 4rem; padding-top: 1.2rem; border-top: 1px solid var(--rule);
+  font-family: var(--face-ui); font-size: 0.76em; line-height: 1.6; color: var(--ink-soft);
+}
+
+/* ============================== print ============================== */
+
+@media print {
+  .guide {
+    --paper: #fff; --ink: #000; --ink-soft: #333; --rule: #bbb;
+    --accent: #004c5c; --accent-soft: #eef4f5; --cite: #666;
+    --measure: none; --fs: 10.5pt; --lh: 1.45;
+    --face-body: "Spectral", Georgia, serif;
+    --face-ui: "Inter", system-ui, sans-serif;
+  }
+  .guide .wrap { max-width: none; padding: 0; }
+
+  /* Watermark on the printed copy.
+   *
+   * It sits on z-index -1, behind the body text, so it can never punch a light hole through
+   * a glyph the way an overlaid watermark does. That only works if the paper itself stops
+   * painting a background over it, hence the background: none; the sheet is white anyway.
+   *
+   * It is text rather than a background image on purpose: headless Chrome's --print-to-pdf
+   * does not print backgrounds by default, and text is also still text in the finished PDF,
+   * so the watermark can be verified page by page instead of being eyeballed once.
+   *
+   * position: fixed is what repeats it on every sheet. */
+  .guide { background: none; }
+  .guide::before {
+    content: "rx.harnar.in";
+    position: fixed;
+    top: 50%;
+    left: 50%;
+    z-index: -1;
+    transform: translate(-50%, -50%) rotate(-32deg);
+    font-family: var(--face-ui);
+    font-size: 54pt;
+    font-weight: 600;
+    letter-spacing: 0.1em;
+    white-space: nowrap;
+    color: #ebe8e3;
+    print-color-adjust: exact;
+    -webkit-print-color-adjust: exact;
+  }
+  .guide h2 {
+    margin-top: 26pt;
+    padding-top: 9pt;
+    padding-bottom: 7pt;
+    border-top: 3pt solid #555;
+    border-bottom: 1pt solid #999;
+    font-size: 10pt;
+    letter-spacing: 0.16em;
+    break-after: avoid;
+    break-before: auto;
+  }
+  .guide h2 .n {
+    color: #000;
+    font-size: 13pt;
+    margin-right: 0.6em;
+  }
+  /* the first section should not push a near-empty first page */
+  .guide h2:first-of-type { margin-top: 14pt; }
+
+  /* subheads hang off the section rule so it is obvious what belongs to what */
+  .guide h3 {
+    border-left: 2.5pt solid #777;
+    padding-left: 7pt;
+    margin-top: 15pt;
+    break-after: avoid;
+  }
+  .guide h4 { margin-top: 11pt; break-after: avoid; }
+  .guide .step, .guide dl.findings dt, .guide dl.findings dd,
+  .guide .pearl, .guide figure, .guide .viva details { break-inside: avoid; }
+  .guide a { color: #000; text-decoration: none; }
+  .guide .colophon { break-before: avoid; }
+
+  /* reader preferences are for the screen; paper gets the designed layout */
+  .guide[data-recall="on"] .step > .why,
+  .guide[data-recall="on"] dl.findings dd,
+  .guide[data-recall="on"] .viva .ans { background: none; color: var(--ink-soft); }
+  .guide[data-recall="on"] .step > .why *,
+  .guide[data-recall="on"] dl.findings dd *,
+  .guide[data-recall="on"] .viva .ans * { visibility: visible; }
+  .guide[data-hl-head="on"] h2 { background: none; padding: 0 0 0.45rem; }
+  .guide[data-hl-term="on"] b, .guide[data-hl-term="on"] strong { background: none; }
+  .guide[data-conflicts="off"] details.conflict { display: block; }
+  .guide[data-cite="off"] cite.src { display: inline; }
+
+  /* discrepancies print as small asterisked footnotes, not as boxes */
+  .guide details.conflict {
+    background: none; border: none; border-left: 2px solid #999;
+    margin: 0.8rem 0; break-inside: avoid;
+  }
+  .guide details.conflict > summary { padding: 0 0 0 0.5rem; font-size: 8.5pt; font-weight: 700; }
+  .guide details.conflict > summary::after,
+  .guide details.conflict[open] > summary::after { content: none; border: none; padding: 0; }
+  .guide details.conflict .body {
+    padding: 0.2rem 0 0 0.5rem; border-top: none; margin-top: 0; font-size: 8.5pt;
+  }
+  .guide details.conflict dt { font-size: 8pt; margin-top: 0.3rem; }
+  .guide details.conflict dd { font-size: 8.5pt; line-height: 1.35; }
+  .guide details.conflict .ruling {
+    font-size: 8.5pt; line-height: 1.35; margin-top: 0.4rem;
+    padding-top: 0.3rem; border-top: 1px dotted #bbb;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .guide * { animation: none !important; transition: none !important; }
+}
+
+/* ===================================================================
+   Reader interface, the rail, selection bubble, studio panel, notes
+   and ink canvas. These sit OUTSIDE .guide (they are chrome, not
+   document), so they are deliberately unscoped and self-contained.
+   =================================================================== */
+
+.rdr-rail {
+  position: fixed;
+  right: max(10px, env(safe-area-inset-right, 0px));
+  top: 50%;
+  transform: translateY(-50%);
+  z-index: 40;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  padding: 6px;
+  border-radius: 10px;
+  background: var(--paper, #fff);
+  border: 1px solid var(--rule, #ddd);
+  box-shadow: 0 4px 18px rgba(0,0,0,.12);
+}
+
+.rdr-rail button {
+  width: 34px; height: 34px;
+  display: grid; place-items: center;
+  border: 1px solid transparent; border-radius: 7px;
+  background: none; color: var(--ink-soft, #666);
+  cursor: pointer; padding: 0;
+}
+.rdr-rail button svg { width: 18px; height: 18px; }
+.rdr-rail button:hover { color: var(--accent, #005f73); border-color: var(--rule, #ddd); }
+.rdr-rail button:focus-visible { outline: 2px solid var(--accent, #005f73); outline-offset: 1px; }
+.rdr-rail button.on {
+  color: var(--accent, #005f73);
+  background: var(--accent-soft, #e3eef0);
+  border-color: var(--accent, #005f73);
+}
+
+.rdr-pal { display: flex; flex-direction: column; gap: 4px; margin-top: 4px;
+           padding-top: 6px; border-top: 1px solid var(--rule, #ddd); }
+.rdr-pal .rdr-sw {
+  width: 22px; height: 22px; margin: 0 auto;
+  border-radius: 50%; border: 2px solid transparent; cursor: pointer; padding: 0;
+}
+.rdr-pal .rdr-sw.on { border-color: var(--ink, #222); }
+
+/* ---------- the rail on a phone ----------
+   The row of tools plus the colour palette comes to about 416px of content. Centring that
+   with left:50% and translateX(-50%) on a 375px screen pushed the Reading settings button off
+   the left edge and the last swatches off the right, so the one control that reaches text
+   size, theme and backup was unreachable on exactly the devices this is read on.
+   It is pinned to both edges now, and scrolls horizontally if the tools still do not fit. */
+@media (max-width: 640px) {
+  .rdr-rail {
+    right: max(8px, env(safe-area-inset-right, 0px));
+    left: max(8px, env(safe-area-inset-left, 0px));
+    top: auto;
+    bottom: max(8px, env(safe-area-inset-bottom, 0px));
+    transform: none;
+    flex-direction: row;
+    align-items: center;
+    justify-content: flex-start;
+    gap: 2px;
+    overflow-x: auto;
+    overscroll-behavior-x: contain;
+    scrollbar-width: none;
+    -webkit-overflow-scrolling: touch;
+  }
+  .rdr-rail::-webkit-scrollbar { display: none; }
+  .rdr-rail button { flex: 0 0 auto; }
+  .rdr-pal { flex-direction: row; margin: 0 0 0 4px; flex: 0 0 auto;
+             padding: 0 0 0 6px; border-top: none; border-left: 1px solid var(--rule, #ddd); }
+}
+
+/* A landscape phone is wider than 640px, so it used to get the tall vertical rail: about
+   416px of buttons in a 390px-high window, with the top and bottom items simply unreachable.
+   Height, not width, is what decides this. */
+@media (max-height: 520px) and (orientation: landscape) {
+  .rdr-rail {
+    right: max(8px, env(safe-area-inset-right, 0px));
+    left: max(8px, env(safe-area-inset-left, 0px));
+    top: auto;
+    bottom: max(8px, env(safe-area-inset-bottom, 0px));
+    transform: none;
+    flex-direction: row; align-items: center; justify-content: flex-start;
+    overflow-x: auto; scrollbar-width: none;
+  }
+  .rdr-pal { flex-direction: row; margin: 0 0 0 4px;
+             padding: 0 0 0 6px; border-top: none; border-left: 1px solid var(--rule, #ddd); }
+}
+
+/* ---------- touch targets ----------
+   Everything the reader taps was built for a mouse: 34px tool buttons, 22px swatches, and
+   citation chips about 16px tall, which are the main interaction in the guide. The visual
+   size stays as designed; the hit area is grown to 44px underneath it. */
+@media (pointer: coarse) {
+  .rdr-rail button,
+  .rdr-erase-modes button,
+  .rdr-bubble button,
+  .rdr-seg button,
+  .rdr-ne-row button,
+  .rdr-close,
+  .rdr-src-close,
+  .rdr-clear { min-width: 44px; min-height: 44px; }
+
+  /* the swatch gets its 44px from padding alone; the generic minimum above would stack with
+     it and make each colour a 70px slab, which pushes the tools off a phone again */
+  .rdr-pal .rdr-sw {
+    width: 22px; height: 22px; min-width: 0; min-height: 0;
+    padding: 11px; background-clip: content-box;
+    box-sizing: content-box;
+  }
+
+  .guide cite.src[data-cite-key],
+  .rdr-note { position: relative; }
+  .guide cite.src[data-cite-key]::after,
+  .rdr-note::after {
+    content: ""; position: absolute; inset: -14px -8px;
+  }
+
+  .guide .viva summary,
+  .guide details.conflict > summary { min-height: 44px; }
+}
+
+/* Hover belongs to pointers. On a touch screen these stick after a tap and leave a button
+   looking permanently active. */
+@media (hover: none) {
+  .rdr-rail button:hover,
+  .rdr-seg button:hover,
+  .guide details.conflict > summary:hover { background: none; }
+  .rdr-rail button:hover { color: var(--ink-soft, #666); border-color: transparent; }
+}
+
+/* ---------- selection bubble ---------- */
+
+.rdr-bubble {
+  position: absolute; z-index: 50;
+  display: flex; gap: 2px; padding: 4px;
+  background: var(--ink, #1b1f22); border-radius: 8px;
+  box-shadow: 0 4px 14px rgba(0,0,0,.25);
+}
+.rdr-bubble button {
+  font: inherit; font-size: 0.78rem; font-weight: 600;
+  font-family: var(--face-ui, system-ui, sans-serif);
+  color: var(--paper, #fff); background: none; border: none;
+  border-radius: 5px; padding: 0.3rem 0.6rem; cursor: pointer;
+}
+.rdr-bubble button:hover { background: rgba(255,255,255,.16); }
+
+/* ---------- studio panel ---------- */
+
+.rdr-studio {
+  position: fixed; z-index: 60;
+  right: max(10px, env(safe-area-inset-right, 0px));
+  top: max(10px, env(safe-area-inset-top, 0px));
+  bottom: max(10px, env(safe-area-inset-bottom, 0px));
+  width: min(21rem, calc(100vw - 20px));
+  display: flex; flex-direction: column;
+  background: var(--paper, #fff);
+  border: 1px solid var(--rule, #ddd); border-radius: 12px;
+  box-shadow: 0 8px 36px rgba(0,0,0,.2);
+  font-family: var(--face-ui, system-ui, sans-serif);
+  color: var(--ink, #222);
+}
+.rdr-st-head {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 0.9rem 1rem; border-bottom: 1px solid var(--rule, #ddd); font-size: 0.95rem;
+}
+.rdr-close { font-size: 1.3rem; line-height: 1; background: none; border: none;
+             color: var(--ink-soft, #666); cursor: pointer; padding: 0 0.2rem; }
+.rdr-close:hover { color: var(--ink, #222); }
+.rdr-st-body { overflow-y: auto; padding: 0.9rem 1rem 1.2rem; }
+
+.rdr-st-body label {
+  display: block; font-size: 0.66rem; font-weight: 700; letter-spacing: 0.1em;
+  text-transform: uppercase; color: var(--accent, #005f73);
+  margin: 1.1rem 0 0.45rem;
+}
+.rdr-st-body label:first-child { margin-top: 0; }
+
+.rdr-seg { display: flex; flex-wrap: wrap; gap: 4px; margin-bottom: 0.4rem; }
+.rdr-seg button {
+  font: inherit; font-size: 0.8rem; font-weight: 600;
+  color: var(--ink-soft, #666); background: none;
+  border: 1px solid var(--rule, #ddd); border-radius: 6px;
+  padding: 0.32rem 0.6rem; cursor: pointer;
+}
+.rdr-seg button:hover:not(:disabled) { color: var(--accent, #005f73); border-color: var(--accent, #005f73); }
+.rdr-seg button.on {
+  color: var(--accent, #005f73); background: var(--accent-soft, #e3eef0);
+  border-color: var(--accent, #005f73);
+}
+.rdr-seg button:disabled { opacity: 0.4; cursor: not-allowed; }
+
+.rdr-lock {
+  margin-top: 1rem; padding: 0.7rem 0.8rem; border-radius: 6px;
+  background: var(--flag-soft, #f6ece0); border-left: 3px solid var(--flag, #8a5a2b);
+  font-size: 0.8rem; line-height: 1.45; color: var(--ink-soft, #666);
+}
+
+.rdr-st-foot {
+  display: flex; flex-wrap: wrap; gap: 6px;
+  margin-top: 1.4rem; padding-top: 1rem; border-top: 1px solid var(--rule, #ddd);
+}
+.rdr-clear {
+  font: inherit; font-size: 0.78rem; font-weight: 600;
+  color: var(--flag, #8a5a2b); background: none;
+  border: 1px solid var(--rule, #ddd); border-radius: 6px;
+  padding: 0.3rem 0.6rem; cursor: pointer;
+}
+.rdr-clear:hover { border-color: var(--flag, #8a5a2b); }
+
+/* ---------- notes ---------- */
+
+.rdr-note {
+  display: inline-block; vertical-align: super;
+  font-family: var(--face-ui, system-ui, sans-serif);
+  font-size: 0.58em; font-weight: 700; letter-spacing: 0.06em; text-transform: uppercase;
+  color: var(--accent, #005f73); background: var(--accent-soft, #e3eef0);
+  border: 1px solid var(--accent, #005f73); border-radius: 3px;
+  padding: 0.05em 0.3em; margin-left: 0.35em; cursor: pointer; user-select: none;
+}
+.rdr-note:hover { filter: brightness(0.95); }
+
+.rdr-noteedit {
+  position: fixed; z-index: 70;
+  left: 50%; top: 50%; transform: translate(-50%, -50%);
+  width: min(26rem, calc(100vw - 32px));
+  background: var(--paper, #fff); color: var(--ink, #222);
+  border: 1px solid var(--rule, #ddd); border-radius: 12px;
+  box-shadow: 0 10px 40px rgba(0,0,0,.25);
+  padding: 1rem; font-family: var(--face-ui, system-ui, sans-serif);
+}
+.rdr-ne-head { font-size: 0.68rem; font-weight: 700; letter-spacing: 0.1em;
+               text-transform: uppercase; color: var(--accent, #005f73); margin-bottom: 0.5rem; }
+
+/* Centred vertically, the Save, Cancel and Delete row lands underneath the on-screen keyboard
+   on a phone, so the editor can be typed into but not finished. Anchoring it to the top keeps
+   the whole dialog in the part of the screen the keyboard leaves alone. */
+@media (max-width: 640px), (max-height: 560px) {
+  .rdr-noteedit {
+    top: max(10px, env(safe-area-inset-top, 0px));
+    transform: translateX(-50%);
+    max-height: 70dvh;
+    overflow-y: auto;
+    overscroll-behavior: contain;
+  }
+}
+.rdr-noteedit textarea {
+  /* 16px exactly. Anything smaller and iOS Safari zooms the page in on focus and leaves it
+     zoomed, which on a phone means the note editor you are typing into walks off screen. */
+  width: 100%; font: inherit; font-size: 16px;
+  color: var(--ink, #222); background: var(--bg, transparent);
+  border: 1px solid var(--rule, #ddd); border-radius: 6px;
+  padding: 0.6rem 0.7rem; resize: vertical;
+}
+.rdr-ne-row { display: flex; align-items: center; gap: 6px; margin-top: 0.7rem; }
+.rdr-ne-row button {
+  font: inherit; font-size: 0.82rem; font-weight: 600;
+  border: 1px solid var(--rule, #ddd); border-radius: 6px;
+  padding: 0.35rem 0.75rem; cursor: pointer;
+  background: none; color: var(--ink, #222);
+}
+.rdr-ne-row .rdr-ok {
+  background: var(--accent, #005f73); border-color: var(--accent, #005f73); color: #fff;
+}
+.rdr-ne-row .rdr-del { color: var(--flag, #8a5a2b); }
+
+/* ---------- ink ---------- */
+
+.rdr-canvas { position: absolute; z-index: 5; touch-action: none; }
+.rdr-pen-on { cursor: crosshair; }
+.rdr-pen-on ::selection { background: transparent; }
+
+@media print {
+  .rdr-rail, .rdr-bubble, .rdr-studio, .rdr-noteedit { display: none !important; }
+  .rdr-canvas { position: absolute; }
+  .rdr-note { border-color: #999; color: #333; background: none; }
+}
+
+/* `display:` on these panels outranks the browser's own [hidden] rule, so state it. */
+.rdr-studio[hidden],
+.rdr-bubble[hidden],
+.rdr-noteedit[hidden],
+.rdr-lock[hidden] { display: none !important; }
+
+/* ---------- source pane ----------
+   Slides in over the guide rather than opening a tab, so checking a citation does not
+   cost the reader their place. The quoted page is set solid; the paragraphs either side
+   are dimmed, because they are there for context and not for reading. */
+
+.guide cite.src[data-cite-key] { cursor: pointer; }
+.guide cite.src[data-cite-key]:hover { background: var(--accent-soft); }
+.guide cite.src[data-cite-key]:focus-visible { outline: 2px solid var(--accent); outline-offset: 1px; }
+
+.rdr-srcpane {
+  position: fixed;
+  z-index: 80;
+  right: 0;
+  top: 0;
+  bottom: 0;
+  width: min(34rem, 100vw);
+  display: flex;
+  flex-direction: column;
+  background: var(--paper, #fff);
+  color: var(--ink, #222);
+  border-left: 1px solid var(--rule, #ddd);
+  box-shadow: -8px 0 40px rgba(0, 0, 0, .22);
+  padding-right: env(safe-area-inset-right, 0px);
+}
+.rdr-srcpane[hidden] { display: none !important; }
+
+.rdr-src-head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 1rem;
+  padding: 1rem 1.1rem;
+  padding-top: max(1rem, env(safe-area-inset-top, 0px));
+  border-bottom: 1px solid var(--rule, #ddd);
+  font-family: var(--face-ui, system-ui, sans-serif);
+}
+.rdr-src-book { font-size: 0.95rem; font-weight: 650; line-height: 1.3; }
+.rdr-src-meta {
+  font-size: 0.74rem; color: var(--ink-soft, #666);
+  letter-spacing: 0.04em; margin-top: 0.15rem;
+}
+.rdr-src-close {
+  font-size: 1.5rem; line-height: 1; background: none; border: none;
+  color: var(--ink-soft, #666); cursor: pointer; padding: 0 0.2rem; flex: none;
+}
+.rdr-src-close:hover { color: var(--ink, #222); }
+.rdr-src-close:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+
+.rdr-src-body {
+  overflow-y: auto;
+  padding: 1.1rem;
+  padding-bottom: max(1.1rem, env(safe-area-inset-bottom, 0px));
+  font-size: 0.92rem;
+  line-height: 1.6;
+}
+
+.rdr-src-page + .rdr-src-page {
+  margin-top: 1.6rem; padding-top: 1.2rem; border-top: 1px solid var(--rule, #ddd);
+}
+.rdr-src-pno {
+  font-family: var(--face-ui, system-ui, sans-serif);
+  font-size: 0.66rem; font-weight: 700; letter-spacing: 0.12em; text-transform: uppercase;
+  color: var(--accent, #005f73); margin-bottom: 0.5rem;
+}
+.rdr-src-main { margin: 0.5rem 0; }
+.rdr-src-ctx { margin: 0.5rem 0; color: var(--ink-soft, #666); font-size: 0.86em; }
+
+.rdr-src-foot {
+  font-family: var(--face-ui, system-ui, sans-serif);
+  font-size: 0.72rem; color: var(--ink-soft, #666);
+  padding: 0.7rem 1.1rem;
+  padding-bottom: max(0.7rem, env(safe-area-inset-bottom, 0px));
+  border-top: 1px solid var(--rule, #ddd);
+}
+
+@media (max-width: 640px) {
+  .rdr-srcpane {
+    left: 0; right: 0; top: auto; height: 78vh;
+    width: auto; border-left: none;
+    border-top: 1px solid var(--rule, #ddd);
+    border-radius: 12px 12px 0 0;
+    box-shadow: 0 -8px 40px rgba(0, 0, 0, .22);
+  }
+}
+
+@media print { .rdr-srcpane { display: none !important; } }
+
+/* the live stroke layer sits just above the committed one */
+.rdr-canvas-live { z-index: 6; }
+
+/* eraser granularity, shown only while the eraser is the active tool */
+.rdr-erase-modes {
+  display: flex; flex-direction: column; gap: 4px;
+  margin-top: 4px; padding-top: 6px;
+  border-top: 1px solid var(--rule, #ddd);
+}
+.rdr-erase-modes[hidden] { display: none !important; }
+.rdr-erase-modes button {
+  width: auto; height: auto;
+  font: inherit; font-size: 0.62rem; font-weight: 700;
+  letter-spacing: 0.06em; text-transform: uppercase;
+  color: var(--ink-soft, #666); background: none;
+  border: 1px solid var(--rule, #ddd); border-radius: 5px;
+  padding: 0.22rem 0.3rem; cursor: pointer;
+}
+.rdr-erase-modes button.on {
+  color: var(--accent, #005f73);
+  background: var(--accent-soft, #e3eef0);
+  border-color: var(--accent, #005f73);
+}
+.rdr-pal[hidden] { display: none !important; }
+
+@media (max-width: 640px) {
+  .rdr-erase-modes {
+    flex-direction: row; margin: 0 0 0 4px;
+    padding: 0 0 0 6px; border-top: none; border-left: 1px solid var(--rule, #ddd);
+  }
+}
+
+/* ---------- backup ---------- */
+
+.rdr-note-hint {
+  font-size: 0.78rem; line-height: 1.45;
+  color: var(--ink-soft, #666); margin: 0 0 0.6rem;
+}
+
+.rdr-backup { display: flex; flex-wrap: wrap; gap: 6px; }
+.rdr-backup button {
+  width: auto; height: auto;
+  font: inherit; font-size: 0.8rem; font-weight: 600;
+  color: var(--ink, #222); background: none;
+  border: 1px solid var(--rule, #ddd); border-radius: 6px;
+  padding: 0.34rem 0.7rem; cursor: pointer;
+}
+.rdr-backup button:hover { border-color: var(--accent, #005f73); color: var(--accent, #005f73); }
+.rdr-backup button:focus-visible { outline: 2px solid var(--accent, #005f73); outline-offset: 2px; }
+.rdr-backup .rdr-do-restore {
+  background: var(--accent, #005f73); border-color: var(--accent, #005f73); color: #fff;
+}
+
+.rdr-restore {
+  margin-top: 0.8rem; padding: 0.8rem 0.9rem;
+  border: 1px solid var(--rule, #ddd); border-left: 3px solid var(--flag, #8a5a2b);
+  border-radius: 0 6px 6px 0; background: var(--flag-soft, #f6ece0);
+  font-size: 0.84rem; line-height: 1.5;
+}
+.rdr-restore[hidden] { display: none !important; }
+.rdr-restore p { margin: 0 0 0.5rem; }
+.rdr-restore .rdr-warn { color: var(--flag, #8a5a2b); font-weight: 650; }
+
+.rdr-say {
+  font-size: 0.78rem; color: var(--ink-soft, #666);
+  margin: 0.7rem 0 0; min-height: 1.1em;
+}
+
+</style>
+</head>
+<body class="guide" data-doc="gastric-outlet-obstruction">
+<div class="wrap">
+
+  <header class="masthead">
+    <p class="eyebrow">Long case 04 &middot; General Surgery</p>
+    <h1>Gastric Outlet Obstruction</h1>
+    <p class="standfirst">
+      The case where the metabolic answer matters more than the anatomical one. Anyone can say
+      "pyloric stenosis". The marks are in explaining why the urine turns acid while the blood
+      turns alkaline, and in knowing that Bailey &amp; Love now tells you to assume cancer until
+      you have a biopsy that says otherwise.
+    </p>
+    <div class="srckey">
+      <span><i style="background:var(--accent)"></i> S Das: clinical method</span>
+      <span><i style="background:var(--bl)"></i> Bailey &amp; Love: mechanism and management</span>
+      <span><i style="background:var(--srb)"></i> SRB: exam framework</span>
+    </div>
+  </header>
+
+  <!-- ===================== 1. ORIENTATION ===================== -->
+
+  <h2><span class="n">1</span>The case in one breath</h2>
+
+  <dl class="findings">
+    <dt>The two causes, and the order you should hold them in</dt>
+    <dd>B&amp;L: <b>"The two common causes of gastric outlet obstruction are gastric cancer and
+    pyloric stenosis secondary to peptic
+    ulceration."</b><cite class="src bl">B&amp;L 67 &middot; p.1168</cite> Note which it names
+    first, and see the disagreement below.</dd>
+    <dt>SRB's fuller differential, which is the list to reproduce</dt>
+    <dd><b>Congenital</b> &middot; <b>chronic duodenal ulcer, fibrosed or cicatrised</b> &middot;
+    <b>carcinoma pylorus</b> &middot; <b>adult pyloric stenosis</b>, which is treated by
+    pyloroplasty and <b>not</b> by pyloromyotomy &middot; <b>pyloric mucosal diaphragm</b>, which
+    must be excised surgically or
+    endoscopically.<cite class="src srb">SRB 20 &middot; p.819</cite></dd>
+    <dt>The mechanism in benign disease</dt>
+    <dd>A chronic duodenal ulcer, after many years, undergoes <b>scarring and cicatrisation</b>
+    causing total obstruction of the pylorus and <b>enormous dilatation of the
+    stomach</b>.<cite class="src srb">SRB 20 &middot; p.818</cite> B&amp;L puts the same thing
+    histologically: the ulcer penetrates the muscle coat, leading to fibrosis, and <b>the
+    resulting scarring may cause a deformity such as pyloric
+    stenosis</b>.<cite class="src bl">B&amp;L 67 &middot; p.1157</cite> S Das: cicatrisation of a
+    duodenal or <b>juxta-pyloric</b> ulcer.<cite class="src das">Das 34 &middot; p.508</cite></dd>
+    <dt>The triad that makes the diagnosis at the bedside</dt>
+    <dd>SRB states it as a set: <b>visible gastric peristalsis positive, auscultopercussion test
+    positive, succussion splash positive</b>.<cite class="src srb">SRB 20 &middot; p.840</cite>
+    And its mnemonic for the three: <b>"stomach we see, stomach we feel, stomach we
+    hear"</b>.<cite class="src srb">SRB 20 &middot; p.818</cite></dd>
+  </dl>
+
+  <details open class="conflict">
+    <summary>
+      <span class="what">Benign until proven otherwise, or malignant until proven otherwise?</span>
+      <span class="who">S Das 34 p.508 and SRB 20 p.818 build the case around chronic ulcer; B&amp;L 67 p.1168 says assume cancer</span>
+    </summary>
+    <div class="body">
+    <dl>
+      <dt>S Das</dt>
+      <dd>Defines the entity itself as benign: <b>"Pyloric stenosis. This is due to cicatrisation
+      of a duodenal or a juxta-pyloric
+      ulcer."</b><cite class="src das">Das 34 &middot; p.508</cite> Carcinoma of the stomach is
+      described separately, as an obstructive type of gastric
+      cancer.<cite class="src das">Das 34 &middot; p.508</cite></dd>
+      <dt>SRB</dt>
+      <dd>Gives "Pyloric Stenosis due to Chronic Duodenal Ulcer" its own chapter heading and its
+      own clinical features, investigations and
+      treatment,<cite class="src srb">SRB 20 &middot; p.818, p.819, p.820</cite> and lists carcinoma
+      pylorus as the <b>differential diagnosis</b>, distinguished because there <b>a mass may be
+      palpable</b>, whereas in benign pyloric stenosis <b>"mass is never
+      palpable"</b>.<cite class="src srb">SRB 20 &middot; p.819</cite></dd>
+      <dt>Bailey &amp; Love 28e</dt>
+      <dd>Reverses the presumption outright: <b>"With the decreasing incidence of peptic ulceration
+      gastric outlet obstruction should be considered malignant until proven
+      otherwise."</b><cite class="src bl">B&amp;L 67 &middot; p.1168</cite> And it makes the
+      consequence an instruction rather than a suggestion: <b>"Endoscopic biopsy is essential to
+      exclude malignancy"</b>, and <b>"biopsy of the area around the pylorus is
+      essential"</b>.<cite class="src bl">B&amp;L 67 &middot; p.1169</cite></dd>
+    </dl>
+    <span class="ruling"><b>This is the most important disagreement in the case, and the two
+    positions are both right about different populations.</b> B&amp;L's premise is a falling
+    incidence of peptic ulcer disease in high-income countries, which makes cancer the likelier
+    cause by elimination. In India peptic ulcer disease remains common, so the benign cause is
+    still frequent, which is why SRB gives it a chapter.
+    <br><br><b>How to answer:</b> give the classical cause, then take B&amp;L's position on
+    management explicitly. Say: <b>"In our population a cicatrised chronic duodenal ulcer is still
+    a common cause, but I would manage every gastric outlet obstruction as malignant until
+    endoscopic biopsy of the pyloric region proves otherwise, because the current Bailey and Love
+    position is that falling ulcer incidence makes cancer the default, and because a missed
+    cancer costs the patient far more than an unnecessary biopsy."</b> That answer takes a position,
+    cites why, and is safe. The one finding that should shift you strongly towards cancer before
+    the biopsy is a <b>palpable mass</b>, which SRB says is never present in benign
+    stenosis.<cite class="src srb">SRB 20 &middot; p.819</cite></span>
+    </div>
+  </details>
+
+  <!-- ===================== 2. WHY ===================== -->
+
+  <h2><span class="n">2</span>Why this patient obstructed, and why he is so ill</h2>
+
+  <div class="pearl">
+    <span class="tag">The metabolic cascade, which is the heart of this case</span>
+    Learn it as a chain of consequences, because that is how it will be
+    asked.<cite class="src bl">B&amp;L 67 &middot; p.1169</cite>
+    <br><br><b>1.</b> Vomiting hydrochloric acid produces a <b>hypochloraemic alkalosis</b>.
+    <br><b>2.</b> <b>Initially the sodium and potassium may be relatively normal.</b> At this
+    stage the urine has a <b>low chloride and high bicarbonate</b> content, reflecting the primary
+    abnormality.
+    <br><b>3.</b> As dehydration progresses, more profound abnormalities appear, <b>partly related
+    to renal dysfunction</b>, and the patient becomes progressively <b>hyponatraemic</b>.
+    <br><b>4.</b> Because of the dehydration, <b>sodium is retained and potassium and hydrogen
+    ions are excreted</b> in its place.
+    <br><b>5.</b> So the urine becomes <b>paradoxically acidic</b> and <b>hypokalaemia</b> ensues.
+    <br><b>6.</b> <b>Alkalosis lowers the circulating ionised calcium, and tetany can occur.</b>
+    <br><br>SRB names that last step <b>"gastric tetany"</b> and gives the renal logic in its own
+    words: in alkalosis <i>without</i> hyponatraemia the kidney excretes bicarbonate along with
+    sodium, but here, <b>because the body must conserve sodium, bicarbonate is excreted with
+    hydrogen ion instead, so the urine turns
+    acid</b>.<cite class="src srb">SRB 20 &middot; p.820</cite> That sentence is the cleanest
+    explanation of paradoxical aciduria in any of the three books: quote it.
+  </div>
+
+  <details open class="conflict">
+    <summary>
+      <span class="what">Which electrolytes are abnormal: a list, or a sequence?</span>
+      <span class="who">SRB 20 p.820 gives a flat list of six; B&amp;L 67 p.1169 gives a staged account</span>
+    </summary>
+    <div class="body">
+    <dl>
+      <dt>SRB</dt>
+      <dd>Lists them together, under the heading "Electrolyte Changes in Pyloric Stenosis":
+      <b>hyponatraemia, hypokalaemia, hypomagnesaemia, hypochloraemia, metabolic alkalosis,
+      paradoxical aciduria</b>,<cite class="src srb">SRB 20 &middot; p.820</cite> and elsewhere
+      a six-part version adding hypocalcaemia: <b>hypochloraemic, hyponatraemic, hypokalaemic,
+      hypocalcaemic, hypomagnesaemic
+      alkalosis</b>.<cite class="src srb">SRB 20 &middot; p.818</cite></dd>
+      <dt>Bailey &amp; Love 28e</dt>
+      <dd>Insists on the order. The primary abnormality is <b>hypochloraemic alkalosis</b> alone;
+      <b>"initially the sodium and potassium may be relatively normal; however, as dehydration
+      progresses, more profound metabolic abnormalities arise"</b>, and the hyponatraemia and then
+      the hypokalaemia are <b>consequences of the renal response to
+      dehydration</b>.<cite class="src bl">B&amp;L 67 &middot; p.1169</cite></dd>
+    </dl>
+    <span class="ruling"><b>Not a contradiction but a difference in resolution, and the graded
+    answer is the better one because it tells the examiner you know which abnormality causes
+    which.</b> Answer: <b>"The primary disturbance is a hypochloraemic alkalosis from vomiting
+    acid. Sodium and potassium may be normal early. As dehydration progresses the kidney conserves
+    sodium and excretes potassium and hydrogen instead, so hypokalaemia and a paradoxically acidic
+    urine develop, and hypomagnesaemia follows the losses. The alkalosis lowers ionised calcium and
+    can cause tetany."</b> Then give the full list as the complete answer. If you are asked for a
+    single early biochemical abnormality, say <b>hypochloraemia with alkalosis</b>, not
+    hypokalaemia, because hypokalaemia is second-order.</span>
+    </div>
+  </details>
+
+  <div class="pearl">
+    <span class="tag">Why the cancer patient is less alkalotic, which is a favourite question</span>
+    Because the stomach is not making as much acid to lose. B&amp;L: in cancer <b>"the metabolic
+    consequences may be somewhat different from those of benign pyloric stenosis because of the
+    relative hypochlorhydria found in patients with gastric
+    cancer"</b>,<cite class="src bl">B&amp;L 67 &middot; p.1168</cite> and the alkalosis is
+    <b>"usually less pronounced than when duodenal ulceration leads to
+    obstruction"</b>.<cite class="src bl">B&amp;L 67 &middot; p.1170</cite> Its summary box goes
+    further: <b>the hypochloraemic alkalosis "is usually only seen with peptic ulcer
+    disease"</b>.<cite class="src bl">B&amp;L 67 &middot; p.1169</cite> SRB agrees in the same
+    terms: metabolic changes are not severe in carcinoma pylorus because there is often
+    <b>hypochlorhydria or achlorhydria</b>.<cite class="src srb">SRB 20 &middot; p.820</cite>
+    <br><br><b>So a florid hypochloraemic alkalosis points to a benign cause, and its absence does
+    not reassure you: it points towards cancer.</b> That inversion is the mark.
+  </div>
+
+  <h3>Risk factors, if the cause turns out to be cancer</h3>
+
+  <dl class="findings">
+    <dt>Helicobacter pylori, and the limit of what follows from it</dt>
+    <dd>Epidemiology points to a role for <i>H. pylori</i>, principally in carcinoma of the
+    <b>body and distal stomach</b> rather than the proximal stomach. But <b>"there is insufficient
+    evidence to support eradication programmes in asymptomatic
+    patients"</b>.<cite class="src bl">B&amp;L 67 &middot; p.1170</cite> Know both halves: the
+    association is real, the population screening conclusion does not follow.</dd>
+    <dt>Previous ulcer surgery</dt>
+    <dd>Patients who have had peptic ulcer surgery, <b>particularly drainage procedures such as
+    Billroth II or Pólya gastrectomy, gastroenterostomy or pyloroplasty</b>, are at
+    <b>approximately four times the average risk</b>, thought to be from <b>bile reflux and
+    intestinal metaplasia</b>.<cite class="src bl">B&amp;L 67 &middot; p.1170</cite> This is the
+    one risk factor the surgeon creates, so it is worth volunteering when you are asked to justify
+    an operation.</dd>
+    <dt>Pernicious anaemia, gastric atrophy, adenomatous polyps</dt>
+    <dd>All increase risk.<cite class="src bl">B&amp;L 67 &middot; p.1170</cite> On polyps, the
+    rule is: <b>metaplastic polyps are the commonest type, associated with H. pylori and regress
+    after eradication; fundic gland polyps are associated with PPI use and with familial
+    adenomatous polyposis; neither has proven malignant potential, but true adenomas do and should
+    be removed</b>. <b>Biopsy is essential</b> in all of them, because a polyp may actually be an
+    early gastric cancer.<cite class="src bl">B&amp;L 67 &middot; p.1169</cite></dd>
+    <dt>Diet, smoking and environment</dt>
+    <dd><b>Excessive salt intake, deficiency of antioxidants, exposure to N-nitroso compounds</b>;
+    cigarette smoking; dust ingestion in industrial processes. The evidence that diet matters is
+    the <b>decline in gastric cancer among Japanese families living in the
+    USA</b>.<cite class="src bl">B&amp;L 67 &middot; p.1170</cite></dd>
+    <dt>And the split that changes the whole picture</dt>
+    <dd>Distal and body cancer is falling at about <b>1% per year</b> in the West and is commonest
+    in <b>low socioeconomic groups</b>; <b>proximal</b> gastric cancer, particularly at the
+    gastro-oesophageal junction, is <b>rising</b> and affects <b>higher socioeconomic groups</b>,
+    is <b>not</b> associated with <i>H. pylori</i>, and is associated with <b>obesity</b>. <b>Its
+    aetiology remains an enigma.</b> This shift <b>has not been observed in
+    Japan</b>, where distal cancer still
+    predominates.<cite class="src bl">B&amp;L 67 &middot; p.1170</cite></dd>
+  </dl>
+
+  <!-- ===================== 3. HISTORY ===================== -->
+
+  <h2><span class="n">3</span>History, and why each question earns its place</h2>
+
+  <h3>Establish that there was an ulcer first</h3>
+
+  <div class="step">
+    <span class="ask">How long have you had pain? Where exactly? Point to it.</span>
+    <span class="why">
+      <span class="label">Distinguishes</span>S Das localises both ulcers precisely. <b>Duodenal
+      ulcer</b>: on the <b>transpyloric plane about 1½ inches to the right of the midline</b>, the
+      <b>duodenal point</b>, which is about a hand's breadth below the xiphisternal
+      joint.<cite class="src das">Das 34 &middot; p.483, p.507</cite> <b>Gastric ulcer</b>: deep
+      tenderness <b>in the mid-epigastric region</b>, elicitable <b>"with remarkable
+      constancy"</b>.<cite class="src das">Das 34 &middot; p.507</cite>
+      <br><span class="label">Why it matters here</span>Benign gastric outlet obstruction requires
+      <b>a long history of peptic ulcer
+      disease</b>,<cite class="src bl">B&amp;L 67 &middot; p.1168</cite> so establishing years of
+      typical ulcer pain is what makes the benign diagnosis plausible. Its absence pushes you
+      towards cancer.
+    </span>
+  </div>
+
+  <div class="step">
+    <span class="ask">Does food make the pain better or worse? How long after eating?</span>
+    <span class="why">
+      <span class="label">Distinguishes</span><b>Duodenal ulcer</b>: pain appears <b>2½ to 4 hours
+      after a meal, when the stomach becomes empty</b>, so it is <b>"hunger pain"</b>, typically
+      <b>in the early morning or late afternoon</b>, and <b>relieved by taking
+      food</b>.<cite class="src das">Das 34 &middot; p.507</cite> <b>Gastric ulcer</b>: pain
+      <b>immediately after food</b>, with <b>"clock-like" regularity</b>, relieved when the
+      stomach empties, or by alkali, or by vomiting which is <b>often
+      self-induced</b>.<cite class="src das">Das 34 &middot; p.507</cite>
+      <br><span class="label">So</span>The food relation separates the two ulcers, and S Das adds
+      the body-habitus consequence: the duodenal ulcer patient has an <b>exceptionally good
+      appetite and eats frequently to relieve pain, so most are well built</b>, whereas the gastric
+      ulcer patient <b>restricts food for fear of pain and is often thin</b>, though <b>appetite
+      remains good</b>.<cite class="src das">Das 34 &middot; p.507</cite>
+      <br><span class="label">And the heavier the meal</span><b>"The heavier the meal, the longer
+      is the interval but the worse is the pain."</b><cite class="src das">Das 34 &middot; p.507</cite>
+    </span>
+  </div>
+
+  <div class="step">
+    <span class="ask">Has the pain lost its old pattern? Does it still come and go in spells?</span>
+    <span class="why">
+      <span class="label">Rules in</span><b>Loss of periodicity.</b> In peptic ulcer there is
+      <b>definite periodicity lasting several weeks followed by an interval of freedom</b>, with
+      attacks in <b>spring and autumn</b>.<cite class="src das">Das 34 &middot; p.482, p.507</cite>
+      SRB lists <b>loss of periodicity</b> as a clinical feature of pyloric
+      stenosis.<cite class="src srb">SRB 20 &middot; p.818</cite> S Das's version in the history is
+      <b>"certain loss of its periodicity with enhancement of pain and fullness towards
+      evening"</b>.<cite class="src das">Das 34 &middot; p.508</cite>
+      <br><span class="label out">And the other thing loss of periodicity means</span>S Das's
+      warning about gastric ulcer: <b>"if [the patient] loses his periodicity of pain one may
+      suspect superimposition of carcinoma or penetration into the pancreas or pyloric
+      obstruction"</b>.<cite class="src das">Das 34 &middot; p.483</cite> Three possibilities from
+      one answer, and you should name all three.
+      <br><span class="label out">Rules out</span>In appendicular dyspepsia and gallbladder disease
+      this <b>definite</b> periodicity is <b>not</b> found; instead a mild pain continues even in
+      the quiet periods.<cite class="src das">Das 34 &middot; p.482</cite>
+    </span>
+  </div>
+
+  <h3>Now characterise the vomiting, which is the diagnostic symptom</h3>
+
+  <div class="step">
+    <span class="ask">How much do you vomit, at what time of day, and what is in it?</span>
+    <span class="why">
+      <span class="label">Rules in</span>All three books converge. B&amp;L: <b>"The vomitus is
+      characteristically of undigested food and is totally lacking in
+      bile."</b><cite class="src bl">B&amp;L 67 &middot; p.1168</cite> SRB: <b>large quantity, foul
+      smelling and frothy, containing food consumed on the previous day, partially digested or
+      undigested</b>.<cite class="src srb">SRB 20 &middot; p.818</cite> S Das: large in amount,
+      <b>characteristically in the evening</b>, often <b>foul and frothy</b>, containing undigested
+      food <b>eaten even 2 or 3 days earlier</b>.<cite class="src das">Das 34 &middot; p.508</cite>
+      <br><span class="label">The three features to name</span><b>Large volume; no bile; and old
+      food.</b> The absence of bile localises the obstruction <b>at or proximal to the pylorus</b>,
+      which is the whole point of asking.
+      <br><span class="label out">Contrast</span>In <b>superior mesenteric artery syndrome</b>, the
+      cast syndrome, the vomiting is <b>bilious</b>, with upper abdominal fullness, visible
+      peristalsis and dehydration, and SRB lists pyloric stenosis with gastric outlet obstruction
+      as its differential.<cite class="src srb">SRB 20 &middot; p.832</cite> Bile in the vomit
+      moves the obstruction distal to the second part of the duodenum.
+      <br><span class="label">And one more character</span>S Das: <b>"coffee ground" vomiting</b>
+      indicates slow haemorrhage into the
+      stomach.<cite class="src das">Das 34 &middot; p.483</cite>
+    </span>
+  </div>
+
+  <div class="step">
+    <span class="ask">Does vomiting relieve the pain?</span>
+    <span class="why">
+      <span class="label">Rules in</span>S Das: <b>"Vomiting always relieves pain of peptic
+      ulcer."</b><cite class="src das">Das 34 &middot; p.483</cite>
+      <br><span class="label out">Rules in something worse</span>In carcinoma of the stomach the
+      late symptom is <b>vomiting which gives no relief to the pain</b>, with <b>constant
+      epigastric pain neither caused by nor relieved by
+      food</b>.<cite class="src das">Das 34 &middot; p.508</cite> So "does it help?" is a
+      one-question screen for malignancy, and almost nobody asks it.
+    </span>
+  </div>
+
+  <div class="step">
+    <span class="ask">Have you lost weight? How is your appetite now?</span>
+    <span class="why">
+      <span class="label">Why</span><b>Weight loss is a feature</b> of benign gastric outlet
+      obstruction too, and the patient <b>appears unwell and
+      dehydrated</b>,<cite class="src bl">B&amp;L 67 &middot; p.1168</cite> so weight loss alone
+      does not mean cancer. SRB lists <b>loss of appetite and
+      weight</b>.<cite class="src srb">SRB 20 &middot; p.818</cite>
+      <br><span class="label">Distinguishes</span>What does discriminate is the <b>sequence</b>. In
+      benign disease there are years of typical ulcer pain and then obstruction and then weight
+      loss. In cancer, <b>early satiety, bloating, distension and vomiting</b> arrive on a
+      <b>short history</b>, with <b>profound</b> weight
+      loss,<cite class="src bl">B&amp;L 67 &middot; p.1170</cite> and S Das notes of the insidious
+      type that <b>"the history is usually
+      short"</b>.<cite class="src das">Das 34 &middot; p.508</cite>
+      <br><span class="label out">Careful about age</span>S Das: carcinoma of the stomach is a
+      disease of the elderly, <b>"but if suspected in the young, should not be turned down on the
+      point of age only"</b>.<cite class="src das">Das 34 &middot; p.508</cite>
+    </span>
+  </div>
+
+  <h3>Then go looking for cancer</h3>
+
+  <div class="step">
+    <span class="ask">Any black stools, or vomiting of blood? Any tiredness or breathlessness?</span>
+    <span class="why">
+      <span class="label">Rules in</span>Both causes bleed. S Das: haematemesis and melaena
+      accompany chronic gastric ulcer in <b>about a quarter</b> of cases, and in duodenal ulcer
+      they are <b>more frequent</b> than in gastric ulcer, with a <b>5% chance of massive
+      haemorrhage and a 2% chance of
+      perforation</b>.<cite class="src das">Das 34 &middot; p.507</cite> B&amp;L on cancer: <b>the
+      tumour frequently bleeds, resulting in iron deficiency
+      anaemia</b>.<cite class="src bl">B&amp;L 67 &middot; p.1170</cite> SRB gives haematemesis in
+      <b>15%</b> of gastric cancers.<cite class="src srb">SRB 20 &middot; p.841</cite>
+      <br><span class="label">So</span>Anaemia in a patient with gastric outlet obstruction is
+      expected either way, but <b>iron deficiency anaemia with a short history and no ulcer
+      history</b> is a cancer story.
+    </span>
+  </div>
+
+  <div class="step">
+    <span class="ask">Any swelling in the neck? Any abdominal distension? Any leg swelling or painful veins?</span>
+    <span class="why">
+      <span class="label">Rules in</span>Metastatic disease, and each has a name.
+      <b>Troisier's sign</b>: tumour appearing in the <b>left supraclavicular</b> node, Virchow's
+      node.<cite class="src bl">B&amp;L 67 &middot; p.1171</cite><cite class="src srb">SRB 20 &middot; p.839</cite>
+      <b>Ascites</b> from transcoelomic spread. <b>Trousseau's sign</b>: <b>migrating
+      thrombophlebitis</b> and deep venous thrombosis, a non-metastatic effect of malignancy
+      arising from the tumour's effect on thrombotic and haemostatic
+      mechanisms.<cite class="src bl">B&amp;L 67 &middot; p.1170</cite><cite class="src srb">SRB 20 &middot; p.841</cite>
+      <br><span class="label">The footnote worth knowing</span>Trousseau described the sign in
+      himself and suspected he had gastric cancer; at post-mortem it proved to be <b>pancreatic</b>
+      cancer.<cite class="src bl">B&amp;L 67 &middot; p.1170</cite> SRB also lists migrating
+      thrombophlebitis in carcinoma of the
+      pancreas.<cite class="src srb">SRB 20 &middot; p.841</cite>
+      <br><span class="label">And the nodal point that surprises people</span>B&amp;L: <b>"Unlike
+      malignancies such as breast cancer, nodal involvement does not" </b>carry the same
+      implication.<cite class="src bl">B&amp;L 67 &middot; p.1171</cite> Gastric cancer nodal
+      spread may be extensive and still resectable, which is why D2 lymphadenectomy exists.
+    </span>
+  </div>
+
+  <div class="step">
+    <span class="ask">Any previous stomach operation?</span>
+    <span class="why">
+      <span class="label">Rules in</span>Two separate things. First, <b>cancer risk</b>: previous
+      drainage surgery raises it <b>fourfold</b> through bile reflux and intestinal
+      metaplasia.<cite class="src bl">B&amp;L 67 &middot; p.1170</cite> Second,
+      <b>gastro-jejunal ulcer</b>, which S Das describes in detail: it follows a Pólya
+      gastrectomy or a gastro-jejunal anastomosis, the incidence being <b>very high when
+      gastro-jejunostomy is not combined with vagotomy</b>, recurring in about <b>3% after Pólya
+      gastrectomy and 5% after vagotomy and gastro-jejunostomy</b>, usually <b>within 2 years</b>,
+      with pain <b>within half an hour of food radiating from above and left of the umbilicus to
+      the left iliac fossa</b>.<cite class="src das">Das 34 &middot; p.508</cite>
+      <br><span class="label out">And its dreadful end point</span><b>Gastro-jejunocolic
+      fistula</b>: anastomotic ulcer symptoms disappear and are replaced by <b>severe diarrhoea,
+      eructation of foul gas, and vomiting of fragments of formed faeces</b>, from fouling of the
+      jejunum by colonic contents. And the examinable technical point: <b>it is better diagnosed by
+      a barium enema, since in more than half of patients the barium meal fails to reveal the
+      fistula</b>.<cite class="src das">Das 34 &middot; p.508</cite>
+    </span>
+  </div>
+
+  <!-- ===================== 4. EXAMINATION ===================== -->
+
+  <h2><span class="n">4</span>Examination, and what each finding settles</h2>
+
+  <div class="pearl">
+    <span class="tag">Look for the three signs in the order SRB names them</span>
+    <b>Stomach we see, stomach we feel, stomach we
+    hear.</b><cite class="src srb">SRB 20 &middot; p.818</cite> Visible gastric peristalsis;
+    the dilated stomach outlined by auscultopercussion; and the succussion splash. Then B&amp;L's
+    much shorter version, which is all it offers: <b>"On examination the distended stomach may be
+    visible and a succussion splash may be
+    audible."</b><cite class="src bl">B&amp;L 67 &middot; p.1168</cite>
+  </div>
+
+  <h3>General examination first</h3>
+
+  <dl class="findings">
+    <dt>Dehydration</dt>
+    <dd>B&amp;L: the patient <b>appears unwell and
+    dehydrated</b>.<cite class="src bl">B&amp;L 67 &middot; p.1168</cite> Assess it properly,
+    because the fluid deficit is what you will be treating first.</dd>
+    <dt>Confusion, irritability, convulsions</dt>
+    <dd>SRB lists <b>confused status because of alkalosis and electrolyte
+    changes</b>,<cite class="src srb">SRB 20 &middot; p.818</cite> and in its account of the
+    metabolic syndrome: <b>irritability, confused status, dehydration, often convulsions, and
+    features of alkalosis such as rapid Cheyne-Stokes breathing and
+    tetany</b>.<cite class="src srb">SRB 20 &middot; p.820</cite> A confused patient with
+    vomiting is not septic until proved otherwise: check the calcium and the gases.</dd>
+    <dt>Signs of tetany</dt>
+    <dd>Look for them actively. Alkalosis lowers ionised calcium and <b>tetany can
+    occur</b>,<cite class="src bl">B&amp;L 67 &middot; p.1169</cite> which SRB calls <b>gastric
+    tetany</b>.<cite class="src srb">SRB 20 &middot; p.820</cite></dd>
+    <dt>Anaemia and cachexia</dt>
+    <dd>SRB lists both among the features of gastric
+    cancer,<cite class="src srb">SRB 20 &middot; p.841</cite> and iron deficiency anaemia follows
+    from a tumour that bleeds.<cite class="src bl">B&amp;L 67 &middot; p.1170</cite></dd>
+  </dl>
+
+  <h3>Inspection of the abdomen</h3>
+
+  <div class="step">
+    <span class="ask">Look across the epigastrium in tangential light for several minutes. Then give the patient a cup of water and look again.</span>
+    <span class="why">
+      <span class="label">Rules in</span><b>Visible gastric peristalsis.</b> S Das is explicit
+      about its value: <b>"visible peristalsis passing from left to right is
+      pathognomonic"</b>.<cite class="src das">Das 34 &middot; p.508</cite> And he tells you when
+      to go looking: <b>"If there is any history suggesting pyloric stenosis, one should look for
+      visible peristalsis."</b><cite class="src das">Das 34 &middot; p.489</cite>
+      <br><span class="label">How to provoke it</span>SRB: <b>visible gastric peristalsis may be
+      elicited by asking the patient to drink a cup of
+      water</b>.<cite class="src srb">SRB 20 &middot; p.818</cite> Say that you would do this, and
+      then actually wait: peristalsis comes in waves and candidates look for three seconds and
+      report it absent.
+      <br><span class="label">Direction matters</span><b>Left to right</b>, following the line of
+      the stomach towards the obstructed
+      pylorus.<cite class="src das">Das 34 &middot; p.508</cite>
+    </span>
+  </div>
+
+  <details open class="conflict">
+    <summary>
+      <span class="what">Does Bailey &amp; Love teach visible gastric peristalsis?</span>
+      <span class="who">S Das 34 p.508 calls it pathognomonic and SRB 20 p.818 tells you how to provoke it; the word does not appear in B&amp;L 67</span>
+    </summary>
+    <div class="body">
+    <dl>
+      <dt>S Das</dt>
+      <dd><b>"On examination, visible peristalsis passing from left to right is
+      pathognomonic."</b><cite class="src das">Das 34 &middot; p.508</cite> It is also one of the
+      two things he instructs you to look for whenever the history suggests pyloric
+      stenosis.<cite class="src das">Das 34 &middot; p.489</cite></dd>
+      <dt>SRB</dt>
+      <dd>Lists <b>visible gastric peristalsis</b> as a clinical feature, gives the manoeuvre to
+      bring it out, and makes it the first of the three signs in its
+      triad.<cite class="src srb">SRB 20 &middot; p.818, p.840</cite></dd>
+      <dt>Bailey &amp; Love 28e</dt>
+      <dd><b>The word "peristalsis" does not occur anywhere in chapter 67.</b> Its entire physical
+      examination of gastric outlet obstruction is one sentence: the distended stomach may be
+      visible and a succussion splash may be
+      audible.<cite class="src bl">B&amp;L 67 &middot; p.1168</cite> Elsewhere it says of peptic
+      ulcer disease generally that examination <b>"may reveal epigastric tenderness but, except in
+      gastric outlet obstruction, there is unlikely to be much else to
+      find"</b>.<cite class="src bl">B&amp;L 67 &middot; p.1159</cite></dd>
+    </dl>
+    <span class="ruling"><b>Not a disagreement about the sign, but about whose job it is: B&amp;L
+    has largely handed the bedside to endoscopy, and the clinical signs in this case live in the
+    Indian texts.</b> Elicit and report visible gastric peristalsis, because your examiner is
+    marking from S Das and SRB and because it is a genuinely useful sign. Just do not say
+    "Bailey and Love says" when you mean S Das: the only two physical findings B&amp;L offers here
+    are <b>a visible distended stomach</b> and <b>a succussion splash</b>. If an examiner trained
+    on the British text seems unimpressed by the sign, the honest line is that it is a classical
+    sign retained in the Indian clinical tradition and that the diagnosis is confirmed
+    endoscopically either way.</span>
+    </div>
+  </details>
+
+  <h3>Palpation and percussion</h3>
+
+  <dl class="findings">
+    <dt>Feel for a mass, and let the answer change your diagnosis</dt>
+    <dd>SRB: in pyloric stenosis due to chronic duodenal ulcer, <b>"mass is never
+    palpable"</b>; in carcinoma pylorus, <b>"here mass may be
+    palpable"</b>.<cite class="src srb">SRB 20 &middot; p.819</cite> This is the single most
+    useful discriminating sign at the bedside, and it is the reason to palpate carefully with the
+    stomach emptied.</dd>
+    <dt>The auscultopercussion test, described properly</dt>
+    <dd>Place a stethoscope over the epigastrium. <b>Scratch the skin from the left side
+    downwards</b> at several points away from the epigastrium, towards the left, with a finger, and
+    <b>join the points</b> at which the sound changes. <b>Normally the greater curvature lies above
+    the level of the umbilicus</b>, midway between umbilicus and epigastrium. <b>In gastric outlet
+    obstruction it lies below the umbilicus.</b><cite class="src srb">SRB 20 &middot; p.818</cite>
+    On barium, SRB's equivalent threshold is more extreme: the greater curvature <b>below the level
+    of the iliac crest</b>.<cite class="src srb">SRB 20 &middot; p.819</cite></dd>
+    <dt>Examine for ascites and for secondaries</dt>
+    <dd>SRB's list for advanced gastric cancer: a <b>liver</b> with secondaries, <b>hard and
+    nodular in 50%, with umbilication</b>; <b>ascites</b>; <b>Troisier's sign</b>; <b>rectovesical
+    secondaries, the Blumer shelf, on rectal examination</b>; and <b>Trousseau's
+    sign</b>.<cite class="src srb">SRB 20 &middot; p.841</cite> B&amp;L adds the two named
+    transcoelomic deposits: the ovaries as the sole site of spread, <b>Krukenberg's tumours</b>,
+    and spread to the umbilicus, <b>Sister Joseph's
+    nodule</b>.<cite class="src bl">B&amp;L 67 &middot; p.1174</cite>
+    <br><span class="label">So do a rectal examination</span>Because the <b>rectovesical shelf</b>
+    is free information and candidates skip it.</dd>
+  </dl>
+
+  <h3>Auscultation: the succussion splash</h3>
+
+  <div class="step">
+    <span class="ask">Place the stethoscope over the epigastrium and shake the patient by the shoulders or the hips.</span>
+    <span class="why">
+      <span class="label">Rules in</span>A splash of fluid in a stomach that should be empty, so
+      the stomach is not emptying. All three books carry the
+      sign.<cite class="src das">Das 34 &middot; p.508</cite><cite class="src srb">SRB 20 &middot; p.818</cite><cite class="src bl">B&amp;L 67 &middot; p.1168</cite>
+      <br><span class="label">The precondition is the whole test</span>The stomach must have been
+      empty for some hours, or you are splashing the breakfast of a normal person. SRB: shake the
+      patient <b>adequately</b>, with a stethoscope over the epigastric
+      region.<cite class="src srb">SRB 20 &middot; p.818</cite>
+      <br><span class="label out">And it is not specific to obstruction</span>SRB lists a positive
+      succussion splash in <b>acute gastric dilatation</b>
+      too.<cite class="src srb">SRB 20 &middot; p.833</cite> A dilated stomach splashes whatever
+      the reason it is dilated.
+    </span>
+  </div>
+
+  <details open class="conflict">
+    <summary>
+      <span class="what">How long must the stomach be empty before testing for a succussion splash?</span>
+      <span class="who">SRB says 4 hours on p.818 and 4 to 6 hours on p.840</span>
+    </summary>
+    <div class="body">
+    <dl>
+      <dt>SRB, in the pyloric stenosis section</dt>
+      <dd>"Positive succussion splash <b>which is done with 4 hours empty stomach</b>, by placing
+      a stethoscope over the epigastric region and shaking the patient
+      adequately."<cite class="src srb">SRB 20 &middot; p.818</cite></dd>
+      <dt>SRB, in the gastric cancer section</dt>
+      <dd>Features of gastric outlet obstruction are VGP positive, auscultopercussion positive, and
+      "+ve succussion splash <b>(to be checked with 4-6 hours empty
+      stomach)</b>".<cite class="src srb">SRB 20 &middot; p.840</cite></dd>
+      <dt>S Das and Bailey &amp; Love</dt>
+      <dd>Neither states a time. S Das says only that the splash <b>"is often
+      heard"</b>,<cite class="src das">Das 34 &middot; p.508</cite> and B&amp;L only that it
+      <b>"may be audible"</b>.<cite class="src bl">B&amp;L 67 &middot; p.1168</cite> So there is
+      no third opinion to appeal to.</dd>
+    </dl>
+    <span class="ruling"><b>One book giving two numbers is a gift, because you cannot be wrong if
+    you give the safer one and say why.</b> Answer <b>"at least four hours, and I would prefer six"</b>,
+    and give the reasoning rather than the citation: the test asks whether the stomach still holds
+    fluid when it should be empty, so <b>the longer the fast, the more specific the sign</b>. Four
+    hours is the minimum at which a normal stomach should have emptied a light meal; at six hours a
+    splash is hard to explain any other way. If the examiner wants a single figure, say four hours,
+    since that is the number in SRB's pyloric stenosis chapter, which is the chapter this case
+    comes from.</span>
+    </div>
+  </details>
+
+  <!-- ===================== 5. INVESTIGATIONS ===================== -->
+
+  <h2><span class="n">5</span>Investigations, and why each one</h2>
+
+  <div class="step">
+    <span class="ask">What do you do before you investigate anything?</span>
+    <span class="why">
+      <span class="label">Answer</span><b>Empty the stomach, and empty it properly.</b> B&amp;L:
+      <b>"A large nasogastric tube may not be sufficiently large to deal with the contents of the
+      stomach, and it may be necessary to pass an orogastric tube and lavage the stomach until it
+      is completely emptied. This allows investigation with endoscopy and contrast
+      radiology."</b><cite class="src bl">B&amp;L 67 &middot; p.1169</cite> SRB names a tube for
+      it, <b>Ewald's</b>, and gives the second benefit: a stomach wash with normal saline also
+      <b>reduces the oedema of the stomach wall and improves gastric
+      [emptying]</b>.<cite class="src srb">SRB 20 &middot; p.819</cite>
+      <br><span class="label">So</span>You cannot scope a stomach full of three-day-old food, and
+      saying this first shows you have thought about the actual patient rather than the list.
+    </span>
+  </div>
+
+  <h3>The investigations, in order of priority</h3>
+
+  <dl class="findings">
+    <dt>1. Serum electrolytes, arterial blood gases, serum calcium and magnesium</dt>
+    <dd>Because the metabolic abnormality is what will kill him, and because correcting it is the
+    first treatment. SRB's list is exactly this: <b>serum electrolytes; arterial blood gas
+    analysis; serum calcium level
+    estimation</b>.<cite class="src srb">SRB 20 &middot; p.820</cite> Add magnesium, which SRB
+    lists among the deficits and the replacements.</dd>
+    <dt>2. ECG</dt>
+    <dd>SRB: <b>to check for hypokalaemia</b>.<cite class="src srb">SRB 20 &middot; p.819</cite>
+    And it is needed again during potassium replacement, which SRB says must be given <b>slowly
+    under ECG monitoring</b>.<cite class="src srb">SRB 20 &middot; p.820</cite></dd>
+    <dt>3. Upper gastrointestinal endoscopy with biopsy: the decisive test</dt>
+    <dd>SRB: gastroscopy <b>to rule out carcinoma stomach and to visualise the stenosed
+    area</b>.<cite class="src srb">SRB 20 &middot; p.819</cite> B&amp;L is stronger: <b>"Endoscopic
+    biopsy is essential to exclude malignancy"</b>, and <b>"biopsy of the area around the pylorus
+    is essential"</b>.<cite class="src bl">B&amp;L 67 &middot; p.1169</cite> Say the word
+    <b>essential</b>, because that is the word the book uses.
+    <br><span class="label out">And biopsy everything that looks like a polyp</span>Gastric polyps
+    matter because they <b>may actually represent early gastric cancer</b>, so <b>biopsy is
+    essential</b> there too.<cite class="src bl">B&amp;L 67 &middot; p.1169</cite></dd>
+    <dt>4. Barium meal, if endoscopy is unavailable</dt>
+    <dd>SRB's four findings: <b>absence of the duodenal cap</b>; a <b>dilated stomach with the
+    greater curvature below the level of the iliac crest</b>; a <b>mottled</b> stomach, from
+    retained food; and <b>barium will not pass into the
+    duodenum</b>.<cite class="src srb">SRB 20 &middot; p.819</cite> S Das: <b>"Barium meal X-ray
+    will clinch the diagnosis."</b><cite class="src das">Das 34 &middot; p.508</cite>
+    <br><span class="label out">The complication nobody mentions</span>SRB warns that a barium meal
+    <b>may precipitate intestinal obstruction</b>.<cite class="src srb">SRB 20 &middot; p.808</cite>
+    <br><span class="label">And the mechanism of the absent cap</span>With deformity of the first
+    part of the duodenum, <b>barium will not stay, so the cap will not be
+    formed</b>.<cite class="src srb">SRB 20 &middot; p.808</cite></dd>
+    <dt>5. Goldstein's saline load test</dt>
+    <dd>Instil <b>750 mL of saline</b>; aspirate <b>half an hour</b> later; <b>more than 250 mL
+    remaining suggests obstruction</b>.<cite class="src srb">SRB 20 &middot; p.819</cite> A
+    bedside test of gastric emptying that is worth naming even though endoscopy has superseded it,
+    because it is the kind of thing an examiner asks to see whether you have read SRB or a
+    summary.</dd>
+    <dt>6. Staging, once malignancy is proven</dt>
+    <dd>Contrast CT, and the staging system is the <b>UICC TNM</b>. Two eighth-edition points worth
+    knowing: <b>all gastric tumours whose epicentre is within 5 cm of the gastro-oesophageal
+    junction and which extend into the oesophagus are now staged by the oesophageal system</b>,
+    while those within 5 cm that <b>do not</b> extend into the oesophagus, and all other gastric
+    cancers, are staged by the gastric
+    system.<cite class="src bl">B&amp;L 67 &middot; p.1171</cite> Transperitoneal spread is
+    <b>detected most effectively</b> by laparoscopy rather than by
+    CT.<cite class="src bl">B&amp;L 67 &middot; p.1174</cite></dd>
+  </dl>
+
+  <!-- ===================== 6. TREATMENT ===================== -->
+
+  <h2><span class="n">6</span>Treatment, and the reasoning behind each choice</h2>
+
+  <div class="pearl">
+    <span class="tag">The order of operations, literally</span>
+    B&amp;L: <b>"Treating the patient involves correcting the metabolic abnormalities and dealing
+    with the mechanical obstruction."</b> In that
+    order.<cite class="src bl">B&amp;L 67 &middot; p.1169</cite> Nobody with a hypochloraemic
+    alkalosis and a potassium of 2.5 should be anaesthetised, and saying so unprompted is worth
+    more than any operative detail in this case.
+  </div>
+
+  <h3>Resuscitation, and why saline is the right fluid</h3>
+
+  <dl class="findings">
+    <dt>Isotonic saline with potassium</dt>
+    <dd>B&amp;L: <b>"The patient should be rehydrated with intravenous isotonic saline with
+    potassium supplementation."</b> And the reason, which is the examinable part: <b>"Replacing the
+    sodium chloride and water allows the kidney to correct the acid-base
+    abnormality."</b><cite class="src bl">B&amp;L 67 &middot; p.1169</cite> Its summary box says the
+    same: the hypochloraemic alkalosis <b>should be treated with isotonic saline with
+    potassium</b>.<cite class="src bl">B&amp;L 67 &middot; p.1169</cite>
+    <br><span class="label">So</span>You do not give bicarbonate, and you do not give acid. You
+    give the kidney back the chloride and the volume it needs to excrete bicarbonate itself.</dd>
+    <dt>SRB's version, with the extras</dt>
+    <dd>Normal saline, <b>often double strength normal saline</b>, and <b>slow correction is
+    important</b>. <b>Intravenous potassium slowly under ECG monitoring</b>; intravenous
+    <b>magnesium</b>; intravenous <b>calcium</b>. Plus <b>blood transfusion if anaemic</b> and
+    <b>total parenteral nutrition
+    support</b>.<cite class="src srb">SRB 20 &middot; p.819, p.820</cite> The nutritional point is
+    a real one: these patients have not eaten properly for weeks.</dd>
+    <dt>Stomach wash</dt>
+    <dd>With normal saline through a wide tube, which also <b>reduces the oedema of the stomach
+    wall</b>.<cite class="src srb">SRB 20 &middot; p.819</cite></dd>
+    <dt>And treat the ulcer while you wait</dt>
+    <dd>B&amp;L: <b>"Early cases may settle with conservative treatment, as oedema around the ulcer
+    diminishes as the ulcer is healed"</b>, and its summary box notes that <b>aggressive medical
+    therapy for peptic ulcer disease often</b> suffices in early
+    cases.<cite class="src bl">B&amp;L 67 &middot; p.1169</cite> So part of the obstruction is
+    oedema, which is reversible, and part is scar, which is not. That distinction is why a few days
+    of decompression and acid suppression can convert an operation into a discharge.</dd>
+  </dl>
+
+  <details open class="conflict">
+    <summary>
+      <span class="what">Is endoscopic balloon dilatation worth doing?</span>
+      <span class="who">B&amp;L 67 p.1169 says it may be effective and most useful early; SRB 20 p.820 says it benefits only temporarily</span>
+    </summary>
+    <div class="body">
+    <dl>
+      <dt>Bailey &amp; Love 28e</dt>
+      <dd>Positive, with a condition. Its summary box lists <b>"Endoscopic dilatation of the
+      gastric outlet may be effective"</b> as a management option, and the text says <b>"Endoscopic
+      treatment with balloon dilatation may be most useful in early cases and may have to be
+      repeated several times."</b><cite class="src bl">B&amp;L 67 &middot; p.1169</cite></dd>
+      <dt>SRB</dt>
+      <dd>Negative: <b>"Endoscopic balloon dilatation of the stenosed area benefits only
+      temporarily with high recurrence
+      rate."</b><cite class="src srb">SRB 20 &middot; p.820</cite></dd>
+    </dl>
+    <span class="ruling"><b>They are not far apart once you notice that B&amp;L concedes the
+    recurrence in the same sentence: "may have to be repeated several times" is the same
+    observation SRB states as an objection.</b> Answer it as a question of selection, not of
+    principle: <b>"Balloon dilatation has a role in early, benign, oedematous stenosis, and in a
+    patient too unfit for surgery, but it commonly needs repeating and recurrence is high, so it is
+    not a definitive treatment for an established fibrotic stricture."</b> Then add the two places
+    endoscopy genuinely wins: it is <b>how you get the biopsy</b>, which is mandatory; and in
+    <b>unresectable malignancy</b>, where B&amp;L says <b>a duodenal stent may be
+    considered</b>.<cite class="src bl">B&amp;L 67 &middot; p.1169</cite></span>
+    </div>
+  </details>
+
+  <h3>The operation for benign obstruction</h3>
+
+  <div class="pearl">
+    <span class="tag">Gastroenterostomy, not pyloroplasty, and both books agree on why</span>
+    B&amp;L: <b>"Traditionally, severe cases are treated surgically, usually with a
+    gastroenterostomy rather than a pyloroplasty."</b><cite class="src bl">B&amp;L 67 &middot; p.1169</cite>
+    Its summary box puts it as <b>a drainage procedure for benign disease and appropriate resection
+    for malignancy</b>.<cite class="src bl">B&amp;L 67 &middot; p.1169</cite>
+    <br><br>SRB supplies the mechanism B&amp;L leaves out, and it is the better answer: <b>"No role
+    of pyloroplasty or only HSV in a scarred duodenum, as it can cause disruption and bile
+    leak."</b><cite class="src srb">SRB 20 &middot; p.820</cite> You cannot safely cut and
+    re-suture a thick, fibrotic, scarred duodenum, so you bypass it. SRB's operation of choice
+    follows: <b>"GJ with vagotomy is commonly used in pyloric stenosis due to chronic duodenal
+    ulcer."</b><cite class="src srb">SRB 20 &middot; p.820</cite>
+  </div>
+
+  <dl class="findings">
+    <dt>Why add a vagotomy to the gastrojejunostomy</dt>
+    <dd>Because a drainage procedure alone leaves the acid, and a gastrojejunostomy without
+    vagotomy is the classical setting for a <b>stomal ulcer</b>. S Das gives the figures: the
+    incidence of gastro-jejunal ulcer is <b>very high when gastro-jejunostomy is not associated
+    with vagotomy</b>, and recurrence is <b>3% after Pólya gastrectomy and 5% after vagotomy and
+    gastro-jejunostomy</b>.<cite class="src das">Das 34 &middot; p.508</cite></dd>
+    <dt>What vagotomy actually does, in SRB's phrase</dt>
+    <dd><b>"No acid, no ulcer."</b> In <b>highly selective vagotomy</b>, only the fibres supplying
+    the parietal cells are divided; the <b>nerve of Latarjet</b>, supplying the antral pump, is
+    retained, <b>so no drainage procedure is required</b>. Fibres in the <b>last 6 cm of stomach
+    proximal to the pylorus are preserved, the crow's foot</b>, and <b>distal 6 cm of oesophageal
+    nerve clearance is essential</b>. Described by <b>Amdrup and Johnston in 1969</b>; also called
+    parietal cell or superselective
+    vagotomy.<cite class="src srb">SRB 20 &middot; p.818</cite>
+    <br><span class="label">Its figures</span>Operative mortality <b>0.2%</b>, morbidity
+    <b>0.5%</b>; very low post-vagotomy diarrhoea and dumping; but <b>lesser curve necrosis from
+    ischaemia</b> and <b>recurrent ulcer in 10 to 15% at 10
+    years</b>.<cite class="src srb">SRB 20 &middot; p.818</cite>
+    <br><span class="label out">But not here</span>SRB specifically excludes <b>HSV alone</b> in a
+    scarred duodenum for the same reason it excludes
+    pyloroplasty.<cite class="src srb">SRB 20 &middot; p.820</cite></dd>
+    <dt>Alternatives, and where they sit</dt>
+    <dd><b>Vagotomy with antrectomy</b>: removes the gastrin-producing antrum and the vagal
+    pathway, with gastroduodenal anastomosis; <b>ulcer recurrence very low but morbidity
+    higher</b>; SRB says it is <b>occasionally used for intractable resistant duodenal ulcer or
+    chronic duodenal ulcer with
+    obstruction</b>.<cite class="src srb">SRB 20 &middot; p.818, p.820</cite>
+    <b>Gastrectomy and other procedures are usually not necessary in pyloric
+    stenosis.</b><cite class="src srb">SRB 20 &middot; p.820</cite></dd>
+    <dt>What to warn the patient about afterwards</dt>
+    <dd>SRB: <b>gastric emptying may be delayed for 2 to 4 weeks after surgery in pyloric stenosis,
+    though it usually recovers in 7
+    days</b>.<cite class="src srb">SRB 20 &middot; p.820</cite> A stomach dilated for months does
+    not regain tone overnight, and a patient who still vomits on day 5 does not necessarily need
+    re-operation.</dd>
+    <dt>And eradicate <i>H. pylori</i> anyway</dt>
+    <dd>SRB: after recovery, <b>eradication of H. pylori is routinely done even though infection
+    may not be evident in many patients with outlet
+    obstruction</b>.<cite class="src srb">SRB 20 &middot; p.820</cite> The triple regime it gives:
+    a <b>proton pump inhibitor</b> with <b>clarithromycin 500 mg twice daily</b> and
+    <b>metronidazole 400 mg twice daily</b>, or amoxycillin 500 to 750 mg twice daily and
+    tinidazole 600 mg twice daily. And a practical warning: <b>antacids and H2 blockers should not
+    be used along with a PPI, because they create an alkaline medium that reduces the PPI's
+    action</b>. <b>Follow-up gastroscopy is a must</b>, to confirm the ulcer has
+    healed.<cite class="src srb">SRB 20 &middot; p.818</cite></dd>
+  </dl>
+
+  <h3>If the cause is cancer</h3>
+
+  <dl class="findings">
+    <dt>The prognosis, stated honestly</dt>
+    <dd><b>"Carcinoma of the stomach is a major cause of mortality worldwide. Its prognosis tends
+    to be poor, with cure rates little better than 5 to 10%, although better results are obtained
+    in Japan, where the disease is common."</b><cite class="src bl">B&amp;L 67 &middot; p.1169</cite>
+    And the sentence that explains the gap: <b>"Gastric cancer is actually an eminently curable
+    disease"</b> whose poor outcome is <b>owing to the advanced stage at
+    presentation</b>.<cite class="src bl">B&amp;L 67 &middot; p.1169</cite> Better results in
+    Japan come from a <b>high population incidence, screening programmes and high-quality
+    surgery</b>.<cite class="src bl">B&amp;L 67 &middot; p.1169</cite></dd>
+    <dt>Incidence, for scale</dt>
+    <dd>USA about <b>10 per 100 000 per year</b>; Eastern Europe about <b>40</b>; <b>Japan
+    approximately 70</b>.<cite class="src bl">B&amp;L 67 &middot; p.1169</cite></dd>
+    <dt>The classification that actually matters clinically</dt>
+    <dd>The <b>Laurén</b> classification, which B&amp;L calls <b>the most useful
+    clinicopathological classification</b>. <b>Intestinal</b> type resembles a carcinoma elsewhere
+    in the gut, forms polypoid tumours or ulcers, and probably arises in <b>intestinal
+    metaplasia</b>. <b>Diffuse</b> type, <b>often with signet ring cells</b>, <b>infiltrates deeply
+    without forming an obvious mass but spreads widely in the gastric wall</b>, and
+    <b>unsurprisingly has a much worse
+    prognosis</b>.<cite class="src bl">B&amp;L 67 &middot; p.1170</cite> SRB gives the intestinal
+    type as <b>53%</b> with favourable prognosis, and notes that in the diffuse type
+    <b>linitis plastica</b> is common, with <b>decreased E-cadherin</b> and p53 and p16
+    inactivation.<cite class="src srb">SRB 20 &middot; p.837</cite></dd>
+    <dt>Early versus advanced, which is the staging that decides cure</dt>
+    <dd><b>Early gastric cancer</b> is cancer <b>limited to the mucosa and submucosa, with or
+    without node involvement, T1 any N</b>. It is <b>eminently curable, with 5-year survival around
+    90%</b>, and is classified by the <b>Japanese</b> system as <b>protruding, superficial or
+    excavated</b>.<cite class="src bl">B&amp;L 67 &middot; p.1170</cite> <b>Advanced</b> cancer
+    involves the <b>muscularis</b> and is classified by <b>Borrmann</b> into four types, of which
+    <b>types III and IV are commonly
+    incurable</b>.<cite class="src bl">B&amp;L 67 &middot; p.1170</cite> SRB's Borrmann list:
+    <b>I single polypoid; II ulcerated with a clear margin; III ulcerated without a clear margin;
+    IV diffuse, linitis plastica; V
+    unclassified</b>.<cite class="src srb">SRB 20 &middot; p.838</cite></dd>
+    <dt>Resection, and the margin</dt>
+    <dd>For distal tumours a <b>subtotal gastrectomy</b> suffices: <b>"it is unnecessary to remove
+    the whole stomach"</b>, the proximal remnant surviving on the <b>short gastric
+    arteries</b>.<cite class="src bl">B&amp;L 67 &middot; p.1175</cite> <b>Resection margins should
+    be well clear of the tumour, greater than 5 cm, with frozen section if either margin is in
+    doubt.</b> Continuity is restored with a <b>Roux loop</b>, whose alimentary limb should be at
+    least 50 cm, to prevent bile reflux
+    oesophagitis.<cite class="src bl">B&amp;L 67 &middot; p.1175</cite></dd>
+    <dt>D1 or D2</dt>
+    <dd><b>D1 removes the perigastric nodes; D2 clears the major arterial trunks.</b> In practice
+    <b>most specialist centres perform a radical total gastrectomy conserving the spleen and
+    pancreas, with D2 lymphadenectomy sparing station 10
+    nodes</b>.<cite class="src bl">B&amp;L 67 &middot; p.1175</cite> Conserving spleen and pancreas
+    is the modern part of that sentence and the part worth saying.</dd>
+    <dt>Palliation of an obstructing, unresectable tumour</dt>
+    <dd><b>Palliative resection is appropriate</b> where there are significant symptoms of
+    obstruction or bleeding, and <b>a palliative gastrectomy need not be radical</b>. Where the
+    tumour cannot be resected, B&amp;L is blunt about the usual bypass: <b>"A high
+    gastroenterostomy is a poor operation that very frequently does not allow the stomach to empty
+    adequately and may produce the additional problem of bile reflux."</b> A <b>Roux loop with a
+    wide gastrojejunal anastomosis may be better, although even this may not allow the stomach to
+    empty well</b>. For inoperable cardia tumours, <b>intubation or
+    stenting</b>.<cite class="src bl">B&amp;L 67 &middot; p.1175</cite> And for unresectable
+    malignant outlet obstruction, a <b>duodenal
+    stent</b>.<cite class="src bl">B&amp;L 67 &middot; p.1169</cite></dd>
+  </dl>
+
+  <details open class="conflict">
+    <summary>
+      <span class="what">What proportion of gastric cancers in Japan are early gastric cancer?</span>
+      <span class="who">B&amp;L 67 p.1170 says about one-third; SRB 20 p.837 says 50%</span>
+    </summary>
+    <div class="body">
+    <dl>
+      <dt>Bailey &amp; Love 28e</dt>
+      <dd>"In Japan, <b>approximately one-third</b> of gastric cancers diagnosed are in this
+      stage." It adds that early diagnosis in the UK is <b>relatively uncommon, as dyspeptic
+      patients are not always referred for endoscopy at an appropriate
+      stage</b>.<cite class="src bl">B&amp;L 67 &middot; p.1170</cite></dd>
+      <dt>SRB</dt>
+      <dd>"More common in Japan: <b>50%</b> of gastric cancers treated are early gastric cancers.
+      <b>In USA, 20%.</b>" With the figures that matter more: <b>10% of early gastric cancers have
+      nodal metastases, 3% in purely mucosal lesions and 20% in submucosal lesions</b>, and nodal
+      spread depends on <b>tumour size over 2 cm</b> and
+      differentiation.<cite class="src srb">SRB 20 &middot; p.837</cite></dd>
+    </dl>
+    <span class="ruling"><b>A small numeric disagreement, and the figures are measuring slightly
+    different things: B&amp;L says "diagnosed", SRB says "treated".</b> Answer the range and
+    attribute it: <b>"Between a third and a half of gastric cancers in Japan are early gastric
+    cancer, against about a fifth in the USA, and relatively few in countries without endoscopic
+    screening."</b> Then move to the numbers that change management, which are SRB's: <b>early
+    gastric cancer still has nodal metastases in about 10%, only 3% if confined to mucosa but 20%
+    once the submucosa is involved</b>, which is exactly why endoscopic mucosal resection is
+    offered for mucosal lesions and not for submucosal
+    ones.<cite class="src srb">SRB 20 &middot; p.837</cite> Quoting a bare percentage for Japan
+    gains nothing; explaining why submucosal invasion changes the operation gains a lot.</span>
+    </div>
+  </details>
+
+  <!-- ===================== 7. VIVA ===================== -->
+
+  <h2><span class="n">7</span>Rapid-fire viva</h2>
+
+  <div class="viva">
+    <details open>
+      <summary>What are the causes of gastric outlet obstruction in an adult?</summary>
+      <p class="ans">The two common ones are gastric cancer and pyloric stenosis secondary to
+      peptic ulceration.<cite class="src bl">B&amp;L 67 &middot; p.1168</cite> SRB's fuller list
+      adds congenital stenosis, adult pyloric stenosis, which is treated by pyloroplasty and not
+      pyloromyotomy, and a pyloric mucosal diaphragm, which must be excised surgically or
+      endoscopically.<cite class="src srb">SRB 20 &middot; p.819</cite> And remember superior
+      mesenteric artery syndrome as a mimic, distinguished because its vomiting is
+      bilious.<cite class="src srb">SRB 20 &middot; p.832</cite></p>
+    </details>
+
+    <details open>
+      <summary>Benign or malignant until proven otherwise?</summary>
+      <p class="ans">Bailey and Love 28e is explicit: with the decreasing incidence of peptic
+      ulceration, gastric outlet obstruction should be considered malignant until proven
+      otherwise, and endoscopic biopsy of the pyloric region is
+      essential.<cite class="src bl">B&amp;L 67 &middot; p.1168, p.1169</cite> In India, where
+      peptic ulcer disease is still common, a cicatrised chronic duodenal ulcer remains a frequent
+      cause, so give the classical cause but manage it as malignant until the biopsy returns. The
+      finding that shifts you towards cancer before the biopsy is a palpable mass: SRB says a mass
+      is never palpable in benign pyloric stenosis and may be palpable in carcinoma
+      pylorus.<cite class="src srb">SRB 20 &middot; p.819</cite></p>
+    </details>
+
+    <details open>
+      <summary>Describe the vomiting.</summary>
+      <p class="ans">Three features. Large volume; completely lacking bile; and containing
+      undigested or partially digested food eaten a day or even two or three days
+      earlier.<cite class="src bl">B&amp;L 67 &middot; p.1168</cite><cite class="src srb">SRB 20 &middot; p.818</cite><cite class="src das">Das 34 &middot; p.508</cite>
+      S Das adds that it is typically in the evening and often foul and frothy. The absence of bile
+      is the important part: it places the obstruction at or proximal to the pylorus.</p>
+    </details>
+
+    <details open>
+      <summary>Explain paradoxical aciduria.</summary>
+      <p class="ans">Vomiting hydrochloric acid gives a hypochloraemic alkalosis, and early the
+      urine is appropriately alkaline with a low chloride and high bicarbonate. As dehydration
+      progresses the kidney must conserve sodium, so instead of excreting bicarbonate with sodium
+      it excretes bicarbonate with hydrogen ion, and potassium is lost as well. So the urine turns
+      acidic while the blood is alkalotic, and hypokalaemia
+      develops.<cite class="src bl">B&amp;L 67 &middot; p.1169</cite><cite class="src srb">SRB 20 &middot; p.820</cite>
+      SRB puts it crisply: in alkalosis without hyponatraemia bicarbonate is secreted along with
+      sodium, but here the body conserves sodium, so bicarbonate goes out with hydrogen.</p>
+    </details>
+
+    <details open>
+      <summary>Why can this patient have tetany?</summary>
+      <p class="ans">Alkalosis lowers the circulating ionised calcium, and tetany can
+      occur.<cite class="src bl">B&amp;L 67 &middot; p.1169</cite> SRB calls it gastric tetany and
+      groups it with the other features of alkalosis, rapid Cheyne-Stokes breathing, irritability,
+      confusion and sometimes convulsions.<cite class="src srb">SRB 20 &middot; p.820</cite></p>
+    </details>
+
+    <details open>
+      <summary>Why is the alkalosis less marked when the cause is cancer?</summary>
+      <p class="ans">Because of the relative hypochlorhydria, or achlorhydria, found in gastric
+      cancer: there is less acid to lose in the
+      vomit.<cite class="src bl">B&amp;L 67 &middot; p.1168, p.1170</cite><cite class="src srb">SRB 20 &middot; p.820</cite>
+      Bailey and Love's summary box goes as far as saying the hypochloraemic alkalosis is usually
+      only seen with peptic ulcer disease.<cite class="src bl">B&amp;L 67 &middot; p.1169</cite> So
+      a florid alkalosis suggests a benign cause, and its absence does not reassure you.</p>
+    </details>
+
+    <details open>
+      <summary>What fluid would you give, and why that one?</summary>
+      <p class="ans">Intravenous isotonic saline with potassium supplementation. The reason is the
+      answer: replacing the sodium chloride and water allows the kidney itself to correct the
+      acid-base abnormality.<cite class="src bl">B&amp;L 67 &middot; p.1169</cite> Do not give
+      bicarbonate. SRB adds double strength saline in severe cases, slow correction, intravenous
+      potassium under ECG monitoring, and magnesium and calcium as
+      needed.<cite class="src srb">SRB 20 &middot; p.820</cite></p>
+    </details>
+
+    <details open>
+      <summary>What would you do before endoscoping this patient?</summary>
+      <p class="ans">Empty the stomach properly. A large nasogastric tube may not be big enough for
+      the contents, so it may be necessary to pass an orogastric tube and lavage the stomach until
+      it is completely empty, which is what makes endoscopy and contrast radiology
+      possible.<cite class="src bl">B&amp;L 67 &middot; p.1169</cite> SRB names Ewald's tube and
+      adds that a saline stomach wash also reduces the oedema of the stomach wall and improves
+      gastric emptying.<cite class="src srb">SRB 20 &middot; p.819</cite></p>
+    </details>
+
+    <details open>
+      <summary>Name the three physical signs of gastric outlet obstruction.</summary>
+      <p class="ans">Visible gastric peristalsis, a positive auscultopercussion test and a positive
+      succussion splash: stomach we see, stomach we feel, stomach we
+      hear.<cite class="src srb">SRB 20 &middot; p.818, p.840</cite> S Das calls visible
+      peristalsis passing from left to right pathognomonic, and tells you to look for it whenever
+      the history suggests pyloric
+      stenosis.<cite class="src das">Das 34 &middot; p.489, p.508</cite> Note that Bailey and Love
+      28e offers only two findings here, a visible distended stomach and a succussion splash, and
+      does not mention peristalsis anywhere in the chapter.</p>
+    </details>
+
+    <details open>
+      <summary>How do you perform the auscultopercussion test?</summary>
+      <p class="ans">Place a stethoscope over the epigastrium, then scratch the skin with a finger
+      from the left side downwards at several points away from the epigastrium and join the points
+      where the sound changes, mapping the greater curvature. Normally it lies above the umbilicus,
+      midway between umbilicus and epigastrium; in gastric outlet obstruction it lies below the
+      umbilicus.<cite class="src srb">SRB 20 &middot; p.818</cite> On a barium meal, the equivalent
+      is a greater curvature below the level of the iliac
+      crest.<cite class="src srb">SRB 20 &middot; p.819</cite></p>
+    </details>
+
+    <details open>
+      <summary>How long must the stomach be empty before you test for a succussion splash?</summary>
+      <p class="ans">At least four hours, and six is better. SRB itself gives both figures, four
+      hours in its pyloric stenosis section and four to six hours in its gastric cancer
+      section.<cite class="src srb">SRB 20 &middot; p.818, p.840</cite> The reasoning is what
+      matters: the test asks whether the stomach still holds fluid when it should be empty, so the
+      longer the fast the more specific the sign. Neither S Das nor Bailey and Love states a
+      time.</p>
+    </details>
+
+    <details open>
+      <summary>What does a barium meal show, and what is the risk?</summary>
+      <p class="ans">Absence of the duodenal cap, because with a deformed first part of the
+      duodenum the barium will not stay long enough to form one; a dilated stomach with the greater
+      curvature below the iliac crest; a mottled stomach from retained food; and barium failing to
+      pass into the duodenum.<cite class="src srb">SRB 20 &middot; p.808, p.819</cite> The risk SRB
+      flags is that it may precipitate intestinal
+      obstruction.<cite class="src srb">SRB 20 &middot; p.808</cite> S Das says barium meal will
+      clinch the diagnosis,<cite class="src das">Das 34 &middot; p.508</cite> but endoscopy has
+      superseded it because only endoscopy gives you the biopsy.</p>
+    </details>
+
+    <details open>
+      <summary>What is Goldstein's saline load test?</summary>
+      <p class="ans">Instil 750 mL of saline into the stomach and aspirate half an hour later. If
+      more than 250 mL remains, that suggests
+      obstruction.<cite class="src srb">SRB 20 &middot; p.819</cite></p>
+    </details>
+
+    <details open>
+      <summary>Gastroenterostomy or pyloroplasty, and why?</summary>
+      <p class="ans">Gastroenterostomy. Bailey and Love says severe cases are treated surgically,
+      usually with a gastroenterostomy rather than a
+      pyloroplasty,<cite class="src bl">B&amp;L 67 &middot; p.1169</cite> and SRB gives the reason:
+      there is no role for pyloroplasty, or for highly selective vagotomy alone, in a scarred
+      duodenum, because it can cause disruption and bile
+      leak.<cite class="src srb">SRB 20 &middot; p.820</cite> You cannot safely cut and re-suture
+      thick fibrotic tissue, so you bypass it. SRB's usual operation is gastrojejunostomy with
+      vagotomy, the vagotomy being added because a drainage procedure alone leaves the acid and
+      invites a stomal ulcer.</p>
+    </details>
+
+    <details open>
+      <summary>What is a stomal ulcer, and how common is it?</summary>
+      <p class="ans">A gastro-jejunal ulcer at or near the anastomosis, after a Pólya gastrectomy
+      or a gastro-jejunal anastomosis, and its incidence is very high when gastrojejunostomy is
+      done without vagotomy. It recurs in about 3% after Pólya gastrectomy and 5% after vagotomy
+      with gastro-jejunostomy, usually within two years, with boring pain within half an hour of
+      food radiating from above and left of the umbilicus to the left iliac
+      fossa.<cite class="src das">Das 34 &middot; p.508</cite> It is more prone to perforation than
+      an ordinary peptic ulcer and may penetrate the transverse colon to form a gastro-jejunocolic
+      fistula.</p>
+    </details>
+
+    <details open>
+      <summary>How is a gastro-jejunocolic fistula diagnosed?</summary>
+      <p class="ans">By barium enema, not barium meal: in more than half of patients the barium
+      meal fails to reveal the fistula.<cite class="src das">Das 34 &middot; p.508</cite>
+      Clinically the anastomotic ulcer symptoms disappear and are replaced by severe diarrhoea,
+      eructation of foul gas, and sometimes vomiting of fragments of formed faeces, from fouling of
+      the jejunum by colonic contents.</p>
+    </details>
+
+    <details open>
+      <summary>What is highly selective vagotomy, and why does it need no drainage procedure?</summary>
+      <p class="ans">Only the fibres supplying the parietal cells are divided, so acid secretion
+      falls, but the nerve of Latarjet supplying the antral pump is preserved, which means gastric
+      emptying is intact and no drainage procedure is required. The nerve fibres in the last 6 cm
+      of stomach proximal to the pylorus, the crow's foot, are preserved, and clearance of the
+      distal 6 cm of oesophageal fibres is essential. Described by Amdrup and Johnston in 1969,
+      and also called parietal cell or superselective vagotomy. Mortality 0.2%, morbidity 0.5%, but
+      lesser curve necrosis from ischaemia and recurrent ulcer in 10 to 15% at ten
+      years.<cite class="src srb">SRB 20 &middot; p.818</cite> It is not the operation for a
+      scarred duodenum with obstruction.</p>
+    </details>
+
+    <details open>
+      <summary>Your patient is still vomiting on the fifth postoperative day. Are you worried?</summary>
+      <p class="ans">Not immediately. SRB notes that after surgery for pyloric stenosis gastric
+      emptying may be delayed for two to four weeks, although it usually recovers within seven
+      days.<cite class="src srb">SRB 20 &middot; p.820</cite> A stomach that has been dilated for
+      months does not regain tone at once. Exclude a mechanical problem and an electrolyte
+      abnormality, keep the stomach decompressed and nutrition going, and give it time.</p>
+    </details>
+
+    <details open>
+      <summary>Would you eradicate Helicobacter pylori?</summary>
+      <p class="ans">Yes, routinely after recovery, even though infection may not be evident in
+      many patients with outlet obstruction.<cite class="src srb">SRB 20 &middot; p.820</cite> A
+      proton pump inhibitor with clarithromycin 500 mg and metronidazole 400 mg twice daily, or
+      amoxycillin with tinidazole; and follow-up gastroscopy is a must to confirm healing. Do not
+      combine antacids or H2 blockers with the PPI, because the alkaline medium reduces the PPI's
+      action.<cite class="src srb">SRB 20 &middot; p.818</cite> Note separately that Bailey and
+      Love says the evidence does not support eradication programmes in asymptomatic people for
+      cancer prevention.<cite class="src bl">B&amp;L 67 &middot; p.1170</cite></p>
+    </details>
+
+    <details open>
+      <summary>Which previous operations increase the risk of gastric cancer?</summary>
+      <p class="ans">Drainage procedures: Billroth II or Pólya gastrectomy, gastroenterostomy and
+      pyloroplasty, which carry approximately four times the average risk, thought to be from bile
+      reflux and intestinal metaplasia.<cite class="src bl">B&amp;L 67 &middot; p.1170</cite> It is
+      worth volunteering, because it is the one risk factor the surgeon creates.</p>
+    </details>
+
+    <details open>
+      <summary>Give the Laurén classification and say why it matters.</summary>
+      <p class="ans">Two principal forms. Intestinal type resembles a carcinoma elsewhere in the
+      gut, forms polypoid tumours or ulcers, probably arises in intestinal metaplasia, and has the
+      better prognosis, about 53% of cases. Diffuse type, often with signet ring cells, infiltrates
+      deeply without forming an obvious mass but spreads widely in the gastric wall, shows reduced
+      E-cadherin, and has a much worse prognosis; linitis plastica belongs
+      here.<cite class="src bl">B&amp;L 67 &middot; p.1170</cite><cite class="src srb">SRB 20 &middot; p.837</cite>
+      It matters because the diffuse type is the one that will not give you a mass to feel or a
+      clean margin to resect.</p>
+    </details>
+
+    <details open>
+      <summary>Define early gastric cancer and give its survival.</summary>
+      <p class="ans">Cancer limited to the mucosa and submucosa, with or without lymph node
+      involvement, that is T1 with any N. Five-year survival is around 90%, and the Japanese
+      classification describes it as protruding, superficial or
+      excavated.<cite class="src bl">B&amp;L 67 &middot; p.1170</cite> The figures that change
+      management are SRB's: nodal metastases in about 10% overall, but only 3% when confined to
+      mucosa against 20% once the submucosa is involved, which is why endoscopic mucosal resection
+      suits mucosal lesions and not submucosal
+      ones.<cite class="src srb">SRB 20 &middot; p.837</cite></p>
+    </details>
+
+    <details open>
+      <summary>What is the difference between a D1 and a D2 resection?</summary>
+      <p class="ans">D1 removes the perigastric nodes; D2 clears the major arterial trunks. In
+      practice most specialist centres perform a radical total gastrectomy conserving the spleen
+      and pancreas, with D2 lymphadenectomy sparing station 10
+      nodes.<cite class="src bl">B&amp;L 67 &middot; p.1175</cite> For a distal tumour it is
+      unnecessary to remove the whole stomach; a subtotal gastrectomy suffices, with the remnant
+      supplied by the short gastric arteries, margins more than 5 cm clear, frozen section if a
+      margin is in doubt, and a Roux loop of at least 50 cm to prevent bile reflux
+      oesophagitis.<cite class="src bl">B&amp;L 67 &middot; p.1175</cite></p>
+    </details>
+
+    <details open>
+      <summary>The tumour is unresectable and the patient is obstructed. What are the options?</summary>
+      <p class="ans">A palliative resection if symptoms of obstruction or bleeding are significant,
+      and it need not be radical: it is enough to remove the tumour and reconstruct. If resection
+      is impossible, Bailey and Love is blunt that a high gastroenterostomy is a poor operation
+      that frequently fails to let the stomach empty and may add bile reflux; a Roux loop with a
+      wide gastrojejunal anastomosis may be better, though even that may not empty well. A duodenal
+      stent may be considered, and for inoperable cardia tumours, intubation or
+      stenting.<cite class="src bl">B&amp;L 67 &middot; p.1169, p.1175</cite></p>
+    </details>
+
+    <details open>
+      <summary>Name the signs of metastatic gastric cancer you would look for.</summary>
+      <p class="ans">Troisier's sign, tumour in the left supraclavicular or Virchow's node; a hard
+      nodular liver, with umbilication in about 50%; ascites; a rectovesical shelf, Blumer's shelf,
+      on rectal examination; Sister Joseph's nodule at the umbilicus; Krukenberg's tumours in the
+      ovaries from transcoelomic spread; and Trousseau's sign, migrating
+      thrombophlebitis.<cite class="src srb">SRB 20 &middot; p.841</cite><cite class="src bl">B&amp;L 67 &middot; p.1171, p.1174</cite>
+      Transperitoneal spread is detected most effectively by laparoscopy rather than
+      CT.<cite class="src bl">B&amp;L 67 &middot; p.1174</cite></p>
+    </details>
+
+    <details open>
+      <summary>Why is gastric cancer prognosis poor if it is curable?</summary>
+      <p class="ans">Because of the advanced stage at presentation. Bailey and Love says gastric
+      cancer is actually an eminently curable disease, with cure rates little better than 5 to 10%
+      overall only because patients present late; better results in Japan come from high population
+      incidence, screening programmes and high-quality
+      surgery.<cite class="src bl">B&amp;L 67 &middot; p.1169</cite> Early gastric cancer has a
+      five-year survival of about 90%.</p>
+    </details>
+
+    <details open>
+      <summary>Where is gastric cancer getting commoner, and where rarer?</summary>
+      <p class="ans">In the West the incidence is falling at about 1% per year, but that fall is
+      confined to the body and distal stomach; proximal cancer, particularly at the
+      gastro-oesophageal junction, is rising, and adenocarcinoma at that site has doubled in the UK
+      over thirty years. Distal and body cancer is commonest in low socioeconomic groups and is
+      associated with H. pylori; proximal cancer affects higher socioeconomic groups, is not
+      associated with H. pylori, is associated with obesity, and its aetiology remains an enigma.
+      This shift has not been seen in Japan, where distal cancer still
+      predominates.<cite class="src bl">B&amp;L 67 &middot; p.1170</cite></p>
+    </details>
+
+    <details open>
+      <summary>Would you dilate the stricture endoscopically?</summary>
+      <p class="ans">In selected cases. Bailey and Love says endoscopic balloon dilatation may be
+      effective and is most useful in early cases, but may have to be repeated several
+      times.<cite class="src bl">B&amp;L 67 &middot; p.1169</cite> SRB puts the same observation as
+      an objection: it benefits only temporarily, with a high recurrence
+      rate.<cite class="src srb">SRB 20 &middot; p.820</cite> So it has a role in early oedematous
+      stenosis and in the patient unfit for surgery, but it is not definitive treatment for an
+      established fibrotic stricture. What endoscopy is indispensable for is the biopsy.</p>
+    </details>
+
+    <details open>
+      <summary>A patient with a short history, no ulcer history, and a palpable epigastric mass. Diagnosis?</summary>
+      <p class="ans">Carcinoma of the stomach causing gastric outlet obstruction. The short
+      history, the absence of the long ulcer history that benign stenosis requires, and the
+      palpable mass all point that way, since SRB says a mass is never palpable in benign pyloric
+      stenosis.<cite class="src srb">SRB 20 &middot; p.818, p.819</cite><cite class="src bl">B&amp;L 67 &middot; p.1168</cite>
+      Expect a less marked alkalosis because of hypochlorhydria. Confirm with endoscopy and biopsy,
+      stage with CT, and consider laparoscopy, which detects transperitoneal spread most
+      effectively.</p>
+    </details>
+
+  </div>
+
+  <footer class="colophon">
+    <p>
+      <b>Sources.</b> <i>S Das. A Manual on Clinical Surgery</i> 13e (2018);
+      <i>Bailey &amp; Love's Short Practice of Surgery</i> <b>28e</b>;
+      <i>SRB's Manual of Surgery</i> 6e. Citations give chapter and printed page so they can be
+      found in a different edition. Where the books disagree, both positions are given and the
+      amber boxes say which to answer. In the 28th edition of Bailey &amp; Love the stomach and
+      duodenum are <b>chapter 67</b>. Note that its chapter contains almost no bedside method for
+      this case: the clinical signs, the triad, the auscultopercussion test and the saline load test
+      are all S Das and SRB, and the metabolic reasoning and the management are Bailey &amp; Love.
+    </p>
+    <p>
+      <b>Using this document.</b> The rail on the right opens reading settings, line width, text size, typeface, colour, and a recall mode that hides the answers until you tap them. You can highlight, underline, write on the page and leave notes; all of it is kept for next time. Printing drops the interface, opens every answer, and keeps each step on one page.
+    </p>
+  </footer>
+
+</div>
+
+<script>window.ReaderConfig = { doc: "gastric-outlet-obstruction" };</script>
+<script>
+/* Reader: study settings and annotation for the surgery guides.
+
+   Attaches to an element with class "guide". Used in two places: the standalone document,
+   where it is loaded with a <script src>, and inside the Claude artifact, where the same
+   source is inlined. Everything it stores is keyed by person, so two students sharing a
+   tablet keep separate settings, highlights, notes and ink.
+
+   window.ReaderConfig may be set before this runs:
+     { student: "hita", doc: "inguinal-hernia", storage: <object with get/set> }
+*/
+
+(function () {
+  "use strict";
+
+  var cfg = window.ReaderConfig || {};
+  var DOC = cfg.doc || "guide";
+  var guide = document.querySelector(".guide");
+
+  // ------------------------------------------------------------------ storage
+
+  var student = (cfg.student || "").trim().toLowerCase() || "_";
+  function key() { return "reader:" + student + ":" + DOC; }
+
+  function load() {
+    if (cfg.storage && cfg.storage.get) { return cfg.storage.get(key()) || {}; }
+    try { return JSON.parse(localStorage.getItem(key()) || "{}"); } catch (e) { return {}; }
+  }
+  function persist(state) {
+    if (cfg.storage && cfg.storage.set) { cfg.storage.set(key(), state); return; }
+    try { localStorage.setItem(key(), JSON.stringify(state)); } catch (e) {}
+  }
+
+  var DEFAULTS = {
+    width: "medium", size: "3", leading: "normal", face: "serif", theme: "auto",
+    cite: "on", conflicts: "on",
+    hlHead: "off", hlWhy: "off", hlTerm: "off", recall: "off",
+    marks: [], notes: [], ink: [], inkLayout: null, updatedAt: 0
+  };
+
+  var state = (function () {
+    var s = load(), out = {};
+    Object.keys(DEFAULTS).forEach(function (k) {
+      out[k] = (s[k] === undefined) ? DEFAULTS[k] : s[k];
+    });
+    return out;
+  })();
+
+  function save() {
+    state.updatedAt = Date.now();
+    persist(state);
+    syncLater();
+  }
+
+
+  // ------------------------------------------------------------------ sync
+  // Optional, and off until an endpoint is set. The local copy is authoritative: sync
+  // pulls once on open and pushes after changes settle, and anything that goes wrong is
+  // swallowed, because a reader halfway through a chapter should never see a network
+  // error about their highlights.
+
+  // The deployed worker, so every case picks sync up without each page having to opt in.
+  // A page can still override it with ReaderConfig.sync, and setting that to "" turns sync
+  // off entirely, which is how you get a purely local copy.
+  var SYNC_DEFAULT = "https://rx-sync.harnar.workers.dev";
+  var SYNC_ENDPOINT = (window.ReaderConfig && window.ReaderConfig.sync !== undefined)
+    ? window.ReaderConfig.sync
+    : SYNC_DEFAULT;
+  // syncedAt is the newest stamp the worker has confirmed. Anything newer than it locally is
+  // work the server has not got yet, which is what makes a retry possible at all: without it
+  // a push that failed, or one that was overtaken while in flight, was simply lost from the
+  // remote copy with nothing left to say so.
+  var syncTimer = null, syncing = false, syncedAt = 0, retryMs = 4000;
+
+  function syncOn() { return !!SYNC_ENDPOINT && student && student !== "_"; }
+
+  function syncSay(msg) {
+    var el2 = document.getElementById("rdrSyncSay");
+    if (el2) el2.textContent = msg || "";
+  }
+
+  // pull once when a guide opens, and adopt the remote copy only if it is newer
+  function syncPull() {
+    if (!syncOn()) return Promise.resolve(false);
+    var u = SYNC_ENDPOINT + "/api/state?student=" + encodeURIComponent(student) +
+            "&doc=" + encodeURIComponent(DOC);
+    return fetch(u, { method: "GET" })
+      .then(function (r) { return r.ok ? r.json() : null; })
+      .then(function (j) {
+        if (!j || !j.found || !j.state) {
+          // the worker has nothing for this document, so everything local is unsent
+          syncLater(600);
+          return false;
+        }
+        syncedAt = j.updatedAt || 0;        // what the server demonstrably holds
+        var mine = state.updatedAt || 0;
+        if (!(j.updatedAt > mine)) {
+          // ours is the same or newer: push anything it has not seen, instead of sitting on
+          // work that would otherwise only leave this device at the next edit
+          syncLater(600);
+          return false;
+        }
+        Object.keys(DEFAULTS).forEach(function (k) {
+          if (j.state[k] !== undefined) state[k] = j.state[k];
+        });
+        state.updatedAt = j.updatedAt;
+        persist(state);
+        applySettings(); renderMarks(); renderNotes(); redrawInk(); updateLock();
+        syncSay("Picked up newer work from another device.");
+        return true;
+      })
+      .catch(function () { syncLater(retryMs); return false; });
+  }
+
+  function syncDirty() { return (state.updatedAt || 0) > syncedAt; }
+
+  function syncPush() {
+    if (!syncOn() || !syncDirty()) return;
+    if (syncing) { syncLater(400); return; }   // overtaken; come back for the newer state
+    syncing = true;
+
+    // snapshot the stamp being sent: edits can land while this is in flight, and confirming
+    // those as synced because an older push succeeded is how work goes missing
+    var at = state.updatedAt || Date.now();
+    var u = SYNC_ENDPOINT + "/api/state?student=" + encodeURIComponent(student) +
+            "&doc=" + encodeURIComponent(DOC);
+    fetch(u, {
+      method: "PUT",
+      headers: { "content-type": "application/json" },
+      body: JSON.stringify({ state: state, updatedAt: at })
+    }).then(function (r) {
+      syncing = false;
+      if (r.ok) {
+        syncedAt = Math.max(syncedAt, at);
+        retryMs = 4000;
+        syncSay("");
+        if (syncDirty()) syncLater(400);       // changed again while in flight
+      } else {
+        syncSay("");
+        syncLater(retryMs);                    // server said no; try again later
+        retryMs = Math.min(retryMs * 2, 60000);
+      }
+    }).catch(function () {
+      syncing = false;
+      syncSay("");                             // offline is normal; say nothing
+      syncLater(retryMs);
+      retryMs = Math.min(retryMs * 2, 60000);
+    });
+  }
+
+  function syncLater(ms) {
+    if (!syncOn()) return;
+    clearTimeout(syncTimer);
+    syncTimer = setTimeout(syncPush, ms === undefined ? 2500 : ms);
+  }
+
+  // A tab is far more likely to be backgrounded or closed than to fire unload, especially on
+  // a phone. Without this, anything highlighted, noted or drawn in the last couple of seconds
+  // stayed on that one device: the debounce had not elapsed and the push never happened.
+  function syncFlush() {
+    if (!syncOn() || !syncDirty()) return;
+    clearTimeout(syncTimer);
+    syncPush();
+  }
+
+  document.addEventListener("visibilitychange", function () {
+    if (document.visibilityState === "hidden") syncFlush();
+  });
+  window.addEventListener("pagehide", syncFlush);
+
+  // ------------------------------------------------------------------ settings
+
+  var ATTR = {
+    width: "data-width", size: "data-size", leading: "data-leading", face: "data-face",
+    theme: "data-theme", cite: "data-cite", conflicts: "data-conflicts",
+    hlHead: "data-hl-head", hlWhy: "data-hl-why", hlTerm: "data-hl-term", recall: "data-recall"
+  };
+
+  function applySettings() {
+    if (!guide) return;
+    Object.keys(ATTR).forEach(function (k) { guide.setAttribute(ATTR[k], state[k]); });
+    if (state.face === "hyper" || state.face === "sans") ensureFont(state.face);
+    syncHostTheme();
+    layoutInk();
+  }
+
+  // Inside the artifact the guide sits in a page with its own chrome. Two independent
+  // theme switches read as a bug, so the reader's colour choice drives both. Sepia and
+  // high contrast have no chrome equivalent, so the chrome takes the nearest of the two.
+  function syncHostTheme() {
+    if (!cfg.syncRoot) return;
+    var map = { auto: "", light: "light", sepia: "light", dark: "dark", contrast: "dark" };
+    var v = map[state.theme];
+    if (v) document.documentElement.setAttribute("data-theme", v);
+    else document.documentElement.removeAttribute("data-theme");
+    if (typeof cfg.onTheme === "function") cfg.onTheme(state.theme);
+  }
+
+  var fontsAdded = {};
+  function ensureFont(which) {
+    if (fontsAdded[which]) return;
+    fontsAdded[which] = true;
+    var fam = which === "hyper" ? "Atkinson+Hyperlegible:wght@400;700" : "Inter:wght@400;600;700";
+    var l = document.createElement("link");
+    l.rel = "stylesheet";
+    l.href = "https://fonts.googleapis.com/css2?family=" + fam + "&display=swap";
+    document.head.appendChild(l);
+  }
+
+  // ------------------------------------------------------------------ anchors
+  // Every block that holds text gets a stable index in document order, so a highlight
+  // can be stored as (block, start character, end character) and re-applied next time.
+
+  // Anchor to the innermost block-level element rather than a fixed tag list. A fixed list
+  // silently refused to highlight anything it had not been told about (legend rows, table
+  // cells, summary lines), which looked exactly like the feature being broken.
+
+  var blocks = [];
+
+  function blockish(el) {
+    var d = getComputedStyle(el).display;
+    return d === "block" || d === "list-item" || d === "table-cell" ||
+           d === "flex" || d === "grid" || d === "table-caption";
+  }
+
+  function indexBlocks() {
+    if (!guide) return;
+    blocks = [];
+    var all = guide.querySelectorAll("*");
+    var blockyWithText = [];
+    for (var i = 0; i < all.length; i++) {
+      var el = all[i];
+      if (!el.textContent || !el.textContent.trim()) continue;
+      if (el.classList.contains("rdr-note")) continue;
+      if (blockish(el)) blockyWithText.push(el);
+    }
+    // keep only the innermost ones: a block that contains another block is a container
+    for (var j = 0; j < blockyWithText.length; j++) {
+      var cand = blockyWithText[j], inner = false;
+      for (var k = 0; k < blockyWithText.length; k++) {
+        if (k !== j && cand.contains(blockyWithText[k])) { inner = true; break; }
+      }
+      if (!inner) blocks.push(cand);
+    }
+    blocks.forEach(function (el, n) { el.setAttribute("data-b", n); });
+  }
+
+  function blockOf(node) {
+    var el = node && (node.nodeType === 1 ? node : node.parentElement);
+    if (!el) return null;
+    var b = el.closest("[data-b]");
+    return (b && guide.contains(b)) ? b : null;
+  }
+
+  function textNodesIn(el) {
+    var out = [], w = document.createTreeWalker(el, NodeFilter.SHOW_TEXT, null);
+    var n; while ((n = w.nextNode())) { if (n.nodeValue.length) out.push(n); }
+    return out;
+  }
+
+  function offsetsOf(range, block) {
+    var nodes = textNodesIn(block), pos = 0, start = -1, end = -1;
+    for (var i = 0; i < nodes.length; i++) {
+      var n = nodes[i], len = n.nodeValue.length;
+      if (n === range.startContainer) start = pos + range.startOffset;
+      if (n === range.endContainer) end = pos + range.endOffset;
+      pos += len;
+    }
+    if (start < 0 && range.startContainer === block) start = 0;
+    if (end < 0 && range.endContainer === block) end = pos;
+    return (start >= 0 && end > start) ? { s: start, e: end } : null;
+  }
+
+  function wrapRange(block, s, e, kind, colour, id) {
+    var nodes = textNodesIn(block), pos = 0;
+    for (var i = 0; i < nodes.length && pos < e; i++) {
+      var n = nodes[i], len = n.nodeValue.length, a = pos, b = pos + len;
+      pos = b;
+      if (b <= s || a >= e) continue;
+      var from = Math.max(0, s - a), to = Math.min(len, e - a);
+      var target = n;
+      if (to < len) target.splitText(to);
+      if (from > 0) target = target.splitText(from);
+      var tag = document.createElement(kind === "ul" ? "u" : "mark");
+      tag.className = "rdr-mark rdr-" + kind;
+      tag.setAttribute("data-mid", id);
+      if (kind === "ul") { tag.style.textDecorationColor = colour; tag.style.textDecorationThickness = "2px"; }
+      else { tag.style.background = colour; }
+      target.parentNode.insertBefore(tag, target);
+      tag.appendChild(target);
+      nodes = textNodesIn(block);
+      pos = 0;
+      for (var j = 0; j < nodes.length; j++) {
+        if (nodes[j] === target) break;
+        pos += nodes[j].nodeValue.length;
+      }
+      pos += target.nodeValue.length;
+    }
+  }
+
+  function clearMarks() {
+    [].slice.call(guide.querySelectorAll(".rdr-mark")).forEach(function (m) {
+      var p = m.parentNode;
+      while (m.firstChild) p.insertBefore(m.firstChild, m);
+      p.removeChild(m);
+      p.normalize();
+    });
+  }
+
+  function renderMarks() {
+    if (!guide) return;
+    clearMarks();
+    state.marks.forEach(function (m) {
+      var block = blocks[m.b];
+      if (block) { try { wrapRange(block, m.s, m.e, m.k, m.c, m.id); } catch (e) {} }
+    });
+  }
+
+  // ------------------------------------------------------------------ palette
+
+  var PALETTE = [
+    { id: "yellow", hl: "#ffe89a", ul: "#d9a400", label: "Yellow" },
+    { id: "green", hl: "#bdebc4", ul: "#2f8a44", label: "Green" },
+    { id: "blue",  hl: "#bfe0f5", ul: "#1f6f9e", label: "Blue" },
+    { id: "pink",  hl: "#fbcfe0", ul: "#b63f73", label: "Pink" },
+    { id: "orange", hl: "#ffd8ab", ul: "#c2650d", label: "Orange" }
+  ];
+  function colourOf(id, kind) {
+    var p = PALETTE.filter(function (x) { return x.id === id; })[0] || PALETTE[0];
+    return kind === "ul" ? p.ul : p.hl;
+  }
+
+  var tool = { kind: "hl", colour: "yellow" };
+
+  // ------------------------------------------------------------------ selection
+
+  function onSelection() {
+    var sel = window.getSelection();
+    if (!sel || sel.isCollapsed || !sel.rangeCount) { hideBubble(); return; }
+    var r = sel.getRangeAt(0);
+    if (!guide || !blockOf(r.startContainer)) { hideBubble(); return; }
+    showBubble(r);
+  }
+
+  var bubble = null;
+  function hideBubble() { if (bubble) bubble.hidden = true; }
+
+  function showBubble(range) {
+    if (!bubble) return;
+    var rect = range.getBoundingClientRect();
+    bubble.hidden = false;
+    var top = rect.top + window.scrollY - bubble.offsetHeight - 8;
+    if (top < window.scrollY + 4) top = rect.bottom + window.scrollY + 8;
+    var left = rect.left + window.scrollX + rect.width / 2 - bubble.offsetWidth / 2;
+    left = Math.max(8, Math.min(left, document.documentElement.clientWidth - bubble.offsetWidth - 8));
+    bubble.style.top = top + "px";
+    bubble.style.left = left + "px";
+  }
+
+  function applyToSelection(kind) {
+    var sel = window.getSelection();
+    if (!sel || sel.isCollapsed || !sel.rangeCount) return;
+    var r = sel.getRangeAt(0);
+    var first = blockOf(r.startContainer), last = blockOf(r.endContainer);
+    if (!first) return;
+
+    // one mark per block the selection touches, so dragging across paragraphs works
+    var touched = [];
+    if (!last || first === last) {
+      touched = [first];
+    } else {
+      for (var i = 0; i < blocks.length; i++) {
+        if (r.intersectsNode && r.intersectsNode(blocks[i])) touched.push(blocks[i]);
+      }
+      if (!touched.length) touched = [first];
+    }
+
+    var made = 0;
+    touched.forEach(function (block) {
+      var full = document.createRange();
+      full.selectNodeContents(block);
+      var s = (block === first) ? r.cloneRange() : full.cloneRange();
+      if (block !== first) s.setEnd(full.endContainer, full.endOffset);
+      if (block === last && block !== first) { s = full.cloneRange(); s.setEnd(r.endContainer, r.endOffset); }
+      var off = offsetsOf(block === first ? r : s, block);
+      if (!off) {
+        var len = block.textContent.length;
+        off = { s: 0, e: len };
+        if (block === last) off.e = offsetsOf(s, block) ? offsetsOf(s, block).e : len;
+      }
+      if (off.e <= off.s) return;
+      state.marks.push({
+        id: "m" + Date.now() + Math.random().toString(36).slice(2, 5) + made,
+        b: +block.getAttribute("data-b"), s: off.s, e: off.e,
+        k: kind, c: colourOf(tool.colour, kind), colourId: tool.colour
+      });
+      made++;
+    });
+
+    if (!made) return;
+    save();
+    renderMarks();
+    sel.removeAllRanges();
+    hideBubble();
+  }
+
+  function removeMarkAt(target) {
+    var mid = target.getAttribute("data-mid");
+    state.marks = state.marks.filter(function (m) { return m.id !== mid; });
+    save();
+    renderMarks();
+  }
+
+  // ------------------------------------------------------------------ notes
+
+  function renderNotes() {
+    if (!guide) return;
+    [].slice.call(guide.querySelectorAll(".rdr-note")).forEach(function (n) { n.remove(); });
+    state.notes.forEach(function (n) {
+      var block = blocks[n.b];
+      if (!block) return;
+      var pin = document.createElement("span");
+      pin.className = "rdr-note";
+      pin.setAttribute("data-nid", n.id);
+      pin.title = n.text;
+      pin.textContent = "note";
+      block.appendChild(pin);
+    });
+  }
+
+  function addNoteFor(block) {
+    var existing = "";
+    var text = promptNote(existing);
+    if (text === null) return;
+    if (!text.trim()) return;
+    state.notes.push({
+      id: "n" + Date.now() + Math.random().toString(36).slice(2, 5),
+      b: +block.getAttribute("data-b"), text: text.trim(), at: new Date().toISOString()
+    });
+    save();
+    renderNotes();
+  }
+
+  // the artifact viewer suppresses window.prompt, so notes use an inline editor
+  var noteEditor = null, noteResolve = null;
+  function promptNote(initial) { return null; }   // replaced below by the inline editor
+
+  function openNoteEditor(block, existingId) {
+    var found = state.notes.filter(function (n) { return n.id === existingId; })[0];
+    noteEditor.hidden = false;
+    noteEditor.querySelector("textarea").value = found ? found.text : "";
+    noteEditor.dataset.block = block ? block.getAttribute("data-b") : "";
+    noteEditor.dataset.nid = existingId || "";
+    noteEditor.querySelector(".rdr-del").hidden = !existingId;
+    noteEditor.querySelector("textarea").focus();
+  }
+
+  // ------------------------------------------------------------------ ink
+  // Strokes stay vectors. Two canvases: everything committed is on `canvas`, the stroke
+  // being drawn right now is on `live`. That keeps a 16-megapixel repaint off the hot path
+  // and lets a translucent highlighter stroke be drawn as one path, so it does not darken
+  // itself where it doubles back.
+  //
+  // Erasing never composites. "part" drops the points under the eraser and splits what is
+  // left; "whole" removes any stroke the eraser touches, the way a tablet object eraser
+  // behaves. Both are ordinary edits to the stroke list.
+
+  var canvas = null, ctx = null;        // committed
+  var live = null, lctx = null;         // the stroke in progress
+  var drawing = false, stroke = null;
+  var eraseMode = "part";               // part | whole
+  var rafPending = false;
+
+  var INK = {
+    pen: { w: 2.4, alpha: 1 },
+    hl:  { w: 16,  alpha: 0.32 }
+  };
+  var ERASE_R = { part: 14, whole: 9 };
+
+  function layoutSignature() {
+    return [state.width, state.size, state.leading, state.face,
+            Math.round(guide.getBoundingClientRect().width)].join("|");
+  }
+
+  // Two separate ceilings, and the old code only knew about one of them.
+  //
+  // Area was capped at 60M, but a browser also refuses a canvas whose *side* is too long, and
+  // a long case is far taller than it is wide. Case 01 at 320px is about 287 x 69,679, which
+  // is only 20M pixels and sails past an area check, while 69,679 exceeds Chrome's 65,535
+  // limit outright: Chrome then renders its broken-canvas placeholder over the guide and the
+  // page goes white. The text was intact underneath the whole time.
+  //
+  // The old fallback was worse than nothing, too. It truncated the canvas height, so on any
+  // guide over the cap the lower part of the page silently could not be inked.
+  //
+  // So nothing is truncated now. The canvas keeps the document's full CSS size and the
+  // backing store is scaled to fit inside both ceilings, with the context transformed to
+  // match. Strokes stay in document coordinates and keep working. Where there is headroom the
+  // scale goes the other way, up to devicePixelRatio, which is also what makes ink sharp on a
+  // retina screen instead of soft.
+  var MAX_CANVAS_DIM = 32767;     // comfortably inside Chrome's 65535 and Safari's lower bound
+  var MAX_CANVAS_PX = 16000000;   // iOS Safari refuses much beyond ~16.7M
+
+  function inkScale(w, h) {
+    var s = window.devicePixelRatio || 1;
+    s = Math.min(s, MAX_CANVAS_DIM / Math.max(1, w), MAX_CANVAS_DIM / Math.max(1, h));
+    s = Math.min(s, Math.sqrt(MAX_CANVAS_PX / Math.max(1, w * h)));
+    return Math.max(0.08, s);
+  }
+
+  function sizeCanvas(c, w, h, left, top) {
+    // CSS size is always the true size, so stroke coordinates remain document pixels
+    c.style.width = w + "px";
+    c.style.height = h + "px";
+    c.style.left = left + "px";
+    c.style.top = top + "px";
+
+    var s = inkScale(w, h);
+    c.width = Math.max(1, Math.round(w * s));
+    c.height = Math.max(1, Math.round(h * s));
+    c.inkScale = s;
+    var g = c.getContext("2d");
+    if (g) g.setTransform(s, 0, 0, s, 0, 0);
+    return s;
+  }
+
+  // clearRect runs through the transform, so clearing has to be done in untransformed space
+  function wipe(c, g) {
+    if (!c || !g) return;
+    g.save();
+    g.setTransform(1, 0, 0, 1, 0, 0);
+    g.clearRect(0, 0, c.width, c.height);
+    g.restore();
+  }
+
+  function layoutInk() {
+    if (!canvas || !guide) return;
+    var wrap = guide.querySelector(".wrap") || guide;
+    var r = wrap.getBoundingClientRect();
+    var w = Math.round(r.width);
+    var h = Math.round(wrap.scrollHeight || r.height);
+    sizeCanvas(canvas, w, h, wrap.offsetLeft, wrap.offsetTop);
+    sizeCanvas(live, w, h, wrap.offsetLeft, wrap.offsetTop);
+    redrawInk();
+  }
+
+  function pathStroke(c, s) {
+    if (!s.pts.length) return;
+    c.save();
+    c.globalAlpha = INK[s.k || "pen"].alpha;
+    c.strokeStyle = s.c;
+    c.lineWidth = s.w;
+    c.lineCap = "round";
+    c.lineJoin = "round";
+    c.beginPath();
+    c.moveTo(s.pts[0][0], s.pts[0][1]);
+    for (var i = 1; i < s.pts.length; i++) c.lineTo(s.pts[i][0], s.pts[i][1]);
+    if (s.pts.length === 1) c.lineTo(s.pts[0][0] + 0.01, s.pts[0][1]);
+    c.stroke();
+    c.restore();
+  }
+
+  function redrawInk() {
+    if (!ctx) return;
+    wipe(canvas, ctx);
+    // highlighter first, so pen marks sit on top of it rather than under
+    for (var i = 0; i < state.ink.length; i++) {
+      if (state.ink[i].k === "hl") pathStroke(ctx, state.ink[i]);
+    }
+    for (var j = 0; j < state.ink.length; j++) {
+      if (state.ink[j].k !== "hl") pathStroke(ctx, state.ink[j]);
+    }
+  }
+
+  function queueRedraw() {
+    if (rafPending) return;
+    rafPending = true;
+    requestAnimationFrame(function () { rafPending = false; redrawInk(); });
+  }
+
+  function penPoint(ev) {
+    var r = live.getBoundingClientRect();
+    return [ev.clientX - r.left, ev.clientY - r.top];
+  }
+
+  // ---- erasing -------------------------------------------------------------
+
+  function near(pt, x, y, r) {
+    var dx = pt[0] - x, dy = pt[1] - y;
+    return dx * dx + dy * dy <= r * r;
+  }
+
+  // distance from (x,y) to the segment a-b, so a thin stroke is still easy to hit
+  function segNear(a, b, x, y, r) {
+    var vx = b[0] - a[0], vy = b[1] - a[1];
+    var wx = x - a[0], wy = y - a[1];
+    var len = vx * vx + vy * vy;
+    var tt = len ? Math.max(0, Math.min(1, (wx * vx + wy * vy) / len)) : 0;
+    var px = a[0] + tt * vx, py = a[1] + tt * vy;
+    var dx = x - px, dy = y - py;
+    return dx * dx + dy * dy <= r * r;
+  }
+
+  function strokeHit(s, x, y, r) {
+    var pad = r + s.w / 2;
+    if (s.pts.length === 1) return near(s.pts[0], x, y, pad);
+    for (var i = 1; i < s.pts.length; i++) {
+      if (segNear(s.pts[i - 1], s.pts[i], x, y, pad)) return true;
+    }
+    return false;
+  }
+
+  function eraseAt(x, y) {
+    var r = ERASE_R[eraseMode];
+    var next = [], changed = false;
+
+    for (var i = 0; i < state.ink.length; i++) {
+      var s = state.ink[i];
+
+      if (eraseMode === "whole") {
+        if (strokeHit(s, x, y, r)) { changed = true; continue; }
+        next.push(s);
+        continue;
+      }
+
+      // part: drop points under the eraser, keeping whatever runs survive
+      if (!strokeHit(s, x, y, r)) { next.push(s); continue; }
+      var pad = r + s.w / 2;
+      var run = [], runs = [];
+      for (var j = 0; j < s.pts.length; j++) {
+        if (near(s.pts[j], x, y, pad)) {
+          if (run.length > 1) runs.push(run);
+          run = [];
+        } else {
+          run.push(s.pts[j]);
+        }
+      }
+      if (run.length > 1) runs.push(run);
+      changed = true;
+      for (var k = 0; k < runs.length; k++) {
+        next.push({ id: s.id + "-" + k, k: s.k, pts: runs[k], c: s.c, w: s.w });
+      }
+    }
+
+    if (changed) { state.ink = next; queueRedraw(); }
+    return changed;
+  }
+
+  // ---- drawing -------------------------------------------------------------
+
+  function penDown(ev) {
+    if (tool.kind !== "pen" && tool.kind !== "ink-hl" && tool.kind !== "erase") return;
+    ev.preventDefault();
+    drawing = true;
+    // setPointerCapture throws on a pointer the element does not currently own, and an
+    // exception here would abort the rest of the handler, so the stroke never starts
+    try { live.setPointerCapture && live.setPointerCapture(ev.pointerId); } catch (e) {}
+
+    if (tool.kind === "erase") {
+      var p = penPoint(ev);
+      eraseAt(p[0], p[1]);
+      return;
+    }
+    var kind = tool.kind === "ink-hl" ? "hl" : "pen";
+    stroke = {
+      id: "s" + Date.now() + Math.random().toString(36).slice(2, 5),
+      k: kind,
+      pts: [penPoint(ev)],
+      c: colourOf(tool.colour, kind === "hl" ? "hl" : "ul"),
+      w: INK[kind].w
+    };
+  }
+
+  function penMove(ev) {
+    if (!drawing) return;
+    ev.preventDefault();
+    var pts = (ev.getCoalescedEvents ? ev.getCoalescedEvents() : [ev]).map(penPoint);
+    if (!pts.length) pts = [penPoint(ev)];
+
+    if (tool.kind === "erase") {
+      for (var i = 0; i < pts.length; i++) eraseAt(pts[i][0], pts[i][1]);
+      return;
+    }
+    if (!stroke) return;          // a move with no stroke in progress
+    stroke.pts.push.apply(stroke.pts, pts);
+    // the whole stroke, redrawn on the live layer only, so alpha applies once
+    wipe(live, lctx);
+    pathStroke(lctx, stroke);
+  }
+
+  function penUp() {
+    if (!drawing) return;
+    drawing = false;
+    if (tool.kind === "erase") { save(); updateLock(); return; }
+    if (stroke && stroke.pts.length) {
+      state.ink.push(stroke);
+      state.inkLayout = layoutSignature();
+      save();
+      updateLock();
+    }
+    stroke = null;
+    wipe(live, lctx);
+    redrawInk();
+  }
+
+  function setPenMode(on) {
+    guide.classList.toggle("rdr-pen-on", on);
+    if (live) live.style.pointerEvents = on ? "auto" : "none";
+    if (on && !state.inkLayout) { state.inkLayout = layoutSignature(); save(); }
+    updateLock();
+  }
+
+  function updateLock() {
+    var locked = state.ink.length > 0;
+    [].slice.call(document.querySelectorAll("[data-locks-layout]")).forEach(function (el) {
+      el.disabled = locked;
+      el.title = locked ? "Locked while there is ink on the page; erase it to change layout" : "";
+    });
+    var warn = document.getElementById("rdrLock");
+    if (warn) warn.hidden = !locked;
+  }
+
+  // ------------------------------------------------------------------ recall mode
+
+  function bindGuide() {
+    if (!guide || guide.__rdrBound) return;
+    guide.__rdrBound = true;
+
+    // citations: first tap fetches the excerpts, then opens the pane
+    guide.addEventListener("click", function (ev) {
+      var c = ev.target.closest("cite.src");
+      if (!c || tool.kind === "pen" || tool.kind === "ink-hl" || tool.kind === "erase") return;
+      ev.preventDefault();
+      ev.stopPropagation();
+      var k = citeKeyOf(c);
+      if (!k) return;
+      if (citesState === "ready") { openCite(k); return; }
+      if (citesState === "failed") return;
+      loadCites().then(function (j) { if (j) openCite(k); });
+    });
+
+    guide.addEventListener("keydown", function (ev) {
+      if (ev.key !== "Enter" && ev.key !== " ") return;
+      var c = ev.target.closest && ev.target.closest("cite.src[data-cite-key]");
+      if (!c) return;
+      ev.preventDefault();
+      openCite(c.getAttribute("data-cite-key"));
+    });
+
+    // recall mode: tap a hidden answer to show it
+    guide.addEventListener("click", function (ev) {
+      if (state.recall !== "on") return;
+      var t = ev.target.closest(".why, dl.findings dd, .viva .ans");
+      if (t && guide.contains(t)) t.classList.toggle("revealed");
+    });
+
+    // tapping a highlight removes it; tapping a note opens it
+    guide.addEventListener("click", function (ev) {
+      var n = ev.target.closest(".rdr-note");
+      if (n) { openNoteEditor(null, n.getAttribute("data-nid")); return; }
+      var m = ev.target.closest(".rdr-mark");
+      if (m && tool.kind !== "pen" && tool.kind !== "ink-hl" && tool.kind !== "erase") {
+        removeMarkAt(m);
+      }
+    });
+  }
+
+
+  // ------------------------------------------------------------------ source pane
+  // Tapping a citation shows what the book actually said, in a pane over the guide rather
+  // than a new tab, so the reader keeps their place. The excerpts live in citations.json,
+  // fetched once on the first tap; without it the chips stay inert rather than erroring.
+
+  var CITES = null, citesState = "idle";   // idle | loading | ready | failed
+  var citePane = null;
+
+  // The book id is the class beside "src"; the rest of the key is every number in the chip,
+  // in order. That covers the simple case, comma lists, page ranges, and the one chip that
+  // carries two chapters, and it matches the rule the extractor used to name its entries.
+  function citeKeyOf(el) {
+    var book = null;
+    for (var i = 0; i < el.classList.length; i++) {
+      if (el.classList[i] !== "src") { book = el.classList[i]; break; }
+    }
+    if (!book) return null;
+    var nums = (el.textContent || "").match(/[0-9]+/g);
+    if (!nums || !nums.length) return null;
+    return book + "-" + nums.join("-");
+  }
+
+  var citesPromise = null;
+
+  function loadCites() {
+    if (citesPromise) return citesPromise;
+    citesState = "loading";
+    citesPromise = fetch("citations.json")
+      .then(function (r) { if (!r.ok) throw new Error(r.status); return r.json(); })
+      .then(function (j) { CITES = j; citesState = "ready"; markCitesClickable(); return j; })
+      .catch(function () { citesState = "failed"; return null; });
+    return citesPromise;
+  }
+
+  function markCitesClickable() {
+    if (!guide || !CITES) return;
+    [].forEach.call(guide.querySelectorAll("cite.src"), function (c) {
+      var k = citeKeyOf(c);
+      if (k && CITES.citations && CITES.citations[k]) {
+        c.setAttribute("data-cite-key", k);
+        c.tabIndex = 0;
+      }
+    });
+  }
+
+  function openCite(key) {
+    if (!CITES) return;
+    var c = CITES.citations[key];
+    if (!c) return;
+    var book = (CITES.books || {})[c.book] || { title: c.book, edition: "" };
+
+    var body = (c.pages || []).map(function (pid) {
+      var pg = (CITES.pages || {})[pid];
+      if (!pg) return "";
+      return '<div class="rdr-src-page">' +
+        '<div class="rdr-src-pno">page ' + pg.page + '</div>' +
+        (pg.before ? '<p class="rdr-src-ctx">' + escHtml(pg.before) + '</p>' : "") +
+        '<p class="rdr-src-main">' + escHtml(pg.text) + '</p>' +
+        (pg.after ? '<p class="rdr-src-ctx">' + escHtml(pg.after) + '</p>' : "") +
+        '</div>';
+    }).join("");
+
+    citePane.querySelector(".rdr-src-book").textContent = book.title;
+    citePane.querySelector(".rdr-src-meta").textContent =
+      [book.edition, "chapter " + c.chapter].filter(Boolean).join(" · ");
+    citePane.querySelector(".rdr-src-body").innerHTML = body ||
+      '<p class="rdr-src-ctx">That page was not extracted.</p>';
+    citePane.hidden = false;
+    citePane.querySelector(".rdr-src-close").focus();
+  }
+
+  function closeCite() { if (citePane) citePane.hidden = true; }
+
+  function escHtml(s) {
+    return String(s).replace(/[&<>"']/g, function (ch) {
+      return {"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[ch];
+    });
+  }
+
+  function buildCitePane() {
+    citePane = el("aside", "rdr-srcpane");
+    citePane.hidden = true;
+    citePane.setAttribute("aria-label", "Source text");
+    citePane.innerHTML =
+      '<header class="rdr-src-head">' +
+        '<div><div class="rdr-src-book"></div><div class="rdr-src-meta"></div></div>' +
+        '<button class="rdr-src-close" aria-label="Close">&times;</button>' +
+      '</header><div class="rdr-src-body"></div>' +
+      '<footer class="rdr-src-foot">Quoted for study. The surrounding paragraphs are shown ' +
+      'for context.</footer>';
+    document.body.appendChild(citePane);
+    citePane.querySelector(".rdr-src-close").addEventListener("click", closeCite);
+    document.addEventListener("keydown", function (e) {
+      if (e.key === "Escape") closeCite();
+    });
+  }
+
+
+  // ------------------------------------------------------------------ backup
+  // localStorage is the only copy of any of this, and Safari drops it for sites left
+  // unvisited for a week. Export writes one file holding every person's settings,
+  // highlights, notes, ink and viva results; restore puts them back.
+
+  var BACKUP_FORMAT = "rx-backup";
+
+  function backupKeys() {
+    var out = [];
+    try {
+      for (var i = 0; i < localStorage.length; i++) {
+        var k = localStorage.key(i);
+        if (k && (k.indexOf("reader:") === 0 || k.indexOf("surgery-case-files") === 0)) {
+          out.push(k);
+        }
+      }
+    } catch (e) {}
+    return out;
+  }
+
+  function collectBackup() {
+    var data = {};
+    backupKeys().forEach(function (k) {
+      try { data[k] = JSON.parse(localStorage.getItem(k)); }
+      catch (e) { data[k] = localStorage.getItem(k); }
+    });
+    return {
+      format: BACKUP_FORMAT,
+      version: 1,
+      exportedAt: new Date().toISOString(),
+      keys: data
+    };
+  }
+
+  // a plain-English summary, so a restore is not a leap of faith
+  function describeBackup(b) {
+    var people = {}, marks = 0, notes = 0, ink = 0, sessions = 0, docs = {};
+    Object.keys(b.keys || {}).forEach(function (k) {
+      var v = b.keys[k];
+      if (k.indexOf("reader:") === 0) {
+        var bits = k.split(":");
+        if (bits[1] && bits[1] !== "_") people[bits[1]] = true;
+        if (bits[2]) docs[bits[2]] = true;
+        if (v && v.marks) marks += v.marks.length;
+        if (v && v.notes) notes += v.notes.length;
+        if (v && v.ink) ink += v.ink.length;
+      } else if (v && v.students) {
+        Object.keys(v.students).forEach(function (s) {
+          people[s] = true;
+          sessions += (v.students[s].sessions || []).length;
+        });
+      }
+    });
+    return {
+      people: Object.keys(people),
+      docs: Object.keys(docs).length,
+      marks: marks, notes: notes, ink: ink, sessions: sessions
+    };
+  }
+
+  function backupFilename() {
+    var d = new Date();
+    function p(n) { return (n < 10 ? "0" : "") + n; }
+    return "rx-backup-" + d.getFullYear() + p(d.getMonth() + 1) + p(d.getDate()) + ".json";
+  }
+
+  function exportBackup(say) {
+    var json = JSON.stringify(collectBackup(), null, 1);
+    var blob = new Blob([json], { type: "application/json" });
+    var name = backupFilename();
+    var size = Math.max(1, Math.round(json.length / 1024));
+
+    // inside an artifact a download link does nothing, so ask the host to save it
+    if (window.claude && window.claude.use) {
+      window.claude.use("downloads").then(function (dl) {
+        if (!dl) throw new Error("not granted");
+        return dl.save({ filename: name, data: blob });
+      }).then(function () {
+        say("Saved " + name + ", " + size + " KB.");
+      }).catch(function () {
+        say("Could not save the file here. Open the guide on the website and export from there.");
+      });
+      return;
+    }
+
+    var url = URL.createObjectURL(blob);
+    var a = document.createElement("a");
+    a.href = url; a.download = name;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    setTimeout(function () { URL.revokeObjectURL(url); }, 4000);
+    say("Saved " + name + ", " + size + " KB.");
+  }
+
+  var pendingRestore = null;
+
+  function readBackupFile(file, say, onReady) {
+    var fr = new FileReader();
+    fr.onload = function () {
+      var b;
+      try { b = JSON.parse(fr.result); } catch (e) { b = null; }
+      if (!b || b.format !== BACKUP_FORMAT || !b.keys) {
+        say("That does not look like a backup from this site.");
+        return;
+      }
+      pendingRestore = b;
+      onReady(describeBackup(b), b);
+    };
+    fr.onerror = function () { say("Could not read that file."); };
+    fr.readAsText(file);
+  }
+
+  function applyRestore(say) {
+    if (!pendingRestore) return;
+    var n = 0;
+    Object.keys(pendingRestore.keys).forEach(function (k) {
+      var v = pendingRestore.keys[k];
+      try {
+        localStorage.setItem(k, typeof v === "string" ? v : JSON.stringify(v));
+        n++;
+      } catch (e) {}
+    });
+    pendingRestore = null;
+    say("Restored " + n + " record" + (n === 1 ? "" : "s") + ". Reloading…");
+    setTimeout(function () { location.reload(); }, 900);
+  }
+
+  // ------------------------------------------------------------------ interface
+
+  function el(tag, cls, html) {
+    var e = document.createElement(tag);
+    if (cls) e.className = cls;
+    if (html !== undefined) e.innerHTML = html;
+    return e;
+  }
+
+  function swatches(kind) {
+    return PALETTE.map(function (p) {
+      return '<button class="rdr-sw" data-colour="' + p.id + '" title="' + p.label + '" ' +
+             'style="background:' + (kind === "ul" ? p.ul : p.hl) + '"></button>';
+    }).join("");
+  }
+
+  function seg(name, opts, current) {
+    return '<div class="rdr-seg" data-setting="' + name + '">' + opts.map(function (o) {
+      return '<button data-v="' + o[0] + '"' + (current === o[0] ? ' class="on"' : '') +
+             (o[2] ? ' data-locks-layout="1"' : '') + '>' + o[1] + '</button>';
+    }).join("") + '</div>';
+  }
+
+  function buildUI() {
+    // floating rail
+    var rail = el("div", "rdr-rail");
+    rail.innerHTML =
+      '<button id="rdrStudio" title="Reading settings" aria-label="Reading settings">' +
+        '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M4 7h16M4 12h10M4 17h7"/></svg></button>' +
+      '<button class="rdr-tool" data-tool="hl" title="Highlighter">' +
+        '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 14l-4 4v2h4l10-10a2.8 2.8 0 10-4-4L5 16"/></svg></button>' +
+      '<button class="rdr-tool" data-tool="ul" title="Underline">' +
+        '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M7 4v6a5 5 0 0010 0V4M5 20h14"/></svg></button>' +
+      '<button class="rdr-tool" data-tool="pen" title="Pen, write on the page">' +
+        '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 19l7-7-4-4-7 7-1 5z"/><path d="M15 8l1-1a2 2 0 013 3l-1 1"/></svg></button>' +
+      '<button class="rdr-tool" data-tool="ink-hl" title="Freehand highlighter">' +
+        '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 20h16"/><path d="M7 16l9-9 3 3-9 9H7z" fill="currentColor" fill-opacity=".22"/></svg></button>' +
+      '<button class="rdr-tool" data-tool="note" title="Leave a note">' +
+        '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 5h16v10H9l-5 4z"/></svg></button>' +
+      '<button class="rdr-tool" data-tool="erase" title="Eraser">' +
+        '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M8 20H4l9-9 7 7-5 2z"/><path d="M13 11l-6-6 4-4 6 6z"/></svg></button>' +
+      '<div class="rdr-pal" id="rdrPal">' + swatches("hl") + '</div>' +
+      '<div class="rdr-erase-modes" id="rdrEraseModes" hidden>' +
+        '<button data-erase="part" class="on" title="Rub out part of a stroke">part</button>' +
+        '<button data-erase="whole" title="Remove a whole stroke">whole</button>' +
+      '</div>';
+    document.body.appendChild(rail);
+
+    // selection bubble
+    bubble = el("div", "rdr-bubble");
+    bubble.hidden = true;
+    bubble.innerHTML =
+      '<button data-act="hl">Highlight</button>' +
+      '<button data-act="ul">Underline</button>' +
+      '<button data-act="note">Note</button>';
+    document.body.appendChild(bubble);
+
+    // note editor
+    noteEditor = el("div", "rdr-noteedit");
+    noteEditor.hidden = true;
+    noteEditor.innerHTML =
+      '<div class="rdr-ne-head">Note</div>' +
+      '<textarea rows="4" placeholder="Anything you want to remember here…"></textarea>' +
+      '<div class="rdr-ne-row">' +
+        '<button class="rdr-del">Delete</button><span style="flex:1"></span>' +
+        '<button class="rdr-cancel">Cancel</button>' +
+        '<button class="rdr-ok">Save</button></div>';
+    document.body.appendChild(noteEditor);
+
+    // studio panel
+    var studio = el("div", "rdr-studio");
+    studio.hidden = true;
+    studio.innerHTML =
+      '<div class="rdr-st-head"><b>Reading settings</b>' +
+        '<button class="rdr-close" aria-label="Close">&times;</button></div>' +
+      '<div class="rdr-st-body">' +
+        '<label>Line width</label>' +
+        seg("width", [["narrow","Narrow"],["medium","Medium"],["wide","Wide"],["full","Full"]], state.width) +
+        '<label>Text size</label>' +
+        seg("size", [["1","XS"],["2","S"],["3","M"],["4","L"],["5","XL"],["6","XXL"]], state.size) +
+        '<label>Line spacing</label>' +
+        seg("leading", [["tight","Tight"],["normal","Normal"],["loose","Loose"]], state.leading) +
+        '<label>Typeface</label>' +
+        seg("face", [["serif","Serif"],["sans","Sans"],["hyper","Hyperlegible"],["mono","Mono"]], state.face) +
+        '<label>Colour</label>' +
+        seg("theme", [["auto","Auto"],["light","Light"],["sepia","Sepia"],["dark","Dark"],["contrast","High contrast"]], state.theme) +
+        '<label>Emphasis</label>' +
+        seg("hlHead", [["off","Plain headings"],["on","Bold headings"]], state.hlHead) +
+        seg("hlWhy", [["off","Plain reasoning"],["on","Highlight reasoning"]], state.hlWhy) +
+        seg("hlTerm", [["off","Plain key terms"],["on","Highlight key terms"]], state.hlTerm) +
+        '<label>Study mode</label>' +
+        seg("recall", [["off","Read"],["on","Recall, hide answers until tapped"]], state.recall) +
+        '<label>Show</label>' +
+        seg("cite", [["on","Citations"],["off","No citations"]], state.cite) +
+        seg("conflicts", [["on","Discrepancies"],["off","Hide discrepancies"]], state.conflicts) +
+        '<div class="rdr-lock" id="rdrLock" hidden>Layout is locked because there is ink on ' +
+          'this page. Writing is drawn at a fixed width: erase the ink to change the layout.</div>' +
+        '<label>Backup</label>' +
+        '<p class="rdr-note-hint">Everything here is stored only in this browser, and it can ' +
+        'be cleared without warning. Keep a copy.</p>' +
+        '<div class="rdr-backup">' +
+          '<button class="rdr-export">Save a copy</button>' +
+          '<button class="rdr-import">Restore from a file</button>' +
+          '<input type="file" accept="application/json,.json" class="rdr-file" hidden>' +
+        '</div>' +
+        '<div class="rdr-restore" id="rdrRestore" hidden></div>' +
+        '<p class="rdr-say" id="rdrSay"></p>' +
+        '<p class="rdr-say" id="rdrSyncSay"></p>' +
+        '<div class="rdr-st-foot">' +
+          '<button class="rdr-clear" data-what="marks">Clear highlights</button>' +
+          '<button class="rdr-clear" data-what="notes">Clear notes</button>' +
+          '<button class="rdr-clear" data-what="ink">Clear ink</button>' +
+        '</div>' +
+      '</div>';
+    document.body.appendChild(studio);
+
+    buildCitePane();
+    attachCanvas();
+    wireUI(rail, studio);
+  }
+
+  function attachCanvas() {
+    if (!canvas) {
+      canvas = el("canvas", "rdr-canvas");
+      canvas.style.pointerEvents = "none";
+      ctx = canvas.getContext("2d");
+
+      // the stroke in progress lives on its own layer, above the committed one
+      live = el("canvas", "rdr-canvas rdr-canvas-live");
+      live.style.pointerEvents = "none";
+      live.addEventListener("pointerdown", penDown);
+      live.addEventListener("pointermove", penMove);
+      live.addEventListener("pointerup", penUp);
+      live.addEventListener("pointercancel", penUp);
+      live.addEventListener("pointerleave", penUp);
+      lctx = live.getContext("2d");
+    }
+    var host = guide.querySelector(".wrap") || guide;
+    if (canvas.parentNode !== host.parentNode) {
+      host.parentNode.insertBefore(canvas, host);
+      host.parentNode.insertBefore(live, host);
+    }
+  }
+
+  function wireUI(rail, studio) {
+    document.getElementById("rdrStudio").addEventListener("click", function () {
+      studio.hidden = !studio.hidden;
+    });
+    studio.querySelector(".rdr-close").addEventListener("click", function () { studio.hidden = true; });
+
+    // settings segments
+    studio.addEventListener("click", function (ev) {
+      var b = ev.target.closest(".rdr-seg button");
+      if (!b) return;
+      var name = b.parentNode.getAttribute("data-setting");
+      [].slice.call(b.parentNode.children).forEach(function (x) { x.classList.remove("on"); });
+      b.classList.add("on");
+      state[name] = b.getAttribute("data-v");
+      save();
+      applySettings();
+    });
+
+    function say(msg) {
+      var el2 = document.getElementById("rdrSay");
+      if (el2) el2.textContent = msg || "";
+    }
+
+    studio.querySelector(".rdr-export").addEventListener("click", function () {
+      say("Preparing…");
+      exportBackup(say);
+    });
+
+    var fileInput = studio.querySelector(".rdr-file");
+    studio.querySelector(".rdr-import").addEventListener("click", function () {
+      say("");
+      fileInput.value = "";
+      fileInput.click();
+    });
+
+    fileInput.addEventListener("change", function () {
+      var f = fileInput.files && fileInput.files[0];
+      if (!f) return;
+      readBackupFile(f, say, function (sum) {
+        var box = document.getElementById("rdrRestore");
+        var bits = [];
+        if (sum.people.length) bits.push(sum.people.join(", "));
+        if (sum.marks) bits.push(sum.marks + " highlight" + (sum.marks === 1 ? "" : "s"));
+        if (sum.notes) bits.push(sum.notes + " note" + (sum.notes === 1 ? "" : "s"));
+        if (sum.ink) bits.push(sum.ink + " ink stroke" + (sum.ink === 1 ? "" : "s"));
+        if (sum.sessions) bits.push(sum.sessions + " viva session" + (sum.sessions === 1 ? "" : "s"));
+        box.innerHTML =
+          '<p>This file holds ' + escHtml(bits.join(", ") || "nothing recognisable") + '.</p>' +
+          '<p class="rdr-warn">Restoring replaces what is in this browser now.</p>' +
+          '<div class="rdr-backup">' +
+            '<button class="rdr-cancel-restore">Cancel</button>' +
+            '<button class="rdr-do-restore">Restore</button>' +
+          '</div>';
+        box.hidden = false;
+        box.querySelector(".rdr-cancel-restore").addEventListener("click", function () {
+          pendingRestore = null; box.hidden = true; say("");
+        });
+        box.querySelector(".rdr-do-restore").addEventListener("click", function () {
+          box.hidden = true;
+          applyRestore(say);
+        });
+      });
+    });
+
+    studio.addEventListener("click", function (ev) {
+      var c = ev.target.closest(".rdr-clear");
+      if (!c) return;
+      var what = c.getAttribute("data-what");
+      state[what] = [];
+      if (what === "ink") { state.inkLayout = null; }
+      save();
+      if (what === "marks") renderMarks();
+      if (what === "notes") renderNotes();
+      if (what === "ink") redrawInk();
+      updateLock();
+    });
+
+    // tools
+    rail.addEventListener("click", function (ev) {
+      var b = ev.target.closest(".rdr-tool");
+      if (b) {
+        var t = b.getAttribute("data-tool");
+        tool.kind = (tool.kind === t) ? "hl" : t;
+        [].slice.call(rail.querySelectorAll(".rdr-tool")).forEach(function (x) {
+          x.classList.toggle("on", x.getAttribute("data-tool") === tool.kind);
+        });
+        var inkish = (tool.kind === "pen" || tool.kind === "ink-hl" || tool.kind === "erase");
+        document.getElementById("rdrPal").innerHTML =
+          swatches(tool.kind === "ul" || tool.kind === "pen" ? "ul" : "hl");
+        document.getElementById("rdrPal").hidden = (tool.kind === "erase");
+        document.getElementById("rdrEraseModes").hidden = (tool.kind !== "erase");
+        markActiveSwatch();
+        setPenMode(inkish);
+        return;
+      }
+      var s = ev.target.closest(".rdr-sw");
+      if (s) {
+        tool.colour = s.getAttribute("data-colour");
+        markActiveSwatch();
+        return;
+      }
+      var m = ev.target.closest(".rdr-erase-modes button");
+      if (m) {
+        eraseMode = m.getAttribute("data-erase");
+        [].slice.call(m.parentNode.children).forEach(function (x) {
+          x.classList.toggle("on", x === m);
+        });
+      }
+    });
+
+    // selection bubble
+    bubble.addEventListener("mousedown", function (e) { e.preventDefault(); });
+    bubble.addEventListener("click", function (ev) {
+      var b = ev.target.closest("button");
+      if (!b) return;
+      var act = b.getAttribute("data-act");
+      if (act === "note") {
+        var sel = window.getSelection();
+        var block = blockOf(sel.anchorNode);
+        hideBubble();
+        if (block) openNoteEditor(block, "");
+        return;
+      }
+      applyToSelection(act);
+    });
+
+    document.addEventListener("selectionchange", function () {
+      if (tool.kind === "pen" || tool.kind === "ink-hl" || tool.kind === "erase") return;
+      clearTimeout(wireUI._t);
+      wireUI._t = setTimeout(onSelection, 120);
+    });
+
+    // note editor
+    noteEditor.querySelector(".rdr-cancel").addEventListener("click", function () { noteEditor.hidden = true; });
+    noteEditor.querySelector(".rdr-ok").addEventListener("click", function () {
+      var text = noteEditor.querySelector("textarea").value.trim();
+      var nid = noteEditor.dataset.nid;
+      if (nid) {
+        state.notes = state.notes.map(function (n) { return n.id === nid ? Object.assign({}, n, { text: text }) : n; })
+                                 .filter(function (n) { return n.text; });
+      } else if (text) {
+        state.notes.push({
+          id: "n" + Date.now() + Math.random().toString(36).slice(2, 5),
+          b: +noteEditor.dataset.block, text: text, at: new Date().toISOString()
+        });
+      }
+      save(); renderNotes();
+      noteEditor.hidden = true;
+    });
+    noteEditor.querySelector(".rdr-del").addEventListener("click", function () {
+      var nid = noteEditor.dataset.nid;
+      state.notes = state.notes.filter(function (n) { return n.id !== nid; });
+      save(); renderNotes();
+      noteEditor.hidden = true;
+    });
+
+    window.addEventListener("resize", function () { clearTimeout(wireUI._r); wireUI._r = setTimeout(layoutInk, 150); });
+    window.addEventListener("scroll", hideBubble, { passive: true });
+
+    markActiveSwatch();
+  }
+
+  function markActiveSwatch() {
+    [].slice.call(document.querySelectorAll(".rdr-sw")).forEach(function (s) {
+      s.classList.toggle("on", s.getAttribute("data-colour") === tool.colour);
+    });
+  }
+
+  // ------------------------------------------------------------------ print
+
+  function openAllForPrint() {
+    window.__rdrReopen = [];
+    [].slice.call(document.querySelectorAll("details:not([open])")).forEach(function (d) {
+      window.__rdrReopen.push(d); d.open = true;
+    });
+  }
+  function restoreAfterPrint() {
+    (window.__rdrReopen || []).forEach(function (d) { d.open = false; });
+    window.__rdrReopen = [];
+  }
+  window.addEventListener("beforeprint", openAllForPrint);
+  window.addEventListener("afterprint", restoreAfterPrint);
+
+  // ------------------------------------------------------------------ boot
+
+  function start() {
+    if (!guide) return;
+    bindGuide();
+    indexBlocks();
+    if (!document.querySelector(".rdr-rail")) buildUI();
+    else attachCanvas();
+    applySettings();
+    renderMarks();
+    renderNotes();
+    markCitesClickable();
+    setTimeout(layoutInk, 60);
+    updateLock();
+    syncPull();
+  }
+
+  function reloadState() {
+    var s = load();
+    Object.keys(DEFAULTS).forEach(function (k) {
+      state[k] = (s[k] === undefined) ? DEFAULTS[k] : s[k];
+    });
+    // strokes saved before the highlighter existed carry no kind, and the old pixel
+    // eraser stored erase strokes that the vector model has no use for
+    state.ink = (state.ink || []).filter(function (x) { return !x.erase; })
+                                 .map(function (x) {
+      if (!x.k) x.k = "pen";
+      if (!x.id) x.id = "s" + Math.random().toString(36).slice(2, 8);
+      return x;
+    });
+  }
+
+  // The standalone document already holds the guide, so boot now. Inside the artifact the
+  // guide is fetched and injected when the reader opens it, so wait to be called.
+  if (guide) start();
+  else window.ReaderBoot = function (opts) {
+    opts = opts || {};
+    guide = opts.guide || document.querySelector(".guide");
+    if (!guide) return null;
+    DOC = opts.doc || DOC;
+    if (opts.syncRoot !== undefined) cfg.syncRoot = opts.syncRoot;
+    if (opts.onTheme !== undefined) cfg.onTheme = opts.onTheme;
+    if (opts.student !== undefined) student = (opts.student || "").trim().toLowerCase() || "_";
+    reloadState();
+    start();
+    return window.Reader;
+  };
+
+  window.Reader = {
+    setStudent: function (name) {
+      student = (name || "").trim().toLowerCase() || "_";
+      reloadState();
+      if (!guide) return;          // nothing mounted yet; start() will apply it
+      applySettings(); renderMarks(); renderNotes(); redrawInk(); updateLock();
+    },
+    remount: function (opts) {
+      opts = opts || {};
+      if (opts.guide) guide = opts.guide;
+      if (opts.doc) DOC = opts.doc;
+      if (opts.student !== undefined) student = (opts.student || "").trim().toLowerCase() || "_";
+      reloadState();
+      start();
+    },
+    state: function () { return state; }
+  };
+})();
+
+</script>
+
+</body>
+</html>

@@ -1,0 +1,2797 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Ulcer, Short Case</title>
+<style>
+/* Stylesheet for the surgery reference documents.
+
+   Every rule is scoped under .guide, so the same sheet works in two places: the standalone
+   document (where <body class="guide">) and inside the Claude artifact (where the guide is a
+   <div class="guide"> alongside the app's own interface).
+
+   Everything a reader might want to change is a token on .guide, switched by data attributes.
+   Students read very differently from one another, line length, type size and contrast are
+   not decoration here, they decide whether someone can sit with a document for an hour. */
+
+/* ============================== tokens ============================== */
+
+.guide {
+  /* colour: light is the base; the themes below redefine these */
+  --paper:       #fbfaf7;
+  --ink:         #1b1f22;
+  --ink-soft:    #5a6269;
+  --rule:        #ddd8ce;
+  --accent:      #005f73;
+  --accent-soft: #e3eef0;
+  --flag:        #8a5a2b;
+  --flag-soft:   #f6ece0;
+  --cite:        #7d8891;
+  --mark:        #fff3bf;
+  --bl:          #5b4a8a;
+  --srb:         #1f6b5c;
+
+  /* typography */
+  --face-body: "Spectral", Georgia, "Times New Roman", serif;
+  --face-ui:  "Inter", system-ui, -apple-system, "Segoe UI", sans-serif;
+  --fs:       17px;
+  --lh:       1.62;
+  --track:    0em;
+
+  /* measure */
+  --measure: 42rem;
+
+  font-family: var(--face-body);
+  font-size: var(--fs);
+  line-height: var(--lh);
+  letter-spacing: var(--track);
+  color: var(--ink);
+  background: var(--paper);
+  position: relative;          /* the ink canvas anchors to this */
+}
+
+/* ---------- reader: line width ---------- */
+.guide[data-width="narrow"] { --measure: 34rem; }
+.guide[data-width="medium"] { --measure: 42rem; }
+.guide[data-width="wide"]   { --measure: 54rem; }
+.guide[data-width="full"]   { --measure: 100%; }
+
+/* ---------- reader: type size ---------- */
+.guide[data-size="1"] { --fs: 15px; }
+.guide[data-size="2"] { --fs: 16px; }
+.guide[data-size="3"] { --fs: 17px; }
+.guide[data-size="4"] { --fs: 19px; }
+.guide[data-size="5"] { --fs: 21px; }
+.guide[data-size="6"] { --fs: 24px; }
+
+/* ---------- reader: line spacing ---------- */
+.guide[data-leading="tight"]  { --lh: 1.42; }
+.guide[data-leading="normal"] { --lh: 1.62; }
+.guide[data-leading="loose"]  { --lh: 1.9; }
+
+/* ---------- reader: typeface ----------
+   Hyperlegible is included because it was drawn for low-vision readers; it also suits
+   anyone who finds a serif tiring on a screen. Mono suits people who read code all day. */
+.guide[data-face="serif"] { --face-body: "Spectral", Georgia, "Times New Roman", serif; }
+.guide[data-face="sans"]  { --face-body: "Inter", system-ui, -apple-system, sans-serif;
+                            --face-ui: "Inter", system-ui, -apple-system, sans-serif; }
+.guide[data-face="hyper"] { --face-body: "Atkinson Hyperlegible", system-ui, sans-serif;
+                            --face-ui: "Atkinson Hyperlegible", system-ui, sans-serif;
+                            --track: 0.005em; }
+.guide[data-face="mono"]  { --face-body: ui-monospace, "SFMono-Regular", Menlo, Consolas, monospace;
+                            --fs: 15px; }
+
+/* ---------- reader: colour themes ---------- */
+
+.guide[data-theme="sepia"] {
+  --paper: #f4ecd8; --ink: #433422; --ink-soft: #6f5f4a; --rule: #ddd0b4;
+  --accent: #7a4a1e; --accent-soft: #ece0c8; --flag: #8a5a2b; --flag-soft: #ece0c8;
+  --cite: #8a7b63; --mark: #f5d98a; --bl: #6a4a7a; --srb: #3f6b4a;
+  color-scheme: light;
+}
+
+.guide[data-theme="dark"] {
+  --paper: #15181a; --ink: #e8e6e1; --ink-soft: #a3abb2; --rule: #2e3338;
+  --accent: #6fc3d2; --accent-soft: #1b2a2e; --flag: #d9a36a; --flag-soft: #2a2119;
+  --cite: #78828a; --mark: #4a4120; --bl: #a893dd; --srb: #6fc3a8;
+  color-scheme: dark;
+}
+
+.guide[data-theme="contrast"] {
+  --paper: #000000; --ink: #ffffff; --ink-soft: #d8d8d8; --rule: #6a6a6a;
+  --accent: #6fe3ff; --accent-soft: #10242b; --flag: #ffc46b; --flag-soft: #2a2008;
+  --cite: #bdbdbd; --mark: #4a4a00; --bl: #d0b8ff; --srb: #7fe8c0;
+  color-scheme: dark;
+}
+
+/* follow the operating system when the reader has not chosen */
+@media (prefers-color-scheme: dark) {
+  .guide[data-theme="auto"] {
+    --paper: #15181a; --ink: #e8e6e1; --ink-soft: #a3abb2; --rule: #2e3338;
+    --accent: #6fc3d2; --accent-soft: #1b2a2e; --flag: #d9a36a; --flag-soft: #2a2119;
+    --cite: #78828a; --mark: #4a4120; --bl: #a893dd; --srb: #6fc3a8;
+    color-scheme: dark;
+  }
+}
+
+/* ============================== layout ============================== */
+
+.guide * { box-sizing: border-box; }
+
+.guide .wrap {
+  max-width: var(--measure);
+  margin: 0 auto;
+  padding-left: max(18px, env(safe-area-inset-left, 0px));
+  padding-right: max(18px, env(safe-area-inset-right, 0px));
+  padding-block: 2.5rem 5rem;
+}
+
+body.guide { margin: 0; -webkit-text-size-adjust: 100%; }
+
+/* ============================== masthead ============================== */
+
+.guide .eyebrow {
+  font-family: var(--face-ui);
+  font-size: 0.7rem; font-weight: 600; letter-spacing: 0.12em;
+  text-transform: uppercase; color: var(--accent); margin: 0 0 0.6rem;
+}
+
+.guide h1 {
+  font-family: var(--face-body);
+  font-size: 2.1rem; font-weight: 600; line-height: 1.15;
+  letter-spacing: -0.015em; text-wrap: balance; margin: 0 0 0.7rem;
+}
+
+.guide .standfirst { font-size: 1.02rem; color: var(--ink-soft); margin: 0 0 1.6rem; }
+
+.guide .masthead {
+  border-bottom: 2px solid var(--ink);
+  padding-bottom: 1.4rem; margin-bottom: 2.2rem;
+}
+
+/* ============================== structure ============================== */
+
+.guide h2 {
+  font-family: var(--face-ui);
+  font-size: 0.78rem; font-weight: 700; letter-spacing: 0.14em;
+  text-transform: uppercase; color: var(--ink);
+  margin: 3.2rem 0 0.2rem; padding-bottom: 0.45rem;
+  border-bottom: 1px solid var(--rule);
+}
+.guide h2 .n { color: var(--accent); margin-right: 0.5rem; }
+
+.guide h3 {
+  font-family: var(--face-body);
+  font-size: 1.22rem; font-weight: 600; margin: 2.1rem 0 0.1rem; text-wrap: balance;
+}
+
+.guide h4 {
+  font-family: var(--face-ui);
+  font-size: 0.86rem; font-weight: 650; margin: 1.5rem 0 0.4rem; color: var(--ink);
+}
+
+.guide p { margin: 0.75rem 0; }
+.guide a { color: var(--accent); }
+
+/* ---------- reader: emphasise headings ---------- */
+.guide[data-hl-head="on"] h2 {
+  background: var(--accent-soft);
+  border-bottom-color: var(--accent);
+  padding: 0.5rem 0.6rem;
+  border-radius: 3px 3px 0 0;
+}
+.guide[data-hl-head="on"] h3 {
+  border-left: 3px solid var(--accent);
+  padding-left: 0.6rem;
+}
+
+/* ============================== step + rationale ============================== */
+
+.guide .step {
+  margin: 1.35rem 0; padding-left: 0.95rem; border-left: 2px solid var(--rule);
+}
+.guide .step > .ask { font-weight: 600; }
+
+.guide .step > .why {
+  display: block;
+  font-family: var(--face-ui);
+  font-size: 0.88em; line-height: 1.55;
+  color: var(--ink-soft); margin-top: 0.35rem;
+}
+.guide .why b, .guide .why strong { color: var(--ink); font-weight: 650; }
+
+.guide .why .label {
+  font-size: 0.68em; font-weight: 700; letter-spacing: 0.09em;
+  text-transform: uppercase; color: var(--accent); margin-right: 0.4rem;
+}
+.guide .why .label.out { color: var(--flag); }
+
+/* ---------- reader: emphasise the reasoning ----------
+   The rationale is the point of this document, so some readers want it to dominate
+   rather than sit quietly under each step. */
+.guide[data-hl-why="on"] .step {
+  border-left-color: var(--accent);
+  background: var(--accent-soft);
+  padding: 0.75rem 0.9rem;
+  border-radius: 0 4px 4px 0;
+}
+.guide[data-hl-why="on"] .step > .why { color: var(--ink); }
+
+/* ---------- reader: recall mode ----------
+   Hides every answer and rationale until tapped, which turns the reference into a
+   self-test without needing a separate deck. */
+.guide[data-recall="on"] .step > .why,
+.guide[data-recall="on"] dl.findings dd,
+.guide[data-recall="on"] .viva .ans {
+  background: var(--rule);
+  color: transparent;
+  border-radius: 3px;
+  cursor: pointer;
+  user-select: none;
+}
+.guide[data-recall="on"] .step > .why *,
+.guide[data-recall="on"] dl.findings dd *,
+.guide[data-recall="on"] .viva .ans * { visibility: hidden; }
+.guide[data-recall="on"] .revealed,
+.guide[data-recall="on"] .revealed * {
+  background: none !important;
+  color: inherit !important;
+  visibility: visible !important;
+  user-select: auto;
+}
+.guide[data-recall="on"] .revealed .label { color: var(--accent) !important; }
+.guide[data-recall="on"] .revealed .label.out { color: var(--flag) !important; }
+
+/* ============================== finding lists ============================== */
+
+.guide dl.findings { margin: 1.1rem 0; }
+.guide dl.findings dt { font-weight: 600; margin-top: 1rem; }
+.guide dl.findings dd {
+  margin: 0.2rem 0 0 0;
+  font-family: var(--face-ui);
+  font-size: 0.88em; line-height: 1.55; color: var(--ink-soft);
+}
+
+/* ---------- reader: emphasise key terms ---------- */
+.guide[data-hl-term="on"] b,
+.guide[data-hl-term="on"] strong {
+  background: var(--mark);
+  padding: 0 0.15em;
+  border-radius: 2px;
+}
+.guide[data-hl-term="on"] .why b,
+.guide[data-hl-term="on"] dl.findings dd b { color: var(--ink); }
+
+/* ============================== callouts ============================== */
+
+.guide .pearl {
+  background: var(--accent-soft); border-left: 3px solid var(--accent);
+  padding: 0.85rem 1rem; margin: 1.6rem 0; font-size: 0.95em;
+}
+.guide .pearl .tag {
+  display: block; font-family: var(--face-ui);
+  font-size: 0.66em; font-weight: 700; letter-spacing: 0.1em;
+  text-transform: uppercase; color: var(--accent); margin-bottom: 0.3rem;
+}
+
+.guide .unverified {
+  background: var(--flag-soft); border-left: 3px solid var(--flag);
+  padding: 0.85rem 1rem; margin: 1.6rem 0;
+  font-family: var(--face-ui); font-size: 0.86em; line-height: 1.55;
+}
+.guide .unverified .tag {
+  display: block; font-size: 0.66em; font-weight: 700; letter-spacing: 0.1em;
+  text-transform: uppercase; color: var(--flag); margin-bottom: 0.3rem;
+}
+
+/* ============================== viva ============================== */
+
+.guide .viva { margin: 1.2rem 0; }
+.guide .viva details { border-bottom: 1px solid var(--rule); padding: 0.7rem 0; }
+.guide .viva summary {
+  cursor: pointer; font-weight: 600; font-size: 0.98em;
+  list-style: none; display: flex; gap: 0.6rem; align-items: baseline;
+}
+.guide .viva summary::-webkit-details-marker { display: none; }
+.guide .viva summary::before {
+  content: "Q"; font-family: var(--face-ui);
+  font-size: 0.64em; font-weight: 700; letter-spacing: 0.08em;
+  color: var(--accent); border: 1px solid var(--accent); border-radius: 2px;
+  padding: 0.08rem 0.3rem; flex: none; transform: translateY(-0.1em);
+}
+.guide .viva details[open] summary { color: var(--accent); }
+.guide .viva .ans {
+  font-family: var(--face-ui); font-size: 0.89em; line-height: 1.6;
+  color: var(--ink-soft); margin: 0.55rem 0 0.2rem 1.9rem;
+}
+
+/* ============================== citations ============================== */
+
+.guide cite.src {
+  font-family: var(--face-ui); font-style: normal;
+  font-size: 0.66em; font-weight: 600; letter-spacing: 0.02em;
+  color: var(--cite); white-space: nowrap;
+  border: 1px solid var(--rule); border-radius: 2px;
+  padding: 0.05rem 0.28rem; margin-left: 0.3rem; vertical-align: 0.12em;
+}
+.guide cite.src.das { border-color: var(--accent); color: var(--accent); }
+.guide cite.src.bl  { border-color: var(--bl);     color: var(--bl); }
+.guide cite.src.srb { border-color: var(--srb);    color: var(--srb); }
+
+.guide[data-cite="off"] cite.src { display: none; }
+
+/* ============================== discrepancies ============================== */
+
+.guide details.conflict {
+  border: 1px solid var(--rule); border-left: 3px solid var(--flag);
+  border-radius: 0 4px 4px 0; background: var(--flag-soft); margin: 1.5rem 0;
+}
+.guide details.conflict > summary {
+  cursor: pointer; list-style: none; display: flex; gap: 0.55rem; align-items: baseline;
+  padding: 0.7rem 0.9rem; font-family: var(--face-ui);
+  font-size: 0.82em; line-height: 1.45; color: var(--ink);
+}
+.guide details.conflict > summary::-webkit-details-marker { display: none; }
+.guide details.conflict > summary::before {
+  content: "*"; color: var(--flag); font-size: 1em; font-weight: 700;
+  line-height: 1; flex: none; transform: translateY(0.22em);
+}
+.guide details.conflict > summary::after {
+  content: "expand"; margin-left: auto; flex: none;
+  font-size: 0.66em; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase;
+  color: var(--flag); border: 1px solid var(--flag); border-radius: 3px; padding: 0.1rem 0.35rem;
+}
+.guide details.conflict[open] > summary::after { content: "close"; }
+.guide details.conflict > summary:hover { color: var(--flag); }
+.guide details.conflict .what { font-weight: 650; }
+.guide details.conflict .who { color: var(--ink-soft); font-weight: 400; }
+.guide details.conflict .body {
+  padding: 0 0.9rem 0.9rem 2.05rem; border-top: 1px solid var(--rule);
+  margin-top: -1px; padding-top: 0.8rem;
+}
+.guide details.conflict dl { margin: 0; }
+.guide details.conflict dt {
+  font-family: var(--face-ui); font-size: 0.76em; font-weight: 700;
+  color: var(--ink); margin-top: 0.65rem;
+}
+.guide details.conflict dt:first-child { margin-top: 0; }
+.guide details.conflict dd {
+  margin: 0.15rem 0 0; font-family: var(--face-ui);
+  font-size: 0.86em; line-height: 1.55; color: var(--ink-soft);
+}
+.guide details.conflict .ruling {
+  display: block; margin-top: 0.85rem; padding-top: 0.7rem;
+  border-top: 1px solid var(--rule); font-family: var(--face-ui);
+  font-size: 0.86em; line-height: 1.55; color: var(--ink-soft);
+}
+.guide details.conflict .ruling b { color: var(--ink); }
+
+.guide[data-conflicts="off"] details.conflict { display: none; }
+
+/* ============================== source key ============================== */
+
+.guide .srckey {
+  display: flex; flex-wrap: wrap; gap: 0.5rem 1.1rem;
+  font-family: var(--face-ui); font-size: 0.74em; color: var(--ink-soft);
+  margin: 1.2rem 0 0; padding-top: 0.9rem; border-top: 1px solid var(--rule);
+}
+.guide .srckey span { display: inline-flex; align-items: center; gap: 0.35rem; }
+.guide .srckey i { width: 9px; height: 9px; border-radius: 2px; flex: none; }
+
+/* ============================== tables ============================== */
+
+.guide .scroll { overflow-x: auto; margin: 1.4rem 0; }
+.guide table {
+  border-collapse: collapse; width: 100%;
+  font-size: 0.9em; font-family: var(--face-ui); min-width: 0;
+}
+.guide th, .guide td {
+  text-align: left; vertical-align: top;
+  padding: 0.5rem 0.7rem 0.5rem 0; border-bottom: 1px solid var(--rule);
+}
+.guide th {
+  font-size: 0.68em; font-weight: 700; letter-spacing: 0.09em;
+  text-transform: uppercase; color: var(--accent); border-bottom: 1px solid var(--ink);
+}
+
+/* ============================== figures ============================== */
+
+.guide figure { margin: 1.8rem 0; padding: 0; }
+.guide figure img {
+  display: block; max-width: 100%; height: auto;
+  border: 1px solid var(--rule); border-radius: 2px; background: #fff;
+}
+.guide figcaption {
+  font-family: var(--face-ui); font-size: 0.78em; line-height: 1.5;
+  color: var(--ink-soft); margin-top: 0.5rem;
+}
+
+/* ============================== colophon ============================== */
+
+.guide .colophon {
+  margin-top: 4rem; padding-top: 1.2rem; border-top: 1px solid var(--rule);
+  font-family: var(--face-ui); font-size: 0.76em; line-height: 1.6; color: var(--ink-soft);
+}
+
+/* ============================== print ============================== */
+
+@media print {
+  .guide {
+    --paper: #fff; --ink: #000; --ink-soft: #333; --rule: #bbb;
+    --accent: #004c5c; --accent-soft: #eef4f5; --cite: #666;
+    --measure: none; --fs: 10.5pt; --lh: 1.45;
+    --face-body: "Spectral", Georgia, serif;
+    --face-ui: "Inter", system-ui, sans-serif;
+  }
+  .guide .wrap { max-width: none; padding: 0; }
+
+  /* Watermark on the printed copy.
+   *
+   * It sits on z-index -1, behind the body text, so it can never punch a light hole through
+   * a glyph the way an overlaid watermark does. That only works if the paper itself stops
+   * painting a background over it, hence the background: none; the sheet is white anyway.
+   *
+   * It is text rather than a background image on purpose: headless Chrome's --print-to-pdf
+   * does not print backgrounds by default, and text is also still text in the finished PDF,
+   * so the watermark can be verified page by page instead of being eyeballed once.
+   *
+   * position: fixed is what repeats it on every sheet. */
+  .guide { background: none; }
+  .guide::before {
+    content: "rx.harnar.in";
+    position: fixed;
+    top: 50%;
+    left: 50%;
+    z-index: -1;
+    transform: translate(-50%, -50%) rotate(-32deg);
+    font-family: var(--face-ui);
+    font-size: 54pt;
+    font-weight: 600;
+    letter-spacing: 0.1em;
+    white-space: nowrap;
+    color: #ebe8e3;
+    print-color-adjust: exact;
+    -webkit-print-color-adjust: exact;
+  }
+  .guide h2 {
+    margin-top: 26pt;
+    padding-top: 9pt;
+    padding-bottom: 7pt;
+    border-top: 3pt solid #555;
+    border-bottom: 1pt solid #999;
+    font-size: 10pt;
+    letter-spacing: 0.16em;
+    break-after: avoid;
+    break-before: auto;
+  }
+  .guide h2 .n {
+    color: #000;
+    font-size: 13pt;
+    margin-right: 0.6em;
+  }
+  /* the first section should not push a near-empty first page */
+  .guide h2:first-of-type { margin-top: 14pt; }
+
+  /* subheads hang off the section rule so it is obvious what belongs to what */
+  .guide h3 {
+    border-left: 2.5pt solid #777;
+    padding-left: 7pt;
+    margin-top: 15pt;
+    break-after: avoid;
+  }
+  .guide h4 { margin-top: 11pt; break-after: avoid; }
+  .guide .step, .guide dl.findings dt, .guide dl.findings dd,
+  .guide .pearl, .guide figure, .guide .viva details { break-inside: avoid; }
+  .guide a { color: #000; text-decoration: none; }
+  .guide .colophon { break-before: avoid; }
+
+  /* reader preferences are for the screen; paper gets the designed layout */
+  .guide[data-recall="on"] .step > .why,
+  .guide[data-recall="on"] dl.findings dd,
+  .guide[data-recall="on"] .viva .ans { background: none; color: var(--ink-soft); }
+  .guide[data-recall="on"] .step > .why *,
+  .guide[data-recall="on"] dl.findings dd *,
+  .guide[data-recall="on"] .viva .ans * { visibility: visible; }
+  .guide[data-hl-head="on"] h2 { background: none; padding: 0 0 0.45rem; }
+  .guide[data-hl-term="on"] b, .guide[data-hl-term="on"] strong { background: none; }
+  .guide[data-conflicts="off"] details.conflict { display: block; }
+  .guide[data-cite="off"] cite.src { display: inline; }
+
+  /* discrepancies print as small asterisked footnotes, not as boxes */
+  .guide details.conflict {
+    background: none; border: none; border-left: 2px solid #999;
+    margin: 0.8rem 0; break-inside: avoid;
+  }
+  .guide details.conflict > summary { padding: 0 0 0 0.5rem; font-size: 8.5pt; font-weight: 700; }
+  .guide details.conflict > summary::after,
+  .guide details.conflict[open] > summary::after { content: none; border: none; padding: 0; }
+  .guide details.conflict .body {
+    padding: 0.2rem 0 0 0.5rem; border-top: none; margin-top: 0; font-size: 8.5pt;
+  }
+  .guide details.conflict dt { font-size: 8pt; margin-top: 0.3rem; }
+  .guide details.conflict dd { font-size: 8.5pt; line-height: 1.35; }
+  .guide details.conflict .ruling {
+    font-size: 8.5pt; line-height: 1.35; margin-top: 0.4rem;
+    padding-top: 0.3rem; border-top: 1px dotted #bbb;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .guide * { animation: none !important; transition: none !important; }
+}
+
+/* ===================================================================
+   Reader interface, the rail, selection bubble, studio panel, notes
+   and ink canvas. These sit OUTSIDE .guide (they are chrome, not
+   document), so they are deliberately unscoped and self-contained.
+   =================================================================== */
+
+.rdr-rail {
+  position: fixed;
+  right: max(10px, env(safe-area-inset-right, 0px));
+  top: 50%;
+  transform: translateY(-50%);
+  z-index: 40;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  padding: 6px;
+  border-radius: 10px;
+  background: var(--paper, #fff);
+  border: 1px solid var(--rule, #ddd);
+  box-shadow: 0 4px 18px rgba(0,0,0,.12);
+}
+
+.rdr-rail button {
+  width: 34px; height: 34px;
+  display: grid; place-items: center;
+  border: 1px solid transparent; border-radius: 7px;
+  background: none; color: var(--ink-soft, #666);
+  cursor: pointer; padding: 0;
+}
+.rdr-rail button svg { width: 18px; height: 18px; }
+.rdr-rail button:hover { color: var(--accent, #005f73); border-color: var(--rule, #ddd); }
+.rdr-rail button:focus-visible { outline: 2px solid var(--accent, #005f73); outline-offset: 1px; }
+.rdr-rail button.on {
+  color: var(--accent, #005f73);
+  background: var(--accent-soft, #e3eef0);
+  border-color: var(--accent, #005f73);
+}
+
+.rdr-pal { display: flex; flex-direction: column; gap: 4px; margin-top: 4px;
+           padding-top: 6px; border-top: 1px solid var(--rule, #ddd); }
+.rdr-pal .rdr-sw {
+  width: 22px; height: 22px; margin: 0 auto;
+  border-radius: 50%; border: 2px solid transparent; cursor: pointer; padding: 0;
+}
+.rdr-pal .rdr-sw.on { border-color: var(--ink, #222); }
+
+/* ---------- the rail on a phone ----------
+   The row of tools plus the colour palette comes to about 416px of content. Centring that
+   with left:50% and translateX(-50%) on a 375px screen pushed the Reading settings button off
+   the left edge and the last swatches off the right, so the one control that reaches text
+   size, theme and backup was unreachable on exactly the devices this is read on.
+   It is pinned to both edges now, and scrolls horizontally if the tools still do not fit. */
+@media (max-width: 640px) {
+  .rdr-rail {
+    right: max(8px, env(safe-area-inset-right, 0px));
+    left: max(8px, env(safe-area-inset-left, 0px));
+    top: auto;
+    bottom: max(8px, env(safe-area-inset-bottom, 0px));
+    transform: none;
+    flex-direction: row;
+    align-items: center;
+    justify-content: flex-start;
+    gap: 2px;
+    overflow-x: auto;
+    overscroll-behavior-x: contain;
+    scrollbar-width: none;
+    -webkit-overflow-scrolling: touch;
+  }
+  .rdr-rail::-webkit-scrollbar { display: none; }
+  .rdr-rail button { flex: 0 0 auto; }
+  .rdr-pal { flex-direction: row; margin: 0 0 0 4px; flex: 0 0 auto;
+             padding: 0 0 0 6px; border-top: none; border-left: 1px solid var(--rule, #ddd); }
+}
+
+/* A landscape phone is wider than 640px, so it used to get the tall vertical rail: about
+   416px of buttons in a 390px-high window, with the top and bottom items simply unreachable.
+   Height, not width, is what decides this. */
+@media (max-height: 520px) and (orientation: landscape) {
+  .rdr-rail {
+    right: max(8px, env(safe-area-inset-right, 0px));
+    left: max(8px, env(safe-area-inset-left, 0px));
+    top: auto;
+    bottom: max(8px, env(safe-area-inset-bottom, 0px));
+    transform: none;
+    flex-direction: row; align-items: center; justify-content: flex-start;
+    overflow-x: auto; scrollbar-width: none;
+  }
+  .rdr-pal { flex-direction: row; margin: 0 0 0 4px;
+             padding: 0 0 0 6px; border-top: none; border-left: 1px solid var(--rule, #ddd); }
+}
+
+/* ---------- touch targets ----------
+   Everything the reader taps was built for a mouse: 34px tool buttons, 22px swatches, and
+   citation chips about 16px tall, which are the main interaction in the guide. The visual
+   size stays as designed; the hit area is grown to 44px underneath it. */
+@media (pointer: coarse) {
+  .rdr-rail button,
+  .rdr-erase-modes button,
+  .rdr-bubble button,
+  .rdr-seg button,
+  .rdr-ne-row button,
+  .rdr-close,
+  .rdr-src-close,
+  .rdr-clear { min-width: 44px; min-height: 44px; }
+
+  /* the swatch gets its 44px from padding alone; the generic minimum above would stack with
+     it and make each colour a 70px slab, which pushes the tools off a phone again */
+  .rdr-pal .rdr-sw {
+    width: 22px; height: 22px; min-width: 0; min-height: 0;
+    padding: 11px; background-clip: content-box;
+    box-sizing: content-box;
+  }
+
+  .guide cite.src[data-cite-key],
+  .rdr-note { position: relative; }
+  .guide cite.src[data-cite-key]::after,
+  .rdr-note::after {
+    content: ""; position: absolute; inset: -14px -8px;
+  }
+
+  .guide .viva summary,
+  .guide details.conflict > summary { min-height: 44px; }
+}
+
+/* Hover belongs to pointers. On a touch screen these stick after a tap and leave a button
+   looking permanently active. */
+@media (hover: none) {
+  .rdr-rail button:hover,
+  .rdr-seg button:hover,
+  .guide details.conflict > summary:hover { background: none; }
+  .rdr-rail button:hover { color: var(--ink-soft, #666); border-color: transparent; }
+}
+
+/* ---------- selection bubble ---------- */
+
+.rdr-bubble {
+  position: absolute; z-index: 50;
+  display: flex; gap: 2px; padding: 4px;
+  background: var(--ink, #1b1f22); border-radius: 8px;
+  box-shadow: 0 4px 14px rgba(0,0,0,.25);
+}
+.rdr-bubble button {
+  font: inherit; font-size: 0.78rem; font-weight: 600;
+  font-family: var(--face-ui, system-ui, sans-serif);
+  color: var(--paper, #fff); background: none; border: none;
+  border-radius: 5px; padding: 0.3rem 0.6rem; cursor: pointer;
+}
+.rdr-bubble button:hover { background: rgba(255,255,255,.16); }
+
+/* ---------- studio panel ---------- */
+
+.rdr-studio {
+  position: fixed; z-index: 60;
+  right: max(10px, env(safe-area-inset-right, 0px));
+  top: max(10px, env(safe-area-inset-top, 0px));
+  bottom: max(10px, env(safe-area-inset-bottom, 0px));
+  width: min(21rem, calc(100vw - 20px));
+  display: flex; flex-direction: column;
+  background: var(--paper, #fff);
+  border: 1px solid var(--rule, #ddd); border-radius: 12px;
+  box-shadow: 0 8px 36px rgba(0,0,0,.2);
+  font-family: var(--face-ui, system-ui, sans-serif);
+  color: var(--ink, #222);
+}
+.rdr-st-head {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 0.9rem 1rem; border-bottom: 1px solid var(--rule, #ddd); font-size: 0.95rem;
+}
+.rdr-close { font-size: 1.3rem; line-height: 1; background: none; border: none;
+             color: var(--ink-soft, #666); cursor: pointer; padding: 0 0.2rem; }
+.rdr-close:hover { color: var(--ink, #222); }
+.rdr-st-body { overflow-y: auto; padding: 0.9rem 1rem 1.2rem; }
+
+.rdr-st-body label {
+  display: block; font-size: 0.66rem; font-weight: 700; letter-spacing: 0.1em;
+  text-transform: uppercase; color: var(--accent, #005f73);
+  margin: 1.1rem 0 0.45rem;
+}
+.rdr-st-body label:first-child { margin-top: 0; }
+
+.rdr-seg { display: flex; flex-wrap: wrap; gap: 4px; margin-bottom: 0.4rem; }
+.rdr-seg button {
+  font: inherit; font-size: 0.8rem; font-weight: 600;
+  color: var(--ink-soft, #666); background: none;
+  border: 1px solid var(--rule, #ddd); border-radius: 6px;
+  padding: 0.32rem 0.6rem; cursor: pointer;
+}
+.rdr-seg button:hover:not(:disabled) { color: var(--accent, #005f73); border-color: var(--accent, #005f73); }
+.rdr-seg button.on {
+  color: var(--accent, #005f73); background: var(--accent-soft, #e3eef0);
+  border-color: var(--accent, #005f73);
+}
+.rdr-seg button:disabled { opacity: 0.4; cursor: not-allowed; }
+
+.rdr-lock {
+  margin-top: 1rem; padding: 0.7rem 0.8rem; border-radius: 6px;
+  background: var(--flag-soft, #f6ece0); border-left: 3px solid var(--flag, #8a5a2b);
+  font-size: 0.8rem; line-height: 1.45; color: var(--ink-soft, #666);
+}
+
+.rdr-st-foot {
+  display: flex; flex-wrap: wrap; gap: 6px;
+  margin-top: 1.4rem; padding-top: 1rem; border-top: 1px solid var(--rule, #ddd);
+}
+.rdr-clear {
+  font: inherit; font-size: 0.78rem; font-weight: 600;
+  color: var(--flag, #8a5a2b); background: none;
+  border: 1px solid var(--rule, #ddd); border-radius: 6px;
+  padding: 0.3rem 0.6rem; cursor: pointer;
+}
+.rdr-clear:hover { border-color: var(--flag, #8a5a2b); }
+
+/* ---------- notes ---------- */
+
+.rdr-note {
+  display: inline-block; vertical-align: super;
+  font-family: var(--face-ui, system-ui, sans-serif);
+  font-size: 0.58em; font-weight: 700; letter-spacing: 0.06em; text-transform: uppercase;
+  color: var(--accent, #005f73); background: var(--accent-soft, #e3eef0);
+  border: 1px solid var(--accent, #005f73); border-radius: 3px;
+  padding: 0.05em 0.3em; margin-left: 0.35em; cursor: pointer; user-select: none;
+}
+.rdr-note:hover { filter: brightness(0.95); }
+
+.rdr-noteedit {
+  position: fixed; z-index: 70;
+  left: 50%; top: 50%; transform: translate(-50%, -50%);
+  width: min(26rem, calc(100vw - 32px));
+  background: var(--paper, #fff); color: var(--ink, #222);
+  border: 1px solid var(--rule, #ddd); border-radius: 12px;
+  box-shadow: 0 10px 40px rgba(0,0,0,.25);
+  padding: 1rem; font-family: var(--face-ui, system-ui, sans-serif);
+}
+.rdr-ne-head { font-size: 0.68rem; font-weight: 700; letter-spacing: 0.1em;
+               text-transform: uppercase; color: var(--accent, #005f73); margin-bottom: 0.5rem; }
+
+/* Centred vertically, the Save, Cancel and Delete row lands underneath the on-screen keyboard
+   on a phone, so the editor can be typed into but not finished. Anchoring it to the top keeps
+   the whole dialog in the part of the screen the keyboard leaves alone. */
+@media (max-width: 640px), (max-height: 560px) {
+  .rdr-noteedit {
+    top: max(10px, env(safe-area-inset-top, 0px));
+    transform: translateX(-50%);
+    max-height: 70dvh;
+    overflow-y: auto;
+    overscroll-behavior: contain;
+  }
+}
+.rdr-noteedit textarea {
+  /* 16px exactly. Anything smaller and iOS Safari zooms the page in on focus and leaves it
+     zoomed, which on a phone means the note editor you are typing into walks off screen. */
+  width: 100%; font: inherit; font-size: 16px;
+  color: var(--ink, #222); background: var(--bg, transparent);
+  border: 1px solid var(--rule, #ddd); border-radius: 6px;
+  padding: 0.6rem 0.7rem; resize: vertical;
+}
+.rdr-ne-row { display: flex; align-items: center; gap: 6px; margin-top: 0.7rem; }
+.rdr-ne-row button {
+  font: inherit; font-size: 0.82rem; font-weight: 600;
+  border: 1px solid var(--rule, #ddd); border-radius: 6px;
+  padding: 0.35rem 0.75rem; cursor: pointer;
+  background: none; color: var(--ink, #222);
+}
+.rdr-ne-row .rdr-ok {
+  background: var(--accent, #005f73); border-color: var(--accent, #005f73); color: #fff;
+}
+.rdr-ne-row .rdr-del { color: var(--flag, #8a5a2b); }
+
+/* ---------- ink ---------- */
+
+.rdr-canvas { position: absolute; z-index: 5; touch-action: none; }
+.rdr-pen-on { cursor: crosshair; }
+.rdr-pen-on ::selection { background: transparent; }
+
+@media print {
+  .rdr-rail, .rdr-bubble, .rdr-studio, .rdr-noteedit { display: none !important; }
+  .rdr-canvas { position: absolute; }
+  .rdr-note { border-color: #999; color: #333; background: none; }
+}
+
+/* `display:` on these panels outranks the browser's own [hidden] rule, so state it. */
+.rdr-studio[hidden],
+.rdr-bubble[hidden],
+.rdr-noteedit[hidden],
+.rdr-lock[hidden] { display: none !important; }
+
+/* ---------- source pane ----------
+   Slides in over the guide rather than opening a tab, so checking a citation does not
+   cost the reader their place. The quoted page is set solid; the paragraphs either side
+   are dimmed, because they are there for context and not for reading. */
+
+.guide cite.src[data-cite-key] { cursor: pointer; }
+.guide cite.src[data-cite-key]:hover { background: var(--accent-soft); }
+.guide cite.src[data-cite-key]:focus-visible { outline: 2px solid var(--accent); outline-offset: 1px; }
+
+.rdr-srcpane {
+  position: fixed;
+  z-index: 80;
+  right: 0;
+  top: 0;
+  bottom: 0;
+  width: min(34rem, 100vw);
+  display: flex;
+  flex-direction: column;
+  background: var(--paper, #fff);
+  color: var(--ink, #222);
+  border-left: 1px solid var(--rule, #ddd);
+  box-shadow: -8px 0 40px rgba(0, 0, 0, .22);
+  padding-right: env(safe-area-inset-right, 0px);
+}
+.rdr-srcpane[hidden] { display: none !important; }
+
+.rdr-src-head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 1rem;
+  padding: 1rem 1.1rem;
+  padding-top: max(1rem, env(safe-area-inset-top, 0px));
+  border-bottom: 1px solid var(--rule, #ddd);
+  font-family: var(--face-ui, system-ui, sans-serif);
+}
+.rdr-src-book { font-size: 0.95rem; font-weight: 650; line-height: 1.3; }
+.rdr-src-meta {
+  font-size: 0.74rem; color: var(--ink-soft, #666);
+  letter-spacing: 0.04em; margin-top: 0.15rem;
+}
+.rdr-src-close {
+  font-size: 1.5rem; line-height: 1; background: none; border: none;
+  color: var(--ink-soft, #666); cursor: pointer; padding: 0 0.2rem; flex: none;
+}
+.rdr-src-close:hover { color: var(--ink, #222); }
+.rdr-src-close:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+
+.rdr-src-body {
+  overflow-y: auto;
+  padding: 1.1rem;
+  padding-bottom: max(1.1rem, env(safe-area-inset-bottom, 0px));
+  font-size: 0.92rem;
+  line-height: 1.6;
+}
+
+.rdr-src-page + .rdr-src-page {
+  margin-top: 1.6rem; padding-top: 1.2rem; border-top: 1px solid var(--rule, #ddd);
+}
+.rdr-src-pno {
+  font-family: var(--face-ui, system-ui, sans-serif);
+  font-size: 0.66rem; font-weight: 700; letter-spacing: 0.12em; text-transform: uppercase;
+  color: var(--accent, #005f73); margin-bottom: 0.5rem;
+}
+.rdr-src-main { margin: 0.5rem 0; }
+.rdr-src-ctx { margin: 0.5rem 0; color: var(--ink-soft, #666); font-size: 0.86em; }
+
+.rdr-src-foot {
+  font-family: var(--face-ui, system-ui, sans-serif);
+  font-size: 0.72rem; color: var(--ink-soft, #666);
+  padding: 0.7rem 1.1rem;
+  padding-bottom: max(0.7rem, env(safe-area-inset-bottom, 0px));
+  border-top: 1px solid var(--rule, #ddd);
+}
+
+@media (max-width: 640px) {
+  .rdr-srcpane {
+    left: 0; right: 0; top: auto; height: 78vh;
+    width: auto; border-left: none;
+    border-top: 1px solid var(--rule, #ddd);
+    border-radius: 12px 12px 0 0;
+    box-shadow: 0 -8px 40px rgba(0, 0, 0, .22);
+  }
+}
+
+@media print { .rdr-srcpane { display: none !important; } }
+
+/* the live stroke layer sits just above the committed one */
+.rdr-canvas-live { z-index: 6; }
+
+/* eraser granularity, shown only while the eraser is the active tool */
+.rdr-erase-modes {
+  display: flex; flex-direction: column; gap: 4px;
+  margin-top: 4px; padding-top: 6px;
+  border-top: 1px solid var(--rule, #ddd);
+}
+.rdr-erase-modes[hidden] { display: none !important; }
+.rdr-erase-modes button {
+  width: auto; height: auto;
+  font: inherit; font-size: 0.62rem; font-weight: 700;
+  letter-spacing: 0.06em; text-transform: uppercase;
+  color: var(--ink-soft, #666); background: none;
+  border: 1px solid var(--rule, #ddd); border-radius: 5px;
+  padding: 0.22rem 0.3rem; cursor: pointer;
+}
+.rdr-erase-modes button.on {
+  color: var(--accent, #005f73);
+  background: var(--accent-soft, #e3eef0);
+  border-color: var(--accent, #005f73);
+}
+.rdr-pal[hidden] { display: none !important; }
+
+@media (max-width: 640px) {
+  .rdr-erase-modes {
+    flex-direction: row; margin: 0 0 0 4px;
+    padding: 0 0 0 6px; border-top: none; border-left: 1px solid var(--rule, #ddd);
+  }
+}
+
+/* ---------- backup ---------- */
+
+.rdr-note-hint {
+  font-size: 0.78rem; line-height: 1.45;
+  color: var(--ink-soft, #666); margin: 0 0 0.6rem;
+}
+
+.rdr-backup { display: flex; flex-wrap: wrap; gap: 6px; }
+.rdr-backup button {
+  width: auto; height: auto;
+  font: inherit; font-size: 0.8rem; font-weight: 600;
+  color: var(--ink, #222); background: none;
+  border: 1px solid var(--rule, #ddd); border-radius: 6px;
+  padding: 0.34rem 0.7rem; cursor: pointer;
+}
+.rdr-backup button:hover { border-color: var(--accent, #005f73); color: var(--accent, #005f73); }
+.rdr-backup button:focus-visible { outline: 2px solid var(--accent, #005f73); outline-offset: 2px; }
+.rdr-backup .rdr-do-restore {
+  background: var(--accent, #005f73); border-color: var(--accent, #005f73); color: #fff;
+}
+
+.rdr-restore {
+  margin-top: 0.8rem; padding: 0.8rem 0.9rem;
+  border: 1px solid var(--rule, #ddd); border-left: 3px solid var(--flag, #8a5a2b);
+  border-radius: 0 6px 6px 0; background: var(--flag-soft, #f6ece0);
+  font-size: 0.84rem; line-height: 1.5;
+}
+.rdr-restore[hidden] { display: none !important; }
+.rdr-restore p { margin: 0 0 0.5rem; }
+.rdr-restore .rdr-warn { color: var(--flag, #8a5a2b); font-weight: 650; }
+
+.rdr-say {
+  font-size: 0.78rem; color: var(--ink-soft, #666);
+  margin: 0.7rem 0 0; min-height: 1.1em;
+}
+
+</style>
+</head>
+<body class="guide" data-doc="ulcer">
+<div class="wrap">
+
+  <header class="masthead">
+    <p class="eyebrow">Short case 10 &middot; General Surgery</p>
+    <h1>Ulcer</h1>
+    <p class="standfirst">
+      The case that is won at the edge. Describe five things in order, name the edge, and the
+      diagnosis usually names itself. Everything else is confirmation.
+    </p>
+    <div class="srckey">
+      <span><i style="background:var(--accent)"></i> S Das: clinical method</span>
+      <span><i style="background:var(--bl)"></i> Bailey &amp; Love: mechanism and management</span>
+      <span><i style="background:var(--srb)"></i> SRB: exam framework</span>
+    </div>
+  </header>
+
+  <h2><span class="n">1</span>Definition and parts</h2>
+
+  <dl class="findings">
+    <dt>Definition</dt>
+    <dd>SRB: <b>"Ulcer is disruption or break in the continuity of any lining, may be skin, mucous
+    membrane or others. Ulcer is one of the types of
+    wounds."</b><cite class="src srb">SRB 1 &middot; p.1</cite></dd>
+    <dt>The five things to describe, in this order</dt>
+    <dd><b>Site</b> &middot; <b>size and shape</b> &middot; <b>edge</b> &middot; <b>floor</b>
+    &middot; <b>base</b>. SRB's figure names the parts as
+    <b>floor and base</b>.<cite class="src srb">SRB 1 &middot; p.15</cite> Then the surrounding
+    skin, the discharge, and the regional lymph nodes.</dd>
+    <dt>Edge is not margin</dt>
+    <dd>S Das is explicit: <b>"The term 'edge' should not be confused with the term
+    'margin'."</b><cite class="src das">Das 4 &middot; p.63</cite> The <b>margin</b> is the
+    junction of normal skin with the ulcer; the <b>edge</b> is the area between the margin and the
+    floor, and it is the edge that carries the diagnosis.</dd>
+    <dt>Floor is not base</dt>
+    <dd>The <b>floor</b> is what you can see, the exposed surface of the
+    ulcer.<cite class="src das">Das 4 &middot; p.64</cite> The <b>base</b> is what the ulcer rests
+    on, which may be bone or soft tissue, and it is
+    <b>palpated</b>.<cite class="src srb">SRB 1 &middot; p.15</cite><cite class="src das">Das 4 &middot; p.64</cite>
+    Saying which you mean, and palpating the base rather than only looking at the floor, is the
+    single commonest thing candidates get wrong.</dd>
+  </dl>
+
+  <div class="pearl">
+    <span class="tag">The five edges, with the mechanism of each</span>
+    This is the heart of the case, and SRB supplies not just the list but the pathology behind
+    each.<cite class="src srb">SRB 1 &middot; p.15</cite><cite class="src das">Das 4 &middot; p.64</cite>
+    <br><br><b>1. Sloping edge</b>: a <b>healing</b> ulcer. S Das describes the three zones from
+    the centre outwards: <b>red granulation tissue, then a blue zone of thin growing epithelium,
+    then a white zone of scar</b>.<cite class="src das">Das 4 &middot; p.64</cite> SRB: the
+    <b>middle part is blue due to epithelial
+    proliferation</b>.<cite class="src srb">SRB 1 &middot; p.15</cite> Also the edge of a venous
+    ulcer once it granulates well.<cite class="src srb">SRB 1 &middot; p.27</cite>
+    <br><b>2. Undermined edge</b>: <b>tuberculous</b>. The reason: <b>"disease process advances in
+    deeper plane, in subcutaneous tissue, whereas the epidermis proliferates
+    inwards"</b>.<cite class="src srb">SRB 1 &middot; p.15</cite> S Das's bedside proof: <b>a probe
+    can be easily insinuated between the edge and the floor of the
+    ulcer</b>.<cite class="src das">Das 4 &middot; p.63</cite>
+    <br><b>3. Punched out edge</b>: <b>gummatous, that is syphilitic, and trophic</b>. The reason:
+    <b>endarteritis</b>.<cite class="src srb">SRB 1 &middot; p.15</cite> The tissue dies in a block
+    because its artery died, so the edge drops vertically.
+    <br><b>4. Raised and beaded, pearly-white edge</b>: <b>rodent ulcer, that is basal cell
+    carcinoma</b>.<cite class="src srb">SRB 1 &middot; p.15</cite><cite class="src das">Das 4 &middot; p.64</cite>
+    <br><b>5. Everted or rolled-out edge</b>: <b>squamous cell carcinoma</b>. S Das gives the
+    mechanism: <b>the ulcer heaps up and spills over the normal skin to produce an everted
+    edge</b>.<cite class="src das">Das 4 &middot; p.64</cite>
+    <br><br><b>And the spreading ulcer, which is a sixth appearance:</b> the edge is
+    <b>inflamed, irregular and oedematous</b>.<cite class="src srb">SRB 1 &middot; p.16</cite><cite class="src das">Das 4 &middot; p.63</cite>
+  </div>
+
+  <h2><span class="n">2</span>Clinical classification, which is what you report</h2>
+
+  <div class="scroll">
+  <table>
+    <thead><tr><th></th><th>Spreading</th><th>Healing</th><th>Chronic / callous</th></tr></thead>
+    <tbody>
+      <tr><td><b>Edge</b></td><td>Inflamed, irregular, oedematous</td><td>Sloping</td>
+          <td>Indolent, often thickened</td></tr>
+      <tr><td><b>Floor</b></td>
+          <td>No healthy granulation; <b>profuse purulent discharge and slough</b></td>
+          <td><b>Healthy pink or red granulation</b>; scanty serous discharge, no slough</td>
+          <td><b>Unhealthy, pale, flat granulation</b></td></tr>
+      <tr><td><b>Surroundings</b></td><td>Red and oedematous</td><td>No inflammation</td>
+          <td>Fibrosed</td></tr>
+      <tr><td><b>Lymph nodes</b></td><td><b>Enlarged and tender</b></td>
+          <td>May be enlarged, but <b>always non-tender</b></td><td>Variable</td></tr>
+      <tr><td><b>Pain</b></td><td>Acutely painful</td><td>Settling</td><td>Usually painless</td></tr>
+    </tbody>
+  </table>
+  </div>
+  <p style="font-family:var(--sans);font-size:0.78rem;color:var(--ink-soft);margin-top:-0.6rem">
+    SRB ch.1 pp.16, 19. The tender-versus-non-tender node is the discriminator worth memorising:
+    tender nodes mean active infection, non-tender enlarged nodes in a healing ulcer mean reactive
+    hyperplasia, and non-tender hard fixed nodes mean something else entirely.
+  </p>
+
+  <dl class="findings">
+    <dt>Pathological classification</dt>
+    <dd><b>Specific</b>: tuberculous, syphilitic, actinomycotic.
+    <b>Malignant</b>: carcinomatous, rodent (BCC), melanotic.
+    <b>Non-specific</b>: traumatic, which may be mechanical, physical or chemical and is the
+    commonest; arterial, from atherosclerosis or thromboangiitis obliterans; venous or
+    gravitational; trophic or neuropathic; and the ulcers of systemic disease, which SRB lists as
+    anaemia, polycythaemia, sickle cell disease, hereditary spherocytosis, leukaemia, vasculitis
+    and autoimmune disease.<cite class="src srb">SRB 1 &middot; p.17, p.29</cite>
+    S Das's two axes are the same: clinical and
+    pathological.<cite class="src das">Das 4 &middot; p.68</cite></dd>
+    <dt>Site is a diagnosis in itself</dt>
+    <dd>S Das's map: <b>cutaneous tuberculosis</b> on the face, fingers and hand, with
+    <b>lupus vulgaris</b> on the face; <b>Hunterian chancre and soft sores</b> on the external
+    genitalia; <b>gummatous ulcers</b> over subcutaneous bones such as tibia, sternum and skull;
+    <b>perforating or trophic ulcers</b> on the heel or the ball of the foot, which carries maximum
+    body weight; and <b>malignant ulcers</b> anywhere but commonly on the lips, tongue, breast,
+    penis and anus.<cite class="src das">Das 4 &middot; p.63</cite>
+    <br><span class="label">The venous ulcer's site, precisely</span>SRB: <b>vertically oval,
+    commonly on the medial side, occasionally lateral, often both sides of the ankle, but never
+    above the middle third of the leg</b>.<cite class="src srb">SRB 1 &middot; p.27</cite> That
+    "never above the middle third" is a discriminator you can state as a rule.</dd>
+    <dt>Induration, and where to feel for it</dt>
+    <dd>SRB: <b>"Induration is a clinical palpatory sign which means there is a specific type of
+    hardness in the diseased tissue. It is obvious in well-differentiated carcinomas. It is better
+    felt in squamous cell"</b> carcinoma.<cite class="src srb">SRB 1 &middot; p.15</cite> So
+    palpate the base and the margin between finger and thumb, and report induration as a separate
+    finding from the edge.</dd>
+  </dl>
+
+  <div class="pearl">
+    <span class="tag">Three granulation tissues, and what each means</span>
+    <b>Healthy, pink or red, flat granulation</b>: a healing
+    ulcer.<cite class="src srb">SRB 1 &middot; p.16</cite>
+    <br><b>Unhealthy, pale, flat granulation</b>: a <b>chronic non-healing or callous
+    ulcer</b>.<cite class="src srb">SRB 1 &middot; p.19</cite>
+    <br><b>Exuberant granulation, "proud flesh"</b>: granulation protruding out of the ulcer bed or
+    sinus opening like a proliferating mass, and SRB gives the reason it matters: <b>"It is
+    commonly associated with a retained foreign body."</b> It <b>"should be scooped out using
+    Volkmann's scoop prior to skin grafting"</b>. A <b>pyogenic granuloma</b> is a type of it: a
+    well-localised red swelling that <b>bleeds on
+    touching</b>.<cite class="src srb">SRB 1 &middot; p.19</cite>
+    <br><br>So proud flesh is not just an appearance, it is a prompt to look for a foreign body.
+  </div>
+
+  <h2><span class="n">3</span>History, the five questions that matter</h2>
+
+  <dl class="findings">
+    <dt>How did it start, and how long ago?</dt>
+    <dd>S Das: <b>duration</b> is the second thing to establish. And ask about trauma, because an
+    ulcer may follow a burn, and about the scar: <b>"Sometimes a malignant ulcer (Marjolin's) may
+    develop on the scar of a burn."</b><cite class="src das">Das 4 &middot; p.61</cite></dd>
+    <dt>Is it painful?</dt>
+    <dd>A spreading ulcer is acutely painful; a healing one settles; a chronic callous ulcer is
+    usually painless.<cite class="src srb">SRB 1 &middot; p.16, p.19</cite> SRB on the venous
+    ulcer: <b>"Ulcer is initially painful; but once chronicity develops it becomes
+    painless."</b><cite class="src srb">SRB 1 &middot; p.27</cite> And tuberculous ulcers <b>"are
+    usually painless"</b>.<cite class="src srb">SRB 1 &middot; p.17</cite>
+    <br><span class="label out">So</span>Painlessness does not mean benign; in this case it means
+    either chronic, tuberculous, or neuropathic.</dd>
+    <dt>Is the sensation normal around it?</dt>
+    <dd>Because a trophic ulcer is a neuropathic one. S Das's example is a <b>trophic ulcer at the
+    heel resulting from nerve injury</b>, with the scar of the injury
+    visible.<cite class="src das">Das 4 &middot; p.63</cite> SRB illustrates <b>bilateral trophic
+    ulceration of the feet due to anaesthesia</b> in
+    leprosy.<cite class="src bl">B&amp;L 6 &middot; p.80</cite> In India, test sensation in every
+    foot ulcer.</dd>
+    <dt>Any varicose veins, claudication, or diabetes?</dt>
+    <dd>Because the three commonest chronic leg ulcers are venous, arterial and neuropathic, and
+    the history separates them before you look.</dd>
+    <dt>Any contact with tuberculosis, or weight loss and evening fever?</dt>
+    <dd>Because a tuberculous ulcer has an undermined edge and needs drugs, not excision. SRB's
+    management: <b>discharge study, biopsy and later antituberculous
+    drugs</b>.<cite class="src srb">SRB 1 &middot; p.17</cite></dd>
+  </dl>
+
+  <details class="conflict">
+    <summary>
+      <span class="what">Does Marjolin's ulcer metastasise?</span>
+      <span class="who">SRB 1 p.24 says it does not spread by lymphatics or blood; B&amp;L 45 p.652 makes no such claim</span>
+    </summary>
+    <div class="body">
+    <dl>
+      <dt>SRB</dt>
+      <dd>"Marjolin's ulcer can occur in an unstable scar of long duration usually after burns or
+      snake bite. <b>It is well differentiated SCC which does not spread through lymphatics or
+      blood.</b>"<cite class="src srb">SRB 1 &middot; p.24</cite> Its treatment is <b>wide local
+      excision with skin grafting</b>, with <b>regional lymph node block dissection</b> reserved
+      for ordinary squamous carcinoma.<cite class="src srb">SRB 1 &middot; p.24</cite></dd>
+      <dt>Bailey &amp; Love 28e</dt>
+      <dd>Gives only the definition: <b>"When a SCC appears in a scar it is known as a Marjolin's
+      ulcer."</b> Its eponym footnote records that Marjolin <b>"described the development of
+      carcinomatous ulcers in scars in
+      1828"</b>.<cite class="src bl">B&amp;L 45 &middot; p.652</cite> It makes <b>no claim at all
+      that such a tumour behaves differently</b>, and it lists scars among the risk factors for
+      squamous cell carcinoma alongside <b>sun exposure, chronic wounds and
+      immunosuppression</b>.<cite class="src bl">B&amp;L 45 &middot; p.652</cite></dd>
+    </dl>
+    <span class="ruling"><b>Live difference, and the classical claim needs stating with its reason
+    rather than as a fact, because the reason is what makes it defensible and also shows its
+    limits.</b>
+    <br><br>Answer: <b>"Marjolin's ulcer is a squamous cell carcinoma arising in a long-standing
+    unstable scar, classically a burn scar. The classical teaching is that it is well
+    differentiated and slow to metastasise, because the scar is relatively avascular and
+    alymphatic, so there is no route for early lymphatic spread. That is why the Indian texts say
+    it does not spread by lymphatics. But it is still a squamous carcinoma: once it grows beyond
+    the scar into normally vascularised tissue it can metastasise, and Bailey and Love 28e makes no
+    exception for it. So I would treat it as a squamous cell carcinoma, by wide local excision with
+    grafting, and I would examine and follow up the regional nodes rather than assume they are
+    safe."</b><cite class="src srb">SRB 1 &middot; p.24</cite><cite class="src bl">B&amp;L 45 &middot; p.652</cite>
+    <br><br>Giving the mechanism, the scar's poor lymphatic drainage, is what earns the mark;
+    repeating "it does not metastasise" as a bare assertion is what loses it.</span>
+    </div>
+  </details>
+
+  <h2><span class="n">4</span>Investigations</h2>
+
+  <dl class="findings">
+    <dt>Biopsy, and from where</dt>
+    <dd>From the <b>edge</b>, including a margin of adjacent normal skin, not from the floor, which
+    is slough and granulation. In a suspected malignant ulcer take an adequate wedge; in a chronic
+    non-healing ulcer biopsy is mandatory rather than optional, because SRB's rule for chronic
+    wounds is that they are <b>"unresponsive to dressing treatment; it requires biopsy, culture
+    study, definitive treatment like wound debridement, VAC therapy, skin grafting or
+    flap"</b>.<cite class="src srb">SRB 1 &middot; p.4</cite></dd>
+    <dt>Discharge for culture, and for acid-fast bacilli</dt>
+    <dd>SRB's sequence in a tuberculous ulcer is <b>discharge study, biopsy, then antituberculous
+    drugs</b>.<cite class="src srb">SRB 1 &middot; p.17</cite></dd>
+    <dt>Vascular assessment</dt>
+    <dd>Ankle-brachial pressure index and duplex, because you must know the arterial supply before
+    you compress a venous ulcer or graft anything.</dd>
+    <dt>Blood glucose, HbA1c and sensation testing</dt>
+    <dd>For the diabetic and neuropathic foot.</dd>
+    <dt>Radiograph of the underlying bone</dt>
+    <dd>If the base is bone, for osteomyelitis or a sequestrum, which is also a cause of a
+    persistent sinus.<cite class="src srb">SRB 1 &middot; p.31</cite></dd>
+  </dl>
+
+  <h2><span class="n">5</span>Treatment, in principle</h2>
+
+  <dl class="findings">
+    <dt>Treat the cause, not the hole</dt>
+    <dd>The ulcer is a symptom. A venous ulcer needs the venous hypertension treated; an arterial
+    ulcer needs revascularisation; a neuropathic ulcer needs offloading; a tuberculous ulcer needs
+    drugs. SRB's instruction for a venous ulcer is explicit: once granulating, graft it, <b>and</b>
+    undertake a <b>definitive procedure for the varicose veins after
+    evaluation</b>.<cite class="src srb">SRB 1 &middot; p.18</cite></dd>
+    <dt>Prepare the bed</dt>
+    <dd>Debridement, control of infection, and <b>vacuum-assisted closure</b> where
+    available.<cite class="src srb">SRB 1 &middot; p.4</cite> Scoop out proud flesh with a
+    <b>Volkmann's scoop before grafting</b>, and look for the foreign body that caused
+    it.<cite class="src srb">SRB 1 &middot; p.19</cite></dd>
+    <dt>Then close it</dt>
+    <dd><b>Skin grafting</b> once there is healthy granulation, or a <b>flap</b> where the base is
+    bone or tendon.<cite class="src srb">SRB 1 &middot; p.4, p.18</cite></dd>
+    <dt>If it is malignant</dt>
+    <dd><b>Wide local excision with skin
+    grafting</b>,<cite class="src srb">SRB 1 &middot; p.24</cite> and for a basal cell carcinoma
+    note B&amp;L's technique for difficult sites: <b>Mohs' micrographic
+    surgery</b>, developed by Mohs in 1938 for cutaneous malignant
+    lesions.<cite class="src bl">B&amp;L 45 &middot; p.652</cite></dd>
+  </dl>
+
+  <div class="pearl">
+    <span class="tag">Rodent ulcer, in one paragraph</span>
+    SRB: <b>"It is the ulcerative form of basal cell carcinoma which is common in the
+    face."</b><cite class="src srb">SRB 1 &middot; p.24</cite> B&amp;L: <b>a slow-growing, locally
+    invasive malignant tumour of pluripotential epithelial cells arising from basal epidermis and
+    hair follicles, so it affects pilosebaceous skin; the risk factor is ultraviolet radiation;
+    90% are nodular or nodular cystic</b>, and it is divided into <b>high- and low-risk
+    BCC</b>.<cite class="src bl">B&amp;L 45 &middot; p.651</cite> The edge is <b>raised, beaded and
+    pearly-white</b>.<cite class="src srb">SRB 1 &middot; p.15</cite> It is locally invasive and
+    does not metastasise, which is why it is called rodent: it gnaws.
+  </div>
+
+  <h2><span class="n">6</span>Rapid-fire viva</h2>
+
+  <div class="viva">
+    <details>
+      <summary>Define an ulcer, and name its parts.</summary>
+      <p class="ans">A disruption or break in the continuity of any lining, whether skin, mucous
+      membrane or other, and one of the types of
+      wound.<cite class="src srb">SRB 1 &middot; p.1</cite> Its parts are the margin, the edge, the
+      floor and the base.<cite class="src srb">SRB 1 &middot; p.15</cite> The margin is the
+      junction with normal skin, the edge lies between margin and floor, the floor is what you see,
+      and the base is what the ulcer rests on and must be
+      palpated.<cite class="src das">Das 4 &middot; p.64</cite></p>
+    </details>
+
+    <details>
+      <summary>Name the types of edge and what each means.</summary>
+      <p class="ans">Sloping: healing, with red granulation centrally, then a blue zone of growing
+      epithelium, then white scar. Undermined: tuberculous, because the disease advances in the
+      deeper plane while the epidermis proliferates inwards, so a probe passes between edge and
+      floor. Punched out: gummatous or trophic, from endarteritis. Raised, beaded and pearly-white:
+      rodent ulcer, that is basal cell carcinoma. Everted or rolled out: squamous cell carcinoma,
+      because the ulcer heaps up and spills over normal skin. And the inflamed, irregular,
+      oedematous edge of a spreading
+      ulcer.<cite class="src srb">SRB 1 &middot; p.15, p.16</cite><cite class="src das">Das 4 &middot; p.63, p.64</cite></p>
+    </details>
+
+    <details>
+      <summary>Why is a tuberculous ulcer's edge undermined?</summary>
+      <p class="ans">Because the disease process advances in the deeper plane, in the subcutaneous
+      tissue, while the epidermis proliferates inwards over it, leaving the skin edge overhanging
+      an undermined cavity.<cite class="src srb">SRB 1 &middot; p.15</cite> The bedside proof is
+      that a probe can be insinuated easily between the edge and the
+      floor.<cite class="src das">Das 4 &middot; p.63</cite></p>
+    </details>
+
+    <details>
+      <summary>Why is a gummatous ulcer punched out?</summary>
+      <p class="ans">Endarteritis.<cite class="src srb">SRB 1 &middot; p.15</cite> The tissue dies
+      in a block because its blood supply dies, so the edge drops vertically rather than sloping or
+      being undermined. The same mechanism gives the punched-out edge of a trophic ulcer.</p>
+    </details>
+
+    <details>
+      <summary>Distinguish a spreading from a healing ulcer.</summary>
+      <p class="ans">Spreading: inflamed, irregular, oedematous edge; floor with absent or
+      unhealthy granulation, profuse purulent discharge and slough; red oedematous surroundings;
+      regional nodes enlarged and tender; acutely painful. Healing: sloping edge; healthy pink or
+      red granulation with scanty serous discharge and no slough; no surrounding inflammation; and
+      nodes that may be enlarged but are always
+      non-tender.<cite class="src srb">SRB 1 &middot; p.16</cite> The tenderness of the nodes is
+      the cleanest discriminator.</p>
+    </details>
+
+    <details>
+      <summary>What does pale flat granulation tissue mean? And proud flesh?</summary>
+      <p class="ans">Unhealthy, pale, flat granulation means a chronic non-healing or callous
+      ulcer. Exuberant granulation, proud flesh, protrudes out of the ulcer bed or sinus opening
+      like a proliferating mass, and is commonly associated with a retained foreign body; it
+      should be scooped out with a Volkmann's scoop before grafting. A pyogenic granuloma is a type
+      of it, presenting as a well-localised red swelling that bleeds on
+      touching.<cite class="src srb">SRB 1 &middot; p.19</cite> So proud flesh should make you look
+      for a foreign body.</p>
+    </details>
+
+    <details>
+      <summary>Where would you biopsy, and why not the floor?</summary>
+      <p class="ans">From the edge, including a margin of adjacent normal skin, because the edge is
+      where the active disease is and where the architecture that gives the diagnosis survives. The
+      floor is slough and granulation tissue and will not be diagnostic. In a chronic non-healing
+      ulcer biopsy is mandatory, along with culture, since chronic wounds unresponsive to dressings
+      require biopsy and culture before definitive
+      treatment.<cite class="src srb">SRB 1 &middot; p.4</cite></p>
+    </details>
+
+    <details>
+      <summary>Where is a venous ulcer, and where is it never?</summary>
+      <p class="ans">Around the ankle in the gaiter's zone, vertically oval, commonly on the medial
+      side, occasionally lateral, sometimes both, but never above the middle third of the
+      leg.<cite class="src srb">SRB 1 &middot; p.27</cite> It is due to ambulatory chronic venous
+      hypertension, from saphenous or perforator incompetence or a post-phlebitic limb, and it is
+      initially painful but becomes painless with chronicity.</p>
+    </details>
+
+    <details>
+      <summary>A painless ulcer on the ball of the foot. What is it and what must you test?</summary>
+      <p class="ans">A trophic or neuropathic ulcer, at a site of maximum weight bearing, which
+      S Das places on the heel or ball of the
+      foot.<cite class="src das">Das 4 &middot; p.63</cite> Test sensation, and look for the cause
+      of the neuropathy: diabetes, leprosy, or a nerve injury whose scar may be
+      visible.<cite class="src das">Das 4 &middot; p.63</cite><cite class="src bl">B&amp;L 6 &middot; p.80</cite>
+      Its edge is punched out, from endarteritis.</p>
+    </details>
+
+    <details>
+      <summary>What is Marjolin's ulcer, and does it metastasise?</summary>
+      <p class="ans">A squamous cell carcinoma arising in a long-standing unstable scar, classically
+      a burn scar or after snake bite. The classical teaching is that it is well differentiated and
+      does not spread by lymphatics or blood, because the scar is relatively avascular and
+      alymphatic, so there is no early route for
+      spread.<cite class="src srb">SRB 1 &middot; p.24</cite> But Bailey and Love 28e simply defines
+      it as an SCC in a scar and makes no exception for its
+      behaviour.<cite class="src bl">B&amp;L 45 &middot; p.652</cite> So treat it as a squamous
+      carcinoma with wide local excision and grafting, and follow the nodes rather than assume they
+      are safe, because once it grows beyond the scar into vascularised tissue it can
+      metastasise.</p>
+    </details>
+
+    <details>
+      <summary>What is a rodent ulcer?</summary>
+      <p class="ans">The ulcerative form of basal cell
+      carcinoma,<cite class="src srb">SRB 1 &middot; p.24</cite> common on the face: a slow-growing,
+      locally invasive malignant tumour of pluripotential epithelial cells arising from basal
+      epidermis and hair follicles, so it affects pilosebaceous skin; ultraviolet radiation is the
+      risk factor and 90% are nodular or nodular
+      cystic.<cite class="src bl">B&amp;L 45 &middot; p.651</cite> Its edge is raised, beaded and
+      pearly-white. It is locally invasive and does not metastasise, hence rodent: it gnaws. For
+      difficult sites, Mohs' micrographic surgery.</p>
+    </details>
+
+    <details>
+      <summary>What is induration and where is it best felt?</summary>
+      <p class="ans">A palpatory sign meaning a specific type of hardness in the diseased tissue,
+      obvious in well-differentiated carcinomas and best felt in squamous cell
+      carcinoma.<cite class="src srb">SRB 1 &middot; p.15</cite> Palpate the base and the margin
+      between finger and thumb and report it separately from the edge.</p>
+    </details>
+
+    <details>
+      <summary>Classify ulcers pathologically.</summary>
+      <p class="ans">Specific: tuberculous, syphilitic, actinomycotic. Malignant: carcinomatous,
+      rodent, melanotic. Non-specific: traumatic, which may be mechanical, physical or chemical and
+      is the commonest; arterial, from atherosclerosis or thromboangiitis obliterans; venous or
+      gravitational; trophic or neuropathic; and the ulcers of systemic disease including anaemia,
+      polycythaemia, sickle cell disease, hereditary spherocytosis, leukaemia, vasculitis and
+      autoimmune disease.<cite class="src srb">SRB 1 &middot; p.17, p.29</cite></p>
+    </details>
+
+    <details>
+      <summary>How would you treat a chronic non-healing ulcer?</summary>
+      <p class="ans">Treat the cause, not the hole. Biopsy and culture it first, because chronic
+      wounds unresponsive to dressings need both. Then debride, control infection, and use
+      vacuum-assisted closure where available; scoop out proud flesh and look for a retained
+      foreign body. Close it with a skin graft once healthy granulation appears, or a flap if the
+      base is bone or tendon. And deal with the underlying cause: the venous hypertension, the
+      arterial supply, the offloading, the glycaemic control, or the antituberculous
+      drugs.<cite class="src srb">SRB 1 &middot; p.4, p.18, p.19</cite></p>
+    </details>
+
+  </div>
+
+  <footer class="colophon">
+    <p>
+      <b>Sources.</b> <i>S Das. A Manual on Clinical Surgery</i> 13e (2018);
+      <i>Bailey &amp; Love's Short Practice of Surgery</i> <b>28e</b>;
+      <i>SRB's Manual of Surgery</i> 6e. Citations give chapter and printed page. In the 28th
+      edition of Bailey &amp; Love, skin and subcutaneous tissue is <b>chapter 45</b> and tropical
+      infections and infestations <b>chapter 6</b>; the ulcer material in the Indian texts is
+      S Das ch.4 and SRB ch.1, and almost all of the classical edge and floor description is
+      theirs.
+    </p>
+    <p>
+      <b>Using this document.</b> The rail on the right opens reading settings, line width, text size, typeface, colour, and a recall mode that hides the answers until you tap them. You can highlight, underline, write on the page and leave notes; all of it is kept for next time. Printing drops the interface, opens every answer, and keeps each step on one page.
+    </p>
+  </footer>
+
+</div>
+
+<script>window.ReaderConfig = { doc: "ulcer" };</script>
+<script>
+/* Reader: study settings and annotation for the surgery guides.
+
+   Attaches to an element with class "guide". Used in two places: the standalone document,
+   where it is loaded with a <script src>, and inside the Claude artifact, where the same
+   source is inlined. Everything it stores is keyed by person, so two students sharing a
+   tablet keep separate settings, highlights, notes and ink.
+
+   window.ReaderConfig may be set before this runs:
+     { student: "hita", doc: "inguinal-hernia", storage: <object with get/set> }
+*/
+
+(function () {
+  "use strict";
+
+  var cfg = window.ReaderConfig || {};
+  var DOC = cfg.doc || "guide";
+  var guide = document.querySelector(".guide");
+
+  // ------------------------------------------------------------------ storage
+
+  var student = (cfg.student || "").trim().toLowerCase() || "_";
+  function key() { return "reader:" + student + ":" + DOC; }
+
+  function load() {
+    if (cfg.storage && cfg.storage.get) { return cfg.storage.get(key()) || {}; }
+    try { return JSON.parse(localStorage.getItem(key()) || "{}"); } catch (e) { return {}; }
+  }
+  function persist(state) {
+    if (cfg.storage && cfg.storage.set) { cfg.storage.set(key(), state); return; }
+    try { localStorage.setItem(key(), JSON.stringify(state)); } catch (e) {}
+  }
+
+  var DEFAULTS = {
+    width: "medium", size: "3", leading: "normal", face: "serif", theme: "auto",
+    cite: "on", conflicts: "on",
+    hlHead: "off", hlWhy: "off", hlTerm: "off", recall: "off",
+    marks: [], notes: [], ink: [], inkLayout: null, updatedAt: 0
+  };
+
+  var state = (function () {
+    var s = load(), out = {};
+    Object.keys(DEFAULTS).forEach(function (k) {
+      out[k] = (s[k] === undefined) ? DEFAULTS[k] : s[k];
+    });
+    return out;
+  })();
+
+  function save() {
+    state.updatedAt = Date.now();
+    persist(state);
+    syncLater();
+  }
+
+
+  // ------------------------------------------------------------------ sync
+  // Optional, and off until an endpoint is set. The local copy is authoritative: sync
+  // pulls once on open and pushes after changes settle, and anything that goes wrong is
+  // swallowed, because a reader halfway through a chapter should never see a network
+  // error about their highlights.
+
+  // The deployed worker, so every case picks sync up without each page having to opt in.
+  // A page can still override it with ReaderConfig.sync, and setting that to "" turns sync
+  // off entirely, which is how you get a purely local copy.
+  var SYNC_DEFAULT = "https://rx-sync.harnar.workers.dev";
+  var SYNC_ENDPOINT = (window.ReaderConfig && window.ReaderConfig.sync !== undefined)
+    ? window.ReaderConfig.sync
+    : SYNC_DEFAULT;
+  // syncedAt is the newest stamp the worker has confirmed. Anything newer than it locally is
+  // work the server has not got yet, which is what makes a retry possible at all: without it
+  // a push that failed, or one that was overtaken while in flight, was simply lost from the
+  // remote copy with nothing left to say so.
+  var syncTimer = null, syncing = false, syncedAt = 0, retryMs = 4000;
+
+  function syncOn() { return !!SYNC_ENDPOINT && student && student !== "_"; }
+
+  function syncSay(msg) {
+    var el2 = document.getElementById("rdrSyncSay");
+    if (el2) el2.textContent = msg || "";
+  }
+
+  // pull once when a guide opens, and adopt the remote copy only if it is newer
+  function syncPull() {
+    if (!syncOn()) return Promise.resolve(false);
+    var u = SYNC_ENDPOINT + "/api/state?student=" + encodeURIComponent(student) +
+            "&doc=" + encodeURIComponent(DOC);
+    return fetch(u, { method: "GET" })
+      .then(function (r) { return r.ok ? r.json() : null; })
+      .then(function (j) {
+        if (!j || !j.found || !j.state) {
+          // the worker has nothing for this document, so everything local is unsent
+          syncLater(600);
+          return false;
+        }
+        syncedAt = j.updatedAt || 0;        // what the server demonstrably holds
+        var mine = state.updatedAt || 0;
+        if (!(j.updatedAt > mine)) {
+          // ours is the same or newer: push anything it has not seen, instead of sitting on
+          // work that would otherwise only leave this device at the next edit
+          syncLater(600);
+          return false;
+        }
+        Object.keys(DEFAULTS).forEach(function (k) {
+          if (j.state[k] !== undefined) state[k] = j.state[k];
+        });
+        state.updatedAt = j.updatedAt;
+        persist(state);
+        applySettings(); renderMarks(); renderNotes(); redrawInk(); updateLock();
+        syncSay("Picked up newer work from another device.");
+        return true;
+      })
+      .catch(function () { syncLater(retryMs); return false; });
+  }
+
+  function syncDirty() { return (state.updatedAt || 0) > syncedAt; }
+
+  function syncPush() {
+    if (!syncOn() || !syncDirty()) return;
+    if (syncing) { syncLater(400); return; }   // overtaken; come back for the newer state
+    syncing = true;
+
+    // snapshot the stamp being sent: edits can land while this is in flight, and confirming
+    // those as synced because an older push succeeded is how work goes missing
+    var at = state.updatedAt || Date.now();
+    var u = SYNC_ENDPOINT + "/api/state?student=" + encodeURIComponent(student) +
+            "&doc=" + encodeURIComponent(DOC);
+    fetch(u, {
+      method: "PUT",
+      headers: { "content-type": "application/json" },
+      body: JSON.stringify({ state: state, updatedAt: at })
+    }).then(function (r) {
+      syncing = false;
+      if (r.ok) {
+        syncedAt = Math.max(syncedAt, at);
+        retryMs = 4000;
+        syncSay("");
+        if (syncDirty()) syncLater(400);       // changed again while in flight
+      } else {
+        syncSay("");
+        syncLater(retryMs);                    // server said no; try again later
+        retryMs = Math.min(retryMs * 2, 60000);
+      }
+    }).catch(function () {
+      syncing = false;
+      syncSay("");                             // offline is normal; say nothing
+      syncLater(retryMs);
+      retryMs = Math.min(retryMs * 2, 60000);
+    });
+  }
+
+  function syncLater(ms) {
+    if (!syncOn()) return;
+    clearTimeout(syncTimer);
+    syncTimer = setTimeout(syncPush, ms === undefined ? 2500 : ms);
+  }
+
+  // A tab is far more likely to be backgrounded or closed than to fire unload, especially on
+  // a phone. Without this, anything highlighted, noted or drawn in the last couple of seconds
+  // stayed on that one device: the debounce had not elapsed and the push never happened.
+  function syncFlush() {
+    if (!syncOn() || !syncDirty()) return;
+    clearTimeout(syncTimer);
+    syncPush();
+  }
+
+  document.addEventListener("visibilitychange", function () {
+    if (document.visibilityState === "hidden") syncFlush();
+  });
+  window.addEventListener("pagehide", syncFlush);
+
+  // ------------------------------------------------------------------ settings
+
+  var ATTR = {
+    width: "data-width", size: "data-size", leading: "data-leading", face: "data-face",
+    theme: "data-theme", cite: "data-cite", conflicts: "data-conflicts",
+    hlHead: "data-hl-head", hlWhy: "data-hl-why", hlTerm: "data-hl-term", recall: "data-recall"
+  };
+
+  function applySettings() {
+    if (!guide) return;
+    Object.keys(ATTR).forEach(function (k) { guide.setAttribute(ATTR[k], state[k]); });
+    if (state.face === "hyper" || state.face === "sans") ensureFont(state.face);
+    syncHostTheme();
+    layoutInk();
+  }
+
+  // Inside the artifact the guide sits in a page with its own chrome. Two independent
+  // theme switches read as a bug, so the reader's colour choice drives both. Sepia and
+  // high contrast have no chrome equivalent, so the chrome takes the nearest of the two.
+  function syncHostTheme() {
+    if (!cfg.syncRoot) return;
+    var map = { auto: "", light: "light", sepia: "light", dark: "dark", contrast: "dark" };
+    var v = map[state.theme];
+    if (v) document.documentElement.setAttribute("data-theme", v);
+    else document.documentElement.removeAttribute("data-theme");
+    if (typeof cfg.onTheme === "function") cfg.onTheme(state.theme);
+  }
+
+  var fontsAdded = {};
+  function ensureFont(which) {
+    if (fontsAdded[which]) return;
+    fontsAdded[which] = true;
+    var fam = which === "hyper" ? "Atkinson+Hyperlegible:wght@400;700" : "Inter:wght@400;600;700";
+    var l = document.createElement("link");
+    l.rel = "stylesheet";
+    l.href = "https://fonts.googleapis.com/css2?family=" + fam + "&display=swap";
+    document.head.appendChild(l);
+  }
+
+  // ------------------------------------------------------------------ anchors
+  // Every block that holds text gets a stable index in document order, so a highlight
+  // can be stored as (block, start character, end character) and re-applied next time.
+
+  // Anchor to the innermost block-level element rather than a fixed tag list. A fixed list
+  // silently refused to highlight anything it had not been told about (legend rows, table
+  // cells, summary lines), which looked exactly like the feature being broken.
+
+  var blocks = [];
+
+  function blockish(el) {
+    var d = getComputedStyle(el).display;
+    return d === "block" || d === "list-item" || d === "table-cell" ||
+           d === "flex" || d === "grid" || d === "table-caption";
+  }
+
+  function indexBlocks() {
+    if (!guide) return;
+    blocks = [];
+    var all = guide.querySelectorAll("*");
+    var blockyWithText = [];
+    for (var i = 0; i < all.length; i++) {
+      var el = all[i];
+      if (!el.textContent || !el.textContent.trim()) continue;
+      if (el.classList.contains("rdr-note")) continue;
+      if (blockish(el)) blockyWithText.push(el);
+    }
+    // keep only the innermost ones: a block that contains another block is a container
+    for (var j = 0; j < blockyWithText.length; j++) {
+      var cand = blockyWithText[j], inner = false;
+      for (var k = 0; k < blockyWithText.length; k++) {
+        if (k !== j && cand.contains(blockyWithText[k])) { inner = true; break; }
+      }
+      if (!inner) blocks.push(cand);
+    }
+    blocks.forEach(function (el, n) { el.setAttribute("data-b", n); });
+  }
+
+  function blockOf(node) {
+    var el = node && (node.nodeType === 1 ? node : node.parentElement);
+    if (!el) return null;
+    var b = el.closest("[data-b]");
+    return (b && guide.contains(b)) ? b : null;
+  }
+
+  function textNodesIn(el) {
+    var out = [], w = document.createTreeWalker(el, NodeFilter.SHOW_TEXT, null);
+    var n; while ((n = w.nextNode())) { if (n.nodeValue.length) out.push(n); }
+    return out;
+  }
+
+  function offsetsOf(range, block) {
+    var nodes = textNodesIn(block), pos = 0, start = -1, end = -1;
+    for (var i = 0; i < nodes.length; i++) {
+      var n = nodes[i], len = n.nodeValue.length;
+      if (n === range.startContainer) start = pos + range.startOffset;
+      if (n === range.endContainer) end = pos + range.endOffset;
+      pos += len;
+    }
+    if (start < 0 && range.startContainer === block) start = 0;
+    if (end < 0 && range.endContainer === block) end = pos;
+    return (start >= 0 && end > start) ? { s: start, e: end } : null;
+  }
+
+  function wrapRange(block, s, e, kind, colour, id) {
+    var nodes = textNodesIn(block), pos = 0;
+    for (var i = 0; i < nodes.length && pos < e; i++) {
+      var n = nodes[i], len = n.nodeValue.length, a = pos, b = pos + len;
+      pos = b;
+      if (b <= s || a >= e) continue;
+      var from = Math.max(0, s - a), to = Math.min(len, e - a);
+      var target = n;
+      if (to < len) target.splitText(to);
+      if (from > 0) target = target.splitText(from);
+      var tag = document.createElement(kind === "ul" ? "u" : "mark");
+      tag.className = "rdr-mark rdr-" + kind;
+      tag.setAttribute("data-mid", id);
+      if (kind === "ul") { tag.style.textDecorationColor = colour; tag.style.textDecorationThickness = "2px"; }
+      else { tag.style.background = colour; }
+      target.parentNode.insertBefore(tag, target);
+      tag.appendChild(target);
+      nodes = textNodesIn(block);
+      pos = 0;
+      for (var j = 0; j < nodes.length; j++) {
+        if (nodes[j] === target) break;
+        pos += nodes[j].nodeValue.length;
+      }
+      pos += target.nodeValue.length;
+    }
+  }
+
+  function clearMarks() {
+    [].slice.call(guide.querySelectorAll(".rdr-mark")).forEach(function (m) {
+      var p = m.parentNode;
+      while (m.firstChild) p.insertBefore(m.firstChild, m);
+      p.removeChild(m);
+      p.normalize();
+    });
+  }
+
+  function renderMarks() {
+    if (!guide) return;
+    clearMarks();
+    state.marks.forEach(function (m) {
+      var block = blocks[m.b];
+      if (block) { try { wrapRange(block, m.s, m.e, m.k, m.c, m.id); } catch (e) {} }
+    });
+  }
+
+  // ------------------------------------------------------------------ palette
+
+  var PALETTE = [
+    { id: "yellow", hl: "#ffe89a", ul: "#d9a400", label: "Yellow" },
+    { id: "green", hl: "#bdebc4", ul: "#2f8a44", label: "Green" },
+    { id: "blue",  hl: "#bfe0f5", ul: "#1f6f9e", label: "Blue" },
+    { id: "pink",  hl: "#fbcfe0", ul: "#b63f73", label: "Pink" },
+    { id: "orange", hl: "#ffd8ab", ul: "#c2650d", label: "Orange" }
+  ];
+  function colourOf(id, kind) {
+    var p = PALETTE.filter(function (x) { return x.id === id; })[0] || PALETTE[0];
+    return kind === "ul" ? p.ul : p.hl;
+  }
+
+  var tool = { kind: "hl", colour: "yellow" };
+
+  // ------------------------------------------------------------------ selection
+
+  function onSelection() {
+    var sel = window.getSelection();
+    if (!sel || sel.isCollapsed || !sel.rangeCount) { hideBubble(); return; }
+    var r = sel.getRangeAt(0);
+    if (!guide || !blockOf(r.startContainer)) { hideBubble(); return; }
+    showBubble(r);
+  }
+
+  var bubble = null;
+  function hideBubble() { if (bubble) bubble.hidden = true; }
+
+  function showBubble(range) {
+    if (!bubble) return;
+    var rect = range.getBoundingClientRect();
+    bubble.hidden = false;
+    var top = rect.top + window.scrollY - bubble.offsetHeight - 8;
+    if (top < window.scrollY + 4) top = rect.bottom + window.scrollY + 8;
+    var left = rect.left + window.scrollX + rect.width / 2 - bubble.offsetWidth / 2;
+    left = Math.max(8, Math.min(left, document.documentElement.clientWidth - bubble.offsetWidth - 8));
+    bubble.style.top = top + "px";
+    bubble.style.left = left + "px";
+  }
+
+  function applyToSelection(kind) {
+    var sel = window.getSelection();
+    if (!sel || sel.isCollapsed || !sel.rangeCount) return;
+    var r = sel.getRangeAt(0);
+    var first = blockOf(r.startContainer), last = blockOf(r.endContainer);
+    if (!first) return;
+
+    // one mark per block the selection touches, so dragging across paragraphs works
+    var touched = [];
+    if (!last || first === last) {
+      touched = [first];
+    } else {
+      for (var i = 0; i < blocks.length; i++) {
+        if (r.intersectsNode && r.intersectsNode(blocks[i])) touched.push(blocks[i]);
+      }
+      if (!touched.length) touched = [first];
+    }
+
+    var made = 0;
+    touched.forEach(function (block) {
+      var full = document.createRange();
+      full.selectNodeContents(block);
+      var s = (block === first) ? r.cloneRange() : full.cloneRange();
+      if (block !== first) s.setEnd(full.endContainer, full.endOffset);
+      if (block === last && block !== first) { s = full.cloneRange(); s.setEnd(r.endContainer, r.endOffset); }
+      var off = offsetsOf(block === first ? r : s, block);
+      if (!off) {
+        var len = block.textContent.length;
+        off = { s: 0, e: len };
+        if (block === last) off.e = offsetsOf(s, block) ? offsetsOf(s, block).e : len;
+      }
+      if (off.e <= off.s) return;
+      state.marks.push({
+        id: "m" + Date.now() + Math.random().toString(36).slice(2, 5) + made,
+        b: +block.getAttribute("data-b"), s: off.s, e: off.e,
+        k: kind, c: colourOf(tool.colour, kind), colourId: tool.colour
+      });
+      made++;
+    });
+
+    if (!made) return;
+    save();
+    renderMarks();
+    sel.removeAllRanges();
+    hideBubble();
+  }
+
+  function removeMarkAt(target) {
+    var mid = target.getAttribute("data-mid");
+    state.marks = state.marks.filter(function (m) { return m.id !== mid; });
+    save();
+    renderMarks();
+  }
+
+  // ------------------------------------------------------------------ notes
+
+  function renderNotes() {
+    if (!guide) return;
+    [].slice.call(guide.querySelectorAll(".rdr-note")).forEach(function (n) { n.remove(); });
+    state.notes.forEach(function (n) {
+      var block = blocks[n.b];
+      if (!block) return;
+      var pin = document.createElement("span");
+      pin.className = "rdr-note";
+      pin.setAttribute("data-nid", n.id);
+      pin.title = n.text;
+      pin.textContent = "note";
+      block.appendChild(pin);
+    });
+  }
+
+  function addNoteFor(block) {
+    var existing = "";
+    var text = promptNote(existing);
+    if (text === null) return;
+    if (!text.trim()) return;
+    state.notes.push({
+      id: "n" + Date.now() + Math.random().toString(36).slice(2, 5),
+      b: +block.getAttribute("data-b"), text: text.trim(), at: new Date().toISOString()
+    });
+    save();
+    renderNotes();
+  }
+
+  // the artifact viewer suppresses window.prompt, so notes use an inline editor
+  var noteEditor = null, noteResolve = null;
+  function promptNote(initial) { return null; }   // replaced below by the inline editor
+
+  function openNoteEditor(block, existingId) {
+    var found = state.notes.filter(function (n) { return n.id === existingId; })[0];
+    noteEditor.hidden = false;
+    noteEditor.querySelector("textarea").value = found ? found.text : "";
+    noteEditor.dataset.block = block ? block.getAttribute("data-b") : "";
+    noteEditor.dataset.nid = existingId || "";
+    noteEditor.querySelector(".rdr-del").hidden = !existingId;
+    noteEditor.querySelector("textarea").focus();
+  }
+
+  // ------------------------------------------------------------------ ink
+  // Strokes stay vectors. Two canvases: everything committed is on `canvas`, the stroke
+  // being drawn right now is on `live`. That keeps a 16-megapixel repaint off the hot path
+  // and lets a translucent highlighter stroke be drawn as one path, so it does not darken
+  // itself where it doubles back.
+  //
+  // Erasing never composites. "part" drops the points under the eraser and splits what is
+  // left; "whole" removes any stroke the eraser touches, the way a tablet object eraser
+  // behaves. Both are ordinary edits to the stroke list.
+
+  var canvas = null, ctx = null;        // committed
+  var live = null, lctx = null;         // the stroke in progress
+  var drawing = false, stroke = null;
+  var eraseMode = "part";               // part | whole
+  var rafPending = false;
+
+  var INK = {
+    pen: { w: 2.4, alpha: 1 },
+    hl:  { w: 16,  alpha: 0.32 }
+  };
+  var ERASE_R = { part: 14, whole: 9 };
+
+  function layoutSignature() {
+    return [state.width, state.size, state.leading, state.face,
+            Math.round(guide.getBoundingClientRect().width)].join("|");
+  }
+
+  // Two separate ceilings, and the old code only knew about one of them.
+  //
+  // Area was capped at 60M, but a browser also refuses a canvas whose *side* is too long, and
+  // a long case is far taller than it is wide. Case 01 at 320px is about 287 x 69,679, which
+  // is only 20M pixels and sails past an area check, while 69,679 exceeds Chrome's 65,535
+  // limit outright: Chrome then renders its broken-canvas placeholder over the guide and the
+  // page goes white. The text was intact underneath the whole time.
+  //
+  // The old fallback was worse than nothing, too. It truncated the canvas height, so on any
+  // guide over the cap the lower part of the page silently could not be inked.
+  //
+  // So nothing is truncated now. The canvas keeps the document's full CSS size and the
+  // backing store is scaled to fit inside both ceilings, with the context transformed to
+  // match. Strokes stay in document coordinates and keep working. Where there is headroom the
+  // scale goes the other way, up to devicePixelRatio, which is also what makes ink sharp on a
+  // retina screen instead of soft.
+  var MAX_CANVAS_DIM = 32767;     // comfortably inside Chrome's 65535 and Safari's lower bound
+  var MAX_CANVAS_PX = 16000000;   // iOS Safari refuses much beyond ~16.7M
+
+  function inkScale(w, h) {
+    var s = window.devicePixelRatio || 1;
+    s = Math.min(s, MAX_CANVAS_DIM / Math.max(1, w), MAX_CANVAS_DIM / Math.max(1, h));
+    s = Math.min(s, Math.sqrt(MAX_CANVAS_PX / Math.max(1, w * h)));
+    return Math.max(0.08, s);
+  }
+
+  function sizeCanvas(c, w, h, left, top) {
+    // CSS size is always the true size, so stroke coordinates remain document pixels
+    c.style.width = w + "px";
+    c.style.height = h + "px";
+    c.style.left = left + "px";
+    c.style.top = top + "px";
+
+    var s = inkScale(w, h);
+    c.width = Math.max(1, Math.round(w * s));
+    c.height = Math.max(1, Math.round(h * s));
+    c.inkScale = s;
+    var g = c.getContext("2d");
+    if (g) g.setTransform(s, 0, 0, s, 0, 0);
+    return s;
+  }
+
+  // clearRect runs through the transform, so clearing has to be done in untransformed space
+  function wipe(c, g) {
+    if (!c || !g) return;
+    g.save();
+    g.setTransform(1, 0, 0, 1, 0, 0);
+    g.clearRect(0, 0, c.width, c.height);
+    g.restore();
+  }
+
+  function layoutInk() {
+    if (!canvas || !guide) return;
+    var wrap = guide.querySelector(".wrap") || guide;
+    var r = wrap.getBoundingClientRect();
+    var w = Math.round(r.width);
+    var h = Math.round(wrap.scrollHeight || r.height);
+    sizeCanvas(canvas, w, h, wrap.offsetLeft, wrap.offsetTop);
+    sizeCanvas(live, w, h, wrap.offsetLeft, wrap.offsetTop);
+    redrawInk();
+  }
+
+  function pathStroke(c, s) {
+    if (!s.pts.length) return;
+    c.save();
+    c.globalAlpha = INK[s.k || "pen"].alpha;
+    c.strokeStyle = s.c;
+    c.lineWidth = s.w;
+    c.lineCap = "round";
+    c.lineJoin = "round";
+    c.beginPath();
+    c.moveTo(s.pts[0][0], s.pts[0][1]);
+    for (var i = 1; i < s.pts.length; i++) c.lineTo(s.pts[i][0], s.pts[i][1]);
+    if (s.pts.length === 1) c.lineTo(s.pts[0][0] + 0.01, s.pts[0][1]);
+    c.stroke();
+    c.restore();
+  }
+
+  function redrawInk() {
+    if (!ctx) return;
+    wipe(canvas, ctx);
+    // highlighter first, so pen marks sit on top of it rather than under
+    for (var i = 0; i < state.ink.length; i++) {
+      if (state.ink[i].k === "hl") pathStroke(ctx, state.ink[i]);
+    }
+    for (var j = 0; j < state.ink.length; j++) {
+      if (state.ink[j].k !== "hl") pathStroke(ctx, state.ink[j]);
+    }
+  }
+
+  function queueRedraw() {
+    if (rafPending) return;
+    rafPending = true;
+    requestAnimationFrame(function () { rafPending = false; redrawInk(); });
+  }
+
+  function penPoint(ev) {
+    var r = live.getBoundingClientRect();
+    return [ev.clientX - r.left, ev.clientY - r.top];
+  }
+
+  // ---- erasing -------------------------------------------------------------
+
+  function near(pt, x, y, r) {
+    var dx = pt[0] - x, dy = pt[1] - y;
+    return dx * dx + dy * dy <= r * r;
+  }
+
+  // distance from (x,y) to the segment a-b, so a thin stroke is still easy to hit
+  function segNear(a, b, x, y, r) {
+    var vx = b[0] - a[0], vy = b[1] - a[1];
+    var wx = x - a[0], wy = y - a[1];
+    var len = vx * vx + vy * vy;
+    var tt = len ? Math.max(0, Math.min(1, (wx * vx + wy * vy) / len)) : 0;
+    var px = a[0] + tt * vx, py = a[1] + tt * vy;
+    var dx = x - px, dy = y - py;
+    return dx * dx + dy * dy <= r * r;
+  }
+
+  function strokeHit(s, x, y, r) {
+    var pad = r + s.w / 2;
+    if (s.pts.length === 1) return near(s.pts[0], x, y, pad);
+    for (var i = 1; i < s.pts.length; i++) {
+      if (segNear(s.pts[i - 1], s.pts[i], x, y, pad)) return true;
+    }
+    return false;
+  }
+
+  function eraseAt(x, y) {
+    var r = ERASE_R[eraseMode];
+    var next = [], changed = false;
+
+    for (var i = 0; i < state.ink.length; i++) {
+      var s = state.ink[i];
+
+      if (eraseMode === "whole") {
+        if (strokeHit(s, x, y, r)) { changed = true; continue; }
+        next.push(s);
+        continue;
+      }
+
+      // part: drop points under the eraser, keeping whatever runs survive
+      if (!strokeHit(s, x, y, r)) { next.push(s); continue; }
+      var pad = r + s.w / 2;
+      var run = [], runs = [];
+      for (var j = 0; j < s.pts.length; j++) {
+        if (near(s.pts[j], x, y, pad)) {
+          if (run.length > 1) runs.push(run);
+          run = [];
+        } else {
+          run.push(s.pts[j]);
+        }
+      }
+      if (run.length > 1) runs.push(run);
+      changed = true;
+      for (var k = 0; k < runs.length; k++) {
+        next.push({ id: s.id + "-" + k, k: s.k, pts: runs[k], c: s.c, w: s.w });
+      }
+    }
+
+    if (changed) { state.ink = next; queueRedraw(); }
+    return changed;
+  }
+
+  // ---- drawing -------------------------------------------------------------
+
+  function penDown(ev) {
+    if (tool.kind !== "pen" && tool.kind !== "ink-hl" && tool.kind !== "erase") return;
+    ev.preventDefault();
+    drawing = true;
+    // setPointerCapture throws on a pointer the element does not currently own, and an
+    // exception here would abort the rest of the handler, so the stroke never starts
+    try { live.setPointerCapture && live.setPointerCapture(ev.pointerId); } catch (e) {}
+
+    if (tool.kind === "erase") {
+      var p = penPoint(ev);
+      eraseAt(p[0], p[1]);
+      return;
+    }
+    var kind = tool.kind === "ink-hl" ? "hl" : "pen";
+    stroke = {
+      id: "s" + Date.now() + Math.random().toString(36).slice(2, 5),
+      k: kind,
+      pts: [penPoint(ev)],
+      c: colourOf(tool.colour, kind === "hl" ? "hl" : "ul"),
+      w: INK[kind].w
+    };
+  }
+
+  function penMove(ev) {
+    if (!drawing) return;
+    ev.preventDefault();
+    var pts = (ev.getCoalescedEvents ? ev.getCoalescedEvents() : [ev]).map(penPoint);
+    if (!pts.length) pts = [penPoint(ev)];
+
+    if (tool.kind === "erase") {
+      for (var i = 0; i < pts.length; i++) eraseAt(pts[i][0], pts[i][1]);
+      return;
+    }
+    if (!stroke) return;          // a move with no stroke in progress
+    stroke.pts.push.apply(stroke.pts, pts);
+    // the whole stroke, redrawn on the live layer only, so alpha applies once
+    wipe(live, lctx);
+    pathStroke(lctx, stroke);
+  }
+
+  function penUp() {
+    if (!drawing) return;
+    drawing = false;
+    if (tool.kind === "erase") { save(); updateLock(); return; }
+    if (stroke && stroke.pts.length) {
+      state.ink.push(stroke);
+      state.inkLayout = layoutSignature();
+      save();
+      updateLock();
+    }
+    stroke = null;
+    wipe(live, lctx);
+    redrawInk();
+  }
+
+  function setPenMode(on) {
+    guide.classList.toggle("rdr-pen-on", on);
+    if (live) live.style.pointerEvents = on ? "auto" : "none";
+    if (on && !state.inkLayout) { state.inkLayout = layoutSignature(); save(); }
+    updateLock();
+  }
+
+  function updateLock() {
+    var locked = state.ink.length > 0;
+    [].slice.call(document.querySelectorAll("[data-locks-layout]")).forEach(function (el) {
+      el.disabled = locked;
+      el.title = locked ? "Locked while there is ink on the page; erase it to change layout" : "";
+    });
+    var warn = document.getElementById("rdrLock");
+    if (warn) warn.hidden = !locked;
+  }
+
+  // ------------------------------------------------------------------ recall mode
+
+  function bindGuide() {
+    if (!guide || guide.__rdrBound) return;
+    guide.__rdrBound = true;
+
+    // citations: first tap fetches the excerpts, then opens the pane
+    guide.addEventListener("click", function (ev) {
+      var c = ev.target.closest("cite.src");
+      if (!c || tool.kind === "pen" || tool.kind === "ink-hl" || tool.kind === "erase") return;
+      ev.preventDefault();
+      ev.stopPropagation();
+      var k = citeKeyOf(c);
+      if (!k) return;
+      if (citesState === "ready") { openCite(k); return; }
+      if (citesState === "failed") return;
+      loadCites().then(function (j) { if (j) openCite(k); });
+    });
+
+    guide.addEventListener("keydown", function (ev) {
+      if (ev.key !== "Enter" && ev.key !== " ") return;
+      var c = ev.target.closest && ev.target.closest("cite.src[data-cite-key]");
+      if (!c) return;
+      ev.preventDefault();
+      openCite(c.getAttribute("data-cite-key"));
+    });
+
+    // recall mode: tap a hidden answer to show it
+    guide.addEventListener("click", function (ev) {
+      if (state.recall !== "on") return;
+      var t = ev.target.closest(".why, dl.findings dd, .viva .ans");
+      if (t && guide.contains(t)) t.classList.toggle("revealed");
+    });
+
+    // tapping a highlight removes it; tapping a note opens it
+    guide.addEventListener("click", function (ev) {
+      var n = ev.target.closest(".rdr-note");
+      if (n) { openNoteEditor(null, n.getAttribute("data-nid")); return; }
+      var m = ev.target.closest(".rdr-mark");
+      if (m && tool.kind !== "pen" && tool.kind !== "ink-hl" && tool.kind !== "erase") {
+        removeMarkAt(m);
+      }
+    });
+  }
+
+
+  // ------------------------------------------------------------------ source pane
+  // Tapping a citation shows what the book actually said, in a pane over the guide rather
+  // than a new tab, so the reader keeps their place. The excerpts live in citations.json,
+  // fetched once on the first tap; without it the chips stay inert rather than erroring.
+
+  var CITES = null, citesState = "idle";   // idle | loading | ready | failed
+  var citePane = null;
+
+  // The book id is the class beside "src"; the rest of the key is every number in the chip,
+  // in order. That covers the simple case, comma lists, page ranges, and the one chip that
+  // carries two chapters, and it matches the rule the extractor used to name its entries.
+  function citeKeyOf(el) {
+    var book = null;
+    for (var i = 0; i < el.classList.length; i++) {
+      if (el.classList[i] !== "src") { book = el.classList[i]; break; }
+    }
+    if (!book) return null;
+    var nums = (el.textContent || "").match(/[0-9]+/g);
+    if (!nums || !nums.length) return null;
+    return book + "-" + nums.join("-");
+  }
+
+  var citesPromise = null;
+
+  function loadCites() {
+    if (citesPromise) return citesPromise;
+    citesState = "loading";
+    citesPromise = fetch("citations.json")
+      .then(function (r) { if (!r.ok) throw new Error(r.status); return r.json(); })
+      .then(function (j) { CITES = j; citesState = "ready"; markCitesClickable(); return j; })
+      .catch(function () { citesState = "failed"; return null; });
+    return citesPromise;
+  }
+
+  function markCitesClickable() {
+    if (!guide || !CITES) return;
+    [].forEach.call(guide.querySelectorAll("cite.src"), function (c) {
+      var k = citeKeyOf(c);
+      if (k && CITES.citations && CITES.citations[k]) {
+        c.setAttribute("data-cite-key", k);
+        c.tabIndex = 0;
+      }
+    });
+  }
+
+  function openCite(key) {
+    if (!CITES) return;
+    var c = CITES.citations[key];
+    if (!c) return;
+    var book = (CITES.books || {})[c.book] || { title: c.book, edition: "" };
+
+    var body = (c.pages || []).map(function (pid) {
+      var pg = (CITES.pages || {})[pid];
+      if (!pg) return "";
+      return '<div class="rdr-src-page">' +
+        '<div class="rdr-src-pno">page ' + pg.page + '</div>' +
+        (pg.before ? '<p class="rdr-src-ctx">' + escHtml(pg.before) + '</p>' : "") +
+        '<p class="rdr-src-main">' + escHtml(pg.text) + '</p>' +
+        (pg.after ? '<p class="rdr-src-ctx">' + escHtml(pg.after) + '</p>' : "") +
+        '</div>';
+    }).join("");
+
+    citePane.querySelector(".rdr-src-book").textContent = book.title;
+    citePane.querySelector(".rdr-src-meta").textContent =
+      [book.edition, "chapter " + c.chapter].filter(Boolean).join(" · ");
+    citePane.querySelector(".rdr-src-body").innerHTML = body ||
+      '<p class="rdr-src-ctx">That page was not extracted.</p>';
+    citePane.hidden = false;
+    citePane.querySelector(".rdr-src-close").focus();
+  }
+
+  function closeCite() { if (citePane) citePane.hidden = true; }
+
+  function escHtml(s) {
+    return String(s).replace(/[&<>"']/g, function (ch) {
+      return {"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[ch];
+    });
+  }
+
+  function buildCitePane() {
+    citePane = el("aside", "rdr-srcpane");
+    citePane.hidden = true;
+    citePane.setAttribute("aria-label", "Source text");
+    citePane.innerHTML =
+      '<header class="rdr-src-head">' +
+        '<div><div class="rdr-src-book"></div><div class="rdr-src-meta"></div></div>' +
+        '<button class="rdr-src-close" aria-label="Close">&times;</button>' +
+      '</header><div class="rdr-src-body"></div>' +
+      '<footer class="rdr-src-foot">Quoted for study. The surrounding paragraphs are shown ' +
+      'for context.</footer>';
+    document.body.appendChild(citePane);
+    citePane.querySelector(".rdr-src-close").addEventListener("click", closeCite);
+    document.addEventListener("keydown", function (e) {
+      if (e.key === "Escape") closeCite();
+    });
+  }
+
+
+  // ------------------------------------------------------------------ backup
+  // localStorage is the only copy of any of this, and Safari drops it for sites left
+  // unvisited for a week. Export writes one file holding every person's settings,
+  // highlights, notes, ink and viva results; restore puts them back.
+
+  var BACKUP_FORMAT = "rx-backup";
+
+  function backupKeys() {
+    var out = [];
+    try {
+      for (var i = 0; i < localStorage.length; i++) {
+        var k = localStorage.key(i);
+        if (k && (k.indexOf("reader:") === 0 || k.indexOf("surgery-case-files") === 0)) {
+          out.push(k);
+        }
+      }
+    } catch (e) {}
+    return out;
+  }
+
+  function collectBackup() {
+    var data = {};
+    backupKeys().forEach(function (k) {
+      try { data[k] = JSON.parse(localStorage.getItem(k)); }
+      catch (e) { data[k] = localStorage.getItem(k); }
+    });
+    return {
+      format: BACKUP_FORMAT,
+      version: 1,
+      exportedAt: new Date().toISOString(),
+      keys: data
+    };
+  }
+
+  // a plain-English summary, so a restore is not a leap of faith
+  function describeBackup(b) {
+    var people = {}, marks = 0, notes = 0, ink = 0, sessions = 0, docs = {};
+    Object.keys(b.keys || {}).forEach(function (k) {
+      var v = b.keys[k];
+      if (k.indexOf("reader:") === 0) {
+        var bits = k.split(":");
+        if (bits[1] && bits[1] !== "_") people[bits[1]] = true;
+        if (bits[2]) docs[bits[2]] = true;
+        if (v && v.marks) marks += v.marks.length;
+        if (v && v.notes) notes += v.notes.length;
+        if (v && v.ink) ink += v.ink.length;
+      } else if (v && v.students) {
+        Object.keys(v.students).forEach(function (s) {
+          people[s] = true;
+          sessions += (v.students[s].sessions || []).length;
+        });
+      }
+    });
+    return {
+      people: Object.keys(people),
+      docs: Object.keys(docs).length,
+      marks: marks, notes: notes, ink: ink, sessions: sessions
+    };
+  }
+
+  function backupFilename() {
+    var d = new Date();
+    function p(n) { return (n < 10 ? "0" : "") + n; }
+    return "rx-backup-" + d.getFullYear() + p(d.getMonth() + 1) + p(d.getDate()) + ".json";
+  }
+
+  function exportBackup(say) {
+    var json = JSON.stringify(collectBackup(), null, 1);
+    var blob = new Blob([json], { type: "application/json" });
+    var name = backupFilename();
+    var size = Math.max(1, Math.round(json.length / 1024));
+
+    // inside an artifact a download link does nothing, so ask the host to save it
+    if (window.claude && window.claude.use) {
+      window.claude.use("downloads").then(function (dl) {
+        if (!dl) throw new Error("not granted");
+        return dl.save({ filename: name, data: blob });
+      }).then(function () {
+        say("Saved " + name + ", " + size + " KB.");
+      }).catch(function () {
+        say("Could not save the file here. Open the guide on the website and export from there.");
+      });
+      return;
+    }
+
+    var url = URL.createObjectURL(blob);
+    var a = document.createElement("a");
+    a.href = url; a.download = name;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    setTimeout(function () { URL.revokeObjectURL(url); }, 4000);
+    say("Saved " + name + ", " + size + " KB.");
+  }
+
+  var pendingRestore = null;
+
+  function readBackupFile(file, say, onReady) {
+    var fr = new FileReader();
+    fr.onload = function () {
+      var b;
+      try { b = JSON.parse(fr.result); } catch (e) { b = null; }
+      if (!b || b.format !== BACKUP_FORMAT || !b.keys) {
+        say("That does not look like a backup from this site.");
+        return;
+      }
+      pendingRestore = b;
+      onReady(describeBackup(b), b);
+    };
+    fr.onerror = function () { say("Could not read that file."); };
+    fr.readAsText(file);
+  }
+
+  function applyRestore(say) {
+    if (!pendingRestore) return;
+    var n = 0;
+    Object.keys(pendingRestore.keys).forEach(function (k) {
+      var v = pendingRestore.keys[k];
+      try {
+        localStorage.setItem(k, typeof v === "string" ? v : JSON.stringify(v));
+        n++;
+      } catch (e) {}
+    });
+    pendingRestore = null;
+    say("Restored " + n + " record" + (n === 1 ? "" : "s") + ". Reloading…");
+    setTimeout(function () { location.reload(); }, 900);
+  }
+
+  // ------------------------------------------------------------------ interface
+
+  function el(tag, cls, html) {
+    var e = document.createElement(tag);
+    if (cls) e.className = cls;
+    if (html !== undefined) e.innerHTML = html;
+    return e;
+  }
+
+  function swatches(kind) {
+    return PALETTE.map(function (p) {
+      return '<button class="rdr-sw" data-colour="' + p.id + '" title="' + p.label + '" ' +
+             'style="background:' + (kind === "ul" ? p.ul : p.hl) + '"></button>';
+    }).join("");
+  }
+
+  function seg(name, opts, current) {
+    return '<div class="rdr-seg" data-setting="' + name + '">' + opts.map(function (o) {
+      return '<button data-v="' + o[0] + '"' + (current === o[0] ? ' class="on"' : '') +
+             (o[2] ? ' data-locks-layout="1"' : '') + '>' + o[1] + '</button>';
+    }).join("") + '</div>';
+  }
+
+  function buildUI() {
+    // floating rail
+    var rail = el("div", "rdr-rail");
+    rail.innerHTML =
+      '<button id="rdrStudio" title="Reading settings" aria-label="Reading settings">' +
+        '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M4 7h16M4 12h10M4 17h7"/></svg></button>' +
+      '<button class="rdr-tool" data-tool="hl" title="Highlighter">' +
+        '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 14l-4 4v2h4l10-10a2.8 2.8 0 10-4-4L5 16"/></svg></button>' +
+      '<button class="rdr-tool" data-tool="ul" title="Underline">' +
+        '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M7 4v6a5 5 0 0010 0V4M5 20h14"/></svg></button>' +
+      '<button class="rdr-tool" data-tool="pen" title="Pen, write on the page">' +
+        '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 19l7-7-4-4-7 7-1 5z"/><path d="M15 8l1-1a2 2 0 013 3l-1 1"/></svg></button>' +
+      '<button class="rdr-tool" data-tool="ink-hl" title="Freehand highlighter">' +
+        '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 20h16"/><path d="M7 16l9-9 3 3-9 9H7z" fill="currentColor" fill-opacity=".22"/></svg></button>' +
+      '<button class="rdr-tool" data-tool="note" title="Leave a note">' +
+        '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 5h16v10H9l-5 4z"/></svg></button>' +
+      '<button class="rdr-tool" data-tool="erase" title="Eraser">' +
+        '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M8 20H4l9-9 7 7-5 2z"/><path d="M13 11l-6-6 4-4 6 6z"/></svg></button>' +
+      '<div class="rdr-pal" id="rdrPal">' + swatches("hl") + '</div>' +
+      '<div class="rdr-erase-modes" id="rdrEraseModes" hidden>' +
+        '<button data-erase="part" class="on" title="Rub out part of a stroke">part</button>' +
+        '<button data-erase="whole" title="Remove a whole stroke">whole</button>' +
+      '</div>';
+    document.body.appendChild(rail);
+
+    // selection bubble
+    bubble = el("div", "rdr-bubble");
+    bubble.hidden = true;
+    bubble.innerHTML =
+      '<button data-act="hl">Highlight</button>' +
+      '<button data-act="ul">Underline</button>' +
+      '<button data-act="note">Note</button>';
+    document.body.appendChild(bubble);
+
+    // note editor
+    noteEditor = el("div", "rdr-noteedit");
+    noteEditor.hidden = true;
+    noteEditor.innerHTML =
+      '<div class="rdr-ne-head">Note</div>' +
+      '<textarea rows="4" placeholder="Anything you want to remember here…"></textarea>' +
+      '<div class="rdr-ne-row">' +
+        '<button class="rdr-del">Delete</button><span style="flex:1"></span>' +
+        '<button class="rdr-cancel">Cancel</button>' +
+        '<button class="rdr-ok">Save</button></div>';
+    document.body.appendChild(noteEditor);
+
+    // studio panel
+    var studio = el("div", "rdr-studio");
+    studio.hidden = true;
+    studio.innerHTML =
+      '<div class="rdr-st-head"><b>Reading settings</b>' +
+        '<button class="rdr-close" aria-label="Close">&times;</button></div>' +
+      '<div class="rdr-st-body">' +
+        '<label>Line width</label>' +
+        seg("width", [["narrow","Narrow"],["medium","Medium"],["wide","Wide"],["full","Full"]], state.width) +
+        '<label>Text size</label>' +
+        seg("size", [["1","XS"],["2","S"],["3","M"],["4","L"],["5","XL"],["6","XXL"]], state.size) +
+        '<label>Line spacing</label>' +
+        seg("leading", [["tight","Tight"],["normal","Normal"],["loose","Loose"]], state.leading) +
+        '<label>Typeface</label>' +
+        seg("face", [["serif","Serif"],["sans","Sans"],["hyper","Hyperlegible"],["mono","Mono"]], state.face) +
+        '<label>Colour</label>' +
+        seg("theme", [["auto","Auto"],["light","Light"],["sepia","Sepia"],["dark","Dark"],["contrast","High contrast"]], state.theme) +
+        '<label>Emphasis</label>' +
+        seg("hlHead", [["off","Plain headings"],["on","Bold headings"]], state.hlHead) +
+        seg("hlWhy", [["off","Plain reasoning"],["on","Highlight reasoning"]], state.hlWhy) +
+        seg("hlTerm", [["off","Plain key terms"],["on","Highlight key terms"]], state.hlTerm) +
+        '<label>Study mode</label>' +
+        seg("recall", [["off","Read"],["on","Recall, hide answers until tapped"]], state.recall) +
+        '<label>Show</label>' +
+        seg("cite", [["on","Citations"],["off","No citations"]], state.cite) +
+        seg("conflicts", [["on","Discrepancies"],["off","Hide discrepancies"]], state.conflicts) +
+        '<div class="rdr-lock" id="rdrLock" hidden>Layout is locked because there is ink on ' +
+          'this page. Writing is drawn at a fixed width: erase the ink to change the layout.</div>' +
+        '<label>Backup</label>' +
+        '<p class="rdr-note-hint">Everything here is stored only in this browser, and it can ' +
+        'be cleared without warning. Keep a copy.</p>' +
+        '<div class="rdr-backup">' +
+          '<button class="rdr-export">Save a copy</button>' +
+          '<button class="rdr-import">Restore from a file</button>' +
+          '<input type="file" accept="application/json,.json" class="rdr-file" hidden>' +
+        '</div>' +
+        '<div class="rdr-restore" id="rdrRestore" hidden></div>' +
+        '<p class="rdr-say" id="rdrSay"></p>' +
+        '<p class="rdr-say" id="rdrSyncSay"></p>' +
+        '<div class="rdr-st-foot">' +
+          '<button class="rdr-clear" data-what="marks">Clear highlights</button>' +
+          '<button class="rdr-clear" data-what="notes">Clear notes</button>' +
+          '<button class="rdr-clear" data-what="ink">Clear ink</button>' +
+        '</div>' +
+      '</div>';
+    document.body.appendChild(studio);
+
+    buildCitePane();
+    attachCanvas();
+    wireUI(rail, studio);
+  }
+
+  function attachCanvas() {
+    if (!canvas) {
+      canvas = el("canvas", "rdr-canvas");
+      canvas.style.pointerEvents = "none";
+      ctx = canvas.getContext("2d");
+
+      // the stroke in progress lives on its own layer, above the committed one
+      live = el("canvas", "rdr-canvas rdr-canvas-live");
+      live.style.pointerEvents = "none";
+      live.addEventListener("pointerdown", penDown);
+      live.addEventListener("pointermove", penMove);
+      live.addEventListener("pointerup", penUp);
+      live.addEventListener("pointercancel", penUp);
+      live.addEventListener("pointerleave", penUp);
+      lctx = live.getContext("2d");
+    }
+    var host = guide.querySelector(".wrap") || guide;
+    if (canvas.parentNode !== host.parentNode) {
+      host.parentNode.insertBefore(canvas, host);
+      host.parentNode.insertBefore(live, host);
+    }
+  }
+
+  function wireUI(rail, studio) {
+    document.getElementById("rdrStudio").addEventListener("click", function () {
+      studio.hidden = !studio.hidden;
+    });
+    studio.querySelector(".rdr-close").addEventListener("click", function () { studio.hidden = true; });
+
+    // settings segments
+    studio.addEventListener("click", function (ev) {
+      var b = ev.target.closest(".rdr-seg button");
+      if (!b) return;
+      var name = b.parentNode.getAttribute("data-setting");
+      [].slice.call(b.parentNode.children).forEach(function (x) { x.classList.remove("on"); });
+      b.classList.add("on");
+      state[name] = b.getAttribute("data-v");
+      save();
+      applySettings();
+    });
+
+    function say(msg) {
+      var el2 = document.getElementById("rdrSay");
+      if (el2) el2.textContent = msg || "";
+    }
+
+    studio.querySelector(".rdr-export").addEventListener("click", function () {
+      say("Preparing…");
+      exportBackup(say);
+    });
+
+    var fileInput = studio.querySelector(".rdr-file");
+    studio.querySelector(".rdr-import").addEventListener("click", function () {
+      say("");
+      fileInput.value = "";
+      fileInput.click();
+    });
+
+    fileInput.addEventListener("change", function () {
+      var f = fileInput.files && fileInput.files[0];
+      if (!f) return;
+      readBackupFile(f, say, function (sum) {
+        var box = document.getElementById("rdrRestore");
+        var bits = [];
+        if (sum.people.length) bits.push(sum.people.join(", "));
+        if (sum.marks) bits.push(sum.marks + " highlight" + (sum.marks === 1 ? "" : "s"));
+        if (sum.notes) bits.push(sum.notes + " note" + (sum.notes === 1 ? "" : "s"));
+        if (sum.ink) bits.push(sum.ink + " ink stroke" + (sum.ink === 1 ? "" : "s"));
+        if (sum.sessions) bits.push(sum.sessions + " viva session" + (sum.sessions === 1 ? "" : "s"));
+        box.innerHTML =
+          '<p>This file holds ' + escHtml(bits.join(", ") || "nothing recognisable") + '.</p>' +
+          '<p class="rdr-warn">Restoring replaces what is in this browser now.</p>' +
+          '<div class="rdr-backup">' +
+            '<button class="rdr-cancel-restore">Cancel</button>' +
+            '<button class="rdr-do-restore">Restore</button>' +
+          '</div>';
+        box.hidden = false;
+        box.querySelector(".rdr-cancel-restore").addEventListener("click", function () {
+          pendingRestore = null; box.hidden = true; say("");
+        });
+        box.querySelector(".rdr-do-restore").addEventListener("click", function () {
+          box.hidden = true;
+          applyRestore(say);
+        });
+      });
+    });
+
+    studio.addEventListener("click", function (ev) {
+      var c = ev.target.closest(".rdr-clear");
+      if (!c) return;
+      var what = c.getAttribute("data-what");
+      state[what] = [];
+      if (what === "ink") { state.inkLayout = null; }
+      save();
+      if (what === "marks") renderMarks();
+      if (what === "notes") renderNotes();
+      if (what === "ink") redrawInk();
+      updateLock();
+    });
+
+    // tools
+    rail.addEventListener("click", function (ev) {
+      var b = ev.target.closest(".rdr-tool");
+      if (b) {
+        var t = b.getAttribute("data-tool");
+        tool.kind = (tool.kind === t) ? "hl" : t;
+        [].slice.call(rail.querySelectorAll(".rdr-tool")).forEach(function (x) {
+          x.classList.toggle("on", x.getAttribute("data-tool") === tool.kind);
+        });
+        var inkish = (tool.kind === "pen" || tool.kind === "ink-hl" || tool.kind === "erase");
+        document.getElementById("rdrPal").innerHTML =
+          swatches(tool.kind === "ul" || tool.kind === "pen" ? "ul" : "hl");
+        document.getElementById("rdrPal").hidden = (tool.kind === "erase");
+        document.getElementById("rdrEraseModes").hidden = (tool.kind !== "erase");
+        markActiveSwatch();
+        setPenMode(inkish);
+        return;
+      }
+      var s = ev.target.closest(".rdr-sw");
+      if (s) {
+        tool.colour = s.getAttribute("data-colour");
+        markActiveSwatch();
+        return;
+      }
+      var m = ev.target.closest(".rdr-erase-modes button");
+      if (m) {
+        eraseMode = m.getAttribute("data-erase");
+        [].slice.call(m.parentNode.children).forEach(function (x) {
+          x.classList.toggle("on", x === m);
+        });
+      }
+    });
+
+    // selection bubble
+    bubble.addEventListener("mousedown", function (e) { e.preventDefault(); });
+    bubble.addEventListener("click", function (ev) {
+      var b = ev.target.closest("button");
+      if (!b) return;
+      var act = b.getAttribute("data-act");
+      if (act === "note") {
+        var sel = window.getSelection();
+        var block = blockOf(sel.anchorNode);
+        hideBubble();
+        if (block) openNoteEditor(block, "");
+        return;
+      }
+      applyToSelection(act);
+    });
+
+    document.addEventListener("selectionchange", function () {
+      if (tool.kind === "pen" || tool.kind === "ink-hl" || tool.kind === "erase") return;
+      clearTimeout(wireUI._t);
+      wireUI._t = setTimeout(onSelection, 120);
+    });
+
+    // note editor
+    noteEditor.querySelector(".rdr-cancel").addEventListener("click", function () { noteEditor.hidden = true; });
+    noteEditor.querySelector(".rdr-ok").addEventListener("click", function () {
+      var text = noteEditor.querySelector("textarea").value.trim();
+      var nid = noteEditor.dataset.nid;
+      if (nid) {
+        state.notes = state.notes.map(function (n) { return n.id === nid ? Object.assign({}, n, { text: text }) : n; })
+                                 .filter(function (n) { return n.text; });
+      } else if (text) {
+        state.notes.push({
+          id: "n" + Date.now() + Math.random().toString(36).slice(2, 5),
+          b: +noteEditor.dataset.block, text: text, at: new Date().toISOString()
+        });
+      }
+      save(); renderNotes();
+      noteEditor.hidden = true;
+    });
+    noteEditor.querySelector(".rdr-del").addEventListener("click", function () {
+      var nid = noteEditor.dataset.nid;
+      state.notes = state.notes.filter(function (n) { return n.id !== nid; });
+      save(); renderNotes();
+      noteEditor.hidden = true;
+    });
+
+    window.addEventListener("resize", function () { clearTimeout(wireUI._r); wireUI._r = setTimeout(layoutInk, 150); });
+    window.addEventListener("scroll", hideBubble, { passive: true });
+
+    markActiveSwatch();
+  }
+
+  function markActiveSwatch() {
+    [].slice.call(document.querySelectorAll(".rdr-sw")).forEach(function (s) {
+      s.classList.toggle("on", s.getAttribute("data-colour") === tool.colour);
+    });
+  }
+
+  // ------------------------------------------------------------------ print
+
+  function openAllForPrint() {
+    window.__rdrReopen = [];
+    [].slice.call(document.querySelectorAll("details:not([open])")).forEach(function (d) {
+      window.__rdrReopen.push(d); d.open = true;
+    });
+  }
+  function restoreAfterPrint() {
+    (window.__rdrReopen || []).forEach(function (d) { d.open = false; });
+    window.__rdrReopen = [];
+  }
+  window.addEventListener("beforeprint", openAllForPrint);
+  window.addEventListener("afterprint", restoreAfterPrint);
+
+  // ------------------------------------------------------------------ boot
+
+  function start() {
+    if (!guide) return;
+    bindGuide();
+    indexBlocks();
+    if (!document.querySelector(".rdr-rail")) buildUI();
+    else attachCanvas();
+    applySettings();
+    renderMarks();
+    renderNotes();
+    markCitesClickable();
+    setTimeout(layoutInk, 60);
+    updateLock();
+    syncPull();
+  }
+
+  function reloadState() {
+    var s = load();
+    Object.keys(DEFAULTS).forEach(function (k) {
+      state[k] = (s[k] === undefined) ? DEFAULTS[k] : s[k];
+    });
+    // strokes saved before the highlighter existed carry no kind, and the old pixel
+    // eraser stored erase strokes that the vector model has no use for
+    state.ink = (state.ink || []).filter(function (x) { return !x.erase; })
+                                 .map(function (x) {
+      if (!x.k) x.k = "pen";
+      if (!x.id) x.id = "s" + Math.random().toString(36).slice(2, 8);
+      return x;
+    });
+  }
+
+  // The standalone document already holds the guide, so boot now. Inside the artifact the
+  // guide is fetched and injected when the reader opens it, so wait to be called.
+  if (guide) start();
+  else window.ReaderBoot = function (opts) {
+    opts = opts || {};
+    guide = opts.guide || document.querySelector(".guide");
+    if (!guide) return null;
+    DOC = opts.doc || DOC;
+    if (opts.syncRoot !== undefined) cfg.syncRoot = opts.syncRoot;
+    if (opts.onTheme !== undefined) cfg.onTheme = opts.onTheme;
+    if (opts.student !== undefined) student = (opts.student || "").trim().toLowerCase() || "_";
+    reloadState();
+    start();
+    return window.Reader;
+  };
+
+  window.Reader = {
+    setStudent: function (name) {
+      student = (name || "").trim().toLowerCase() || "_";
+      reloadState();
+      if (!guide) return;          // nothing mounted yet; start() will apply it
+      applySettings(); renderMarks(); renderNotes(); redrawInk(); updateLock();
+    },
+    remount: function (opts) {
+      opts = opts || {};
+      if (opts.guide) guide = opts.guide;
+      if (opts.doc) DOC = opts.doc;
+      if (opts.student !== undefined) student = (opts.student || "").trim().toLowerCase() || "_";
+      reloadState();
+      start();
+    },
+    state: function () { return state; }
+  };
+})();
+
+</script>
+
+</body>
+</html>

@@ -1,0 +1,3712 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="color-scheme" content="light dark">
+<title>Surgery Case Files</title>
+<style>:root{color-scheme:light dark}body{margin:0;font:14px system-ui}img{max-width:100%}[hidden]{display:none!important}</style>
+</head>
+<body>
+<style>
+/* Layout: an index that opens into one case, and a case page offering four ways in,
+   read it, drill it, see where you stand, or take it away. One column throughout,
+   because it is used on a phone between postings as often as at a desk. */
+
+:root {
+  --bg:       #f4f1ec;
+  --card:     #ffffff;
+  --ink:      #1a1e21;
+  --ink-soft: #5c646b;
+  --rule:     #e0dad0;
+  --accent:   #005f73;
+  --accent-dim:#e0ecef;
+  --good:     #2f6b45;
+  --good-dim: #e2efe7;
+  --miss:     #9a4228;
+  --miss-dim: #f7e8e2;
+
+
+  /* The reader's floating chrome, the rail, studio, note editor, bubble and source pane, is
+     appended to document.body rather than inside .guide, so it cannot see the tokens the
+     stylesheet defines on .guide. In the hub that left every panel painting var(--paper, #fff)
+     white while its text used the dark --ink, measured at 1.24:1. These aliases give the
+     chrome the same palette the hub is already using. */
+  --paper:       var(--card);
+  --accent-soft: var(--accent-dim);
+  --flag:        #8a5a2b;
+  --flag-soft:   #f6ece0;
+  --cite:        var(--ink-soft);
+  --mark:        #fff3bf;
+  --bl:          #5b4a8a;
+  --srb:         #1f6b5c;
+
+  --serif: "Spectral", Georgia, "Times New Roman", serif;
+  --sans: "Inter", system-ui, -apple-system, "Segoe UI", sans-serif;
+  color-scheme: light;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: #111416; --card: #1a1e21; --ink: #e9e7e2; --ink-soft: #a0a8ae;
+    --rule: #2d3338; --accent: #6fc3d2; --accent-dim: #16292f;
+    --good: #7fc79b; --good-dim: #16281d; --miss: #e09a7c; --miss-dim: #2a1b15;
+    --flag: #d8a46a; --flag-soft: #2a1f14; --mark: #6b5b1f;
+    color-scheme: dark;
+  }
+}
+:root[data-theme="dark"] {
+  --bg: #111416; --card: #1a1e21; --ink: #e9e7e2; --ink-soft: #a0a8ae;
+  --rule: #2d3338; --accent: #6fc3d2; --accent-dim: #16292f;
+  --good: #7fc79b; --good-dim: #16281d; --miss: #e09a7c; --miss-dim: #2a1b15;
+  --flag: #d8a46a; --flag-soft: #2a1f14; --mark: #6b5b1f;
+  color-scheme: dark;
+}
+
+* { box-sizing: border-box; }
+html, body { height: 100%; }
+
+body {
+  margin: 0;
+  background: var(--bg);
+  color: var(--ink);
+  font-family: var(--sans);
+  font-size: 15px;
+  line-height: 1.6;
+  -webkit-text-size-adjust: 100%;
+}
+
+.shell {
+  max-width: 40rem;
+  margin: 0 auto;
+  padding-left: max(16px, env(safe-area-inset-left, 0px));
+  padding-right: max(16px, env(safe-area-inset-right, 0px));
+  padding-block: 1rem 4rem;
+}
+
+/* ---------- top bar: back on the left, theme on the right ---------- */
+
+.topbar {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  min-height: 2.2rem;
+  margin-bottom: 0.9rem;
+}
+
+.topbar .spacer { flex: 1; }
+
+button.ghost {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  font: inherit;
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: var(--ink-soft);
+  background: none;
+  border: 1px solid transparent;
+  border-radius: 6px;
+  padding: 0.3rem 0.55rem;
+  cursor: pointer;
+}
+button.ghost:hover { color: var(--accent); border-color: var(--rule); }
+button.ghost:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+button.ghost svg { width: 15px; height: 15px; flex: none; }
+
+.card {
+  background: var(--card);
+  border: 1px solid var(--rule);
+  border-radius: 10px;
+  padding: 1.5rem;
+}
+
+h1 {
+  font-family: var(--serif);
+  font-size: 1.9rem; font-weight: 600; letter-spacing: -0.015em;
+  margin: 0 0 0.4rem; text-wrap: balance;
+}
+h2 {
+  font-family: var(--serif);
+  font-size: 1.3rem; font-weight: 600; margin: 0 0 0.5rem; text-wrap: balance;
+}
+h3 {
+  font-size: 0.7rem; font-weight: 700; letter-spacing: 0.12em;
+  text-transform: uppercase; color: var(--accent);
+  margin: 1.8rem 0 0.7rem;
+}
+.eyebrow {
+  font-size: 0.68rem; font-weight: 700; letter-spacing: 0.13em;
+  text-transform: uppercase; color: var(--accent); margin: 0 0 0.55rem;
+}
+.sub { color: var(--ink-soft); margin: 0 0 1.6rem; font-size: 0.95rem; }
+
+/* ---------- entry tiles ---------- */
+
+.tiles { display: grid; gap: 0.8rem; margin-top: 1.4rem; }
+
+.tile {
+  display: grid;
+  grid-template-columns: auto 1fr auto;
+  gap: 0.25rem 1rem;
+  align-items: start;
+  text-align: left;
+  width: 100%;
+  font: inherit;
+  color: var(--ink);
+  background: var(--card);
+  border: 1px solid var(--rule);
+  border-radius: 9px;
+  padding: 1.05rem 1.15rem;
+  cursor: pointer;
+  text-decoration: none;
+  transition: border-color 0.12s, transform 0.12s;
+}
+.tile:hover { border-color: var(--accent); transform: translateY(-1px); }
+.tile:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+
+.tile .ico {
+  grid-column: 1; grid-row: 1 / span 2;
+  width: 34px; height: 34px; border-radius: 7px;
+  background: var(--accent-dim); color: var(--accent);
+  display: grid; place-items: center;
+  font-size: 0.62rem; font-weight: 700; letter-spacing: 0.03em;
+}
+.tile .t-name { grid-column: 2; grid-row: 1; font-weight: 650; font-size: 1.02rem; }
+.tile .t-desc { grid-column: 2; grid-row: 2; font-size: 0.85rem; color: var(--ink-soft); line-height: 1.45; }
+.tile .t-go { grid-column: 3; grid-row: 1 / span 2; color: var(--ink-soft); font-size: 1.1rem; align-self: center; }
+.tile:hover .t-go { color: var(--accent); }
+
+.tile.muted { opacity: 0.5; cursor: default; }
+.tile.muted:hover { border-color: var(--rule); transform: none; }
+
+.meta-line {
+  font-size: 0.78rem; color: var(--ink-soft);
+  margin-top: 1.4rem; padding-top: 1rem; border-top: 1px solid var(--rule);
+}
+.meta-line b { color: var(--ink); }
+
+.srckey { display: flex; flex-wrap: wrap; gap: 0.4rem 1rem; font-size: 0.74rem; color: var(--ink-soft); margin-top: 0.8rem; }
+.srckey span { display: inline-flex; align-items: center; gap: 0.35rem; }
+.srckey i { width: 9px; height: 9px; border-radius: 2px; flex: none; }
+
+/* ---------- buttons ---------- */
+
+button.btn {
+  font: inherit; font-weight: 600; cursor: pointer; border-radius: 6px;
+  border: 1px solid var(--rule); background: var(--card); color: var(--ink);
+  padding: 0.6rem 1rem;
+}
+button.btn:hover:not(:disabled) { border-color: var(--accent); color: var(--accent); }
+button.btn:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+button.btn.primary { background: var(--accent); border-color: var(--accent); color: #fff; }
+:root[data-theme="dark"] button.btn.primary { color: #06191e; }
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) button.btn.primary { color: #06191e; }
+}
+button.btn.primary:hover:not(:disabled) { opacity: 0.9; }
+
+.row { display: flex; flex-wrap: wrap; gap: 0.6rem; }
+.row.end { justify-content: flex-end; }
+
+input[type="text"] {
+  width: 100%; font: inherit; font-size: 1rem; color: var(--ink);
+  background: var(--bg); border: 1px solid var(--rule);
+  border-radius: 6px; padding: 0.6rem 0.75rem;
+}
+input[type="text"]:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+label.fld {
+  display: block; font-size: 0.7rem; font-weight: 700; letter-spacing: 0.1em;
+  text-transform: uppercase; color: var(--accent); margin-bottom: 0.4rem;
+}
+.hint { font-size: 0.8rem; color: var(--ink-soft); margin-top: 0.5rem; }
+
+.known { display: flex; flex-wrap: wrap; gap: 0.4rem; margin-top: 0.8rem; }
+.known button {
+  font: inherit; font-size: 0.82rem; font-weight: 600;
+  color: var(--accent); background: var(--accent-dim);
+  border: 1px solid transparent; border-radius: 999px;
+  padding: 0.25rem 0.7rem; cursor: pointer;
+}
+.known button:hover { border-color: var(--accent); }
+
+/* ---------- viva ---------- */
+
+.levels { display: grid; gap: 0.7rem; margin: 1.2rem 0 1.4rem; }
+.level { text-align: left; display: grid; gap: 0.2rem; padding: 0.9rem 1rem; width: 100%;
+         font: inherit; color: var(--ink); background: var(--card);
+         border: 1px solid var(--rule); border-radius: 8px; cursor: pointer; }
+.level:hover { border-color: var(--accent); }
+.level:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+.level .lv-name { font-weight: 650; font-size: 1rem; }
+.level .lv-desc { font-size: 0.85rem; color: var(--ink-soft); line-height: 1.45; }
+.level .lv-meta { font-size: 0.75rem; color: var(--accent); font-weight: 600; }
+
+.progress { display: flex; justify-content: space-between; align-items: baseline;
+            font-size: 0.72rem; font-weight: 600; letter-spacing: 0.06em;
+            text-transform: uppercase; color: var(--ink-soft); margin-bottom: 0.5rem; }
+.bar { height: 3px; background: var(--rule); border-radius: 2px; overflow: hidden; margin-bottom: 1.4rem; }
+.bar > i { display: block; height: 100%; background: var(--accent); transition: width 0.25s; }
+
+.qtag { display: inline-block; font-size: 0.65rem; font-weight: 700; letter-spacing: 0.09em;
+        text-transform: uppercase; color: var(--accent); background: var(--accent-dim);
+        border-radius: 3px; padding: 0.2rem 0.45rem; margin-bottom: 0.8rem; }
+
+.question { font-family: var(--serif); font-size: 1.28rem; line-height: 1.4;
+            font-weight: 600; margin: 0 0 1.3rem; text-wrap: balance; }
+
+.answer { border-left: 3px solid var(--accent); background: var(--accent-dim);
+          border-radius: 0 6px 6px 0; padding: 0.9rem 1rem; margin-bottom: 1.3rem; font-size: 0.95rem; }
+.answer .tag { display: block; font-size: 0.65rem; font-weight: 700; letter-spacing: 0.1em;
+               text-transform: uppercase; color: var(--accent); margin-bottom: 0.35rem; }
+.answer .ref { display: block; margin-top: 0.6rem; font-size: 0.72rem; color: var(--ink-soft); }
+
+.grade { display: flex; gap: 0.6rem; }
+.grade button { flex: 1; }
+.grade .got:hover { border-color: var(--good); color: var(--good); }
+.grade .missed:hover { border-color: var(--miss); color: var(--miss); }
+
+.score { font-family: var(--serif); font-size: 3rem; font-weight: 600; line-height: 1;
+         margin: 0.4rem 0 0.2rem; font-variant-numeric: tabular-nums; }
+.score small { font-size: 1.05rem; color: var(--ink-soft); font-weight: 400; }
+
+.breakdown { margin: 1.4rem 0; display: grid; gap: 0.5rem; }
+.brow { display: grid; grid-template-columns: 1fr auto; gap: 0.5rem 0.8rem; align-items: center;
+        padding-bottom: 0.5rem; border-bottom: 1px solid var(--rule); }
+.brow .bname { font-size: 0.9rem; font-weight: 600; min-width: 0; }
+.brow .bval { font-size: 0.82rem; font-variant-numeric: tabular-nums; color: var(--ink-soft); white-space: nowrap; }
+.brow .btrack { grid-column: 1 / -1; height: 4px; background: var(--rule); border-radius: 2px; overflow: hidden; }
+.brow .btrack > i { display: block; height: 100%; }
+
+.verdict { padding: 0.9rem 1rem; border-radius: 6px; font-size: 0.92rem;
+           margin: 1.2rem 0; border-left: 3px solid; }
+.verdict.weak { background: var(--miss-dim); border-color: var(--miss); }
+.verdict.strong { background: var(--good-dim); border-color: var(--good); }
+.verdict.info { background: var(--accent-dim); border-color: var(--accent); }
+
+.saved { font-size: 0.78rem; color: var(--ink-soft); margin-top: 1.1rem;
+         padding-top: 0.9rem; border-top: 1px solid var(--rule); }
+
+.ask { margin-top: 1.8rem; padding-top: 1.2rem; border-top: 1px solid var(--rule); }
+.ask h3 { margin: 0 0 0.6rem; font-size: 0.92rem; }
+.ask textarea {
+  width: 100%; box-sizing: border-box; resize: vertical; min-height: 4.2rem;
+  font: inherit; font-size: 1rem;            /* 16px, so iOS does not zoom on focus */
+  color: var(--ink); background: var(--card);
+  border: 1px solid var(--rule); border-radius: 8px; padding: 0.7rem 0.8rem;
+}
+.ask textarea:focus-visible { outline: 2px solid var(--accent); outline-offset: 1px; }
+.ask .row { margin-top: 0.6rem; }
+.asknote { font-size: 0.8rem; color: var(--ink-soft); margin: 0.6rem 0 0; min-height: 1.1em; }
+
+.who { display: flex; justify-content: space-between; align-items: center; gap: 0.8rem;
+       font-size: 0.78rem; color: var(--ink-soft); margin-bottom: 1rem; }
+
+/* ---------- progress view ---------- */
+
+.stats { display: grid; grid-template-columns: repeat(auto-fit, minmax(7rem, 1fr)); gap: 0.8rem; margin: 1.2rem 0; }
+.stat { border: 1px solid var(--rule); border-radius: 8px; padding: 0.8rem 0.9rem; }
+.stat .sv { font-family: var(--serif); font-size: 1.6rem; font-weight: 600; line-height: 1.1;
+            font-variant-numeric: tabular-nums; }
+.stat .sl { font-size: 0.72rem; color: var(--ink-soft); margin-top: 0.15rem; line-height: 1.35; }
+
+.hist { margin: 0.6rem 0 0; display: grid; gap: 0; }
+.hrow { display: grid; grid-template-columns: 1fr auto auto; gap: 0.8rem; align-items: baseline;
+        padding: 0.55rem 0; border-bottom: 1px solid var(--rule); font-size: 0.86rem; }
+.hrow .hl { font-weight: 600; min-width: 0; }
+.hrow .hd { color: var(--ink-soft); font-size: 0.78rem; white-space: nowrap; }
+.hrow .hp { font-variant-numeric: tabular-nums; font-weight: 650; white-space: nowrap; }
+.hrow .hp.ok { color: var(--good); }
+.hrow .hp.bad { color: var(--miss); }
+
+.empty { color: var(--ink-soft); font-size: 0.9rem; padding: 1.2rem 0; }
+
+/* ---------- the study guide, rendered inside this page ---------- */
+
+.readerwrap { margin: 0 -1.5rem -1.5rem; }
+.readerwrap .guide { border-radius: 0 0 10px 10px; }
+.readerwrap .guide .wrap { padding-block: 1.5rem 3rem; }
+.loading { color: var(--ink-soft); font-size: 0.9rem; padding: 2rem 0; text-align: center; }
+
+@media (prefers-reduced-motion: reduce) { * { transition: none !important; } }
+</style>
+<style id="guideCss">/* Stylesheet for the surgery reference documents.
+
+   Every rule is scoped under .guide, so the same sheet works in two places: the standalone
+   document (where <body class="guide">) and inside the Claude artifact (where the guide is a
+   <div class="guide"> alongside the app's own interface).
+
+   Everything a reader might want to change is a token on .guide, switched by data attributes.
+   Students read very differently from one another, line length, type size and contrast are
+   not decoration here, they decide whether someone can sit with a document for an hour. */
+
+/* ============================== tokens ============================== */
+
+.guide {
+  /* colour: light is the base; the themes below redefine these */
+  --paper:       #fbfaf7;
+  --ink:         #1b1f22;
+  --ink-soft:    #5a6269;
+  --rule:        #ddd8ce;
+  --accent:      #005f73;
+  --accent-soft: #e3eef0;
+  --flag:        #8a5a2b;
+  --flag-soft:   #f6ece0;
+  --cite:        #7d8891;
+  --mark:        #fff3bf;
+  --bl:          #5b4a8a;
+  --srb:         #1f6b5c;
+
+  /* typography */
+  --face-body: "Spectral", Georgia, "Times New Roman", serif;
+  --face-ui:  "Inter", system-ui, -apple-system, "Segoe UI", sans-serif;
+  --fs:       17px;
+  --lh:       1.62;
+  --track:    0em;
+
+  /* measure */
+  --measure: 42rem;
+
+  font-family: var(--face-body);
+  font-size: var(--fs);
+  line-height: var(--lh);
+  letter-spacing: var(--track);
+  color: var(--ink);
+  background: var(--paper);
+  position: relative;          /* the ink canvas anchors to this */
+}
+
+/* ---------- reader: line width ---------- */
+.guide[data-width="narrow"] { --measure: 34rem; }
+.guide[data-width="medium"] { --measure: 42rem; }
+.guide[data-width="wide"]   { --measure: 54rem; }
+.guide[data-width="full"]   { --measure: 100%; }
+
+/* ---------- reader: type size ---------- */
+.guide[data-size="1"] { --fs: 15px; }
+.guide[data-size="2"] { --fs: 16px; }
+.guide[data-size="3"] { --fs: 17px; }
+.guide[data-size="4"] { --fs: 19px; }
+.guide[data-size="5"] { --fs: 21px; }
+.guide[data-size="6"] { --fs: 24px; }
+
+/* ---------- reader: line spacing ---------- */
+.guide[data-leading="tight"]  { --lh: 1.42; }
+.guide[data-leading="normal"] { --lh: 1.62; }
+.guide[data-leading="loose"]  { --lh: 1.9; }
+
+/* ---------- reader: typeface ----------
+   Hyperlegible is included because it was drawn for low-vision readers; it also suits
+   anyone who finds a serif tiring on a screen. Mono suits people who read code all day. */
+.guide[data-face="serif"] { --face-body: "Spectral", Georgia, "Times New Roman", serif; }
+.guide[data-face="sans"]  { --face-body: "Inter", system-ui, -apple-system, sans-serif;
+                            --face-ui: "Inter", system-ui, -apple-system, sans-serif; }
+.guide[data-face="hyper"] { --face-body: "Atkinson Hyperlegible", system-ui, sans-serif;
+                            --face-ui: "Atkinson Hyperlegible", system-ui, sans-serif;
+                            --track: 0.005em; }
+.guide[data-face="mono"]  { --face-body: ui-monospace, "SFMono-Regular", Menlo, Consolas, monospace;
+                            --fs: 15px; }
+
+/* ---------- reader: colour themes ---------- */
+
+.guide[data-theme="sepia"] {
+  --paper: #f4ecd8; --ink: #433422; --ink-soft: #6f5f4a; --rule: #ddd0b4;
+  --accent: #7a4a1e; --accent-soft: #ece0c8; --flag: #8a5a2b; --flag-soft: #ece0c8;
+  --cite: #8a7b63; --mark: #f5d98a; --bl: #6a4a7a; --srb: #3f6b4a;
+  color-scheme: light;
+}
+
+.guide[data-theme="dark"] {
+  --paper: #15181a; --ink: #e8e6e1; --ink-soft: #a3abb2; --rule: #2e3338;
+  --accent: #6fc3d2; --accent-soft: #1b2a2e; --flag: #d9a36a; --flag-soft: #2a2119;
+  --cite: #78828a; --mark: #4a4120; --bl: #a893dd; --srb: #6fc3a8;
+  color-scheme: dark;
+}
+
+.guide[data-theme="contrast"] {
+  --paper: #000000; --ink: #ffffff; --ink-soft: #d8d8d8; --rule: #6a6a6a;
+  --accent: #6fe3ff; --accent-soft: #10242b; --flag: #ffc46b; --flag-soft: #2a2008;
+  --cite: #bdbdbd; --mark: #4a4a00; --bl: #d0b8ff; --srb: #7fe8c0;
+  color-scheme: dark;
+}
+
+/* follow the operating system when the reader has not chosen */
+@media (prefers-color-scheme: dark) {
+  .guide[data-theme="auto"] {
+    --paper: #15181a; --ink: #e8e6e1; --ink-soft: #a3abb2; --rule: #2e3338;
+    --accent: #6fc3d2; --accent-soft: #1b2a2e; --flag: #d9a36a; --flag-soft: #2a2119;
+    --cite: #78828a; --mark: #4a4120; --bl: #a893dd; --srb: #6fc3a8;
+    color-scheme: dark;
+  }
+}
+
+/* ============================== layout ============================== */
+
+.guide * { box-sizing: border-box; }
+
+.guide .wrap {
+  max-width: var(--measure);
+  margin: 0 auto;
+  padding-left: max(18px, env(safe-area-inset-left, 0px));
+  padding-right: max(18px, env(safe-area-inset-right, 0px));
+  padding-block: 2.5rem 5rem;
+}
+
+body.guide { margin: 0; -webkit-text-size-adjust: 100%; }
+
+/* ============================== masthead ============================== */
+
+.guide .eyebrow {
+  font-family: var(--face-ui);
+  font-size: 0.7rem; font-weight: 600; letter-spacing: 0.12em;
+  text-transform: uppercase; color: var(--accent); margin: 0 0 0.6rem;
+}
+
+.guide h1 {
+  font-family: var(--face-body);
+  font-size: 2.1rem; font-weight: 600; line-height: 1.15;
+  letter-spacing: -0.015em; text-wrap: balance; margin: 0 0 0.7rem;
+}
+
+.guide .standfirst { font-size: 1.02rem; color: var(--ink-soft); margin: 0 0 1.6rem; }
+
+.guide .masthead {
+  border-bottom: 2px solid var(--ink);
+  padding-bottom: 1.4rem; margin-bottom: 2.2rem;
+}
+
+/* ============================== structure ============================== */
+
+.guide h2 {
+  font-family: var(--face-ui);
+  font-size: 0.78rem; font-weight: 700; letter-spacing: 0.14em;
+  text-transform: uppercase; color: var(--ink);
+  margin: 3.2rem 0 0.2rem; padding-bottom: 0.45rem;
+  border-bottom: 1px solid var(--rule);
+}
+.guide h2 .n { color: var(--accent); margin-right: 0.5rem; }
+
+.guide h3 {
+  font-family: var(--face-body);
+  font-size: 1.22rem; font-weight: 600; margin: 2.1rem 0 0.1rem; text-wrap: balance;
+}
+
+.guide h4 {
+  font-family: var(--face-ui);
+  font-size: 0.86rem; font-weight: 650; margin: 1.5rem 0 0.4rem; color: var(--ink);
+}
+
+.guide p { margin: 0.75rem 0; }
+.guide a { color: var(--accent); }
+
+/* ---------- reader: emphasise headings ---------- */
+.guide[data-hl-head="on"] h2 {
+  background: var(--accent-soft);
+  border-bottom-color: var(--accent);
+  padding: 0.5rem 0.6rem;
+  border-radius: 3px 3px 0 0;
+}
+.guide[data-hl-head="on"] h3 {
+  border-left: 3px solid var(--accent);
+  padding-left: 0.6rem;
+}
+
+/* ============================== step + rationale ============================== */
+
+.guide .step {
+  margin: 1.35rem 0; padding-left: 0.95rem; border-left: 2px solid var(--rule);
+}
+.guide .step > .ask { font-weight: 600; }
+
+.guide .step > .why {
+  display: block;
+  font-family: var(--face-ui);
+  font-size: 0.88em; line-height: 1.55;
+  color: var(--ink-soft); margin-top: 0.35rem;
+}
+.guide .why b, .guide .why strong { color: var(--ink); font-weight: 650; }
+
+.guide .why .label {
+  font-size: 0.68em; font-weight: 700; letter-spacing: 0.09em;
+  text-transform: uppercase; color: var(--accent); margin-right: 0.4rem;
+}
+.guide .why .label.out { color: var(--flag); }
+
+/* ---------- reader: emphasise the reasoning ----------
+   The rationale is the point of this document, so some readers want it to dominate
+   rather than sit quietly under each step. */
+.guide[data-hl-why="on"] .step {
+  border-left-color: var(--accent);
+  background: var(--accent-soft);
+  padding: 0.75rem 0.9rem;
+  border-radius: 0 4px 4px 0;
+}
+.guide[data-hl-why="on"] .step > .why { color: var(--ink); }
+
+/* ---------- reader: recall mode ----------
+   Hides every answer and rationale until tapped, which turns the reference into a
+   self-test without needing a separate deck. */
+.guide[data-recall="on"] .step > .why,
+.guide[data-recall="on"] dl.findings dd,
+.guide[data-recall="on"] .viva .ans {
+  background: var(--rule);
+  color: transparent;
+  border-radius: 3px;
+  cursor: pointer;
+  user-select: none;
+}
+.guide[data-recall="on"] .step > .why *,
+.guide[data-recall="on"] dl.findings dd *,
+.guide[data-recall="on"] .viva .ans * { visibility: hidden; }
+.guide[data-recall="on"] .revealed,
+.guide[data-recall="on"] .revealed * {
+  background: none !important;
+  color: inherit !important;
+  visibility: visible !important;
+  user-select: auto;
+}
+.guide[data-recall="on"] .revealed .label { color: var(--accent) !important; }
+.guide[data-recall="on"] .revealed .label.out { color: var(--flag) !important; }
+
+/* ============================== finding lists ============================== */
+
+.guide dl.findings { margin: 1.1rem 0; }
+.guide dl.findings dt { font-weight: 600; margin-top: 1rem; }
+.guide dl.findings dd {
+  margin: 0.2rem 0 0 0;
+  font-family: var(--face-ui);
+  font-size: 0.88em; line-height: 1.55; color: var(--ink-soft);
+}
+
+/* ---------- reader: emphasise key terms ---------- */
+.guide[data-hl-term="on"] b,
+.guide[data-hl-term="on"] strong {
+  background: var(--mark);
+  padding: 0 0.15em;
+  border-radius: 2px;
+}
+.guide[data-hl-term="on"] .why b,
+.guide[data-hl-term="on"] dl.findings dd b { color: var(--ink); }
+
+/* ============================== callouts ============================== */
+
+.guide .pearl {
+  background: var(--accent-soft); border-left: 3px solid var(--accent);
+  padding: 0.85rem 1rem; margin: 1.6rem 0; font-size: 0.95em;
+}
+.guide .pearl .tag {
+  display: block; font-family: var(--face-ui);
+  font-size: 0.66em; font-weight: 700; letter-spacing: 0.1em;
+  text-transform: uppercase; color: var(--accent); margin-bottom: 0.3rem;
+}
+
+.guide .unverified {
+  background: var(--flag-soft); border-left: 3px solid var(--flag);
+  padding: 0.85rem 1rem; margin: 1.6rem 0;
+  font-family: var(--face-ui); font-size: 0.86em; line-height: 1.55;
+}
+.guide .unverified .tag {
+  display: block; font-size: 0.66em; font-weight: 700; letter-spacing: 0.1em;
+  text-transform: uppercase; color: var(--flag); margin-bottom: 0.3rem;
+}
+
+/* ============================== viva ============================== */
+
+.guide .viva { margin: 1.2rem 0; }
+.guide .viva details { border-bottom: 1px solid var(--rule); padding: 0.7rem 0; }
+.guide .viva summary {
+  cursor: pointer; font-weight: 600; font-size: 0.98em;
+  list-style: none; display: flex; gap: 0.6rem; align-items: baseline;
+}
+.guide .viva summary::-webkit-details-marker { display: none; }
+.guide .viva summary::before {
+  content: "Q"; font-family: var(--face-ui);
+  font-size: 0.64em; font-weight: 700; letter-spacing: 0.08em;
+  color: var(--accent); border: 1px solid var(--accent); border-radius: 2px;
+  padding: 0.08rem 0.3rem; flex: none; transform: translateY(-0.1em);
+}
+.guide .viva details[open] summary { color: var(--accent); }
+.guide .viva .ans {
+  font-family: var(--face-ui); font-size: 0.89em; line-height: 1.6;
+  color: var(--ink-soft); margin: 0.55rem 0 0.2rem 1.9rem;
+}
+
+/* ============================== citations ============================== */
+
+.guide cite.src {
+  font-family: var(--face-ui); font-style: normal;
+  font-size: 0.66em; font-weight: 600; letter-spacing: 0.02em;
+  color: var(--cite); white-space: nowrap;
+  border: 1px solid var(--rule); border-radius: 2px;
+  padding: 0.05rem 0.28rem; margin-left: 0.3rem; vertical-align: 0.12em;
+}
+.guide cite.src.das { border-color: var(--accent); color: var(--accent); }
+.guide cite.src.bl  { border-color: var(--bl);     color: var(--bl); }
+.guide cite.src.srb { border-color: var(--srb);    color: var(--srb); }
+
+.guide[data-cite="off"] cite.src { display: none; }
+
+/* ============================== discrepancies ============================== */
+
+.guide details.conflict {
+  border: 1px solid var(--rule); border-left: 3px solid var(--flag);
+  border-radius: 0 4px 4px 0; background: var(--flag-soft); margin: 1.5rem 0;
+}
+.guide details.conflict > summary {
+  cursor: pointer; list-style: none; display: flex; gap: 0.55rem; align-items: baseline;
+  padding: 0.7rem 0.9rem; font-family: var(--face-ui);
+  font-size: 0.82em; line-height: 1.45; color: var(--ink);
+}
+.guide details.conflict > summary::-webkit-details-marker { display: none; }
+.guide details.conflict > summary::before {
+  content: "*"; color: var(--flag); font-size: 1em; font-weight: 700;
+  line-height: 1; flex: none; transform: translateY(0.22em);
+}
+.guide details.conflict > summary::after {
+  content: "expand"; margin-left: auto; flex: none;
+  font-size: 0.66em; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase;
+  color: var(--flag); border: 1px solid var(--flag); border-radius: 3px; padding: 0.1rem 0.35rem;
+}
+.guide details.conflict[open] > summary::after { content: "close"; }
+.guide details.conflict > summary:hover { color: var(--flag); }
+.guide details.conflict .what { font-weight: 650; }
+.guide details.conflict .who { color: var(--ink-soft); font-weight: 400; }
+.guide details.conflict .body {
+  padding: 0 0.9rem 0.9rem 2.05rem; border-top: 1px solid var(--rule);
+  margin-top: -1px; padding-top: 0.8rem;
+}
+.guide details.conflict dl { margin: 0; }
+.guide details.conflict dt {
+  font-family: var(--face-ui); font-size: 0.76em; font-weight: 700;
+  color: var(--ink); margin-top: 0.65rem;
+}
+.guide details.conflict dt:first-child { margin-top: 0; }
+.guide details.conflict dd {
+  margin: 0.15rem 0 0; font-family: var(--face-ui);
+  font-size: 0.86em; line-height: 1.55; color: var(--ink-soft);
+}
+.guide details.conflict .ruling {
+  display: block; margin-top: 0.85rem; padding-top: 0.7rem;
+  border-top: 1px solid var(--rule); font-family: var(--face-ui);
+  font-size: 0.86em; line-height: 1.55; color: var(--ink-soft);
+}
+.guide details.conflict .ruling b { color: var(--ink); }
+
+.guide[data-conflicts="off"] details.conflict { display: none; }
+
+/* ============================== source key ============================== */
+
+.guide .srckey {
+  display: flex; flex-wrap: wrap; gap: 0.5rem 1.1rem;
+  font-family: var(--face-ui); font-size: 0.74em; color: var(--ink-soft);
+  margin: 1.2rem 0 0; padding-top: 0.9rem; border-top: 1px solid var(--rule);
+}
+.guide .srckey span { display: inline-flex; align-items: center; gap: 0.35rem; }
+.guide .srckey i { width: 9px; height: 9px; border-radius: 2px; flex: none; }
+
+/* ============================== tables ============================== */
+
+.guide .scroll { overflow-x: auto; margin: 1.4rem 0; }
+.guide table {
+  border-collapse: collapse; width: 100%;
+  font-size: 0.9em; font-family: var(--face-ui); min-width: 0;
+}
+.guide th, .guide td {
+  text-align: left; vertical-align: top;
+  padding: 0.5rem 0.7rem 0.5rem 0; border-bottom: 1px solid var(--rule);
+}
+.guide th {
+  font-size: 0.68em; font-weight: 700; letter-spacing: 0.09em;
+  text-transform: uppercase; color: var(--accent); border-bottom: 1px solid var(--ink);
+}
+
+/* ============================== figures ============================== */
+
+.guide figure { margin: 1.8rem 0; padding: 0; }
+.guide figure img {
+  display: block; max-width: 100%; height: auto;
+  border: 1px solid var(--rule); border-radius: 2px; background: #fff;
+}
+.guide figcaption {
+  font-family: var(--face-ui); font-size: 0.78em; line-height: 1.5;
+  color: var(--ink-soft); margin-top: 0.5rem;
+}
+
+/* ============================== colophon ============================== */
+
+.guide .colophon {
+  margin-top: 4rem; padding-top: 1.2rem; border-top: 1px solid var(--rule);
+  font-family: var(--face-ui); font-size: 0.76em; line-height: 1.6; color: var(--ink-soft);
+}
+
+/* ============================== print ============================== */
+
+@media print {
+  .guide {
+    --paper: #fff; --ink: #000; --ink-soft: #333; --rule: #bbb;
+    --accent: #004c5c; --accent-soft: #eef4f5; --cite: #666;
+    --measure: none; --fs: 10.5pt; --lh: 1.45;
+    --face-body: "Spectral", Georgia, serif;
+    --face-ui: "Inter", system-ui, sans-serif;
+  }
+  .guide .wrap { max-width: none; padding: 0; }
+
+  /* Watermark on the printed copy.
+   *
+   * It sits on z-index -1, behind the body text, so it can never punch a light hole through
+   * a glyph the way an overlaid watermark does. That only works if the paper itself stops
+   * painting a background over it, hence the background: none; the sheet is white anyway.
+   *
+   * It is text rather than a background image on purpose: headless Chrome's --print-to-pdf
+   * does not print backgrounds by default, and text is also still text in the finished PDF,
+   * so the watermark can be verified page by page instead of being eyeballed once.
+   *
+   * position: fixed is what repeats it on every sheet. */
+  .guide { background: none; }
+  .guide::before {
+    content: "rx.harnar.in";
+    position: fixed;
+    top: 50%;
+    left: 50%;
+    z-index: -1;
+    transform: translate(-50%, -50%) rotate(-32deg);
+    font-family: var(--face-ui);
+    font-size: 54pt;
+    font-weight: 600;
+    letter-spacing: 0.1em;
+    white-space: nowrap;
+    color: #ebe8e3;
+    print-color-adjust: exact;
+    -webkit-print-color-adjust: exact;
+  }
+  .guide h2 {
+    margin-top: 26pt;
+    padding-top: 9pt;
+    padding-bottom: 7pt;
+    border-top: 3pt solid #555;
+    border-bottom: 1pt solid #999;
+    font-size: 10pt;
+    letter-spacing: 0.16em;
+    break-after: avoid;
+    break-before: auto;
+  }
+  .guide h2 .n {
+    color: #000;
+    font-size: 13pt;
+    margin-right: 0.6em;
+  }
+  /* the first section should not push a near-empty first page */
+  .guide h2:first-of-type { margin-top: 14pt; }
+
+  /* subheads hang off the section rule so it is obvious what belongs to what */
+  .guide h3 {
+    border-left: 2.5pt solid #777;
+    padding-left: 7pt;
+    margin-top: 15pt;
+    break-after: avoid;
+  }
+  .guide h4 { margin-top: 11pt; break-after: avoid; }
+  .guide .step, .guide dl.findings dt, .guide dl.findings dd,
+  .guide .pearl, .guide figure, .guide .viva details { break-inside: avoid; }
+  .guide a { color: #000; text-decoration: none; }
+  .guide .colophon { break-before: avoid; }
+
+  /* reader preferences are for the screen; paper gets the designed layout */
+  .guide[data-recall="on"] .step > .why,
+  .guide[data-recall="on"] dl.findings dd,
+  .guide[data-recall="on"] .viva .ans { background: none; color: var(--ink-soft); }
+  .guide[data-recall="on"] .step > .why *,
+  .guide[data-recall="on"] dl.findings dd *,
+  .guide[data-recall="on"] .viva .ans * { visibility: visible; }
+  .guide[data-hl-head="on"] h2 { background: none; padding: 0 0 0.45rem; }
+  .guide[data-hl-term="on"] b, .guide[data-hl-term="on"] strong { background: none; }
+  .guide[data-conflicts="off"] details.conflict { display: block; }
+  .guide[data-cite="off"] cite.src { display: inline; }
+
+  /* discrepancies print as small asterisked footnotes, not as boxes */
+  .guide details.conflict {
+    background: none; border: none; border-left: 2px solid #999;
+    margin: 0.8rem 0; break-inside: avoid;
+  }
+  .guide details.conflict > summary { padding: 0 0 0 0.5rem; font-size: 8.5pt; font-weight: 700; }
+  .guide details.conflict > summary::after,
+  .guide details.conflict[open] > summary::after { content: none; border: none; padding: 0; }
+  .guide details.conflict .body {
+    padding: 0.2rem 0 0 0.5rem; border-top: none; margin-top: 0; font-size: 8.5pt;
+  }
+  .guide details.conflict dt { font-size: 8pt; margin-top: 0.3rem; }
+  .guide details.conflict dd { font-size: 8.5pt; line-height: 1.35; }
+  .guide details.conflict .ruling {
+    font-size: 8.5pt; line-height: 1.35; margin-top: 0.4rem;
+    padding-top: 0.3rem; border-top: 1px dotted #bbb;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .guide * { animation: none !important; transition: none !important; }
+}
+
+/* ===================================================================
+   Reader interface, the rail, selection bubble, studio panel, notes
+   and ink canvas. These sit OUTSIDE .guide (they are chrome, not
+   document), so they are deliberately unscoped and self-contained.
+   =================================================================== */
+
+.rdr-rail {
+  position: fixed;
+  right: max(10px, env(safe-area-inset-right, 0px));
+  top: 50%;
+  transform: translateY(-50%);
+  z-index: 40;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  padding: 6px;
+  border-radius: 10px;
+  background: var(--paper, #fff);
+  border: 1px solid var(--rule, #ddd);
+  box-shadow: 0 4px 18px rgba(0,0,0,.12);
+}
+
+.rdr-rail button {
+  width: 34px; height: 34px;
+  display: grid; place-items: center;
+  border: 1px solid transparent; border-radius: 7px;
+  background: none; color: var(--ink-soft, #666);
+  cursor: pointer; padding: 0;
+}
+.rdr-rail button svg { width: 18px; height: 18px; }
+.rdr-rail button:hover { color: var(--accent, #005f73); border-color: var(--rule, #ddd); }
+.rdr-rail button:focus-visible { outline: 2px solid var(--accent, #005f73); outline-offset: 1px; }
+.rdr-rail button.on {
+  color: var(--accent, #005f73);
+  background: var(--accent-soft, #e3eef0);
+  border-color: var(--accent, #005f73);
+}
+
+.rdr-pal { display: flex; flex-direction: column; gap: 4px; margin-top: 4px;
+           padding-top: 6px; border-top: 1px solid var(--rule, #ddd); }
+.rdr-pal .rdr-sw {
+  width: 22px; height: 22px; margin: 0 auto;
+  border-radius: 50%; border: 2px solid transparent; cursor: pointer; padding: 0;
+}
+.rdr-pal .rdr-sw.on { border-color: var(--ink, #222); }
+
+/* ---------- the rail on a phone ----------
+   The row of tools plus the colour palette comes to about 416px of content. Centring that
+   with left:50% and translateX(-50%) on a 375px screen pushed the Reading settings button off
+   the left edge and the last swatches off the right, so the one control that reaches text
+   size, theme and backup was unreachable on exactly the devices this is read on.
+   It is pinned to both edges now, and scrolls horizontally if the tools still do not fit. */
+@media (max-width: 640px) {
+  .rdr-rail {
+    right: max(8px, env(safe-area-inset-right, 0px));
+    left: max(8px, env(safe-area-inset-left, 0px));
+    top: auto;
+    bottom: max(8px, env(safe-area-inset-bottom, 0px));
+    transform: none;
+    flex-direction: row;
+    align-items: center;
+    justify-content: flex-start;
+    gap: 2px;
+    overflow-x: auto;
+    overscroll-behavior-x: contain;
+    scrollbar-width: none;
+    -webkit-overflow-scrolling: touch;
+  }
+  .rdr-rail::-webkit-scrollbar { display: none; }
+  .rdr-rail button { flex: 0 0 auto; }
+  .rdr-pal { flex-direction: row; margin: 0 0 0 4px; flex: 0 0 auto;
+             padding: 0 0 0 6px; border-top: none; border-left: 1px solid var(--rule, #ddd); }
+}
+
+/* A landscape phone is wider than 640px, so it used to get the tall vertical rail: about
+   416px of buttons in a 390px-high window, with the top and bottom items simply unreachable.
+   Height, not width, is what decides this. */
+@media (max-height: 520px) and (orientation: landscape) {
+  .rdr-rail {
+    right: max(8px, env(safe-area-inset-right, 0px));
+    left: max(8px, env(safe-area-inset-left, 0px));
+    top: auto;
+    bottom: max(8px, env(safe-area-inset-bottom, 0px));
+    transform: none;
+    flex-direction: row; align-items: center; justify-content: flex-start;
+    overflow-x: auto; scrollbar-width: none;
+  }
+  .rdr-pal { flex-direction: row; margin: 0 0 0 4px;
+             padding: 0 0 0 6px; border-top: none; border-left: 1px solid var(--rule, #ddd); }
+}
+
+/* ---------- touch targets ----------
+   Everything the reader taps was built for a mouse: 34px tool buttons, 22px swatches, and
+   citation chips about 16px tall, which are the main interaction in the guide. The visual
+   size stays as designed; the hit area is grown to 44px underneath it. */
+@media (pointer: coarse) {
+  .rdr-rail button,
+  .rdr-erase-modes button,
+  .rdr-bubble button,
+  .rdr-seg button,
+  .rdr-ne-row button,
+  .rdr-close,
+  .rdr-src-close,
+  .rdr-clear { min-width: 44px; min-height: 44px; }
+
+  /* the swatch gets its 44px from padding alone; the generic minimum above would stack with
+     it and make each colour a 70px slab, which pushes the tools off a phone again */
+  .rdr-pal .rdr-sw {
+    width: 22px; height: 22px; min-width: 0; min-height: 0;
+    padding: 11px; background-clip: content-box;
+    box-sizing: content-box;
+  }
+
+  .guide cite.src[data-cite-key],
+  .rdr-note { position: relative; }
+  .guide cite.src[data-cite-key]::after,
+  .rdr-note::after {
+    content: ""; position: absolute; inset: -14px -8px;
+  }
+
+  .guide .viva summary,
+  .guide details.conflict > summary { min-height: 44px; }
+}
+
+/* Hover belongs to pointers. On a touch screen these stick after a tap and leave a button
+   looking permanently active. */
+@media (hover: none) {
+  .rdr-rail button:hover,
+  .rdr-seg button:hover,
+  .guide details.conflict > summary:hover { background: none; }
+  .rdr-rail button:hover { color: var(--ink-soft, #666); border-color: transparent; }
+}
+
+/* ---------- selection bubble ---------- */
+
+.rdr-bubble {
+  position: absolute; z-index: 50;
+  display: flex; gap: 2px; padding: 4px;
+  background: var(--ink, #1b1f22); border-radius: 8px;
+  box-shadow: 0 4px 14px rgba(0,0,0,.25);
+}
+.rdr-bubble button {
+  font: inherit; font-size: 0.78rem; font-weight: 600;
+  font-family: var(--face-ui, system-ui, sans-serif);
+  color: var(--paper, #fff); background: none; border: none;
+  border-radius: 5px; padding: 0.3rem 0.6rem; cursor: pointer;
+}
+.rdr-bubble button:hover { background: rgba(255,255,255,.16); }
+
+/* ---------- studio panel ---------- */
+
+.rdr-studio {
+  position: fixed; z-index: 60;
+  right: max(10px, env(safe-area-inset-right, 0px));
+  top: max(10px, env(safe-area-inset-top, 0px));
+  bottom: max(10px, env(safe-area-inset-bottom, 0px));
+  width: min(21rem, calc(100vw - 20px));
+  display: flex; flex-direction: column;
+  background: var(--paper, #fff);
+  border: 1px solid var(--rule, #ddd); border-radius: 12px;
+  box-shadow: 0 8px 36px rgba(0,0,0,.2);
+  font-family: var(--face-ui, system-ui, sans-serif);
+  color: var(--ink, #222);
+}
+.rdr-st-head {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 0.9rem 1rem; border-bottom: 1px solid var(--rule, #ddd); font-size: 0.95rem;
+}
+.rdr-close { font-size: 1.3rem; line-height: 1; background: none; border: none;
+             color: var(--ink-soft, #666); cursor: pointer; padding: 0 0.2rem; }
+.rdr-close:hover { color: var(--ink, #222); }
+.rdr-st-body { overflow-y: auto; padding: 0.9rem 1rem 1.2rem; }
+
+.rdr-st-body label {
+  display: block; font-size: 0.66rem; font-weight: 700; letter-spacing: 0.1em;
+  text-transform: uppercase; color: var(--accent, #005f73);
+  margin: 1.1rem 0 0.45rem;
+}
+.rdr-st-body label:first-child { margin-top: 0; }
+
+.rdr-seg { display: flex; flex-wrap: wrap; gap: 4px; margin-bottom: 0.4rem; }
+.rdr-seg button {
+  font: inherit; font-size: 0.8rem; font-weight: 600;
+  color: var(--ink-soft, #666); background: none;
+  border: 1px solid var(--rule, #ddd); border-radius: 6px;
+  padding: 0.32rem 0.6rem; cursor: pointer;
+}
+.rdr-seg button:hover:not(:disabled) { color: var(--accent, #005f73); border-color: var(--accent, #005f73); }
+.rdr-seg button.on {
+  color: var(--accent, #005f73); background: var(--accent-soft, #e3eef0);
+  border-color: var(--accent, #005f73);
+}
+.rdr-seg button:disabled { opacity: 0.4; cursor: not-allowed; }
+
+.rdr-lock {
+  margin-top: 1rem; padding: 0.7rem 0.8rem; border-radius: 6px;
+  background: var(--flag-soft, #f6ece0); border-left: 3px solid var(--flag, #8a5a2b);
+  font-size: 0.8rem; line-height: 1.45; color: var(--ink-soft, #666);
+}
+
+.rdr-st-foot {
+  display: flex; flex-wrap: wrap; gap: 6px;
+  margin-top: 1.4rem; padding-top: 1rem; border-top: 1px solid var(--rule, #ddd);
+}
+.rdr-clear {
+  font: inherit; font-size: 0.78rem; font-weight: 600;
+  color: var(--flag, #8a5a2b); background: none;
+  border: 1px solid var(--rule, #ddd); border-radius: 6px;
+  padding: 0.3rem 0.6rem; cursor: pointer;
+}
+.rdr-clear:hover { border-color: var(--flag, #8a5a2b); }
+
+/* ---------- notes ---------- */
+
+.rdr-note {
+  display: inline-block; vertical-align: super;
+  font-family: var(--face-ui, system-ui, sans-serif);
+  font-size: 0.58em; font-weight: 700; letter-spacing: 0.06em; text-transform: uppercase;
+  color: var(--accent, #005f73); background: var(--accent-soft, #e3eef0);
+  border: 1px solid var(--accent, #005f73); border-radius: 3px;
+  padding: 0.05em 0.3em; margin-left: 0.35em; cursor: pointer; user-select: none;
+}
+.rdr-note:hover { filter: brightness(0.95); }
+
+.rdr-noteedit {
+  position: fixed; z-index: 70;
+  left: 50%; top: 50%; transform: translate(-50%, -50%);
+  width: min(26rem, calc(100vw - 32px));
+  background: var(--paper, #fff); color: var(--ink, #222);
+  border: 1px solid var(--rule, #ddd); border-radius: 12px;
+  box-shadow: 0 10px 40px rgba(0,0,0,.25);
+  padding: 1rem; font-family: var(--face-ui, system-ui, sans-serif);
+}
+.rdr-ne-head { font-size: 0.68rem; font-weight: 700; letter-spacing: 0.1em;
+               text-transform: uppercase; color: var(--accent, #005f73); margin-bottom: 0.5rem; }
+
+/* Centred vertically, the Save, Cancel and Delete row lands underneath the on-screen keyboard
+   on a phone, so the editor can be typed into but not finished. Anchoring it to the top keeps
+   the whole dialog in the part of the screen the keyboard leaves alone. */
+@media (max-width: 640px), (max-height: 560px) {
+  .rdr-noteedit {
+    top: max(10px, env(safe-area-inset-top, 0px));
+    transform: translateX(-50%);
+    max-height: 70dvh;
+    overflow-y: auto;
+    overscroll-behavior: contain;
+  }
+}
+.rdr-noteedit textarea {
+  /* 16px exactly. Anything smaller and iOS Safari zooms the page in on focus and leaves it
+     zoomed, which on a phone means the note editor you are typing into walks off screen. */
+  width: 100%; font: inherit; font-size: 16px;
+  color: var(--ink, #222); background: var(--bg, transparent);
+  border: 1px solid var(--rule, #ddd); border-radius: 6px;
+  padding: 0.6rem 0.7rem; resize: vertical;
+}
+.rdr-ne-row { display: flex; align-items: center; gap: 6px; margin-top: 0.7rem; }
+.rdr-ne-row button {
+  font: inherit; font-size: 0.82rem; font-weight: 600;
+  border: 1px solid var(--rule, #ddd); border-radius: 6px;
+  padding: 0.35rem 0.75rem; cursor: pointer;
+  background: none; color: var(--ink, #222);
+}
+.rdr-ne-row .rdr-ok {
+  background: var(--accent, #005f73); border-color: var(--accent, #005f73); color: #fff;
+}
+.rdr-ne-row .rdr-del { color: var(--flag, #8a5a2b); }
+
+/* ---------- ink ---------- */
+
+.rdr-canvas { position: absolute; z-index: 5; touch-action: none; }
+.rdr-pen-on { cursor: crosshair; }
+.rdr-pen-on ::selection { background: transparent; }
+
+@media print {
+  .rdr-rail, .rdr-bubble, .rdr-studio, .rdr-noteedit { display: none !important; }
+  .rdr-canvas { position: absolute; }
+  .rdr-note { border-color: #999; color: #333; background: none; }
+}
+
+/* `display:` on these panels outranks the browser's own [hidden] rule, so state it. */
+.rdr-studio[hidden],
+.rdr-bubble[hidden],
+.rdr-noteedit[hidden],
+.rdr-lock[hidden] { display: none !important; }
+
+/* ---------- source pane ----------
+   Slides in over the guide rather than opening a tab, so checking a citation does not
+   cost the reader their place. The quoted page is set solid; the paragraphs either side
+   are dimmed, because they are there for context and not for reading. */
+
+.guide cite.src[data-cite-key] { cursor: pointer; }
+.guide cite.src[data-cite-key]:hover { background: var(--accent-soft); }
+.guide cite.src[data-cite-key]:focus-visible { outline: 2px solid var(--accent); outline-offset: 1px; }
+
+.rdr-srcpane {
+  position: fixed;
+  z-index: 80;
+  right: 0;
+  top: 0;
+  bottom: 0;
+  width: min(34rem, 100vw);
+  display: flex;
+  flex-direction: column;
+  background: var(--paper, #fff);
+  color: var(--ink, #222);
+  border-left: 1px solid var(--rule, #ddd);
+  box-shadow: -8px 0 40px rgba(0, 0, 0, .22);
+  padding-right: env(safe-area-inset-right, 0px);
+}
+.rdr-srcpane[hidden] { display: none !important; }
+
+.rdr-src-head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 1rem;
+  padding: 1rem 1.1rem;
+  padding-top: max(1rem, env(safe-area-inset-top, 0px));
+  border-bottom: 1px solid var(--rule, #ddd);
+  font-family: var(--face-ui, system-ui, sans-serif);
+}
+.rdr-src-book { font-size: 0.95rem; font-weight: 650; line-height: 1.3; }
+.rdr-src-meta {
+  font-size: 0.74rem; color: var(--ink-soft, #666);
+  letter-spacing: 0.04em; margin-top: 0.15rem;
+}
+.rdr-src-close {
+  font-size: 1.5rem; line-height: 1; background: none; border: none;
+  color: var(--ink-soft, #666); cursor: pointer; padding: 0 0.2rem; flex: none;
+}
+.rdr-src-close:hover { color: var(--ink, #222); }
+.rdr-src-close:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+
+.rdr-src-body {
+  overflow-y: auto;
+  padding: 1.1rem;
+  padding-bottom: max(1.1rem, env(safe-area-inset-bottom, 0px));
+  font-size: 0.92rem;
+  line-height: 1.6;
+}
+
+.rdr-src-page + .rdr-src-page {
+  margin-top: 1.6rem; padding-top: 1.2rem; border-top: 1px solid var(--rule, #ddd);
+}
+.rdr-src-pno {
+  font-family: var(--face-ui, system-ui, sans-serif);
+  font-size: 0.66rem; font-weight: 700; letter-spacing: 0.12em; text-transform: uppercase;
+  color: var(--accent, #005f73); margin-bottom: 0.5rem;
+}
+.rdr-src-main { margin: 0.5rem 0; }
+.rdr-src-ctx { margin: 0.5rem 0; color: var(--ink-soft, #666); font-size: 0.86em; }
+
+.rdr-src-foot {
+  font-family: var(--face-ui, system-ui, sans-serif);
+  font-size: 0.72rem; color: var(--ink-soft, #666);
+  padding: 0.7rem 1.1rem;
+  padding-bottom: max(0.7rem, env(safe-area-inset-bottom, 0px));
+  border-top: 1px solid var(--rule, #ddd);
+}
+
+@media (max-width: 640px) {
+  .rdr-srcpane {
+    left: 0; right: 0; top: auto; height: 78vh;
+    width: auto; border-left: none;
+    border-top: 1px solid var(--rule, #ddd);
+    border-radius: 12px 12px 0 0;
+    box-shadow: 0 -8px 40px rgba(0, 0, 0, .22);
+  }
+}
+
+@media print { .rdr-srcpane { display: none !important; } }
+
+/* the live stroke layer sits just above the committed one */
+.rdr-canvas-live { z-index: 6; }
+
+/* eraser granularity, shown only while the eraser is the active tool */
+.rdr-erase-modes {
+  display: flex; flex-direction: column; gap: 4px;
+  margin-top: 4px; padding-top: 6px;
+  border-top: 1px solid var(--rule, #ddd);
+}
+.rdr-erase-modes[hidden] { display: none !important; }
+.rdr-erase-modes button {
+  width: auto; height: auto;
+  font: inherit; font-size: 0.62rem; font-weight: 700;
+  letter-spacing: 0.06em; text-transform: uppercase;
+  color: var(--ink-soft, #666); background: none;
+  border: 1px solid var(--rule, #ddd); border-radius: 5px;
+  padding: 0.22rem 0.3rem; cursor: pointer;
+}
+.rdr-erase-modes button.on {
+  color: var(--accent, #005f73);
+  background: var(--accent-soft, #e3eef0);
+  border-color: var(--accent, #005f73);
+}
+.rdr-pal[hidden] { display: none !important; }
+
+@media (max-width: 640px) {
+  .rdr-erase-modes {
+    flex-direction: row; margin: 0 0 0 4px;
+    padding: 0 0 0 6px; border-top: none; border-left: 1px solid var(--rule, #ddd);
+  }
+}
+
+/* ---------- backup ---------- */
+
+.rdr-note-hint {
+  font-size: 0.78rem; line-height: 1.45;
+  color: var(--ink-soft, #666); margin: 0 0 0.6rem;
+}
+
+.rdr-backup { display: flex; flex-wrap: wrap; gap: 6px; }
+.rdr-backup button {
+  width: auto; height: auto;
+  font: inherit; font-size: 0.8rem; font-weight: 600;
+  color: var(--ink, #222); background: none;
+  border: 1px solid var(--rule, #ddd); border-radius: 6px;
+  padding: 0.34rem 0.7rem; cursor: pointer;
+}
+.rdr-backup button:hover { border-color: var(--accent, #005f73); color: var(--accent, #005f73); }
+.rdr-backup button:focus-visible { outline: 2px solid var(--accent, #005f73); outline-offset: 2px; }
+.rdr-backup .rdr-do-restore {
+  background: var(--accent, #005f73); border-color: var(--accent, #005f73); color: #fff;
+}
+
+.rdr-restore {
+  margin-top: 0.8rem; padding: 0.8rem 0.9rem;
+  border: 1px solid var(--rule, #ddd); border-left: 3px solid var(--flag, #8a5a2b);
+  border-radius: 0 6px 6px 0; background: var(--flag-soft, #f6ece0);
+  font-size: 0.84rem; line-height: 1.5;
+}
+.rdr-restore[hidden] { display: none !important; }
+.rdr-restore p { margin: 0 0 0.5rem; }
+.rdr-restore .rdr-warn { color: var(--flag, #8a5a2b); font-weight: 650; }
+
+.rdr-say {
+  font-size: 0.78rem; color: var(--ink-soft, #666);
+  margin: 0.7rem 0 0; min-height: 1.1em;
+}
+</style>
+
+<div class="shell">
+  <div class="topbar" id="topbar"></div>
+  <div id="app" class="card"></div>
+</div>
+
+<script>/* Reader: study settings and annotation for the surgery guides.
+
+   Attaches to an element with class "guide". Used in two places: the standalone document,
+   where it is loaded with a <script src>, and inside the Claude artifact, where the same
+   source is inlined. Everything it stores is keyed by person, so two students sharing a
+   tablet keep separate settings, highlights, notes and ink.
+
+   window.ReaderConfig may be set before this runs:
+     { student: "hita", doc: "inguinal-hernia", storage: <object with get/set> }
+*/
+
+(function () {
+  "use strict";
+
+  var cfg = window.ReaderConfig || {};
+  var DOC = cfg.doc || "guide";
+  var guide = document.querySelector(".guide");
+
+  // ------------------------------------------------------------------ storage
+
+  var student = (cfg.student || "").trim().toLowerCase() || "_";
+  function key() { return "reader:" + student + ":" + DOC; }
+
+  function load() {
+    if (cfg.storage && cfg.storage.get) { return cfg.storage.get(key()) || {}; }
+    try { return JSON.parse(localStorage.getItem(key()) || "{}"); } catch (e) { return {}; }
+  }
+  function persist(state) {
+    if (cfg.storage && cfg.storage.set) { cfg.storage.set(key(), state); return; }
+    try { localStorage.setItem(key(), JSON.stringify(state)); } catch (e) {}
+  }
+
+  var DEFAULTS = {
+    width: "medium", size: "3", leading: "normal", face: "serif", theme: "auto",
+    cite: "on", conflicts: "on",
+    hlHead: "off", hlWhy: "off", hlTerm: "off", recall: "off",
+    marks: [], notes: [], ink: [], inkLayout: null, updatedAt: 0
+  };
+
+  var state = (function () {
+    var s = load(), out = {};
+    Object.keys(DEFAULTS).forEach(function (k) {
+      out[k] = (s[k] === undefined) ? DEFAULTS[k] : s[k];
+    });
+    return out;
+  })();
+
+  function save() {
+    state.updatedAt = Date.now();
+    persist(state);
+    syncLater();
+  }
+
+
+  // ------------------------------------------------------------------ sync
+  // Optional, and off until an endpoint is set. The local copy is authoritative: sync
+  // pulls once on open and pushes after changes settle, and anything that goes wrong is
+  // swallowed, because a reader halfway through a chapter should never see a network
+  // error about their highlights.
+
+  // The deployed worker, so every case picks sync up without each page having to opt in.
+  // A page can still override it with ReaderConfig.sync, and setting that to "" turns sync
+  // off entirely, which is how you get a purely local copy.
+  var SYNC_DEFAULT = "https://rx-sync.harnar.workers.dev";
+  var SYNC_ENDPOINT = (window.ReaderConfig && window.ReaderConfig.sync !== undefined)
+    ? window.ReaderConfig.sync
+    : SYNC_DEFAULT;
+  // syncedAt is the newest stamp the worker has confirmed. Anything newer than it locally is
+  // work the server has not got yet, which is what makes a retry possible at all: without it
+  // a push that failed, or one that was overtaken while in flight, was simply lost from the
+  // remote copy with nothing left to say so.
+  var syncTimer = null, syncing = false, syncedAt = 0, retryMs = 4000;
+
+  function syncOn() { return !!SYNC_ENDPOINT && student && student !== "_"; }
+
+  function syncSay(msg) {
+    var el2 = document.getElementById("rdrSyncSay");
+    if (el2) el2.textContent = msg || "";
+  }
+
+  // pull once when a guide opens, and adopt the remote copy only if it is newer
+  function syncPull() {
+    if (!syncOn()) return Promise.resolve(false);
+    var u = SYNC_ENDPOINT + "/api/state?student=" + encodeURIComponent(student) +
+            "&doc=" + encodeURIComponent(DOC);
+    return fetch(u, { method: "GET" })
+      .then(function (r) { return r.ok ? r.json() : null; })
+      .then(function (j) {
+        if (!j || !j.found || !j.state) {
+          // the worker has nothing for this document, so everything local is unsent
+          syncLater(600);
+          return false;
+        }
+        syncedAt = j.updatedAt || 0;        // what the server demonstrably holds
+        var mine = state.updatedAt || 0;
+        if (!(j.updatedAt > mine)) {
+          // ours is the same or newer: push anything it has not seen, instead of sitting on
+          // work that would otherwise only leave this device at the next edit
+          syncLater(600);
+          return false;
+        }
+        Object.keys(DEFAULTS).forEach(function (k) {
+          if (j.state[k] !== undefined) state[k] = j.state[k];
+        });
+        state.updatedAt = j.updatedAt;
+        persist(state);
+        applySettings(); renderMarks(); renderNotes(); redrawInk(); updateLock();
+        syncSay("Picked up newer work from another device.");
+        return true;
+      })
+      .catch(function () { syncLater(retryMs); return false; });
+  }
+
+  function syncDirty() { return (state.updatedAt || 0) > syncedAt; }
+
+  function syncPush() {
+    if (!syncOn() || !syncDirty()) return;
+    if (syncing) { syncLater(400); return; }   // overtaken; come back for the newer state
+    syncing = true;
+
+    // snapshot the stamp being sent: edits can land while this is in flight, and confirming
+    // those as synced because an older push succeeded is how work goes missing
+    var at = state.updatedAt || Date.now();
+    var u = SYNC_ENDPOINT + "/api/state?student=" + encodeURIComponent(student) +
+            "&doc=" + encodeURIComponent(DOC);
+    fetch(u, {
+      method: "PUT",
+      headers: { "content-type": "application/json" },
+      body: JSON.stringify({ state: state, updatedAt: at })
+    }).then(function (r) {
+      syncing = false;
+      if (r.ok) {
+        syncedAt = Math.max(syncedAt, at);
+        retryMs = 4000;
+        syncSay("");
+        if (syncDirty()) syncLater(400);       // changed again while in flight
+      } else {
+        syncSay("");
+        syncLater(retryMs);                    // server said no; try again later
+        retryMs = Math.min(retryMs * 2, 60000);
+      }
+    }).catch(function () {
+      syncing = false;
+      syncSay("");                             // offline is normal; say nothing
+      syncLater(retryMs);
+      retryMs = Math.min(retryMs * 2, 60000);
+    });
+  }
+
+  function syncLater(ms) {
+    if (!syncOn()) return;
+    clearTimeout(syncTimer);
+    syncTimer = setTimeout(syncPush, ms === undefined ? 2500 : ms);
+  }
+
+  // A tab is far more likely to be backgrounded or closed than to fire unload, especially on
+  // a phone. Without this, anything highlighted, noted or drawn in the last couple of seconds
+  // stayed on that one device: the debounce had not elapsed and the push never happened.
+  function syncFlush() {
+    if (!syncOn() || !syncDirty()) return;
+    clearTimeout(syncTimer);
+    syncPush();
+  }
+
+  document.addEventListener("visibilitychange", function () {
+    if (document.visibilityState === "hidden") syncFlush();
+  });
+  window.addEventListener("pagehide", syncFlush);
+
+  // ------------------------------------------------------------------ settings
+
+  var ATTR = {
+    width: "data-width", size: "data-size", leading: "data-leading", face: "data-face",
+    theme: "data-theme", cite: "data-cite", conflicts: "data-conflicts",
+    hlHead: "data-hl-head", hlWhy: "data-hl-why", hlTerm: "data-hl-term", recall: "data-recall"
+  };
+
+  function applySettings() {
+    if (!guide) return;
+    Object.keys(ATTR).forEach(function (k) { guide.setAttribute(ATTR[k], state[k]); });
+    if (state.face === "hyper" || state.face === "sans") ensureFont(state.face);
+    syncHostTheme();
+    layoutInk();
+  }
+
+  // Inside the artifact the guide sits in a page with its own chrome. Two independent
+  // theme switches read as a bug, so the reader's colour choice drives both. Sepia and
+  // high contrast have no chrome equivalent, so the chrome takes the nearest of the two.
+  function syncHostTheme() {
+    if (!cfg.syncRoot) return;
+    var map = { auto: "", light: "light", sepia: "light", dark: "dark", contrast: "dark" };
+    var v = map[state.theme];
+    if (v) document.documentElement.setAttribute("data-theme", v);
+    else document.documentElement.removeAttribute("data-theme");
+    if (typeof cfg.onTheme === "function") cfg.onTheme(state.theme);
+  }
+
+  var fontsAdded = {};
+  function ensureFont(which) {
+    if (fontsAdded[which]) return;
+    fontsAdded[which] = true;
+    var fam = which === "hyper" ? "Atkinson+Hyperlegible:wght@400;700" : "Inter:wght@400;600;700";
+    var l = document.createElement("link");
+    l.rel = "stylesheet";
+    l.href = "https://fonts.googleapis.com/css2?family=" + fam + "&display=swap";
+    document.head.appendChild(l);
+  }
+
+  // ------------------------------------------------------------------ anchors
+  // Every block that holds text gets a stable index in document order, so a highlight
+  // can be stored as (block, start character, end character) and re-applied next time.
+
+  // Anchor to the innermost block-level element rather than a fixed tag list. A fixed list
+  // silently refused to highlight anything it had not been told about (legend rows, table
+  // cells, summary lines), which looked exactly like the feature being broken.
+
+  var blocks = [];
+
+  function blockish(el) {
+    var d = getComputedStyle(el).display;
+    return d === "block" || d === "list-item" || d === "table-cell" ||
+           d === "flex" || d === "grid" || d === "table-caption";
+  }
+
+  function indexBlocks() {
+    if (!guide) return;
+    blocks = [];
+    var all = guide.querySelectorAll("*");
+    var blockyWithText = [];
+    for (var i = 0; i < all.length; i++) {
+      var el = all[i];
+      if (!el.textContent || !el.textContent.trim()) continue;
+      if (el.classList.contains("rdr-note")) continue;
+      if (blockish(el)) blockyWithText.push(el);
+    }
+    // keep only the innermost ones: a block that contains another block is a container
+    for (var j = 0; j < blockyWithText.length; j++) {
+      var cand = blockyWithText[j], inner = false;
+      for (var k = 0; k < blockyWithText.length; k++) {
+        if (k !== j && cand.contains(blockyWithText[k])) { inner = true; break; }
+      }
+      if (!inner) blocks.push(cand);
+    }
+    blocks.forEach(function (el, n) { el.setAttribute("data-b", n); });
+  }
+
+  function blockOf(node) {
+    var el = node && (node.nodeType === 1 ? node : node.parentElement);
+    if (!el) return null;
+    var b = el.closest("[data-b]");
+    return (b && guide.contains(b)) ? b : null;
+  }
+
+  function textNodesIn(el) {
+    var out = [], w = document.createTreeWalker(el, NodeFilter.SHOW_TEXT, null);
+    var n; while ((n = w.nextNode())) { if (n.nodeValue.length) out.push(n); }
+    return out;
+  }
+
+  function offsetsOf(range, block) {
+    var nodes = textNodesIn(block), pos = 0, start = -1, end = -1;
+    for (var i = 0; i < nodes.length; i++) {
+      var n = nodes[i], len = n.nodeValue.length;
+      if (n === range.startContainer) start = pos + range.startOffset;
+      if (n === range.endContainer) end = pos + range.endOffset;
+      pos += len;
+    }
+    if (start < 0 && range.startContainer === block) start = 0;
+    if (end < 0 && range.endContainer === block) end = pos;
+    return (start >= 0 && end > start) ? { s: start, e: end } : null;
+  }
+
+  function wrapRange(block, s, e, kind, colour, id) {
+    var nodes = textNodesIn(block), pos = 0;
+    for (var i = 0; i < nodes.length && pos < e; i++) {
+      var n = nodes[i], len = n.nodeValue.length, a = pos, b = pos + len;
+      pos = b;
+      if (b <= s || a >= e) continue;
+      var from = Math.max(0, s - a), to = Math.min(len, e - a);
+      var target = n;
+      if (to < len) target.splitText(to);
+      if (from > 0) target = target.splitText(from);
+      var tag = document.createElement(kind === "ul" ? "u" : "mark");
+      tag.className = "rdr-mark rdr-" + kind;
+      tag.setAttribute("data-mid", id);
+      if (kind === "ul") { tag.style.textDecorationColor = colour; tag.style.textDecorationThickness = "2px"; }
+      else { tag.style.background = colour; }
+      target.parentNode.insertBefore(tag, target);
+      tag.appendChild(target);
+      nodes = textNodesIn(block);
+      pos = 0;
+      for (var j = 0; j < nodes.length; j++) {
+        if (nodes[j] === target) break;
+        pos += nodes[j].nodeValue.length;
+      }
+      pos += target.nodeValue.length;
+    }
+  }
+
+  function clearMarks() {
+    [].slice.call(guide.querySelectorAll(".rdr-mark")).forEach(function (m) {
+      var p = m.parentNode;
+      while (m.firstChild) p.insertBefore(m.firstChild, m);
+      p.removeChild(m);
+      p.normalize();
+    });
+  }
+
+  function renderMarks() {
+    if (!guide) return;
+    clearMarks();
+    state.marks.forEach(function (m) {
+      var block = blocks[m.b];
+      if (block) { try { wrapRange(block, m.s, m.e, m.k, m.c, m.id); } catch (e) {} }
+    });
+  }
+
+  // ------------------------------------------------------------------ palette
+
+  var PALETTE = [
+    { id: "yellow", hl: "#ffe89a", ul: "#d9a400", label: "Yellow" },
+    { id: "green", hl: "#bdebc4", ul: "#2f8a44", label: "Green" },
+    { id: "blue",  hl: "#bfe0f5", ul: "#1f6f9e", label: "Blue" },
+    { id: "pink",  hl: "#fbcfe0", ul: "#b63f73", label: "Pink" },
+    { id: "orange", hl: "#ffd8ab", ul: "#c2650d", label: "Orange" }
+  ];
+  function colourOf(id, kind) {
+    var p = PALETTE.filter(function (x) { return x.id === id; })[0] || PALETTE[0];
+    return kind === "ul" ? p.ul : p.hl;
+  }
+
+  var tool = { kind: "hl", colour: "yellow" };
+
+  // ------------------------------------------------------------------ selection
+
+  function onSelection() {
+    var sel = window.getSelection();
+    if (!sel || sel.isCollapsed || !sel.rangeCount) { hideBubble(); return; }
+    var r = sel.getRangeAt(0);
+    if (!guide || !blockOf(r.startContainer)) { hideBubble(); return; }
+    showBubble(r);
+  }
+
+  var bubble = null;
+  function hideBubble() { if (bubble) bubble.hidden = true; }
+
+  function showBubble(range) {
+    if (!bubble) return;
+    var rect = range.getBoundingClientRect();
+    bubble.hidden = false;
+    var top = rect.top + window.scrollY - bubble.offsetHeight - 8;
+    if (top < window.scrollY + 4) top = rect.bottom + window.scrollY + 8;
+    var left = rect.left + window.scrollX + rect.width / 2 - bubble.offsetWidth / 2;
+    left = Math.max(8, Math.min(left, document.documentElement.clientWidth - bubble.offsetWidth - 8));
+    bubble.style.top = top + "px";
+    bubble.style.left = left + "px";
+  }
+
+  function applyToSelection(kind) {
+    var sel = window.getSelection();
+    if (!sel || sel.isCollapsed || !sel.rangeCount) return;
+    var r = sel.getRangeAt(0);
+    var first = blockOf(r.startContainer), last = blockOf(r.endContainer);
+    if (!first) return;
+
+    // one mark per block the selection touches, so dragging across paragraphs works
+    var touched = [];
+    if (!last || first === last) {
+      touched = [first];
+    } else {
+      for (var i = 0; i < blocks.length; i++) {
+        if (r.intersectsNode && r.intersectsNode(blocks[i])) touched.push(blocks[i]);
+      }
+      if (!touched.length) touched = [first];
+    }
+
+    var made = 0;
+    touched.forEach(function (block) {
+      var full = document.createRange();
+      full.selectNodeContents(block);
+      var s = (block === first) ? r.cloneRange() : full.cloneRange();
+      if (block !== first) s.setEnd(full.endContainer, full.endOffset);
+      if (block === last && block !== first) { s = full.cloneRange(); s.setEnd(r.endContainer, r.endOffset); }
+      var off = offsetsOf(block === first ? r : s, block);
+      if (!off) {
+        var len = block.textContent.length;
+        off = { s: 0, e: len };
+        if (block === last) off.e = offsetsOf(s, block) ? offsetsOf(s, block).e : len;
+      }
+      if (off.e <= off.s) return;
+      state.marks.push({
+        id: "m" + Date.now() + Math.random().toString(36).slice(2, 5) + made,
+        b: +block.getAttribute("data-b"), s: off.s, e: off.e,
+        k: kind, c: colourOf(tool.colour, kind), colourId: tool.colour
+      });
+      made++;
+    });
+
+    if (!made) return;
+    save();
+    renderMarks();
+    sel.removeAllRanges();
+    hideBubble();
+  }
+
+  function removeMarkAt(target) {
+    var mid = target.getAttribute("data-mid");
+    state.marks = state.marks.filter(function (m) { return m.id !== mid; });
+    save();
+    renderMarks();
+  }
+
+  // ------------------------------------------------------------------ notes
+
+  function renderNotes() {
+    if (!guide) return;
+    [].slice.call(guide.querySelectorAll(".rdr-note")).forEach(function (n) { n.remove(); });
+    state.notes.forEach(function (n) {
+      var block = blocks[n.b];
+      if (!block) return;
+      var pin = document.createElement("span");
+      pin.className = "rdr-note";
+      pin.setAttribute("data-nid", n.id);
+      pin.title = n.text;
+      pin.textContent = "note";
+      block.appendChild(pin);
+    });
+  }
+
+  function addNoteFor(block) {
+    var existing = "";
+    var text = promptNote(existing);
+    if (text === null) return;
+    if (!text.trim()) return;
+    state.notes.push({
+      id: "n" + Date.now() + Math.random().toString(36).slice(2, 5),
+      b: +block.getAttribute("data-b"), text: text.trim(), at: new Date().toISOString()
+    });
+    save();
+    renderNotes();
+  }
+
+  // the artifact viewer suppresses window.prompt, so notes use an inline editor
+  var noteEditor = null, noteResolve = null;
+  function promptNote(initial) { return null; }   // replaced below by the inline editor
+
+  function openNoteEditor(block, existingId) {
+    var found = state.notes.filter(function (n) { return n.id === existingId; })[0];
+    noteEditor.hidden = false;
+    noteEditor.querySelector("textarea").value = found ? found.text : "";
+    noteEditor.dataset.block = block ? block.getAttribute("data-b") : "";
+    noteEditor.dataset.nid = existingId || "";
+    noteEditor.querySelector(".rdr-del").hidden = !existingId;
+    noteEditor.querySelector("textarea").focus();
+  }
+
+  // ------------------------------------------------------------------ ink
+  // Strokes stay vectors. Two canvases: everything committed is on `canvas`, the stroke
+  // being drawn right now is on `live`. That keeps a 16-megapixel repaint off the hot path
+  // and lets a translucent highlighter stroke be drawn as one path, so it does not darken
+  // itself where it doubles back.
+  //
+  // Erasing never composites. "part" drops the points under the eraser and splits what is
+  // left; "whole" removes any stroke the eraser touches, the way a tablet object eraser
+  // behaves. Both are ordinary edits to the stroke list.
+
+  var canvas = null, ctx = null;        // committed
+  var live = null, lctx = null;         // the stroke in progress
+  var drawing = false, stroke = null;
+  var eraseMode = "part";               // part | whole
+  var rafPending = false;
+
+  var INK = {
+    pen: { w: 2.4, alpha: 1 },
+    hl:  { w: 16,  alpha: 0.32 }
+  };
+  var ERASE_R = { part: 14, whole: 9 };
+
+  function layoutSignature() {
+    return [state.width, state.size, state.leading, state.face,
+            Math.round(guide.getBoundingClientRect().width)].join("|");
+  }
+
+  // Two separate ceilings, and the old code only knew about one of them.
+  //
+  // Area was capped at 60M, but a browser also refuses a canvas whose *side* is too long, and
+  // a long case is far taller than it is wide. Case 01 at 320px is about 287 x 69,679, which
+  // is only 20M pixels and sails past an area check, while 69,679 exceeds Chrome's 65,535
+  // limit outright: Chrome then renders its broken-canvas placeholder over the guide and the
+  // page goes white. The text was intact underneath the whole time.
+  //
+  // The old fallback was worse than nothing, too. It truncated the canvas height, so on any
+  // guide over the cap the lower part of the page silently could not be inked.
+  //
+  // So nothing is truncated now. The canvas keeps the document's full CSS size and the
+  // backing store is scaled to fit inside both ceilings, with the context transformed to
+  // match. Strokes stay in document coordinates and keep working. Where there is headroom the
+  // scale goes the other way, up to devicePixelRatio, which is also what makes ink sharp on a
+  // retina screen instead of soft.
+  var MAX_CANVAS_DIM = 32767;     // comfortably inside Chrome's 65535 and Safari's lower bound
+  var MAX_CANVAS_PX = 16000000;   // iOS Safari refuses much beyond ~16.7M
+
+  function inkScale(w, h) {
+    var s = window.devicePixelRatio || 1;
+    s = Math.min(s, MAX_CANVAS_DIM / Math.max(1, w), MAX_CANVAS_DIM / Math.max(1, h));
+    s = Math.min(s, Math.sqrt(MAX_CANVAS_PX / Math.max(1, w * h)));
+    return Math.max(0.08, s);
+  }
+
+  function sizeCanvas(c, w, h, left, top) {
+    // CSS size is always the true size, so stroke coordinates remain document pixels
+    c.style.width = w + "px";
+    c.style.height = h + "px";
+    c.style.left = left + "px";
+    c.style.top = top + "px";
+
+    var s = inkScale(w, h);
+    c.width = Math.max(1, Math.round(w * s));
+    c.height = Math.max(1, Math.round(h * s));
+    c.inkScale = s;
+    var g = c.getContext("2d");
+    if (g) g.setTransform(s, 0, 0, s, 0, 0);
+    return s;
+  }
+
+  // clearRect runs through the transform, so clearing has to be done in untransformed space
+  function wipe(c, g) {
+    if (!c || !g) return;
+    g.save();
+    g.setTransform(1, 0, 0, 1, 0, 0);
+    g.clearRect(0, 0, c.width, c.height);
+    g.restore();
+  }
+
+  function layoutInk() {
+    if (!canvas || !guide) return;
+    var wrap = guide.querySelector(".wrap") || guide;
+    var r = wrap.getBoundingClientRect();
+    var w = Math.round(r.width);
+    var h = Math.round(wrap.scrollHeight || r.height);
+    sizeCanvas(canvas, w, h, wrap.offsetLeft, wrap.offsetTop);
+    sizeCanvas(live, w, h, wrap.offsetLeft, wrap.offsetTop);
+    redrawInk();
+  }
+
+  function pathStroke(c, s) {
+    if (!s.pts.length) return;
+    c.save();
+    c.globalAlpha = INK[s.k || "pen"].alpha;
+    c.strokeStyle = s.c;
+    c.lineWidth = s.w;
+    c.lineCap = "round";
+    c.lineJoin = "round";
+    c.beginPath();
+    c.moveTo(s.pts[0][0], s.pts[0][1]);
+    for (var i = 1; i < s.pts.length; i++) c.lineTo(s.pts[i][0], s.pts[i][1]);
+    if (s.pts.length === 1) c.lineTo(s.pts[0][0] + 0.01, s.pts[0][1]);
+    c.stroke();
+    c.restore();
+  }
+
+  function redrawInk() {
+    if (!ctx) return;
+    wipe(canvas, ctx);
+    // highlighter first, so pen marks sit on top of it rather than under
+    for (var i = 0; i < state.ink.length; i++) {
+      if (state.ink[i].k === "hl") pathStroke(ctx, state.ink[i]);
+    }
+    for (var j = 0; j < state.ink.length; j++) {
+      if (state.ink[j].k !== "hl") pathStroke(ctx, state.ink[j]);
+    }
+  }
+
+  function queueRedraw() {
+    if (rafPending) return;
+    rafPending = true;
+    requestAnimationFrame(function () { rafPending = false; redrawInk(); });
+  }
+
+  function penPoint(ev) {
+    var r = live.getBoundingClientRect();
+    return [ev.clientX - r.left, ev.clientY - r.top];
+  }
+
+  // ---- erasing -------------------------------------------------------------
+
+  function near(pt, x, y, r) {
+    var dx = pt[0] - x, dy = pt[1] - y;
+    return dx * dx + dy * dy <= r * r;
+  }
+
+  // distance from (x,y) to the segment a-b, so a thin stroke is still easy to hit
+  function segNear(a, b, x, y, r) {
+    var vx = b[0] - a[0], vy = b[1] - a[1];
+    var wx = x - a[0], wy = y - a[1];
+    var len = vx * vx + vy * vy;
+    var tt = len ? Math.max(0, Math.min(1, (wx * vx + wy * vy) / len)) : 0;
+    var px = a[0] + tt * vx, py = a[1] + tt * vy;
+    var dx = x - px, dy = y - py;
+    return dx * dx + dy * dy <= r * r;
+  }
+
+  function strokeHit(s, x, y, r) {
+    var pad = r + s.w / 2;
+    if (s.pts.length === 1) return near(s.pts[0], x, y, pad);
+    for (var i = 1; i < s.pts.length; i++) {
+      if (segNear(s.pts[i - 1], s.pts[i], x, y, pad)) return true;
+    }
+    return false;
+  }
+
+  function eraseAt(x, y) {
+    var r = ERASE_R[eraseMode];
+    var next = [], changed = false;
+
+    for (var i = 0; i < state.ink.length; i++) {
+      var s = state.ink[i];
+
+      if (eraseMode === "whole") {
+        if (strokeHit(s, x, y, r)) { changed = true; continue; }
+        next.push(s);
+        continue;
+      }
+
+      // part: drop points under the eraser, keeping whatever runs survive
+      if (!strokeHit(s, x, y, r)) { next.push(s); continue; }
+      var pad = r + s.w / 2;
+      var run = [], runs = [];
+      for (var j = 0; j < s.pts.length; j++) {
+        if (near(s.pts[j], x, y, pad)) {
+          if (run.length > 1) runs.push(run);
+          run = [];
+        } else {
+          run.push(s.pts[j]);
+        }
+      }
+      if (run.length > 1) runs.push(run);
+      changed = true;
+      for (var k = 0; k < runs.length; k++) {
+        next.push({ id: s.id + "-" + k, k: s.k, pts: runs[k], c: s.c, w: s.w });
+      }
+    }
+
+    if (changed) { state.ink = next; queueRedraw(); }
+    return changed;
+  }
+
+  // ---- drawing -------------------------------------------------------------
+
+  function penDown(ev) {
+    if (tool.kind !== "pen" && tool.kind !== "ink-hl" && tool.kind !== "erase") return;
+    ev.preventDefault();
+    drawing = true;
+    // setPointerCapture throws on a pointer the element does not currently own, and an
+    // exception here would abort the rest of the handler, so the stroke never starts
+    try { live.setPointerCapture && live.setPointerCapture(ev.pointerId); } catch (e) {}
+
+    if (tool.kind === "erase") {
+      var p = penPoint(ev);
+      eraseAt(p[0], p[1]);
+      return;
+    }
+    var kind = tool.kind === "ink-hl" ? "hl" : "pen";
+    stroke = {
+      id: "s" + Date.now() + Math.random().toString(36).slice(2, 5),
+      k: kind,
+      pts: [penPoint(ev)],
+      c: colourOf(tool.colour, kind === "hl" ? "hl" : "ul"),
+      w: INK[kind].w
+    };
+  }
+
+  function penMove(ev) {
+    if (!drawing) return;
+    ev.preventDefault();
+    var pts = (ev.getCoalescedEvents ? ev.getCoalescedEvents() : [ev]).map(penPoint);
+    if (!pts.length) pts = [penPoint(ev)];
+
+    if (tool.kind === "erase") {
+      for (var i = 0; i < pts.length; i++) eraseAt(pts[i][0], pts[i][1]);
+      return;
+    }
+    if (!stroke) return;          // a move with no stroke in progress
+    stroke.pts.push.apply(stroke.pts, pts);
+    // the whole stroke, redrawn on the live layer only, so alpha applies once
+    wipe(live, lctx);
+    pathStroke(lctx, stroke);
+  }
+
+  function penUp() {
+    if (!drawing) return;
+    drawing = false;
+    if (tool.kind === "erase") { save(); updateLock(); return; }
+    if (stroke && stroke.pts.length) {
+      state.ink.push(stroke);
+      state.inkLayout = layoutSignature();
+      save();
+      updateLock();
+    }
+    stroke = null;
+    wipe(live, lctx);
+    redrawInk();
+  }
+
+  function setPenMode(on) {
+    guide.classList.toggle("rdr-pen-on", on);
+    if (live) live.style.pointerEvents = on ? "auto" : "none";
+    if (on && !state.inkLayout) { state.inkLayout = layoutSignature(); save(); }
+    updateLock();
+  }
+
+  function updateLock() {
+    var locked = state.ink.length > 0;
+    [].slice.call(document.querySelectorAll("[data-locks-layout]")).forEach(function (el) {
+      el.disabled = locked;
+      el.title = locked ? "Locked while there is ink on the page; erase it to change layout" : "";
+    });
+    var warn = document.getElementById("rdrLock");
+    if (warn) warn.hidden = !locked;
+  }
+
+  // ------------------------------------------------------------------ recall mode
+
+  function bindGuide() {
+    if (!guide || guide.__rdrBound) return;
+    guide.__rdrBound = true;
+
+    // citations: first tap fetches the excerpts, then opens the pane
+    guide.addEventListener("click", function (ev) {
+      var c = ev.target.closest("cite.src");
+      if (!c || tool.kind === "pen" || tool.kind === "ink-hl" || tool.kind === "erase") return;
+      ev.preventDefault();
+      ev.stopPropagation();
+      var k = citeKeyOf(c);
+      if (!k) return;
+      if (citesState === "ready") { openCite(k); return; }
+      if (citesState === "failed") return;
+      loadCites().then(function (j) { if (j) openCite(k); });
+    });
+
+    guide.addEventListener("keydown", function (ev) {
+      if (ev.key !== "Enter" && ev.key !== " ") return;
+      var c = ev.target.closest && ev.target.closest("cite.src[data-cite-key]");
+      if (!c) return;
+      ev.preventDefault();
+      openCite(c.getAttribute("data-cite-key"));
+    });
+
+    // recall mode: tap a hidden answer to show it
+    guide.addEventListener("click", function (ev) {
+      if (state.recall !== "on") return;
+      var t = ev.target.closest(".why, dl.findings dd, .viva .ans");
+      if (t && guide.contains(t)) t.classList.toggle("revealed");
+    });
+
+    // tapping a highlight removes it; tapping a note opens it
+    guide.addEventListener("click", function (ev) {
+      var n = ev.target.closest(".rdr-note");
+      if (n) { openNoteEditor(null, n.getAttribute("data-nid")); return; }
+      var m = ev.target.closest(".rdr-mark");
+      if (m && tool.kind !== "pen" && tool.kind !== "ink-hl" && tool.kind !== "erase") {
+        removeMarkAt(m);
+      }
+    });
+  }
+
+
+  // ------------------------------------------------------------------ source pane
+  // Tapping a citation shows what the book actually said, in a pane over the guide rather
+  // than a new tab, so the reader keeps their place. The excerpts live in citations.json,
+  // fetched once on the first tap; without it the chips stay inert rather than erroring.
+
+  var CITES = null, citesState = "idle";   // idle | loading | ready | failed
+  var citePane = null;
+
+  // The book id is the class beside "src"; the rest of the key is every number in the chip,
+  // in order. That covers the simple case, comma lists, page ranges, and the one chip that
+  // carries two chapters, and it matches the rule the extractor used to name its entries.
+  function citeKeyOf(el) {
+    var book = null;
+    for (var i = 0; i < el.classList.length; i++) {
+      if (el.classList[i] !== "src") { book = el.classList[i]; break; }
+    }
+    if (!book) return null;
+    var nums = (el.textContent || "").match(/[0-9]+/g);
+    if (!nums || !nums.length) return null;
+    return book + "-" + nums.join("-");
+  }
+
+  var citesPromise = null;
+
+  function loadCites() {
+    if (citesPromise) return citesPromise;
+    citesState = "loading";
+    citesPromise = fetch("citations.json")
+      .then(function (r) { if (!r.ok) throw new Error(r.status); return r.json(); })
+      .then(function (j) { CITES = j; citesState = "ready"; markCitesClickable(); return j; })
+      .catch(function () { citesState = "failed"; return null; });
+    return citesPromise;
+  }
+
+  function markCitesClickable() {
+    if (!guide || !CITES) return;
+    [].forEach.call(guide.querySelectorAll("cite.src"), function (c) {
+      var k = citeKeyOf(c);
+      if (k && CITES.citations && CITES.citations[k]) {
+        c.setAttribute("data-cite-key", k);
+        c.tabIndex = 0;
+      }
+    });
+  }
+
+  function openCite(key) {
+    if (!CITES) return;
+    var c = CITES.citations[key];
+    if (!c) return;
+    var book = (CITES.books || {})[c.book] || { title: c.book, edition: "" };
+
+    var body = (c.pages || []).map(function (pid) {
+      var pg = (CITES.pages || {})[pid];
+      if (!pg) return "";
+      return '<div class="rdr-src-page">' +
+        '<div class="rdr-src-pno">page ' + pg.page + '</div>' +
+        (pg.before ? '<p class="rdr-src-ctx">' + escHtml(pg.before) + '</p>' : "") +
+        '<p class="rdr-src-main">' + escHtml(pg.text) + '</p>' +
+        (pg.after ? '<p class="rdr-src-ctx">' + escHtml(pg.after) + '</p>' : "") +
+        '</div>';
+    }).join("");
+
+    citePane.querySelector(".rdr-src-book").textContent = book.title;
+    citePane.querySelector(".rdr-src-meta").textContent =
+      [book.edition, "chapter " + c.chapter].filter(Boolean).join(" · ");
+    citePane.querySelector(".rdr-src-body").innerHTML = body ||
+      '<p class="rdr-src-ctx">That page was not extracted.</p>';
+    citePane.hidden = false;
+    citePane.querySelector(".rdr-src-close").focus();
+  }
+
+  function closeCite() { if (citePane) citePane.hidden = true; }
+
+  function escHtml(s) {
+    return String(s).replace(/[&<>"']/g, function (ch) {
+      return {"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[ch];
+    });
+  }
+
+  function buildCitePane() {
+    citePane = el("aside", "rdr-srcpane");
+    citePane.hidden = true;
+    citePane.setAttribute("aria-label", "Source text");
+    citePane.innerHTML =
+      '<header class="rdr-src-head">' +
+        '<div><div class="rdr-src-book"></div><div class="rdr-src-meta"></div></div>' +
+        '<button class="rdr-src-close" aria-label="Close">&times;</button>' +
+      '</header><div class="rdr-src-body"></div>' +
+      '<footer class="rdr-src-foot">Quoted for study. The surrounding paragraphs are shown ' +
+      'for context.</footer>';
+    document.body.appendChild(citePane);
+    citePane.querySelector(".rdr-src-close").addEventListener("click", closeCite);
+    document.addEventListener("keydown", function (e) {
+      if (e.key === "Escape") closeCite();
+    });
+  }
+
+
+  // ------------------------------------------------------------------ backup
+  // localStorage is the only copy of any of this, and Safari drops it for sites left
+  // unvisited for a week. Export writes one file holding every person's settings,
+  // highlights, notes, ink and viva results; restore puts them back.
+
+  var BACKUP_FORMAT = "rx-backup";
+
+  function backupKeys() {
+    var out = [];
+    try {
+      for (var i = 0; i < localStorage.length; i++) {
+        var k = localStorage.key(i);
+        if (k && (k.indexOf("reader:") === 0 || k.indexOf("surgery-case-files") === 0)) {
+          out.push(k);
+        }
+      }
+    } catch (e) {}
+    return out;
+  }
+
+  function collectBackup() {
+    var data = {};
+    backupKeys().forEach(function (k) {
+      try { data[k] = JSON.parse(localStorage.getItem(k)); }
+      catch (e) { data[k] = localStorage.getItem(k); }
+    });
+    return {
+      format: BACKUP_FORMAT,
+      version: 1,
+      exportedAt: new Date().toISOString(),
+      keys: data
+    };
+  }
+
+  // a plain-English summary, so a restore is not a leap of faith
+  function describeBackup(b) {
+    var people = {}, marks = 0, notes = 0, ink = 0, sessions = 0, docs = {};
+    Object.keys(b.keys || {}).forEach(function (k) {
+      var v = b.keys[k];
+      if (k.indexOf("reader:") === 0) {
+        var bits = k.split(":");
+        if (bits[1] && bits[1] !== "_") people[bits[1]] = true;
+        if (bits[2]) docs[bits[2]] = true;
+        if (v && v.marks) marks += v.marks.length;
+        if (v && v.notes) notes += v.notes.length;
+        if (v && v.ink) ink += v.ink.length;
+      } else if (v && v.students) {
+        Object.keys(v.students).forEach(function (s) {
+          people[s] = true;
+          sessions += (v.students[s].sessions || []).length;
+        });
+      }
+    });
+    return {
+      people: Object.keys(people),
+      docs: Object.keys(docs).length,
+      marks: marks, notes: notes, ink: ink, sessions: sessions
+    };
+  }
+
+  function backupFilename() {
+    var d = new Date();
+    function p(n) { return (n < 10 ? "0" : "") + n; }
+    return "rx-backup-" + d.getFullYear() + p(d.getMonth() + 1) + p(d.getDate()) + ".json";
+  }
+
+  function exportBackup(say) {
+    var json = JSON.stringify(collectBackup(), null, 1);
+    var blob = new Blob([json], { type: "application/json" });
+    var name = backupFilename();
+    var size = Math.max(1, Math.round(json.length / 1024));
+
+    // inside an artifact a download link does nothing, so ask the host to save it
+    if (window.claude && window.claude.use) {
+      window.claude.use("downloads").then(function (dl) {
+        if (!dl) throw new Error("not granted");
+        return dl.save({ filename: name, data: blob });
+      }).then(function () {
+        say("Saved " + name + ", " + size + " KB.");
+      }).catch(function () {
+        say("Could not save the file here. Open the guide on the website and export from there.");
+      });
+      return;
+    }
+
+    var url = URL.createObjectURL(blob);
+    var a = document.createElement("a");
+    a.href = url; a.download = name;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    setTimeout(function () { URL.revokeObjectURL(url); }, 4000);
+    say("Saved " + name + ", " + size + " KB.");
+  }
+
+  var pendingRestore = null;
+
+  function readBackupFile(file, say, onReady) {
+    var fr = new FileReader();
+    fr.onload = function () {
+      var b;
+      try { b = JSON.parse(fr.result); } catch (e) { b = null; }
+      if (!b || b.format !== BACKUP_FORMAT || !b.keys) {
+        say("That does not look like a backup from this site.");
+        return;
+      }
+      pendingRestore = b;
+      onReady(describeBackup(b), b);
+    };
+    fr.onerror = function () { say("Could not read that file."); };
+    fr.readAsText(file);
+  }
+
+  function applyRestore(say) {
+    if (!pendingRestore) return;
+    var n = 0;
+    Object.keys(pendingRestore.keys).forEach(function (k) {
+      var v = pendingRestore.keys[k];
+      try {
+        localStorage.setItem(k, typeof v === "string" ? v : JSON.stringify(v));
+        n++;
+      } catch (e) {}
+    });
+    pendingRestore = null;
+    say("Restored " + n + " record" + (n === 1 ? "" : "s") + ". Reloading…");
+    setTimeout(function () { location.reload(); }, 900);
+  }
+
+  // ------------------------------------------------------------------ interface
+
+  function el(tag, cls, html) {
+    var e = document.createElement(tag);
+    if (cls) e.className = cls;
+    if (html !== undefined) e.innerHTML = html;
+    return e;
+  }
+
+  function swatches(kind) {
+    return PALETTE.map(function (p) {
+      return '<button class="rdr-sw" data-colour="' + p.id + '" title="' + p.label + '" ' +
+             'style="background:' + (kind === "ul" ? p.ul : p.hl) + '"></button>';
+    }).join("");
+  }
+
+  function seg(name, opts, current) {
+    return '<div class="rdr-seg" data-setting="' + name + '">' + opts.map(function (o) {
+      return '<button data-v="' + o[0] + '"' + (current === o[0] ? ' class="on"' : '') +
+             (o[2] ? ' data-locks-layout="1"' : '') + '>' + o[1] + '</button>';
+    }).join("") + '</div>';
+  }
+
+  function buildUI() {
+    // floating rail
+    var rail = el("div", "rdr-rail");
+    rail.innerHTML =
+      '<button id="rdrStudio" title="Reading settings" aria-label="Reading settings">' +
+        '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M4 7h16M4 12h10M4 17h7"/></svg></button>' +
+      '<button class="rdr-tool" data-tool="hl" title="Highlighter">' +
+        '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 14l-4 4v2h4l10-10a2.8 2.8 0 10-4-4L5 16"/></svg></button>' +
+      '<button class="rdr-tool" data-tool="ul" title="Underline">' +
+        '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M7 4v6a5 5 0 0010 0V4M5 20h14"/></svg></button>' +
+      '<button class="rdr-tool" data-tool="pen" title="Pen, write on the page">' +
+        '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 19l7-7-4-4-7 7-1 5z"/><path d="M15 8l1-1a2 2 0 013 3l-1 1"/></svg></button>' +
+      '<button class="rdr-tool" data-tool="ink-hl" title="Freehand highlighter">' +
+        '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 20h16"/><path d="M7 16l9-9 3 3-9 9H7z" fill="currentColor" fill-opacity=".22"/></svg></button>' +
+      '<button class="rdr-tool" data-tool="note" title="Leave a note">' +
+        '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 5h16v10H9l-5 4z"/></svg></button>' +
+      '<button class="rdr-tool" data-tool="erase" title="Eraser">' +
+        '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M8 20H4l9-9 7 7-5 2z"/><path d="M13 11l-6-6 4-4 6 6z"/></svg></button>' +
+      '<div class="rdr-pal" id="rdrPal">' + swatches("hl") + '</div>' +
+      '<div class="rdr-erase-modes" id="rdrEraseModes" hidden>' +
+        '<button data-erase="part" class="on" title="Rub out part of a stroke">part</button>' +
+        '<button data-erase="whole" title="Remove a whole stroke">whole</button>' +
+      '</div>';
+    document.body.appendChild(rail);
+
+    // selection bubble
+    bubble = el("div", "rdr-bubble");
+    bubble.hidden = true;
+    bubble.innerHTML =
+      '<button data-act="hl">Highlight</button>' +
+      '<button data-act="ul">Underline</button>' +
+      '<button data-act="note">Note</button>';
+    document.body.appendChild(bubble);
+
+    // note editor
+    noteEditor = el("div", "rdr-noteedit");
+    noteEditor.hidden = true;
+    noteEditor.innerHTML =
+      '<div class="rdr-ne-head">Note</div>' +
+      '<textarea rows="4" placeholder="Anything you want to remember here…"></textarea>' +
+      '<div class="rdr-ne-row">' +
+        '<button class="rdr-del">Delete</button><span style="flex:1"></span>' +
+        '<button class="rdr-cancel">Cancel</button>' +
+        '<button class="rdr-ok">Save</button></div>';
+    document.body.appendChild(noteEditor);
+
+    // studio panel
+    var studio = el("div", "rdr-studio");
+    studio.hidden = true;
+    studio.innerHTML =
+      '<div class="rdr-st-head"><b>Reading settings</b>' +
+        '<button class="rdr-close" aria-label="Close">&times;</button></div>' +
+      '<div class="rdr-st-body">' +
+        '<label>Line width</label>' +
+        seg("width", [["narrow","Narrow"],["medium","Medium"],["wide","Wide"],["full","Full"]], state.width) +
+        '<label>Text size</label>' +
+        seg("size", [["1","XS"],["2","S"],["3","M"],["4","L"],["5","XL"],["6","XXL"]], state.size) +
+        '<label>Line spacing</label>' +
+        seg("leading", [["tight","Tight"],["normal","Normal"],["loose","Loose"]], state.leading) +
+        '<label>Typeface</label>' +
+        seg("face", [["serif","Serif"],["sans","Sans"],["hyper","Hyperlegible"],["mono","Mono"]], state.face) +
+        '<label>Colour</label>' +
+        seg("theme", [["auto","Auto"],["light","Light"],["sepia","Sepia"],["dark","Dark"],["contrast","High contrast"]], state.theme) +
+        '<label>Emphasis</label>' +
+        seg("hlHead", [["off","Plain headings"],["on","Bold headings"]], state.hlHead) +
+        seg("hlWhy", [["off","Plain reasoning"],["on","Highlight reasoning"]], state.hlWhy) +
+        seg("hlTerm", [["off","Plain key terms"],["on","Highlight key terms"]], state.hlTerm) +
+        '<label>Study mode</label>' +
+        seg("recall", [["off","Read"],["on","Recall, hide answers until tapped"]], state.recall) +
+        '<label>Show</label>' +
+        seg("cite", [["on","Citations"],["off","No citations"]], state.cite) +
+        seg("conflicts", [["on","Discrepancies"],["off","Hide discrepancies"]], state.conflicts) +
+        '<div class="rdr-lock" id="rdrLock" hidden>Layout is locked because there is ink on ' +
+          'this page. Writing is drawn at a fixed width: erase the ink to change the layout.</div>' +
+        '<label>Backup</label>' +
+        '<p class="rdr-note-hint">Everything here is stored only in this browser, and it can ' +
+        'be cleared without warning. Keep a copy.</p>' +
+        '<div class="rdr-backup">' +
+          '<button class="rdr-export">Save a copy</button>' +
+          '<button class="rdr-import">Restore from a file</button>' +
+          '<input type="file" accept="application/json,.json" class="rdr-file" hidden>' +
+        '</div>' +
+        '<div class="rdr-restore" id="rdrRestore" hidden></div>' +
+        '<p class="rdr-say" id="rdrSay"></p>' +
+        '<p class="rdr-say" id="rdrSyncSay"></p>' +
+        '<div class="rdr-st-foot">' +
+          '<button class="rdr-clear" data-what="marks">Clear highlights</button>' +
+          '<button class="rdr-clear" data-what="notes">Clear notes</button>' +
+          '<button class="rdr-clear" data-what="ink">Clear ink</button>' +
+        '</div>' +
+      '</div>';
+    document.body.appendChild(studio);
+
+    buildCitePane();
+    attachCanvas();
+    wireUI(rail, studio);
+  }
+
+  function attachCanvas() {
+    if (!canvas) {
+      canvas = el("canvas", "rdr-canvas");
+      canvas.style.pointerEvents = "none";
+      ctx = canvas.getContext("2d");
+
+      // the stroke in progress lives on its own layer, above the committed one
+      live = el("canvas", "rdr-canvas rdr-canvas-live");
+      live.style.pointerEvents = "none";
+      live.addEventListener("pointerdown", penDown);
+      live.addEventListener("pointermove", penMove);
+      live.addEventListener("pointerup", penUp);
+      live.addEventListener("pointercancel", penUp);
+      live.addEventListener("pointerleave", penUp);
+      lctx = live.getContext("2d");
+    }
+    var host = guide.querySelector(".wrap") || guide;
+    if (canvas.parentNode !== host.parentNode) {
+      host.parentNode.insertBefore(canvas, host);
+      host.parentNode.insertBefore(live, host);
+    }
+  }
+
+  function wireUI(rail, studio) {
+    document.getElementById("rdrStudio").addEventListener("click", function () {
+      studio.hidden = !studio.hidden;
+    });
+    studio.querySelector(".rdr-close").addEventListener("click", function () { studio.hidden = true; });
+
+    // settings segments
+    studio.addEventListener("click", function (ev) {
+      var b = ev.target.closest(".rdr-seg button");
+      if (!b) return;
+      var name = b.parentNode.getAttribute("data-setting");
+      [].slice.call(b.parentNode.children).forEach(function (x) { x.classList.remove("on"); });
+      b.classList.add("on");
+      state[name] = b.getAttribute("data-v");
+      save();
+      applySettings();
+    });
+
+    function say(msg) {
+      var el2 = document.getElementById("rdrSay");
+      if (el2) el2.textContent = msg || "";
+    }
+
+    studio.querySelector(".rdr-export").addEventListener("click", function () {
+      say("Preparing…");
+      exportBackup(say);
+    });
+
+    var fileInput = studio.querySelector(".rdr-file");
+    studio.querySelector(".rdr-import").addEventListener("click", function () {
+      say("");
+      fileInput.value = "";
+      fileInput.click();
+    });
+
+    fileInput.addEventListener("change", function () {
+      var f = fileInput.files && fileInput.files[0];
+      if (!f) return;
+      readBackupFile(f, say, function (sum) {
+        var box = document.getElementById("rdrRestore");
+        var bits = [];
+        if (sum.people.length) bits.push(sum.people.join(", "));
+        if (sum.marks) bits.push(sum.marks + " highlight" + (sum.marks === 1 ? "" : "s"));
+        if (sum.notes) bits.push(sum.notes + " note" + (sum.notes === 1 ? "" : "s"));
+        if (sum.ink) bits.push(sum.ink + " ink stroke" + (sum.ink === 1 ? "" : "s"));
+        if (sum.sessions) bits.push(sum.sessions + " viva session" + (sum.sessions === 1 ? "" : "s"));
+        box.innerHTML =
+          '<p>This file holds ' + escHtml(bits.join(", ") || "nothing recognisable") + '.</p>' +
+          '<p class="rdr-warn">Restoring replaces what is in this browser now.</p>' +
+          '<div class="rdr-backup">' +
+            '<button class="rdr-cancel-restore">Cancel</button>' +
+            '<button class="rdr-do-restore">Restore</button>' +
+          '</div>';
+        box.hidden = false;
+        box.querySelector(".rdr-cancel-restore").addEventListener("click", function () {
+          pendingRestore = null; box.hidden = true; say("");
+        });
+        box.querySelector(".rdr-do-restore").addEventListener("click", function () {
+          box.hidden = true;
+          applyRestore(say);
+        });
+      });
+    });
+
+    studio.addEventListener("click", function (ev) {
+      var c = ev.target.closest(".rdr-clear");
+      if (!c) return;
+      var what = c.getAttribute("data-what");
+      state[what] = [];
+      if (what === "ink") { state.inkLayout = null; }
+      save();
+      if (what === "marks") renderMarks();
+      if (what === "notes") renderNotes();
+      if (what === "ink") redrawInk();
+      updateLock();
+    });
+
+    // tools
+    rail.addEventListener("click", function (ev) {
+      var b = ev.target.closest(".rdr-tool");
+      if (b) {
+        var t = b.getAttribute("data-tool");
+        tool.kind = (tool.kind === t) ? "hl" : t;
+        [].slice.call(rail.querySelectorAll(".rdr-tool")).forEach(function (x) {
+          x.classList.toggle("on", x.getAttribute("data-tool") === tool.kind);
+        });
+        var inkish = (tool.kind === "pen" || tool.kind === "ink-hl" || tool.kind === "erase");
+        document.getElementById("rdrPal").innerHTML =
+          swatches(tool.kind === "ul" || tool.kind === "pen" ? "ul" : "hl");
+        document.getElementById("rdrPal").hidden = (tool.kind === "erase");
+        document.getElementById("rdrEraseModes").hidden = (tool.kind !== "erase");
+        markActiveSwatch();
+        setPenMode(inkish);
+        return;
+      }
+      var s = ev.target.closest(".rdr-sw");
+      if (s) {
+        tool.colour = s.getAttribute("data-colour");
+        markActiveSwatch();
+        return;
+      }
+      var m = ev.target.closest(".rdr-erase-modes button");
+      if (m) {
+        eraseMode = m.getAttribute("data-erase");
+        [].slice.call(m.parentNode.children).forEach(function (x) {
+          x.classList.toggle("on", x === m);
+        });
+      }
+    });
+
+    // selection bubble
+    bubble.addEventListener("mousedown", function (e) { e.preventDefault(); });
+    bubble.addEventListener("click", function (ev) {
+      var b = ev.target.closest("button");
+      if (!b) return;
+      var act = b.getAttribute("data-act");
+      if (act === "note") {
+        var sel = window.getSelection();
+        var block = blockOf(sel.anchorNode);
+        hideBubble();
+        if (block) openNoteEditor(block, "");
+        return;
+      }
+      applyToSelection(act);
+    });
+
+    document.addEventListener("selectionchange", function () {
+      if (tool.kind === "pen" || tool.kind === "ink-hl" || tool.kind === "erase") return;
+      clearTimeout(wireUI._t);
+      wireUI._t = setTimeout(onSelection, 120);
+    });
+
+    // note editor
+    noteEditor.querySelector(".rdr-cancel").addEventListener("click", function () { noteEditor.hidden = true; });
+    noteEditor.querySelector(".rdr-ok").addEventListener("click", function () {
+      var text = noteEditor.querySelector("textarea").value.trim();
+      var nid = noteEditor.dataset.nid;
+      if (nid) {
+        state.notes = state.notes.map(function (n) { return n.id === nid ? Object.assign({}, n, { text: text }) : n; })
+                                 .filter(function (n) { return n.text; });
+      } else if (text) {
+        state.notes.push({
+          id: "n" + Date.now() + Math.random().toString(36).slice(2, 5),
+          b: +noteEditor.dataset.block, text: text, at: new Date().toISOString()
+        });
+      }
+      save(); renderNotes();
+      noteEditor.hidden = true;
+    });
+    noteEditor.querySelector(".rdr-del").addEventListener("click", function () {
+      var nid = noteEditor.dataset.nid;
+      state.notes = state.notes.filter(function (n) { return n.id !== nid; });
+      save(); renderNotes();
+      noteEditor.hidden = true;
+    });
+
+    window.addEventListener("resize", function () { clearTimeout(wireUI._r); wireUI._r = setTimeout(layoutInk, 150); });
+    window.addEventListener("scroll", hideBubble, { passive: true });
+
+    markActiveSwatch();
+  }
+
+  function markActiveSwatch() {
+    [].slice.call(document.querySelectorAll(".rdr-sw")).forEach(function (s) {
+      s.classList.toggle("on", s.getAttribute("data-colour") === tool.colour);
+    });
+  }
+
+  // ------------------------------------------------------------------ print
+
+  function openAllForPrint() {
+    window.__rdrReopen = [];
+    [].slice.call(document.querySelectorAll("details:not([open])")).forEach(function (d) {
+      window.__rdrReopen.push(d); d.open = true;
+    });
+  }
+  function restoreAfterPrint() {
+    (window.__rdrReopen || []).forEach(function (d) { d.open = false; });
+    window.__rdrReopen = [];
+  }
+  window.addEventListener("beforeprint", openAllForPrint);
+  window.addEventListener("afterprint", restoreAfterPrint);
+
+  // ------------------------------------------------------------------ boot
+
+  function start() {
+    if (!guide) return;
+    bindGuide();
+    indexBlocks();
+    if (!document.querySelector(".rdr-rail")) buildUI();
+    else attachCanvas();
+    applySettings();
+    renderMarks();
+    renderNotes();
+    markCitesClickable();
+    setTimeout(layoutInk, 60);
+    updateLock();
+    syncPull();
+  }
+
+  function reloadState() {
+    var s = load();
+    Object.keys(DEFAULTS).forEach(function (k) {
+      state[k] = (s[k] === undefined) ? DEFAULTS[k] : s[k];
+    });
+    // strokes saved before the highlighter existed carry no kind, and the old pixel
+    // eraser stored erase strokes that the vector model has no use for
+    state.ink = (state.ink || []).filter(function (x) { return !x.erase; })
+                                 .map(function (x) {
+      if (!x.k) x.k = "pen";
+      if (!x.id) x.id = "s" + Math.random().toString(36).slice(2, 8);
+      return x;
+    });
+  }
+
+  // The standalone document already holds the guide, so boot now. Inside the artifact the
+  // guide is fetched and injected when the reader opens it, so wait to be called.
+  if (guide) start();
+  else window.ReaderBoot = function (opts) {
+    opts = opts || {};
+    guide = opts.guide || document.querySelector(".guide");
+    if (!guide) return null;
+    DOC = opts.doc || DOC;
+    if (opts.syncRoot !== undefined) cfg.syncRoot = opts.syncRoot;
+    if (opts.onTheme !== undefined) cfg.onTheme = opts.onTheme;
+    if (opts.student !== undefined) student = (opts.student || "").trim().toLowerCase() || "_";
+    reloadState();
+    start();
+    return window.Reader;
+  };
+
+  window.Reader = {
+    setStudent: function (name) {
+      student = (name || "").trim().toLowerCase() || "_";
+      reloadState();
+      if (!guide) return;          // nothing mounted yet; start() will apply it
+      applySettings(); renderMarks(); renderNotes(); redrawInk(); updateLock();
+    },
+    remount: function (opts) {
+      opts = opts || {};
+      if (opts.guide) guide = opts.guide;
+      if (opts.doc) DOC = opts.doc;
+      if (opts.student !== undefined) student = (opts.student || "").trim().toLowerCase() || "_";
+      reloadState();
+      start();
+    },
+    state: function () { return state; }
+  };
+})();
+</script>
+<script>
+(function () {
+  "use strict";
+
+  // ------------------------------------------------------------------ config
+  // Shaped so other subjects and cases drop in without touching the storage
+  // layer: everything written is tagged with subject and case.
+
+  var SUBJECT = "General Surgery";
+  // Every guide in reference/ is built into dist/ as a standalone page, a body fragment and a
+  // PDF, and publish_site.py discovers all three from dist/ rather than naming them, so adding a
+  // case here needs nothing else. Two naming rules, both set by publish_site.py: the body
+  // fragment keeps its number prefix, the PDF loses it.
+  //   id   must equal the guide's data-doc attribute, because the reader stores a student's
+  //        highlights and notes against it.
+  //   bank is true only where this hub has a scored question bank for the case. The guides all
+  //        carry their own viva as tap-to-reveal questions; the scored drill is separate.
+  var CASES = [
+    {num:"01", id:"inguinal-hernia", name:"Inguinal Hernia", kind:"long", bank:true},
+    {num:"02", id:"thyroid-swelling", name:"Thyroid Swelling", kind:"long"},
+    {num:"03", id:"breast-lump", name:"Breast Lump", kind:"long"},
+    {num:"04", id:"gastric-outlet-obstruction", name:"Gastric Outlet Obstruction", kind:"long"},
+    {num:"05", id:"obstructive-jaundice", name:"Obstructive Jaundice", kind:"long"},
+    {num:"06", id:"right-iliac-fossa-mass", name:"Right Iliac Fossa Mass", kind:"long"},
+    {num:"07", id:"liver-secondaries", name:"Liver Secondaries", kind:"long"},
+    {num:"08", id:"varicose-veins", name:"Varicose Veins", kind:"long"},
+    {num:"09", id:"peripheral-vascular-disease", name:"Peripheral Vascular Disease", kind:"long"},
+    {num:"10", id:"ulcer", name:"Ulcer", kind:"short"},
+    {num:"11", id:"sinus-and-fistula", name:"Sinus and Fistula", kind:"short"},
+    {num:"12", id:"lipoma-and-sebaceous-cyst", name:"Lipoma and Sebaceous Cyst", kind:"short"},
+    {num:"13", id:"cervical-lymphadenopathy", name:"Cervical Lymphadenopathy", kind:"short"},
+    {num:"14", id:"neck-swellings", name:"Neck Swellings", kind:"short"},
+    {num:"15", id:"salivary-swelling", name:"Salivary Swelling", kind:"short"},
+    {num:"16", id:"oral-cavity-lesions", name:"Oral Cavity Lesions", kind:"short"},
+    {num:"17", id:"hydrocele", name:"Hydrocele", kind:"short"},
+    {num:"18", id:"varicocele", name:"Varicocele", kind:"short"},
+    {num:"19", id:"undescended-testis", name:"Undescended Testis", kind:"short"},
+    {num:"20", id:"dysphagia", name:"Dysphagia", kind:"short"},
+    {num:"21", id:"testicular-tumour", name:"Testicular Tumour", kind:"short"},
+    {num:"22", id:"lymphoedema", name:"Lymphoedema", kind:"short"},
+    {num:"23", id:"carcinoma-penis", name:"Carcinoma of the Penis", kind:"short"},
+    {num:"24", id:"benign-prostatic-hyperplasia", name:"Benign Prostatic Hyperplasia", kind:"short"},
+    {num:"25", id:"anorectal-conditions", name:"Haemorrhoids, Fissure and Fistula-in-Ano", kind:"short"}
+  ];
+
+  // One line each, shown on the case page. Where a case has none, the generic line is used.
+  var BLURB = {
+    "inguinal-hernia":
+      "The most commonly allotted surgical long case, and the one where the examiner is least " +
+      "interested in your diagnosis. He can see the lump. What he wants is the reasoning behind " +
+      "each question you asked and each test you performed.",
+    "peripheral-vascular-disease":
+      "Two pains to separate, claudication from rest pain, and then one decision: is this limb " +
+      "threatened? The staging systems your examiner asks for are not the ones the current " +
+      "edition uses, and section 1 sets out how to answer both."
+  };
+
+  var CASE = CASES[0];
+
+  function caseById(id) {
+    for (var i = 0; i < CASES.length; i++) if (CASES[i].id === id) return CASES[i];
+    return null;
+  }
+
+  // claude.ai refuses to serve a published sibling file as a top-level document
+  // (ERR_BLOCKED_BY_RESPONSE), so the guide is fetched and rendered inside this page
+  // and the PDF is handed over through the downloads capability.
+  function guideBodyFile(c) { return c.num + "-" + c.id + ".body.html"; }
+  function pdfFile(c)       { return c.id + ".pdf"; }
+
+  var BANK = [
+    {id:"h01", lv:1, type:"Anatomy", q:"Define a hernia.",
+     a:"S Das: the protrusion of the whole or a part of a viscus through the wall that contains it. Bailey & Love: the bulging of part of the contents of the abdominal cavity through a weakness in the abdominal wall.", ref:"Das 38 p.594 · B&L 64 p.1058"},
+    {id:"h02", lv:1, type:"Anatomy", q:"Name the three parts of a hernia, and the four parts of its sac.",
+     a:"Covering, sac and contents. The sac has a mouth, neck, body and fundus.", ref:"SRB 18 p.741"},
+    {id:"h03", lv:1, type:"Anatomy", q:"By what route does an indirect inguinal hernia leave the abdomen?",
+     a:"Through the deep inguinal ring, lateral to the inferior epigastric vessels, obliquely along the inguinal canal, emerging at the superficial ring. Lateral by origin, oblique by course.", ref:"Das 38 p.594 · B&L 64 p.1066"},
+    {id:"h04", lv:1, type:"Anatomy", q:"Give the boundaries of Hesselbach's triangle.",
+     a:"Lateral border of rectus abdominis medially, inferior epigastric vessels laterally, inguinal ligament below. B&L names the pubic bone and iliopubic tract as the lower border. The neck of a direct sac lies medial to the inferior epigastric vessels.", ref:"Das 38 p.603 · B&L 64 p.1066"},
+    {id:"h05", lv:1, type:"Examination", q:"What are the two classical signs of an uncomplicated hernia, and the two caveats?",
+     a:"Impulse on coughing and reducibility. Caveats: a swelling with a cough impulse is not necessarily a hernia, and a swelling with no cough impulse may still be one.", ref:"Das 38 p.598 · B&L 64 p.1061"},
+    {id:"h06", lv:1, type:"Classification", q:"When is an inguinal hernia 'complete'?",
+     a:"Only when the contents reach the bottom of the scrotum. Short of that, incomplete; still inside the superficial ring, a bubonocele.", ref:"Das 38 p.594, p.603"},
+    {id:"h07", lv:1, type:"History", q:"Which inguinal hernia is typical of the young, and which of the old?",
+     a:"Indirect in the young, and always the congenital type in neonates and young children. Direct mostly in older subjects, more common above 40.", ref:"Das 38 p.594, p.604 · B&L 64 p.1066"},
+    {id:"h08", lv:1, type:"Classification", q:"Name the possible contents of a hernial sac.",
+     a:"Omentum (omentocele/epiplocele), intestine (enterocele), bladder (cystocele), Meckel's diverticulum (Littre's), part of the bowel circumference (Richter's), appendix (Amyand's), ovary with fallopian tube, and fluid.", ref:"SRB 18 p.741–742"},
+    {id:"h09", lv:1, type:"Examination", q:"Why must the patient be examined standing?",
+     a:"A direct hernia disappears the moment he lies down. S Das examines standing first; B&L lies the patient down first to reduce and assess. Do both: standing to demonstrate, supine to assess the defect.", ref:"Das 38 p.596 · B&L 64 p.1061"},
+    {id:"h10", lv:1, type:"Examination", q:"How far must you expose the patient?",
+     a:"Both inguinal regions, from the umbilicus to mid-thigh. Inadequate exposure of this area is exactly why femoral hernias are missed.", ref:"Das 38 p.595 · B&L 64 p.1071"},
+    {id:"h11", lv:1, type:"Classification", q:"Name the clinical types of hernia.",
+     a:"Reducible, irreducible, obstructed, inflamed, strangulated, and SRB adds occult. B&L's complexity scale ends in infarcted.", ref:"Das 38 p.604–605 · SRB 18 p.742–743 · B&L 64 p.1060"},
+    {id:"h12", lv:1, type:"Anatomy", q:"Where is the superficial inguinal ring, and what should it admit?",
+     a:"A triangular opening in the external oblique aponeurosis, 1.25 cm above the pubic tubercle, bounded by a superomedial and an inferolateral crus. Normally it does not, or only just, admits the tip of the little finger.", ref:"SRB 18 p.743"},
+    {id:"h13", lv:1, type:"Examination", q:"Where does an inguinal hernia lie relative to the pubic tubercle? And a femoral hernia?",
+     a:"Inguinal: above the inguinal ligament and medial to the pubic tubercle. Femoral: below the ligament and lateral to the tubercle. Edition note, not a live disagreement: B&L 26e said 'above and lateral' for the inguinal hernia and 28e has deleted that sentence, so the books now agree. The only relation 28e prints is the femoral one, and it matches S Das.", ref:"Das 38 p.597 · B&L 64 p.1071"},
+    {id:"h14", lv:1, type:"History", q:"What proportion of adult hernia repairs are inguinal?",
+     a:"B&L 28e has dropped the 80% figure. What it says now is that inguinal hernia is the most common hernia in men and around 10 times more common in men than in women. More than 80% of inguinal hernias are indirect, and almost all hernias in children and women are indirect.", ref:"B&L 64 p.1065 · Das 38 p.603"},
+
+    {id:"h20", lv:2, type:"History", q:"Describe the pain of an early hernia. What does it mean when it stops?",
+     a:"Dragging and aching, worse as the day passes, often appearing before the lump. It ceases once the hernia is fully formed: so settling pain means the hernia has finished forming, not that he is improving. B&L: sharp intermittent pain suggests pinching; severe pain means high risk of strangulation.", ref:"Das 38 p.594 · B&L 64 p.1061"},
+    {id:"h21", lv:2, type:"History", q:"Give the four set questions for any inguinoscrotal swelling.",
+     a:"How did it start: on straining? Where did it first appear: groin descending, or below the crease ascending? What size when first seen, bottom of scrotum at once, or gradual? Does it disappear on lying down?", ref:"Das 38 p.594–595"},
+    {id:"h22", lv:2, type:"History", q:"Is a hernia caused by heavy lifting?",
+     a:"Classically yes. But B&L 28e begins from the premise that a normal abdominal wall has sufficient strength to resist high pressure, so the strain brings the hernia to the patient's attention rather than causing it. The evidence favours an inherited imbalance of collagen types, supported by the association with aortic aneurysm, by the difficulty of repair in Ehlers-Danlos syndrome, and by smoking raising risk through impaired collagen maturation. SRB agrees in its own words, 'metastatic emphysema of Read'. Edition note: the Olympic weightlifters line was 26e's way of making this argument and has been removed from 28e, so quote the mechanism, not the weightlifters.", ref:"B&L 64 p.1060 · SRB 18 p.741"},
+    {id:"h23", lv:2, type:"Examination", q:"A hernia with no cough impulse. What does that mean?",
+     a:"A complication, strangulated or incarcerated: or a neck blocked by adhesions. It is also typical of femoral hernia, where its absence leads to misdiagnosis as a lymph node. A saphena varix and a varicocele give false positives.", ref:"Das 38 p.597, p.599 · B&L 64 p.1061, p.1071"},
+    {id:"h24", lv:2, type:"Examination", q:"Describe Zieman's technique and its precondition.",
+     a:"Index on the deep ring (indirect), middle on the superficial ring (direct), ring finger on the saphenous opening 4 cm below and lateral to the pubic tubercle (femoral); the patient holds his nose and blows, or coughs. Only valid with no obvious swelling, or after complete reduction.", ref:"Das 38 p.599"},
+    {id:"h25", lv:2, type:"Examination", q:"In the invagination test, what does the direction of the finger tell you?",
+     a:"Directly backwards, direct. Upwards, backwards and outwards: indirect. Impulse on the pulp means direct; on the tip, oblique.", ref:"Das 38 p.600–601"},
+    {id:"h26", lv:2, type:"Examination", q:"Explain the ring occlusion test and its logic.",
+     a:"Standing, hernia reduced, thumb over the deep ring, cough. An indirect hernia comes through that ring so it is blocked; a direct one comes medial to it and bulges medial to your finger. B&L warns even experienced surgeons cannot distinguish the two with certainty.", ref:"Das 38 p.601 · B&L 64 p.1067"},
+    {id:"h27", lv:2, type:"Examination", q:"Distinguish an enterocele from an omentocele at the bedside.",
+     a:"Enterocele: elastic, resonant, reduces with a gurgle, first part difficult and last part easy, may show peristalsis. Omentocele: doughy and granular, dull, no gurgle, first part easy and last part resists.", ref:"Das 38 p.598, p.600 · SRB 18 p.742"},
+    {id:"h28", lv:2, type:"Examination", q:"Why is rectal examination obligatory in a case of hernia?",
+     a:"To exclude chronic constipation and an enlarged prostate, causes of straining that recur the hernia. And prostatic symptoms predict postoperative urinary retention.", ref:"Das 38 p.603 · B&L 64 p.1070"},
+    {id:"h29", lv:2, type:"Complications", q:"Differentiate an irreducible from a strangulated hernia.",
+     a:"Both are irreducible. The strangulated one is extremely tense and tender, may have red overlying skin, and has lost its cough impulse. All absent in pure irreducibility.", ref:"Das 38 p.604–605"},
+    {id:"h30", lv:2, type:"Complications", q:"Define obstructed hernia, and say why the diagnosis is dangerous.",
+     a:"Irreducibility plus intestinal obstruction with blood supply intact. It shares two of the three features of strangulation, so calling a strangulated hernia 'obstructed' wastes the time that would have saved the patient.", ref:"Das 38 p.604–605"},
+    {id:"h31", lv:2, type:"Examination", q:"Why examine abdominal muscle tone, and how?",
+     a:"To choose the operation, herniorrhaphy if tone is good, hernioplasty if poor. Observe in profile; the rising test, where weak obliques give Malgaigne's bulgings; and a finger in the superficial ring during a cough.", ref:"Das 38 p.602"},
+    {id:"h32", lv:2, type:"History", q:"A hernia that enlarges before micturition and shrinks after. What is in it?",
+     a:"Urinary bladder: a cystocele, only in a direct or sliding hernia. Pressing it provokes a desire to micturate. The medially placed bladder is pulled into a direct hernia.", ref:"Das 38 p.604 · B&L 64 p.1066"},
+    {id:"h33", lv:2, type:"Management", q:"Which investigation establishes the diagnosis?",
+     a:"None, it is clinical. Investigations are for fitness and cause. In doubt: ultrasound first, low cost but highly operator dependent; CT for complex or incisional hernia, and for planning abdominal wall reconstruction; MRI for sportsman's groin; laparoscopy for an occult contralateral hernia, though it will not show an intraparietal hernia. Plain x-ray is of little value. Herniography is SRB's answer, not B&L 28e's. And a negative scan does not exclude the hernia you felt, because groin hernias tend to reduce in a supine patient.", ref:"B&L 64 p.1061, p.1062"},
+    {id:"h34", lv:2, type:"Management", q:"State the four principles of any hernia repair.",
+     a:"Reduce the contents and remove non-viable tissue; excise and close the peritoneal sac, though small sacs may be reduced intact; close the defect if possible; reinforce with mesh, since closure alone has a high recurrence rate and mesh reduces but does not prevent recurrence. B&L 28e adds a fifth: excise redundant skin if necessary for cosmesis.", ref:"B&L 64 p.1062"},
+    {id:"h35", lv:2, type:"History", q:"A right direct hernia in a man with a right iliac fossa scar. Connect them.",
+     a:"Appendicectomy through a McBurney incision injured the ilioinguinal nerve, weakening the inguinal region and producing a right-sided direct hernia.", ref:"SRB 18 p.741 · Das 38 p.595"},
+
+    {id:"h40", lv:3, type:"Anatomy", q:"Where exactly is the deep inguinal ring?",
+     a:"S Das and SRB: 1.25 cm above the mid-inguinal point, midway between the ASIS and the symphysis pubis. B&L: midway between the ASIS and the pubic tubercle, the midpoint of the inguinal ligament: 2–3 cm above the femoral pulse. The mid-inguinal point overlies the femoral artery; the midpoint of the ligament overlies the deep ring.", ref:"Das 38 p.599 · SRB 18 p.743 · B&L 64 p.1065"},
+    {id:"h41", lv:3, type:"Complications", q:"Which hernia strangulates most often?",
+     a:"Two answers to two questions. The most common strangulated hernia is the indirect inguinal, because inguinal hernias are far more numerous. The highest rate of strangulation is in the femoral hernia. Fifty per cent of femoral hernias present as an emergency, against five per cent of inguinal.", ref:"SRB 18 p.743 · B&L 64 p.1070, p.1071"},
+    {id:"h42", lv:3, type:"Complications", q:"Why can a small hernia be more dangerous than a large one?",
+     a:"Risk depends on the neck, not the bulk. A small rigid-walled defect traps contents, acts as a constriction ring, impedes venous return and progresses to strangulation. A wide-necked direct hernia rarely strangulates.", ref:"B&L 64 p.1060, p.1062"},
+    {id:"h43", lv:3, type:"Complications", q:"What is Garrey's stricture?",
+     a:"An ischaemic narrowing of small bowel that has been reduced from an obstructed hernia, a stricture forming later at the site of the constriction ring.", ref:"SRB 18 p.742–743"},
+    {id:"h44", lv:3, type:"Classification", q:"What is Amyand's hernia? And Littre's?",
+     a:"Amyand's, the appendix in an inguinal hernial sac, often incarcerated. Littre's: a Meckel's diverticulum in the sac; Littre described it 81 years before Meckel was born.", ref:"SRB 18 p.742–743"},
+    {id:"h45", lv:3, type:"Complications", q:"What is Richter's hernia, and why is it treacherous?",
+     a:"Strangulation of only part of the circumference of the bowel, often complicating a femoral hernia. It mimics gastroenteritis: colic, bowels opening normally, sometimes diarrhoea, so operation is delayed. It may be impossible to detect clinically, yet the bowel can necrose and perforate.", ref:"Das 38 p.605–606 · B&L 64 p.1060"},
+    {id:"h46", lv:3, type:"Classification", q:"Classify a hernia by the European Hernia Society system.",
+     a:"Primary or recurrent (P/R); lateral, medial or femoral (L/M/F); defect size in finger breadths at 1.5 cm each. A primary indirect hernia with a 3 cm defect is PL2.", ref:"B&L 64 p.1067"},
+    {id:"h47", lv:3, type:"Classification", q:"What is a sliding hernia, and what is the surgical danger?",
+     a:"Extraperitoneal viscus, caecum on the right, sigmoid on the left, bladder either side, slides outside the sac and forms part of its wall. B&L: the sac forms secondarily, which distinguishes it from a classic indirect hernia; the large bowel wall may not be covered by peritoneum and can be damaged at operation.", ref:"Das 38 p.605 · B&L 64 p.1066"},
+    {id:"h48", lv:3, type:"Management", q:"Choose the operation, and justify it.",
+     a:"Herniotomy in a child: the wall is normal and in infants the rings are superimposed with no obliquity. Herniorrhaphy in a young adult with good tone. Hernioplasty with mesh where tone is poor, Malgaigne's bulgings are present, or the hernia is large or recurrent. Lichtenstein is commonest worldwide; laparoscopic TEP or TAPP for bilateral or recurrent hernia.", ref:"SRB 18 p.743 · Das 38 p.602 · B&L 64 p.1068-1069"},
+    {id:"h49", lv:3, type:"Management", q:"Describe the Shouldice repair and how it differs from Bassini.",
+     a:"Bassini sutures conjoint tendon to inguinal ligament from pubic tubercle to deep ring. Shouldice first incises the transversalis fascia from deep ring to pubic tubercle and closes it as a double-thick, two-layered posterior wall, double breasting: then the external oblique likewise. The only one of 150+ modifications with benefit; under 2% lifetime failure in expert hands, identical to Bassini in general hands.", ref:"B&L 64 p.1068"},
+    {id:"h50", lv:3, type:"Management", q:"What size mesh, and what must it cover?",
+     a:"Lichtenstein: 8 × 15 cm over the posterior wall, split around the cord at the deep ring. Laparoscopic: 10 × 15 cm crossing the midline into the retropubic space and 5 cm lateral to the deep ring, covering Hesselbach's triangle, the deep ring and the femoral canal together. At least 2 cm overlap, up to 5 cm.", ref:"B&L 64 p.1068, p.1069"},
+    {id:"h51", lv:3, type:"Management", q:"Why are lightweight large-pore meshes preferred?",
+     a:"Better integration, less contracture, less foreign body reaction, more flexibility and better comfort. Heavyweight mesh provokes a greater fibrous reaction, with collagen contraction and stiffening, impaired abdominal wall mobility, foreign body sensation and pain. Note the vocabulary: the mesh does not shrink, the fibrous tissue grown into it contracts, so 'mesh contracture' is the accurate term, and it can exceed 50% of area. Edition note: 28e has dropped the weight thresholds in g/m² and argues from pore size instead, favouring at least 1 mm in all directions.", ref:"B&L 64 p.1063, p.1064"},
+    {id:"h52", lv:3, type:"Management", q:"Groin pain four months after a Lichtenstein repair. What is it?",
+     a:"Chronic pain: defined as pain at three months, the commonest complication of open flat mesh repair, reported up to 20%. Most severe form is neuralgic, from injury to or irritation of the ilioinguinal, iliohypogastric or genital branch of the genitofemoral nerve, or from mesh shrinkage.", ref:"B&L 64 p.1069, p.1070"},
+    {id:"h53", lv:3, type:"Management", q:"Laparoscopic or open, what does the evidence say?",
+     a:"Laparoscopic repair gives less pain both immediately and up to five years later, faster return to full activity, and fewer wound complications: infection, bleeding and seroma. Particular benefit in bilateral hernias and in recurrence after open repair. Note what is not claimed: recurrence is no different between open and laparoscopic, nor between mesh types. The limit is a long learning curve. Robot assistance has shown little additional patient benefit so far and is hard to justify on cost for a simple repair. Edition note: 28e no longer cites the 'over 60 randomised trials' figure.", ref:"B&L 64 p.1069, p.1070"},
+    {id:"h54", lv:3, type:"Management", q:"Would you repair the asymptomatic other side?",
+     a:"Occult contralateral hernias are present in up to 20% of patients, so the other groin must always be examined, and a patient with a single hernia has a 50% lifetime risk of developing one on the other side. Some surgeons have suggested offering bilateral repair, especially if laparoscopic surgery is planned, but that is not widespread practice. Edition note: the lifetime risk was 33% in 26e and is 50% in 28e.", ref:"B&L 64 p.1061, p.1067"},
+    {id:"h55", lv:3, type:"Examination", q:"List the differential diagnosis of a groin swelling.",
+     a:"Integument: sebaceous cyst, lipoma, neurofibroma. Hernia: inguinal, femoral. Lymphatic: inguinal lymphadenopathy. Vascular: saphena varix, aneurysm. Inguinal canal: ectopic testis, lipoma or hydrocele of the cord, hydrocele of the canal of Nuck. Deep: psoas abscess. The common four are inguinal hernia, femoral hernia, inguinal lymphadenopathy and saphena varix.", ref:"SRB 18 p.741"},
+    {id:"h56", lv:3, type:"Complications", q:"A patient has unexplained small bowel obstruction. What must you do?",
+     a:"Examine the groins carefully for a femoral hernia. It is missed because the area is inadequately exposed, it may be only 1–2 cm, it loses its cough impulse early, and it is mistaken for a lymph node. CT in obstruction can identify one the clinician missed.", ref:"B&L 64 p.1071"},
+    {id:"h57", lv:3, type:"Management", q:"Does every hernia need repair?",
+     a:"No. Small hernias can be more dangerous than large, because risk follows the defect and not the lump. Femoral hernia should always be repaired. Recommend repair when complications are likely, for symptomatic or irreducible hernias, when reduction is getting harder or the hernia is enlarging, and in younger adults. Watchful waiting in an asymptomatic inguinal hernia in an elderly patient appears generally safe, with an annual crossover to surgery of around 10% as symptoms develop. Trusses are not recommended.", ref:"B&L 64 p.1062"}
+  ];
+
+  var LEVELS = [
+    {n:1, name:"Foundation", desc:"Definitions, anatomy and the signs you must never fumble."},
+    {n:2, name:"Clinical",  desc:"History technique, the special tests, and telling complications apart."},
+    {n:3, name:"Examiner's edge", desc:"Where the three books disagree, named varieties, and the evidence."}
+  ];
+
+  // ------------------------------------------------------------------ storage
+  // One record per student, keyed case-insensitively. The typed spelling is kept for display.
+
+  var LS = "surgery-case-files-v2";
+
+  function store() {
+    try { return JSON.parse(localStorage.getItem(LS) || "{}"); } catch (e) { return {}; }
+  }
+  function save(o) {
+    try { localStorage.setItem(LS, JSON.stringify(o)); } catch (e) {}
+  }
+  function keyOf(name) { return String(name).trim().toLowerCase().replace(/\s+/g, " "); }
+
+  // --------------------------------------------- per-question history
+  //
+  // A session is only written when a whole level is finished, which meant answering three
+  // questions and walking away left no trace at all: the answers sat in an in-memory array
+  // that went out of scope, so the progress page and the database were both empty and
+  // neither was wrong. Nothing about it looked broken, which is why it survived.
+  //
+  // These records are written the instant a question is marked, so partial work survives
+  // leaving, navigating back, closing the tab or switching person. They are also the thing
+  // that makes a question answerable across sessions: how many times this person has met it,
+  // how often they got it, and whether they had it last time.
+
+  function qKey(caseId, qid) { return caseId + "::" + qid; }
+
+  function recordAnswer(q, ok) {
+    if (!student.key) return;
+    var s = store();
+    s.students = s.students || {};
+    var r = s.students[student.key] || { name: student.name, sessions: [] };
+    r.name = student.name;
+    r.questions = r.questions || {};
+
+    var k = qKey(CASE.id, q.id);
+    var rec = r.questions[k] || { t: q.type, n: 0, ok: 0, last: 0, at: null };
+    rec.t = q.type;                      // kept current, in case a question is recategorised
+    rec.n += 1;
+    if (ok) rec.ok += 1;
+    rec.last = ok ? 1 : 0;
+    rec.at = new Date().toISOString();
+    rec.synced = false;
+
+    r.questions[k] = rec;
+    s.students[student.key] = r;
+    s.lastStudent = student.key;
+    save(s);
+    pushAnswersLater();
+  }
+
+  // Everything this person has ever answered for the case on screen.
+  function answersForCase(key) {
+    var r = (store().students || {})[key];
+    var out = {};
+    if (!r || !r.questions) return out;
+    var prefix = CASE.id + "::";
+    Object.keys(r.questions).forEach(function (k) {
+      if (k.indexOf(prefix) === 0) out[k.slice(prefix.length)] = r.questions[k];
+    });
+    return out;
+  }
+
+  var answerTimer = null;
+
+  function pushAnswersLater() {
+    if (!SYNC) return;
+    clearTimeout(answerTimer);
+    answerTimer = setTimeout(pushAnswers, 1500);   // let a burst of marking settle
+  }
+
+  // Sent as a batch of whole counters rather than individual events, so a repeat delivery is
+  // harmless: the worker stores the counters it is given and the newest write wins.
+  function pushAnswers() {
+    if (!SYNC || !student.key) return;
+    var s = store();
+    var r = (s.students || {})[student.key];
+    if (!r || !r.questions) return;
+
+    var batch = [];
+    Object.keys(r.questions).forEach(function (k) {
+      var rec = r.questions[k];
+      if (rec.synced) return;
+      var cut = k.indexOf("::");
+      batch.push({
+        caseId: k.slice(0, cut), questionId: k.slice(cut + 2), type: rec.t,
+        attempts: rec.n, correct: rec.ok, lastOk: rec.last, at: rec.at
+      });
+    });
+    if (!batch.length) return;
+
+    fetch(SYNC + "/api/answers?student=" + encodeURIComponent(student.key), {
+      method: "POST",
+      headers: { "content-type": "application/json" },
+      body: JSON.stringify({ answers: batch })
+    }).then(function (res) {
+      if (!res.ok) return;
+      // re-read rather than reuse the snapshot: marking may have continued while in flight
+      var s2 = store();
+      var r2 = (s2.students || {})[student.key];
+      if (!r2 || !r2.questions) return;
+      batch.forEach(function (b) {
+        var rec = r2.questions[qKey(b.caseId, b.questionId)];
+        if (rec && rec.at === b.at) rec.synced = true;
+      });
+      save(s2);
+    }).catch(function () {
+      // offline is normal; the next mark or the next open sends it
+    });
+  }
+
+  // ------------------------------------------------- sync, for the viva results
+  //
+  // The same bargain as the reader: this browser holds the real copy and the worker is a
+  // mirror, so every failure here is swallowed and the viva carries on regardless. Someone
+  // halfway through revising should never see a network error about a score.
+  //
+  // Each session carries an id generated here, and the worker inserts-or-ignores on it, so a
+  // session that goes up twice, from a retry or from a second device, is still one row.
+
+  var SYNC = "https://rx-sync.harnar.workers.dev";
+
+  function newId() {
+    return Date.now().toString(36) + "-" + Math.random().toString(36).slice(2, 10);
+  }
+
+  function markSynced(id) {
+    var s = store(), changed = false;
+    Object.keys(s.students || {}).forEach(function (k) {
+      (s.students[k].sessions || []).forEach(function (r) {
+        if (r.id === id && !r.synced) { r.synced = true; changed = true; }
+      });
+    });
+    if (changed) save(s);
+  }
+
+  function postSession(rec) {
+    if (!SYNC || !rec || !rec.id) return;
+    fetch(SYNC + "/api/sessions", {
+      method: "POST",
+      headers: { "content-type": "application/json" },
+      body: JSON.stringify(rec)
+    }).then(function (r) {
+      if (r.ok) markSynced(rec.id);
+    }).catch(function () {
+      // offline is normal and not worth reporting; flushSessions picks it up next time
+    });
+  }
+
+  // Sessions finished while offline never reached the worker, so they are retried whenever
+  // the page is opened. Without this, a session done on a train would be lost to the
+  // database for good, even though the browser still has it.
+  function flushSessions() {
+    if (!SYNC) return;
+    var s = store(), pending = [];
+    Object.keys(s.students || {}).forEach(function (k) {
+      (s.students[k].sessions || []).forEach(function (r) {
+        if (r && r.id && !r.synced) pending.push(r);
+      });
+    });
+    pending.slice(-50).forEach(postSession);
+  }
+
+  function studentRec(k) {
+    var s = store();
+    return (s.students && s.students[k]) || null;
+  }
+  function allStudents() {
+    var s = store(), out = [];
+    Object.keys(s.students || {}).forEach(function (k) {
+      out.push({ key: k, name: s.students[k].name, sessions: s.students[k].sessions || [] });
+    });
+    return out.sort(function (a, b) { return b.sessions.length - a.sessions.length; });
+  }
+
+  function recordSession(rec) {
+    var s = store();
+    s.students = s.students || {};
+    rec.id = rec.id || newId();
+    rec.synced = false;                  // postSession flips this once the worker has it
+    var r = s.students[rec.studentKey] || { name: rec.studentName, sessions: [] };
+    r.name = rec.studentName;            // keep the latest spelling they typed
+    r.sessions = (r.sessions || []).concat([rec]).slice(-200);
+    s.students[rec.studentKey] = r;
+    s.lastStudent = rec.studentKey;
+    save(s);
+    postSession(rec);                    // saved locally first, so a failure here costs nothing
+  }
+
+  // ------------------------------------------------------------------ theme
+
+  var THEMES = ["system", "light", "dark"];
+  function currentTheme() { return store().theme || "system"; }
+  function applyTheme(t) {
+    var el = document.documentElement;
+    if (t === "system") el.removeAttribute("data-theme");
+    else el.setAttribute("data-theme", t);
+  }
+  function setTheme(t) {
+    var s = store(); s.theme = t; save(s);
+    applyTheme(t);
+    renderTopbar();
+  }
+  applyTheme(currentTheme());
+
+  var ICONS = {
+    system: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><rect x="2" y="4" width="20" height="13" rx="2"/><path d="M8 21h8M12 17v4"/></svg>',
+    light: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"/></svg>',
+    dark:  '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12.8A9 9 0 1111.2 3a7 7 0 009.8 9.8z"/></svg>'
+  };
+  var THEME_LABEL = { system: "Auto", light: "Light", dark: "Dark" };
+
+  // ------------------------------------------------------------------ nav
+
+  var app = document.getElementById("app");
+  var topbar = document.getElementById("topbar");
+  var backTo = null;          // function, or null at the root
+
+  var inGuide = false;
+
+  function renderTopbar() {
+    var t = currentTheme();
+    topbar.innerHTML =
+      (backTo
+        ? '<button class="ghost" id="navBack">' +
+          '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" ' +
+          'stroke-linecap="round" stroke-linejoin="round"><path d="M15 18l-6-6 6-6"/></svg>' +
+          'Back</button>'
+        : '') +
+      '<span class="spacer"></span>' +
+      (inGuide ? '' : '<button class="ghost" id="themeBtn" title="Switch theme" ' +
+      'aria-label="Theme: ' + THEME_LABEL[t] + '">' + ICONS[t] + THEME_LABEL[t] + '</button>');
+
+    var b = document.getElementById("navBack");
+    if (b) b.addEventListener("click", function () { if (backTo) backTo(); });
+    var tb = document.getElementById("themeBtn");
+    if (tb) tb.addEventListener("click", function () {
+      setTheme(THEMES[(THEMES.indexOf(currentTheme()) + 1) % THEMES.length]);
+    });
+  }
+
+  var stack = [];
+
+  function paint() {
+    var render = stack[stack.length - 1];
+    inGuide = (render === screenGuide);
+    backTo = stack.length > 1 ? back : null;
+    renderTopbar();
+    render();
+    window.scrollTo(0, 0);
+  }
+
+  function go(render)      { stack.push(render); paint(); }
+  function replace(render) { stack[stack.length - 1] = render; paint(); }
+  function reset(render)   { stack = [render]; paint(); }
+  function back()          { if (stack.length > 1) { stack.pop(); paint(); } }
+
+  // ------------------------------------------------------------------ helpers
+
+  function esc(s) {
+    return String(s).replace(/[&<>"']/g, function (c) {
+      return {"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c];
+    });
+  }
+  function shuffle(a) {
+    for (var i = a.length - 1; i > 0; i--) {
+      var j = Math.floor(Math.random() * (i + 1));
+      var t = a[i]; a[i] = a[j]; a[j] = t;
+    }
+    return a;
+  }
+  function on(id, ev, fn) { var el = document.getElementById(id); if (el) el.addEventListener(ev, fn); }
+  function when(iso) {
+    var d = new Date(iso), now = new Date();
+    var days = Math.floor((now - d) / 86400000);
+    if (days === 0) return "today";
+    if (days === 1) return "yesterday";
+    if (days < 7) return days + " days ago";
+    return d.toLocaleDateString(undefined, { day: "numeric", month: "short" });
+  }
+
+  // ------------------------------------------------------------------ state
+
+  var student = { key: "", name: "" };
+  var db = null, dbReady = false;
+  var queue = [], idx = 0, results = [], level = 1;
+
+  // ------------------------------------------------------------------ index
+
+  function tilesFor(kind) {
+    return CASES.filter(function (c) { return c.kind === kind; }).map(function (c) {
+      return '<button class="tile" id="case-' + c.id + '">' +
+             '<span class="ico">' + c.num + '</span>' +
+             '<span class="t-name">' + esc(c.name) + '</span>' +
+             '<span class="t-desc">' + (c.kind === "long" ? "Long case" : "Short case") +
+             '. Study guide and printable PDF' + (c.bank ? ', plus the scored viva drill' : '') +
+             '.</span><span class="t-go">&rarr;</span></button>';
+    }).join("");
+  }
+
+  function screenIndex() {
+    app.innerHTML =
+      '<div class="who"><span>Signed in as <b>' + esc(student.name) + '</b></span>' +
+      '<button class="btn" id="swapWho" style="padding:.25rem .6rem;font-size:.75rem">Switch</button></div>' +
+      '<p class="eyebrow">' + esc(SUBJECT) + ' · MBBS final year</p>' +
+      '<h1>Surgery Case Files</h1>' +
+      '<p class="sub">History and examination with the reasoning attached to every step, ' +
+      'management with the rationale for every decision, and a viva drill that tracks what you ' +
+      'keep getting wrong. Built from S Das, Bailey &amp; Love and SRB.</p>' +
+      '<div class="tiles">' + tilesFor("long") + '</div>' +
+      '<h2 style="margin-top:1.6rem">Short cases</h2>' +
+      '<div class="tiles">' + tilesFor("short") + '</div>' +
+      '<div class="srckey">' +
+        '<span><i style="background:#005f73"></i> S Das 13e: clinical method</span>' +
+        '<span><i style="background:#5b4a8a"></i> Bailey &amp; Love 28e: mechanism and management</span>' +
+        '<span><i style="background:#1f6b5c"></i> SRB 6e: exam framework</span>' +
+      '</div>';
+    CASES.forEach(function (c) {
+      on("case-" + c.id, "click", function () { CASE = c; go(screenCase); });
+    });
+    on("swapWho", "click", function () { reset(screenWelcome); });
+  }
+
+  // ------------------------------------------------------------------ case hub
+
+  function screenCase() {
+    var studs = allStudents();
+    var totalSessions = studs.reduce(function (n, s) { return n + s.sessions.length; }, 0);
+    var line = totalSessions
+      ? '<b>' + totalSessions + '</b> viva session' + (totalSessions === 1 ? '' : 's') +
+        ' recorded on this device across <b>' + studs.length + '</b> ' +
+        (studs.length === 1 ? 'person' : 'people') + '.'
+      : 'Nothing drilled yet. The viva marks itself against your own honesty, so answer out loud first.';
+
+    var blurb = BLURB[CASE.id] ||
+      ("Full case with the reasoning attached to every history question, examination finding, " +
+       "investigation and treatment decision, and the amber boxes wherever S Das, Bailey & Love " +
+       "and SRB disagree.");
+
+    app.innerHTML =
+      '<p class="eyebrow">' + (CASE.kind === "long" ? "Long case " : "Short case ") + CASE.num +
+      '</p>' +
+      '<h1>' + esc(CASE.name) + '</h1>' +
+      '<p class="sub">' + esc(blurb) + '</p>' +
+      '<div class="tiles">' +
+        '<button class="tile" id="goGuide">' +
+          '<span class="ico">READ</span><span class="t-name">Study guide</span>' +
+          '<span class="t-desc">Full case with rationale on every history question, examination ' +
+          'finding, investigation and treatment decision. Set it up how you like to read, and ' +
+          'highlight, annotate or write on it.</span>' +
+          '<span class="t-go">&rarr;</span></button>' +
+        (CASE.bank
+          ? '<button class="tile" id="goViva">' +
+            '<span class="ico">VIVA</span><span class="t-name">Viva drill</span>' +
+            '<span class="t-desc">' + BANK.length + ' questions across three levels. Tracks ' +
+            'which kinds of question you miss and tells you what to revise.</span>' +
+            '<span class="t-go">&rarr;</span></button>'
+          : '<div class="tile muted">' +
+            '<span class="ico">VIVA</span><span class="t-name">Viva drill</span>' +
+            '<span class="t-desc">No scored drill for this case yet. The study guide ends with ' +
+            'its own viva section: the questions are there with the answers hidden until you tap ' +
+            'them, so answer out loud first.</span>' +
+            '<span class="t-go">&middot;</span></div>') +
+        '<button class="tile" id="goProgress">' +
+          '<span class="ico">STATS</span><span class="t-name">Your progress</span>' +
+          '<span class="t-desc">Everything drilled so far: coverage, accuracy by topic, and ' +
+          'every past session.</span>' +
+          '<span class="t-go">&rarr;</span></button>' +
+        '<button class="tile" id="goPdf">' +
+          '<span class="ico">PDF</span><span class="t-name">Printable PDF</span>' +
+          '<span class="t-desc" id="pdfDesc">The whole study guide laid out for paper, with ' +
+          'every answer opened.</span>' +
+          '<span class="t-go">&darr;</span></button>' +
+      '</div>' +
+      '<p class="meta-line">' + line + '</p>';
+
+    on("goGuide", "click", function () { go(screenGuide); });
+    on("goPdf", "click", savePdf);
+    if (CASE.bank) on("goViva", "click", function () { go(screenLevels); });
+    on("goProgress", "click", function () { go(screenProgress); });
+  }
+
+  // ------------------------------------------------------------------ sign in
+
+
+  // ------------------------------------------------------------------ levels
+
+  function screenLevels() {
+    var rec = studentRec(student.key);
+    var hist = rec ? rec.sessions : [];
+    var mine = hist.filter(function (s) { return s.caseId === CASE.id; });
+
+    var html =
+      '<div class="who"><span>Drilling as <b>' + esc(student.name) + '</b></span></div>' +
+      '<h2>Choose your level</h2>' +
+      '<p class="sub">Answer out loud, then mark yourself honestly, the summary is only useful ' +
+      'if the marking is.</p><div class="levels">';
+
+    LEVELS.forEach(function (L) {
+      var n = BANK.filter(function (q) { return q.lv === L.n; }).length;
+      var past = mine.filter(function (s) { return s.level === L.n; });
+      var meta = n + " questions";
+      if (past.length) {
+        meta += " · best " + Math.max.apply(null, past.map(function (s) { return s.pct; })) +
+                "% · " + past.length + " attempt" + (past.length === 1 ? "" : "s");
+      }
+      html += '<button class="level" data-lv="' + L.n + '">' +
+              '<span class="lv-name">' + esc(L.name) + '</span>' +
+              '<span class="lv-desc">' + esc(L.desc) + '</span>' +
+              '<span class="lv-meta">' + meta + '</span></button>';
+    });
+    html += '</div><div class="row"><button class="btn" id="seeProgress">Your progress</button>' +
+            '<button class="btn" id="switch">Switch person</button></div>';
+
+    app.innerHTML = html;
+    [].forEach.call(app.querySelectorAll(".level"), function (b) {
+      b.addEventListener("click", function () { startDrill(+b.dataset.lv); });
+    });
+    on("switch", "click", function () { reset(screenWelcome); });
+    on("seeProgress", "click", function () { go(screenProgress); });
+  }
+
+  // ------------------------------------------------------------------ drill
+
+  function startDrill(lv, inPlace) {
+    level = lv;
+    queue = shuffle(BANK.filter(function (q) { return q.lv === lv; }).slice());
+    idx = 0; results = [];
+    // back from any question returns to the level list, not the previous question
+    if (inPlace) replace(screenQuestion); else go(screenQuestion);
+  }
+
+  function head(q) {
+    var pct = Math.round(idx / queue.length * 100);
+    return '<div class="progress"><span>' + esc(LEVELS[level-1].name) + '</span>' +
+           '<span>' + (idx + 1) + ' / ' + queue.length + '</span></div>' +
+           '<div class="bar"><i style="width:' + pct + '%"></i></div>' +
+           '<span class="qtag">' + esc(q.type) + '</span>' +
+           '<p class="question">' + esc(q.q) + '</p>';
+  }
+
+  function screenQuestion() {
+    if (idx >= queue.length) { replace(screenSummary); return; }
+    var q = queue[idx];
+    app.innerHTML = head(q) +
+      '<div class="row end"><button class="btn primary" id="reveal">Show the answer</button></div>';
+    on("reveal", "click", function () { revealAnswer(q); });
+  }
+
+  function revealAnswer(q) {
+    app.innerHTML = head(q) +
+      '<div class="answer"><span class="tag">Answer</span>' + esc(q.a) +
+      '<span class="ref">' + esc(q.ref) + '</span></div>' +
+      '<div class="grade">' +
+      '<button class="btn missed" id="no">I missed this</button>' +
+      '<button class="btn got" id="yes">I had it</button></div>';
+    on("yes", "click", function () { mark(q, true); });
+    on("no", "click", function () { mark(q, false); });
+  }
+
+  function mark(q, ok) {
+    results.push({ id: q.id, type: q.type, correct: ok });
+    recordAnswer(q, ok);     // durable, before anything can navigate away
+    idx++;
+    screenQuestion();
+  }
+
+  // ------------------------------------------------------------------ summary
+
+  function screenSummary() {
+    var total = results.length;
+    var score = results.filter(function (r) { return r.correct; }).length;
+    var pct = total ? Math.round(score / total * 100) : 0;
+
+    var byType = {};
+    results.forEach(function (r) {
+      if (!byType[r.type]) byType[r.type] = { ok: 0, n: 0 };
+      byType[r.type].n++;
+      if (r.correct) byType[r.type].ok++;
+    });
+    var types = Object.keys(byType).sort(function (a, b) {
+      return (byType[a].ok / byType[a].n) - (byType[b].ok / byType[b].n);
+    });
+    var weakest = types.filter(function (t) { return byType[t].ok / byType[t].n < 0.7; });
+
+    var rec = {
+      studentKey: student.key, studentName: student.name,
+      subject: SUBJECT, caseId: CASE.id, caseName: CASE.name,
+      level: level, levelName: LEVELS[level-1].name,
+      score: score, total: total, pct: pct,
+      byType: byType, weakest: weakest,
+      missed: results.filter(function (r) { return !r.correct; }).map(function (r) { return r.id; }),
+      seen: results.map(function (r) { return r.id; }),
+      at: new Date().toISOString()
+    };
+    recordSession(rec);
+
+    var html =
+      '<div class="who"><span>Session complete · <b>' + esc(student.name) + '</b></span></div>' +
+      '<h2>' + esc(LEVELS[level-1].name) + '</h2>' +
+      '<p class="score">' + pct + '%<small> &nbsp;' + score + ' of ' + total + '</small></p>' +
+      '<div class="breakdown">';
+    types.forEach(function (t) {
+      var d = byType[t], p = Math.round(d.ok / d.n * 100);
+      html += '<div class="brow"><span class="bname">' + esc(t) + '</span>' +
+              '<span class="bval">' + d.ok + '/' + d.n + '</span>' +
+              '<span class="btrack"><i style="width:' + p + '%;background:' +
+              (p >= 70 ? "var(--good)" : "var(--miss)") + '"></i></span></div>';
+    });
+    html += '</div>';
+    html += weakest.length
+      ? '<div class="verdict weak"><b>Work on ' + esc(weakest.join(", ")) + '.</b> Go back to ' +
+        'those sections of the study guide before the next session.</div>'
+      : '<div class="verdict strong"><b>Solid across every category.</b> Move up a level, or come ' +
+        'back in a few days to test retention rather than recall.</div>';
+    html += '<div class="row"><button class="btn" id="retry">Retry this level</button>' +
+            '<button class="btn" id="levels">Another level</button>' +
+            '<button class="btn primary" id="prog">Your progress</button></div>';
+
+    app.innerHTML = html;
+    on("retry", "click", function () { level = level; startDrill(level, true); });
+    on("levels", "click", function () { replace(screenLevels); });
+    on("prog", "click", function () { go(screenProgress); });
+
+    syncSession(rec);
+  }
+
+  // ------------------------------------------------------------------ progress
+
+  function screenProgress() {
+    var rec = studentRec(student.key);
+    var sessions = (rec ? rec.sessions : []).filter(function (s) { return s.caseId === CASE.id; });
+    sessions = sessions.slice().sort(function (a, b) { return new Date(b.at) - new Date(a.at); });
+
+    var html = '<div class="who"><span>Progress for <b>' + esc(student.name) + '</b> · ' +
+               esc(CASE.name) + '</span></div><h2>Where you stand</h2>';
+
+    // Everything below is built from the per-question history rather than from finished
+    // sessions. A single answered question counts, which is the whole point: this page used
+    // to say "nothing here" to someone who had just answered three.
+    var qs = answersForCase(student.key);
+    var qids = Object.keys(qs);
+
+    if (!qids.length && !sessions.length) {
+      html += '<div class="empty">Nothing drilled yet for this case. Answer a single question ' +
+              'and it is kept, so this page fills in as you go, even if you stop part way.</div>' +
+              '<div class="row"><button class="btn primary" id="start">Start a session</button>' +
+              '<button class="btn" id="switch">Switch person</button></div>' + askHtml();
+      app.innerHTML = html;
+      on("start", "click", function () { go(screenLevels); });
+      on("switch", "click", function () { reset(screenWelcome); });
+      wireAsk();
+      return;
+    }
+
+    var agg = {}, totalQ = 0, totalOk = 0, wrongNow = [];
+    qids.forEach(function (id) {
+      var r = qs[id], t = r.t || "Uncategorised";
+      if (!agg[t]) agg[t] = { ok: 0, n: 0 };
+      agg[t].ok += r.ok; agg[t].n += r.n;
+      totalQ += r.n; totalOk += r.ok;
+      if (!r.last) wrongNow.push(id);
+    });
+
+    var seenCount = qids.length;
+    var coverage = BANK.length ? Math.round(seenCount / BANK.length * 100) : 0;
+    var overall = totalQ ? Math.round(totalOk / totalQ * 100) : 0;
+    var best = sessions.length
+      ? Math.max.apply(null, sessions.map(function (s) { return s.pct; })) : null;
+
+    html += '<div class="stats">' +
+      '<div class="stat"><div class="sv">' + seenCount +
+        '<span style="font-size:.6em;color:var(--ink-soft)">/' + BANK.length + '</span></div>' +
+        '<div class="sl">questions met (' + coverage + '%)</div></div>' +
+      '<div class="stat"><div class="sv">' + overall + '%</div>' +
+        '<div class="sl">answered right, all attempts</div></div>' +
+      '<div class="stat"><div class="sv">' + wrongNow.length + '</div>' +
+        '<div class="sl">wrong last time</div></div>' +
+      '<div class="stat"><div class="sv">' + (best === null ? '&mdash;' : best + '%') + '</div>' +
+        '<div class="sl">' + (best === null ? 'no full level yet' : 'best full level') + '</div></div>' +
+      '</div>';
+
+    if (wrongNow.length) {
+      var byTypeWrong = {};
+      wrongNow.forEach(function (id) {
+        var t = qs[id].t || "Uncategorised";
+        byTypeWrong[t] = (byTypeWrong[t] || 0) + 1;
+      });
+      var parts = Object.keys(byTypeWrong).sort(function (a, b) {
+        return byTypeWrong[b] - byTypeWrong[a];
+      }).map(function (t) { return byTypeWrong[t] + " in " + t.toLowerCase(); });
+      html += '<div class="verdict weak"><b>' + wrongNow.length + ' question' +
+              (wrongNow.length === 1 ? '' : 's') + ' you got wrong the last time you met ' +
+              (wrongNow.length === 1 ? 'it' : 'them') + ':</b> ' + esc(parts.join(", ")) +
+              '. These are the ones worth going back to first.</div>';
+    }
+
+    if (seenCount >= BANK.length) {
+      html += '<div class="verdict info"><b>You have been through every question in this case.</b> ' +
+              'Repeating them now tests retention rather than recall, which is the more useful ' +
+              'thing this close to an exam. If you want more, ask for the bank to be extended, ' +
+              'your results are kept, so new questions slot in alongside these.</div>';
+    }
+
+    // cumulative accuracy by topic
+    var types = Object.keys(agg).sort(function (a, b) {
+      return (agg[a].ok / agg[a].n) - (agg[b].ok / agg[b].n);
+    });
+    html += '<h3>Accuracy by topic, every attempt</h3><div class="breakdown">';
+    types.forEach(function (t) {
+      var d = agg[t], p = Math.round(d.ok / d.n * 100);
+      html += '<div class="brow"><span class="bname">' + esc(t) + '</span>' +
+              '<span class="bval">' + d.ok + '/' + d.n + ' · ' + p + '%</span>' +
+              '<span class="btrack"><i style="width:' + p + '%;background:' +
+              (p >= 70 ? "var(--good)" : "var(--miss)") + '"></i></span></div>';
+    });
+    html += '</div>';
+
+    var weak = types.filter(function (t) { return agg[t].ok / agg[t].n < 0.7; });
+    if (weak.length) {
+      html += '<div class="verdict weak"><b>Consistently weak: ' + esc(weak.join(", ")) + '.</b> ' +
+              'These are the sections of the study guide to reread before the next session.</div>';
+    }
+
+    html += '<h3>Completed levels</h3><div class="hist">';
+    if (!sessions.length) {
+      html += '<div class="empty" style="margin:0">No level finished end to end yet. Your ' +
+              'answers so far are all kept either way, this list is just the full runs.</div>';
+    }
+    sessions.forEach(function (s) {
+      html += '<div class="hrow"><span class="hl">' + esc(s.levelName || ("Level " + s.level)) + '</span>' +
+              '<span class="hd">' + esc(when(s.at)) + '</span>' +
+              '<span class="hp ' + (s.pct >= 70 ? 'ok' : 'bad') + '">' + s.pct + '%</span></div>';
+    });
+    html += '</div>';
+
+    html += '<div class="row" style="margin-top:1.4rem">' +
+            '<button class="btn primary" id="again">Drill again</button>' +
+            '<button class="btn" id="switch">Switch person</button></div>';
+
+    html += askHtml();
+
+    app.innerHTML = html;
+    on("again", "click", function () { replace(screenLevels); });
+    on("switch", "click", function () { reset(screenWelcome); });
+    wireAsk();
+  }
+
+  // ------------------------------------------------- asking for better questions
+  //
+  // The viva bank was written without the people who use it, so nothing in the system knows
+  // whether a level is pitched right, which case needs more questions, or which question is
+  // wrong. This is the only channel that can say so. It is stored locally first and retried,
+  // like everything else here, because a request typed on ward wifi should not evaporate.
+
+  function askHtml() {
+    return '<div class="ask"><h3>Ask for different questions</h3>' +
+           '<textarea id="askbox" rows="3" placeholder="Harder anatomy. More on complications. ' +
+           'This question is wrong."></textarea>' +
+           '<div class="row end"><button class="btn" id="asksend">Send</button></div>' +
+           '<p class="asknote" id="asknote"></p></div>';
+  }
+
+  function wireAsk() {
+    var box = document.getElementById("askbox");
+    var note = document.getElementById("asknote");
+    if (!box) return;
+
+    on("asksend", "click", function () {
+      var text = box.value.trim();
+      if (!text) { box.focus(); return; }
+
+      var rec = {
+        id: newId(), studentKey: student.key, subject: SUBJECT, caseId: CASE.id,
+        body: text.slice(0, 4000), at: new Date().toISOString(), sent: false
+      };
+      var s = store();
+      s.asks = (s.asks || []).concat([rec]).slice(-200);
+      save(s);
+
+      box.value = "";
+      note.textContent = "Noted, thank you. It goes into the next revision of this case.";
+      sendAsks();
+    });
+  }
+
+  function sendAsks() {
+    if (!SYNC) return;
+    var s = store();
+    var pending = (s.asks || []).filter(function (a) { return a && !a.sent && a.studentKey; });
+    pending.slice(-20).forEach(function (a) {
+      fetch(SYNC + "/api/feedback?student=" + encodeURIComponent(a.studentKey), {
+        method: "POST",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify({ id: a.id, subject: a.subject, caseId: a.caseId,
+                               body: a.body, at: a.at })
+      }).then(function (r) {
+        if (!r.ok) return;
+        var s2 = store();
+        (s2.asks || []).forEach(function (x) { if (x.id === a.id) x.sent = true; });
+        save(s2);
+      }).catch(function () { /* offline; it goes on the next open */ });
+    });
+  }
+
+  // ------------------------------------------------------------------ sync
+
+  // Saving is not something the reader needs told. It happens on every mark, it happens
+  // again on leaving, and saying so in a footer only suggests it might not have.
+  function syncSession(rec) {
+    if (!dbReady || !db) return;        // the website path; recordSession has already stored it
+    var id = rec.at.replace(/[^0-9]/g, "") + "-" + Math.random().toString(36).slice(2, 7);
+    db.collection("sessions").doc(id).set(rec).catch(function () {});
+  }
+
+  // ------------------------------------------------------------------ study guide
+
+  var guideCache = {};   // keyed by case id: the hub keeps every guide the student has opened
+
+  function screenGuide() {
+    app.innerHTML = '<div class="loading">Opening the study guide…</div>';
+
+    function mount(html) {
+      app.innerHTML = '<div class="readerwrap"><div class="guide" id="guideRoot">' + html + '</div></div>';
+      var root = document.getElementById("guideRoot");
+      var opts = { guide: root, doc: CASE.id, student: student.key || "_",
+                   syncRoot: true, onTheme: function () { renderTopbar(); } };
+      if (window.ReaderBoot) window.ReaderBoot(opts);
+      else if (window.Reader && window.Reader.remount) window.Reader.remount(opts);
+    }
+
+    var id = CASE.id;
+    if (guideCache[id]) { mount(guideCache[id]); return; }
+
+    fetch(guideBodyFile(CASE))
+      .then(function (r) { if (!r.ok) throw new Error(r.status); return r.text(); })
+      .then(function (txt) { guideCache[id] = txt; mount(txt); })
+      .catch(function () {
+        app.innerHTML =
+          '<h2>The study guide could not load</h2>' +
+          '<p class="sub">It is published alongside this page but the request did not ' +
+          'come back. Reloading usually fixes it. The PDF on the case page has the same ' +
+          'content and does not depend on this.</p>' +
+          '<div class="row"><button class="btn primary" id="retry">Try again</button></div>';
+        on("retry", "click", function () { go(screenGuide); });
+      });
+  }
+
+  // ------------------------------------------------------------------ pdf
+
+  var IN_ARTIFACT = !!(window.claude && window.claude.use);
+
+  function savePdf() {
+    var d = document.getElementById("pdfDesc");
+    function say(msg) { if (d) d.textContent = msg; }
+
+    // On the web the sandbox restrictions do not apply, so just open it.
+    var file = pdfFile(CASE);
+
+    if (!IN_ARTIFACT) {
+      window.open(file, "_blank", "noopener");
+      return;
+    }
+
+    say("Fetching the PDF…");
+    fetch(file)
+      .then(function (r) { if (!r.ok) throw new Error(r.status); return r.blob(); })
+      .then(function (blob) {
+        return window.claude.use("downloads").then(function (dl) {
+          if (!dl) throw new Error("not granted");
+          return dl.save({ filename: file, data: blob });
+        });
+      })
+      .then(function () { say("Saved. The whole study guide laid out for paper."); })
+      .catch(function () {
+        say("Could not save it here, open the study guide above and print it instead, " +
+            "which produces the same pages.");
+      });
+  }
+
+  // ------------------------------------------------------------------ welcome
+
+  function screenWelcome() {
+    var others = allStudents();
+    var last = store().lastStudent;
+    var saved = (last && studentRec(last)) ? studentRec(last).name : "";
+
+    var html =
+      '<p class="eyebrow">' + esc(SUBJECT) + ' · MBBS final year</p>' +
+      '<h1>Surgery Case Files</h1>' +
+      '<label class="fld" for="nm">Your name</label>' +
+      '<input type="text" id="nm" autocomplete="off" placeholder="Name" value="' + esc(saved) + '">';
+
+    if (others.length) {
+      html += '<div class="known">' + others.map(function (o) {
+        return '<button data-k="' + esc(o.key) + '">' + esc(o.name) + '</button>';
+      }).join("") + '</div>';
+    }
+    html += '<div class="row end" style="margin-top:1.3rem">' +
+            '<button class="btn primary" id="go">Continue</button></div>';
+    app.innerHTML = html;
+
+    function enter(name) {
+      var v = String(name).trim();
+      if (!v) { document.getElementById("nm").focus(); return; }
+      student = { key: keyOf(v), name: v };
+      var st = store();
+      st.students = st.students || {};
+      if (st.students[student.key]) student.name = st.students[student.key].name;
+      else st.students[student.key] = { name: student.name, sessions: [] };
+      st.lastStudent = student.key;
+      save(st);
+      if (window.Reader && window.Reader.setStudent) window.Reader.setStudent(student.key);
+      reset(screenIndex);
+    }
+    on("go", "click", function () { enter(document.getElementById("nm").value); });
+    document.getElementById("nm").addEventListener("keydown", function (e) {
+      if (e.key === "Enter") enter(this.value);
+    });
+    [].forEach.call(app.querySelectorAll(".known button"), function (b) {
+      b.addEventListener("click", function () {
+        var r = studentRec(b.dataset.k);
+        enter(r ? r.name : b.dataset.k);
+      });
+    });
+    document.getElementById("nm").focus();
+  }
+
+  // ------------------------------------------------------------------ boot
+
+  reset(screenWelcome);
+
+  // Anything finished while offline goes up now. Deliberately after the first paint, so a
+  // slow or failing network never delays the screen the reader is waiting for.
+  setTimeout(flushSessions, 1200);
+  setTimeout(pushAnswers, 1400);
+  setTimeout(sendAsks, 1600);
+
+  // A phone does not reliably fire unload, but it does fire this when the tab is hidden or
+  // the app is backgrounded, which is how a session on a phone actually ends.
+  document.addEventListener("visibilitychange", function () {
+    if (document.visibilityState === "hidden") { pushAnswers(); flushSessions(); sendAsks(); }
+  });
+
+  if (window.claude && window.claude.use) {
+    window.claude.use("db").then(function (d) { db = d; dbReady = true; })
+                           .catch(function () { db = null; dbReady = true; });
+  } else { dbReady = true; }
+})();
+</script>
+
+</body>
+</html>

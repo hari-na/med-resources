@@ -18,6 +18,21 @@
   --miss:     #9a4228;
   --miss-dim: #f7e8e2;
 
+
+  /* The reader's floating chrome, the rail, studio, note editor, bubble and source pane, is
+     appended to document.body rather than inside .guide, so it cannot see the tokens the
+     stylesheet defines on .guide. In the hub that left every panel painting var(--paper, #fff)
+     white while its text used the dark --ink, measured at 1.24:1. These aliases give the
+     chrome the same palette the hub is already using. */
+  --paper:       var(--card);
+  --accent-soft: var(--accent-dim);
+  --flag:        #8a5a2b;
+  --flag-soft:   #f6ece0;
+  --cite:        var(--ink-soft);
+  --mark:        #fff3bf;
+  --bl:          #5b4a8a;
+  --srb:         #1f6b5c;
+
   --serif: "Spectral", Georgia, "Times New Roman", serif;
   --sans: "Inter", system-ui, -apple-system, "Segoe UI", sans-serif;
   color-scheme: light;
@@ -28,6 +43,7 @@
     --bg: #111416; --card: #1a1e21; --ink: #e9e7e2; --ink-soft: #a0a8ae;
     --rule: #2d3338; --accent: #6fc3d2; --accent-dim: #16292f;
     --good: #7fc79b; --good-dim: #16281d; --miss: #e09a7c; --miss-dim: #2a1b15;
+    --flag: #d8a46a; --flag-soft: #2a1f14; --mark: #6b5b1f;
     color-scheme: dark;
   }
 }
@@ -35,6 +51,7 @@
   --bg: #111416; --card: #1a1e21; --ink: #e9e7e2; --ink-soft: #a0a8ae;
   --rule: #2d3338; --accent: #6fc3d2; --accent-dim: #16292f;
   --good: #7fc79b; --good-dim: #16281d; --miss: #e09a7c; --miss-dim: #2a1b15;
+  --flag: #d8a46a; --flag-soft: #2a1f14; --mark: #6b5b1f;
   color-scheme: dark;
 }
 
@@ -261,6 +278,18 @@ label.fld {
 
 .saved { font-size: 0.78rem; color: var(--ink-soft); margin-top: 1.1rem;
          padding-top: 0.9rem; border-top: 1px solid var(--rule); }
+
+.ask { margin-top: 1.8rem; padding-top: 1.2rem; border-top: 1px solid var(--rule); }
+.ask h3 { margin: 0 0 0.6rem; font-size: 0.92rem; }
+.ask textarea {
+  width: 100%; box-sizing: border-box; resize: vertical; min-height: 4.2rem;
+  font: inherit; font-size: 1rem;            /* 16px, so iOS does not zoom on focus */
+  color: var(--ink); background: var(--card);
+  border: 1px solid var(--rule); border-radius: 8px; padding: 0.7rem 0.8rem;
+}
+.ask textarea:focus-visible { outline: 2px solid var(--accent); outline-offset: 1px; }
+.ask .row { margin-top: 0.6rem; }
+.asknote { font-size: 0.8rem; color: var(--ink-soft); margin: 0.6rem 0 0; min-height: 1.1em; }
 
 .who { display: flex; justify-content: space-between; align-items: center; gap: 0.8rem;
        font-size: 0.78rem; color: var(--ink-soft); margin-bottom: 1rem; }
@@ -995,8 +1024,7 @@ label.fld {
         'back in a few days to test retention rather than recall.</div>';
     html += '<div class="row"><button class="btn" id="retry">Retry this level</button>' +
             '<button class="btn" id="levels">Another level</button>' +
-            '<button class="btn primary" id="prog">Your progress</button></div>' +
-            '<div class="saved" id="saved">Saving…</div>';
+            '<button class="btn primary" id="prog">Your progress</button></div>';
 
     app.innerHTML = html;
     on("retry", "click", function () { level = level; startDrill(level, true); });
@@ -1026,10 +1054,11 @@ label.fld {
       html += '<div class="empty">Nothing drilled yet for this case. Answer a single question ' +
               'and it is kept, so this page fills in as you go, even if you stop part way.</div>' +
               '<div class="row"><button class="btn primary" id="start">Start a session</button>' +
-              '<button class="btn" id="switch">Switch person</button></div>';
+              '<button class="btn" id="switch">Switch person</button></div>' + askHtml();
       app.innerHTML = html;
       on("start", "click", function () { go(screenLevels); });
       on("switch", "click", function () { reset(screenWelcome); });
+      wireAsk();
       return;
     }
 
@@ -1116,41 +1145,81 @@ label.fld {
 
     html += '<div class="row" style="margin-top:1.4rem">' +
             '<button class="btn primary" id="again">Drill again</button>' +
-            '<button class="btn" id="switch">Switch person</button></div>' +
-            '<div class="saved" id="syncline"></div>';
+            '<button class="btn" id="switch">Switch person</button></div>';
+
+    html += askHtml();
 
     app.innerHTML = html;
     on("again", "click", function () { replace(screenLevels); });
     on("switch", "click", function () { reset(screenWelcome); });
+    wireAsk();
+  }
 
-    var sl = document.getElementById("syncline");
-    if (sl) {
-      sl.textContent = SYNC
-        ? "Saved on this device, and to your name, so it follows you to your other devices."
-        : "Saved on this device.";
-    }
+  // ------------------------------------------------- asking for better questions
+  //
+  // The viva bank was written without the people who use it, so nothing in the system knows
+  // whether a level is pitched right, which case needs more questions, or which question is
+  // wrong. This is the only channel that can say so. It is stored locally first and retried,
+  // like everything else here, because a request typed on ward wifi should not evaporate.
+
+  function askHtml() {
+    return '<div class="ask"><h3>Ask for different questions</h3>' +
+           '<textarea id="askbox" rows="3" placeholder="Harder anatomy. More on complications. ' +
+           'This question is wrong."></textarea>' +
+           '<div class="row end"><button class="btn" id="asksend">Send</button></div>' +
+           '<p class="asknote" id="asknote"></p></div>';
+  }
+
+  function wireAsk() {
+    var box = document.getElementById("askbox");
+    var note = document.getElementById("asknote");
+    if (!box) return;
+
+    on("asksend", "click", function () {
+      var text = box.value.trim();
+      if (!text) { box.focus(); return; }
+
+      var rec = {
+        id: newId(), studentKey: student.key, subject: SUBJECT, caseId: CASE.id,
+        body: text.slice(0, 4000), at: new Date().toISOString(), sent: false
+      };
+      var s = store();
+      s.asks = (s.asks || []).concat([rec]).slice(-200);
+      save(s);
+
+      box.value = "";
+      note.textContent = "Noted, thank you. It goes into the next revision of this case.";
+      sendAsks();
+    });
+  }
+
+  function sendAsks() {
+    if (!SYNC) return;
+    var s = store();
+    var pending = (s.asks || []).filter(function (a) { return a && !a.sent && a.studentKey; });
+    pending.slice(-20).forEach(function (a) {
+      fetch(SYNC + "/api/feedback?student=" + encodeURIComponent(a.studentKey), {
+        method: "POST",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify({ id: a.id, subject: a.subject, caseId: a.caseId,
+                               body: a.body, at: a.at })
+      }).then(function (r) {
+        if (!r.ok) return;
+        var s2 = store();
+        (s2.asks || []).forEach(function (x) { if (x.id === a.id) x.sent = true; });
+        save(s2);
+      }).catch(function () { /* offline; it goes on the next open */ });
+    });
   }
 
   // ------------------------------------------------------------------ sync
 
+  // Saving is not something the reader needs told. It happens on every mark, it happens
+  // again on leaving, and saying so in a footer only suggests it might not have.
   function syncSession(rec) {
-    var el = document.getElementById("saved");
-    if (!el) return;
-    if (!dbReady) { el.textContent = "Saved on this device."; return; }
-    if (!db) {
-      // No artifact database here, which is the normal case on the website. The session has
-      // already gone to the worker from recordSession, so this is not a failure.
-      el.textContent = SYNC
-        ? "Saved on this device, and to your name."
-        : "Saved on this device.";
-      return;
-    }
+    if (!dbReady || !db) return;        // the website path; recordSession has already stored it
     var id = rec.at.replace(/[^0-9]/g, "") + "-" + Math.random().toString(36).slice(2, 7);
-    db.collection("sessions").doc(id).set(rec).then(function () {
-      el.textContent = "Saved for " + rec.studentName + " and synced.";
-    }).catch(function () {
-      el.textContent = "Saved on this device; could not sync this time.";
-    });
+    db.collection("sessions").doc(id).set(rec).catch(function () {});
   }
 
   // ------------------------------------------------------------------ study guide
@@ -1274,11 +1343,12 @@ label.fld {
   // slow or failing network never delays the screen the reader is waiting for.
   setTimeout(flushSessions, 1200);
   setTimeout(pushAnswers, 1400);
+  setTimeout(sendAsks, 1600);
 
   // A phone does not reliably fire unload, but it does fire this when the tab is hidden or
   // the app is backgrounded, which is how a session on a phone actually ends.
   document.addEventListener("visibilitychange", function () {
-    if (document.visibilityState === "hidden") { pushAnswers(); flushSessions(); }
+    if (document.visibilityState === "hidden") { pushAnswers(); flushSessions(); sendAsks(); }
   });
 
   if (window.claude && window.claude.use) {

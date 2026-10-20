@@ -31,8 +31,11 @@ def site_files() -> dict:
     PDFs are published without their number prefix, because that is the name the hub asks
     for: dist/02-thyroid-swelling.pdf is served as thyroid-swelling.pdf.
     """
+    # index.html must be the wrapped document, not the bare artifact fragment. Shipping the
+    # fragment is what put the site live with no doctype and no viewport meta, so phones laid
+    # it out at about 980px and shrank it. build.py writes both; this takes the right one.
     files = {
-        "index.html": DIST / "artifact" / "case-files.html",
+        "index.html": DIST / "artifact" / "index.html",
         "citations.json": DIST / "citations.json",
     }
     for body in sorted(DIST.glob("*.body.html")):
