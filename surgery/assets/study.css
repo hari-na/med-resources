@@ -1,0 +1,865 @@
+/* Stylesheet for the surgery reference documents.
+
+   Every rule is scoped under .guide, so the same sheet works in two places: the standalone
+   document (where <body class="guide">) and inside the Claude artifact (where the guide is a
+   <div class="guide"> alongside the app's own interface).
+
+   Everything a reader might want to change is a token on .guide, switched by data attributes.
+   Students read very differently from one another, line length, type size and contrast are
+   not decoration here, they decide whether someone can sit with a document for an hour. */
+
+/* ============================== tokens ============================== */
+
+.guide {
+  /* colour: light is the base; the themes below redefine these */
+  --paper:       #fbfaf7;
+  --ink:         #1b1f22;
+  --ink-soft:    #5a6269;
+  --rule:        #ddd8ce;
+  --accent:      #005f73;
+  --accent-soft: #e3eef0;
+  --flag:        #8a5a2b;
+  --flag-soft:   #f6ece0;
+  --cite:        #7d8891;
+  --mark:        #fff3bf;
+  --bl:          #5b4a8a;
+  --srb:         #1f6b5c;
+
+  /* typography */
+  --face-body: "Spectral", Georgia, "Times New Roman", serif;
+  --face-ui:  "Inter", system-ui, -apple-system, "Segoe UI", sans-serif;
+  --fs:       17px;
+  --lh:       1.62;
+  --track:    0em;
+
+  /* measure */
+  --measure: 42rem;
+
+  font-family: var(--face-body);
+  font-size: var(--fs);
+  line-height: var(--lh);
+  letter-spacing: var(--track);
+  color: var(--ink);
+  background: var(--paper);
+  position: relative;          /* the ink canvas anchors to this */
+}
+
+/* ---------- reader: line width ---------- */
+.guide[data-width="narrow"] { --measure: 34rem; }
+.guide[data-width="medium"] { --measure: 42rem; }
+.guide[data-width="wide"]   { --measure: 54rem; }
+.guide[data-width="full"]   { --measure: 100%; }
+
+/* ---------- reader: type size ---------- */
+.guide[data-size="1"] { --fs: 15px; }
+.guide[data-size="2"] { --fs: 16px; }
+.guide[data-size="3"] { --fs: 17px; }
+.guide[data-size="4"] { --fs: 19px; }
+.guide[data-size="5"] { --fs: 21px; }
+.guide[data-size="6"] { --fs: 24px; }
+
+/* ---------- reader: line spacing ---------- */
+.guide[data-leading="tight"]  { --lh: 1.42; }
+.guide[data-leading="normal"] { --lh: 1.62; }
+.guide[data-leading="loose"]  { --lh: 1.9; }
+
+/* ---------- reader: typeface ----------
+   Hyperlegible is included because it was drawn for low-vision readers; it also suits
+   anyone who finds a serif tiring on a screen. Mono suits people who read code all day. */
+.guide[data-face="serif"] { --face-body: "Spectral", Georgia, "Times New Roman", serif; }
+.guide[data-face="sans"]  { --face-body: "Inter", system-ui, -apple-system, sans-serif;
+                            --face-ui: "Inter", system-ui, -apple-system, sans-serif; }
+.guide[data-face="hyper"] { --face-body: "Atkinson Hyperlegible", system-ui, sans-serif;
+                            --face-ui: "Atkinson Hyperlegible", system-ui, sans-serif;
+                            --track: 0.005em; }
+.guide[data-face="mono"]  { --face-body: ui-monospace, "SFMono-Regular", Menlo, Consolas, monospace;
+                            --fs: 15px; }
+
+/* ---------- reader: colour themes ---------- */
+
+.guide[data-theme="sepia"] {
+  --paper: #f4ecd8; --ink: #433422; --ink-soft: #6f5f4a; --rule: #ddd0b4;
+  --accent: #7a4a1e; --accent-soft: #ece0c8; --flag: #8a5a2b; --flag-soft: #ece0c8;
+  --cite: #8a7b63; --mark: #f5d98a; --bl: #6a4a7a; --srb: #3f6b4a;
+  color-scheme: light;
+}
+
+.guide[data-theme="dark"] {
+  --paper: #15181a; --ink: #e8e6e1; --ink-soft: #a3abb2; --rule: #2e3338;
+  --accent: #6fc3d2; --accent-soft: #1b2a2e; --flag: #d9a36a; --flag-soft: #2a2119;
+  --cite: #78828a; --mark: #4a4120; --bl: #a893dd; --srb: #6fc3a8;
+  color-scheme: dark;
+}
+
+.guide[data-theme="contrast"] {
+  --paper: #000000; --ink: #ffffff; --ink-soft: #d8d8d8; --rule: #6a6a6a;
+  --accent: #6fe3ff; --accent-soft: #10242b; --flag: #ffc46b; --flag-soft: #2a2008;
+  --cite: #bdbdbd; --mark: #4a4a00; --bl: #d0b8ff; --srb: #7fe8c0;
+  color-scheme: dark;
+}
+
+/* follow the operating system when the reader has not chosen */
+@media (prefers-color-scheme: dark) {
+  .guide[data-theme="auto"] {
+    --paper: #15181a; --ink: #e8e6e1; --ink-soft: #a3abb2; --rule: #2e3338;
+    --accent: #6fc3d2; --accent-soft: #1b2a2e; --flag: #d9a36a; --flag-soft: #2a2119;
+    --cite: #78828a; --mark: #4a4120; --bl: #a893dd; --srb: #6fc3a8;
+    color-scheme: dark;
+  }
+}
+
+/* ============================== layout ============================== */
+
+.guide * { box-sizing: border-box; }
+
+.guide .wrap {
+  max-width: var(--measure);
+  margin: 0 auto;
+  padding-left: max(18px, env(safe-area-inset-left, 0px));
+  padding-right: max(18px, env(safe-area-inset-right, 0px));
+  padding-block: 2.5rem 5rem;
+}
+
+body.guide { margin: 0; -webkit-text-size-adjust: 100%; }
+
+/* ============================== masthead ============================== */
+
+.guide .eyebrow {
+  font-family: var(--face-ui);
+  font-size: 0.7rem; font-weight: 600; letter-spacing: 0.12em;
+  text-transform: uppercase; color: var(--accent); margin: 0 0 0.6rem;
+}
+
+.guide h1 {
+  font-family: var(--face-body);
+  font-size: 2.1rem; font-weight: 600; line-height: 1.15;
+  letter-spacing: -0.015em; text-wrap: balance; margin: 0 0 0.7rem;
+}
+
+.guide .standfirst { font-size: 1.02rem; color: var(--ink-soft); margin: 0 0 1.6rem; }
+
+.guide .masthead {
+  border-bottom: 2px solid var(--ink);
+  padding-bottom: 1.4rem; margin-bottom: 2.2rem;
+}
+
+/* ============================== structure ============================== */
+
+.guide h2 {
+  font-family: var(--face-ui);
+  font-size: 0.78rem; font-weight: 700; letter-spacing: 0.14em;
+  text-transform: uppercase; color: var(--ink);
+  margin: 3.2rem 0 0.2rem; padding-bottom: 0.45rem;
+  border-bottom: 1px solid var(--rule);
+}
+.guide h2 .n { color: var(--accent); margin-right: 0.5rem; }
+
+.guide h3 {
+  font-family: var(--face-body);
+  font-size: 1.22rem; font-weight: 600; margin: 2.1rem 0 0.1rem; text-wrap: balance;
+}
+
+.guide h4 {
+  font-family: var(--face-ui);
+  font-size: 0.86rem; font-weight: 650; margin: 1.5rem 0 0.4rem; color: var(--ink);
+}
+
+.guide p { margin: 0.75rem 0; }
+.guide a { color: var(--accent); }
+
+/* ---------- reader: emphasise headings ---------- */
+.guide[data-hl-head="on"] h2 {
+  background: var(--accent-soft);
+  border-bottom-color: var(--accent);
+  padding: 0.5rem 0.6rem;
+  border-radius: 3px 3px 0 0;
+}
+.guide[data-hl-head="on"] h3 {
+  border-left: 3px solid var(--accent);
+  padding-left: 0.6rem;
+}
+
+/* ============================== step + rationale ============================== */
+
+.guide .step {
+  margin: 1.35rem 0; padding-left: 0.95rem; border-left: 2px solid var(--rule);
+}
+.guide .step > .ask { font-weight: 600; }
+
+.guide .step > .why {
+  display: block;
+  font-family: var(--face-ui);
+  font-size: 0.88em; line-height: 1.55;
+  color: var(--ink-soft); margin-top: 0.35rem;
+}
+.guide .why b, .guide .why strong { color: var(--ink); font-weight: 650; }
+
+.guide .why .label {
+  font-size: 0.68em; font-weight: 700; letter-spacing: 0.09em;
+  text-transform: uppercase; color: var(--accent); margin-right: 0.4rem;
+}
+.guide .why .label.out { color: var(--flag); }
+
+/* ---------- reader: emphasise the reasoning ----------
+   The rationale is the point of this document, so some readers want it to dominate
+   rather than sit quietly under each step. */
+.guide[data-hl-why="on"] .step {
+  border-left-color: var(--accent);
+  background: var(--accent-soft);
+  padding: 0.75rem 0.9rem;
+  border-radius: 0 4px 4px 0;
+}
+.guide[data-hl-why="on"] .step > .why { color: var(--ink); }
+
+/* ---------- reader: recall mode ----------
+   Hides every answer and rationale until tapped, which turns the reference into a
+   self-test without needing a separate deck. */
+.guide[data-recall="on"] .step > .why,
+.guide[data-recall="on"] dl.findings dd,
+.guide[data-recall="on"] .viva .ans {
+  background: var(--rule);
+  color: transparent;
+  border-radius: 3px;
+  cursor: pointer;
+  user-select: none;
+}
+.guide[data-recall="on"] .step > .why *,
+.guide[data-recall="on"] dl.findings dd *,
+.guide[data-recall="on"] .viva .ans * { visibility: hidden; }
+.guide[data-recall="on"] .revealed,
+.guide[data-recall="on"] .revealed * {
+  background: none !important;
+  color: inherit !important;
+  visibility: visible !important;
+  user-select: auto;
+}
+.guide[data-recall="on"] .revealed .label { color: var(--accent) !important; }
+.guide[data-recall="on"] .revealed .label.out { color: var(--flag) !important; }
+
+/* ============================== finding lists ============================== */
+
+.guide dl.findings { margin: 1.1rem 0; }
+.guide dl.findings dt { font-weight: 600; margin-top: 1rem; }
+.guide dl.findings dd {
+  margin: 0.2rem 0 0 0;
+  font-family: var(--face-ui);
+  font-size: 0.88em; line-height: 1.55; color: var(--ink-soft);
+}
+
+/* ---------- reader: emphasise key terms ---------- */
+.guide[data-hl-term="on"] b,
+.guide[data-hl-term="on"] strong {
+  background: var(--mark);
+  padding: 0 0.15em;
+  border-radius: 2px;
+}
+.guide[data-hl-term="on"] .why b,
+.guide[data-hl-term="on"] dl.findings dd b { color: var(--ink); }
+
+/* ============================== callouts ============================== */
+
+.guide .pearl {
+  background: var(--accent-soft); border-left: 3px solid var(--accent);
+  padding: 0.85rem 1rem; margin: 1.6rem 0; font-size: 0.95em;
+}
+.guide .pearl .tag {
+  display: block; font-family: var(--face-ui);
+  font-size: 0.66em; font-weight: 700; letter-spacing: 0.1em;
+  text-transform: uppercase; color: var(--accent); margin-bottom: 0.3rem;
+}
+
+.guide .unverified {
+  background: var(--flag-soft); border-left: 3px solid var(--flag);
+  padding: 0.85rem 1rem; margin: 1.6rem 0;
+  font-family: var(--face-ui); font-size: 0.86em; line-height: 1.55;
+}
+.guide .unverified .tag {
+  display: block; font-size: 0.66em; font-weight: 700; letter-spacing: 0.1em;
+  text-transform: uppercase; color: var(--flag); margin-bottom: 0.3rem;
+}
+
+/* ============================== viva ============================== */
+
+.guide .viva { margin: 1.2rem 0; }
+.guide .viva details { border-bottom: 1px solid var(--rule); padding: 0.7rem 0; }
+.guide .viva summary {
+  cursor: pointer; font-weight: 600; font-size: 0.98em;
+  list-style: none; display: flex; gap: 0.6rem; align-items: baseline;
+}
+.guide .viva summary::-webkit-details-marker { display: none; }
+.guide .viva summary::before {
+  content: "Q"; font-family: var(--face-ui);
+  font-size: 0.64em; font-weight: 700; letter-spacing: 0.08em;
+  color: var(--accent); border: 1px solid var(--accent); border-radius: 2px;
+  padding: 0.08rem 0.3rem; flex: none; transform: translateY(-0.1em);
+}
+.guide .viva details[open] summary { color: var(--accent); }
+.guide .viva .ans {
+  font-family: var(--face-ui); font-size: 0.89em; line-height: 1.6;
+  color: var(--ink-soft); margin: 0.55rem 0 0.2rem 1.9rem;
+}
+
+/* ============================== citations ============================== */
+
+.guide cite.src {
+  font-family: var(--face-ui); font-style: normal;
+  font-size: 0.66em; font-weight: 600; letter-spacing: 0.02em;
+  color: var(--cite); white-space: nowrap;
+  border: 1px solid var(--rule); border-radius: 2px;
+  padding: 0.05rem 0.28rem; margin-left: 0.3rem; vertical-align: 0.12em;
+}
+.guide cite.src.das { border-color: var(--accent); color: var(--accent); }
+.guide cite.src.bl  { border-color: var(--bl);     color: var(--bl); }
+.guide cite.src.srb { border-color: var(--srb);    color: var(--srb); }
+
+.guide[data-cite="off"] cite.src { display: none; }
+
+/* ============================== discrepancies ============================== */
+
+.guide details.conflict {
+  border: 1px solid var(--rule); border-left: 3px solid var(--flag);
+  border-radius: 0 4px 4px 0; background: var(--flag-soft); margin: 1.5rem 0;
+}
+.guide details.conflict > summary {
+  cursor: pointer; list-style: none; display: flex; gap: 0.55rem; align-items: baseline;
+  padding: 0.7rem 0.9rem; font-family: var(--face-ui);
+  font-size: 0.82em; line-height: 1.45; color: var(--ink);
+}
+.guide details.conflict > summary::-webkit-details-marker { display: none; }
+.guide details.conflict > summary::before {
+  content: "*"; color: var(--flag); font-size: 1em; font-weight: 700;
+  line-height: 1; flex: none; transform: translateY(0.22em);
+}
+.guide details.conflict > summary::after {
+  content: "expand"; margin-left: auto; flex: none;
+  font-size: 0.66em; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase;
+  color: var(--flag); border: 1px solid var(--flag); border-radius: 3px; padding: 0.1rem 0.35rem;
+}
+.guide details.conflict[open] > summary::after { content: "close"; }
+.guide details.conflict > summary:hover { color: var(--flag); }
+.guide details.conflict .what { font-weight: 650; }
+.guide details.conflict .who { color: var(--ink-soft); font-weight: 400; }
+.guide details.conflict .body {
+  padding: 0 0.9rem 0.9rem 2.05rem; border-top: 1px solid var(--rule);
+  margin-top: -1px; padding-top: 0.8rem;
+}
+.guide details.conflict dl { margin: 0; }
+.guide details.conflict dt {
+  font-family: var(--face-ui); font-size: 0.76em; font-weight: 700;
+  color: var(--ink); margin-top: 0.65rem;
+}
+.guide details.conflict dt:first-child { margin-top: 0; }
+.guide details.conflict dd {
+  margin: 0.15rem 0 0; font-family: var(--face-ui);
+  font-size: 0.86em; line-height: 1.55; color: var(--ink-soft);
+}
+.guide details.conflict .ruling {
+  display: block; margin-top: 0.85rem; padding-top: 0.7rem;
+  border-top: 1px solid var(--rule); font-family: var(--face-ui);
+  font-size: 0.86em; line-height: 1.55; color: var(--ink-soft);
+}
+.guide details.conflict .ruling b { color: var(--ink); }
+
+.guide[data-conflicts="off"] details.conflict { display: none; }
+
+/* ============================== source key ============================== */
+
+.guide .srckey {
+  display: flex; flex-wrap: wrap; gap: 0.5rem 1.1rem;
+  font-family: var(--face-ui); font-size: 0.74em; color: var(--ink-soft);
+  margin: 1.2rem 0 0; padding-top: 0.9rem; border-top: 1px solid var(--rule);
+}
+.guide .srckey span { display: inline-flex; align-items: center; gap: 0.35rem; }
+.guide .srckey i { width: 9px; height: 9px; border-radius: 2px; flex: none; }
+
+/* ============================== tables ============================== */
+
+.guide .scroll { overflow-x: auto; margin: 1.4rem 0; }
+.guide table {
+  border-collapse: collapse; width: 100%;
+  font-size: 0.9em; font-family: var(--face-ui); min-width: 0;
+}
+.guide th, .guide td {
+  text-align: left; vertical-align: top;
+  padding: 0.5rem 0.7rem 0.5rem 0; border-bottom: 1px solid var(--rule);
+}
+.guide th {
+  font-size: 0.68em; font-weight: 700; letter-spacing: 0.09em;
+  text-transform: uppercase; color: var(--accent); border-bottom: 1px solid var(--ink);
+}
+
+/* ============================== figures ============================== */
+
+.guide figure { margin: 1.8rem 0; padding: 0; }
+.guide figure img {
+  display: block; max-width: 100%; height: auto;
+  border: 1px solid var(--rule); border-radius: 2px; background: #fff;
+}
+.guide figcaption {
+  font-family: var(--face-ui); font-size: 0.78em; line-height: 1.5;
+  color: var(--ink-soft); margin-top: 0.5rem;
+}
+
+/* ============================== colophon ============================== */
+
+.guide .colophon {
+  margin-top: 4rem; padding-top: 1.2rem; border-top: 1px solid var(--rule);
+  font-family: var(--face-ui); font-size: 0.76em; line-height: 1.6; color: var(--ink-soft);
+}
+
+/* ============================== print ============================== */
+
+@media print {
+  .guide {
+    --paper: #fff; --ink: #000; --ink-soft: #333; --rule: #bbb;
+    --accent: #004c5c; --accent-soft: #eef4f5; --cite: #666;
+    --measure: none; --fs: 10.5pt; --lh: 1.45;
+    --face-body: "Spectral", Georgia, serif;
+    --face-ui: "Inter", system-ui, sans-serif;
+  }
+  .guide .wrap { max-width: none; padding: 0; }
+
+  /* Watermark on the printed copy.
+   *
+   * It sits on z-index -1, behind the body text, so it can never punch a light hole through
+   * a glyph the way an overlaid watermark does. That only works if the paper itself stops
+   * painting a background over it, hence the background: none; the sheet is white anyway.
+   *
+   * It is text rather than a background image on purpose: headless Chrome's --print-to-pdf
+   * does not print backgrounds by default, and text is also still text in the finished PDF,
+   * so the watermark can be verified page by page instead of being eyeballed once.
+   *
+   * position: fixed is what repeats it on every sheet. */
+  .guide { background: none; }
+  .guide::before {
+    content: "rx.harnar.in";
+    position: fixed;
+    top: 50%;
+    left: 50%;
+    z-index: -1;
+    transform: translate(-50%, -50%) rotate(-32deg);
+    font-family: var(--face-ui);
+    font-size: 54pt;
+    font-weight: 600;
+    letter-spacing: 0.1em;
+    white-space: nowrap;
+    color: #ebe8e3;
+    print-color-adjust: exact;
+    -webkit-print-color-adjust: exact;
+  }
+  .guide h2 {
+    margin-top: 26pt;
+    padding-top: 9pt;
+    padding-bottom: 7pt;
+    border-top: 3pt solid #555;
+    border-bottom: 1pt solid #999;
+    font-size: 10pt;
+    letter-spacing: 0.16em;
+    break-after: avoid;
+    break-before: auto;
+  }
+  .guide h2 .n {
+    color: #000;
+    font-size: 13pt;
+    margin-right: 0.6em;
+  }
+  /* the first section should not push a near-empty first page */
+  .guide h2:first-of-type { margin-top: 14pt; }
+
+  /* subheads hang off the section rule so it is obvious what belongs to what */
+  .guide h3 {
+    border-left: 2.5pt solid #777;
+    padding-left: 7pt;
+    margin-top: 15pt;
+    break-after: avoid;
+  }
+  .guide h4 { margin-top: 11pt; break-after: avoid; }
+  .guide .step, .guide dl.findings dt, .guide dl.findings dd,
+  .guide .pearl, .guide figure, .guide .viva details { break-inside: avoid; }
+  .guide a { color: #000; text-decoration: none; }
+  .guide .colophon { break-before: avoid; }
+
+  /* reader preferences are for the screen; paper gets the designed layout */
+  .guide[data-recall="on"] .step > .why,
+  .guide[data-recall="on"] dl.findings dd,
+  .guide[data-recall="on"] .viva .ans { background: none; color: var(--ink-soft); }
+  .guide[data-recall="on"] .step > .why *,
+  .guide[data-recall="on"] dl.findings dd *,
+  .guide[data-recall="on"] .viva .ans * { visibility: visible; }
+  .guide[data-hl-head="on"] h2 { background: none; padding: 0 0 0.45rem; }
+  .guide[data-hl-term="on"] b, .guide[data-hl-term="on"] strong { background: none; }
+  .guide[data-conflicts="off"] details.conflict { display: block; }
+  .guide[data-cite="off"] cite.src { display: inline; }
+
+  /* discrepancies print as small asterisked footnotes, not as boxes */
+  .guide details.conflict {
+    background: none; border: none; border-left: 2px solid #999;
+    margin: 0.8rem 0; break-inside: avoid;
+  }
+  .guide details.conflict > summary { padding: 0 0 0 0.5rem; font-size: 8.5pt; font-weight: 700; }
+  .guide details.conflict > summary::after,
+  .guide details.conflict[open] > summary::after { content: none; border: none; padding: 0; }
+  .guide details.conflict .body {
+    padding: 0.2rem 0 0 0.5rem; border-top: none; margin-top: 0; font-size: 8.5pt;
+  }
+  .guide details.conflict dt { font-size: 8pt; margin-top: 0.3rem; }
+  .guide details.conflict dd { font-size: 8.5pt; line-height: 1.35; }
+  .guide details.conflict .ruling {
+    font-size: 8.5pt; line-height: 1.35; margin-top: 0.4rem;
+    padding-top: 0.3rem; border-top: 1px dotted #bbb;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .guide * { animation: none !important; transition: none !important; }
+}
+
+/* ===================================================================
+   Reader interface, the rail, selection bubble, studio panel, notes
+   and ink canvas. These sit OUTSIDE .guide (they are chrome, not
+   document), so they are deliberately unscoped and self-contained.
+   =================================================================== */
+
+.rdr-rail {
+  position: fixed;
+  right: max(10px, env(safe-area-inset-right, 0px));
+  top: 50%;
+  transform: translateY(-50%);
+  z-index: 40;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  padding: 6px;
+  border-radius: 10px;
+  background: var(--paper, #fff);
+  border: 1px solid var(--rule, #ddd);
+  box-shadow: 0 4px 18px rgba(0,0,0,.12);
+}
+
+.rdr-rail button {
+  width: 34px; height: 34px;
+  display: grid; place-items: center;
+  border: 1px solid transparent; border-radius: 7px;
+  background: none; color: var(--ink-soft, #666);
+  cursor: pointer; padding: 0;
+}
+.rdr-rail button svg { width: 18px; height: 18px; }
+.rdr-rail button:hover { color: var(--accent, #005f73); border-color: var(--rule, #ddd); }
+.rdr-rail button:focus-visible { outline: 2px solid var(--accent, #005f73); outline-offset: 1px; }
+.rdr-rail button.on {
+  color: var(--accent, #005f73);
+  background: var(--accent-soft, #e3eef0);
+  border-color: var(--accent, #005f73);
+}
+
+.rdr-pal { display: flex; flex-direction: column; gap: 4px; margin-top: 4px;
+           padding-top: 6px; border-top: 1px solid var(--rule, #ddd); }
+.rdr-pal .rdr-sw {
+  width: 22px; height: 22px; margin: 0 auto;
+  border-radius: 50%; border: 2px solid transparent; cursor: pointer; padding: 0;
+}
+.rdr-pal .rdr-sw.on { border-color: var(--ink, #222); }
+
+@media (max-width: 640px) {
+  .rdr-rail {
+    right: auto; left: 50%; top: auto;
+    bottom: max(10px, env(safe-area-inset-bottom, 0px));
+    transform: translateX(-50%);
+    flex-direction: row; align-items: center;
+  }
+  .rdr-pal { flex-direction: row; margin: 0 0 0 4px;
+             padding: 0 0 0 6px; border-top: none; border-left: 1px solid var(--rule, #ddd); }
+}
+
+/* ---------- selection bubble ---------- */
+
+.rdr-bubble {
+  position: absolute; z-index: 50;
+  display: flex; gap: 2px; padding: 4px;
+  background: var(--ink, #1b1f22); border-radius: 8px;
+  box-shadow: 0 4px 14px rgba(0,0,0,.25);
+}
+.rdr-bubble button {
+  font: inherit; font-size: 0.78rem; font-weight: 600;
+  font-family: var(--face-ui, system-ui, sans-serif);
+  color: var(--paper, #fff); background: none; border: none;
+  border-radius: 5px; padding: 0.3rem 0.6rem; cursor: pointer;
+}
+.rdr-bubble button:hover { background: rgba(255,255,255,.16); }
+
+/* ---------- studio panel ---------- */
+
+.rdr-studio {
+  position: fixed; z-index: 60;
+  right: max(10px, env(safe-area-inset-right, 0px));
+  top: max(10px, env(safe-area-inset-top, 0px));
+  bottom: max(10px, env(safe-area-inset-bottom, 0px));
+  width: min(21rem, calc(100vw - 20px));
+  display: flex; flex-direction: column;
+  background: var(--paper, #fff);
+  border: 1px solid var(--rule, #ddd); border-radius: 12px;
+  box-shadow: 0 8px 36px rgba(0,0,0,.2);
+  font-family: var(--face-ui, system-ui, sans-serif);
+  color: var(--ink, #222);
+}
+.rdr-st-head {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 0.9rem 1rem; border-bottom: 1px solid var(--rule, #ddd); font-size: 0.95rem;
+}
+.rdr-close { font-size: 1.3rem; line-height: 1; background: none; border: none;
+             color: var(--ink-soft, #666); cursor: pointer; padding: 0 0.2rem; }
+.rdr-close:hover { color: var(--ink, #222); }
+.rdr-st-body { overflow-y: auto; padding: 0.9rem 1rem 1.2rem; }
+
+.rdr-st-body label {
+  display: block; font-size: 0.66rem; font-weight: 700; letter-spacing: 0.1em;
+  text-transform: uppercase; color: var(--accent, #005f73);
+  margin: 1.1rem 0 0.45rem;
+}
+.rdr-st-body label:first-child { margin-top: 0; }
+
+.rdr-seg { display: flex; flex-wrap: wrap; gap: 4px; margin-bottom: 0.4rem; }
+.rdr-seg button {
+  font: inherit; font-size: 0.8rem; font-weight: 600;
+  color: var(--ink-soft, #666); background: none;
+  border: 1px solid var(--rule, #ddd); border-radius: 6px;
+  padding: 0.32rem 0.6rem; cursor: pointer;
+}
+.rdr-seg button:hover:not(:disabled) { color: var(--accent, #005f73); border-color: var(--accent, #005f73); }
+.rdr-seg button.on {
+  color: var(--accent, #005f73); background: var(--accent-soft, #e3eef0);
+  border-color: var(--accent, #005f73);
+}
+.rdr-seg button:disabled { opacity: 0.4; cursor: not-allowed; }
+
+.rdr-lock {
+  margin-top: 1rem; padding: 0.7rem 0.8rem; border-radius: 6px;
+  background: var(--flag-soft, #f6ece0); border-left: 3px solid var(--flag, #8a5a2b);
+  font-size: 0.8rem; line-height: 1.45; color: var(--ink-soft, #666);
+}
+
+.rdr-st-foot {
+  display: flex; flex-wrap: wrap; gap: 6px;
+  margin-top: 1.4rem; padding-top: 1rem; border-top: 1px solid var(--rule, #ddd);
+}
+.rdr-clear {
+  font: inherit; font-size: 0.78rem; font-weight: 600;
+  color: var(--flag, #8a5a2b); background: none;
+  border: 1px solid var(--rule, #ddd); border-radius: 6px;
+  padding: 0.3rem 0.6rem; cursor: pointer;
+}
+.rdr-clear:hover { border-color: var(--flag, #8a5a2b); }
+
+/* ---------- notes ---------- */
+
+.rdr-note {
+  display: inline-block; vertical-align: super;
+  font-family: var(--face-ui, system-ui, sans-serif);
+  font-size: 0.58em; font-weight: 700; letter-spacing: 0.06em; text-transform: uppercase;
+  color: var(--accent, #005f73); background: var(--accent-soft, #e3eef0);
+  border: 1px solid var(--accent, #005f73); border-radius: 3px;
+  padding: 0.05em 0.3em; margin-left: 0.35em; cursor: pointer; user-select: none;
+}
+.rdr-note:hover { filter: brightness(0.95); }
+
+.rdr-noteedit {
+  position: fixed; z-index: 70;
+  left: 50%; top: 50%; transform: translate(-50%, -50%);
+  width: min(26rem, calc(100vw - 32px));
+  background: var(--paper, #fff); color: var(--ink, #222);
+  border: 1px solid var(--rule, #ddd); border-radius: 12px;
+  box-shadow: 0 10px 40px rgba(0,0,0,.25);
+  padding: 1rem; font-family: var(--face-ui, system-ui, sans-serif);
+}
+.rdr-ne-head { font-size: 0.68rem; font-weight: 700; letter-spacing: 0.1em;
+               text-transform: uppercase; color: var(--accent, #005f73); margin-bottom: 0.5rem; }
+.rdr-noteedit textarea {
+  width: 100%; font: inherit; font-size: 0.92rem;
+  color: var(--ink, #222); background: var(--bg, transparent);
+  border: 1px solid var(--rule, #ddd); border-radius: 6px;
+  padding: 0.6rem 0.7rem; resize: vertical;
+}
+.rdr-ne-row { display: flex; align-items: center; gap: 6px; margin-top: 0.7rem; }
+.rdr-ne-row button {
+  font: inherit; font-size: 0.82rem; font-weight: 600;
+  border: 1px solid var(--rule, #ddd); border-radius: 6px;
+  padding: 0.35rem 0.75rem; cursor: pointer;
+  background: none; color: var(--ink, #222);
+}
+.rdr-ne-row .rdr-ok {
+  background: var(--accent, #005f73); border-color: var(--accent, #005f73); color: #fff;
+}
+.rdr-ne-row .rdr-del { color: var(--flag, #8a5a2b); }
+
+/* ---------- ink ---------- */
+
+.rdr-canvas { position: absolute; z-index: 5; touch-action: none; }
+.rdr-pen-on { cursor: crosshair; }
+.rdr-pen-on ::selection { background: transparent; }
+
+@media print {
+  .rdr-rail, .rdr-bubble, .rdr-studio, .rdr-noteedit { display: none !important; }
+  .rdr-canvas { position: absolute; }
+  .rdr-note { border-color: #999; color: #333; background: none; }
+}
+
+/* `display:` on these panels outranks the browser's own [hidden] rule, so state it. */
+.rdr-studio[hidden],
+.rdr-bubble[hidden],
+.rdr-noteedit[hidden],
+.rdr-lock[hidden] { display: none !important; }
+
+/* ---------- source pane ----------
+   Slides in over the guide rather than opening a tab, so checking a citation does not
+   cost the reader their place. The quoted page is set solid; the paragraphs either side
+   are dimmed, because they are there for context and not for reading. */
+
+.guide cite.src[data-cite-key] { cursor: pointer; }
+.guide cite.src[data-cite-key]:hover { background: var(--accent-soft); }
+.guide cite.src[data-cite-key]:focus-visible { outline: 2px solid var(--accent); outline-offset: 1px; }
+
+.rdr-srcpane {
+  position: fixed;
+  z-index: 80;
+  right: 0;
+  top: 0;
+  bottom: 0;
+  width: min(34rem, 100vw);
+  display: flex;
+  flex-direction: column;
+  background: var(--paper, #fff);
+  color: var(--ink, #222);
+  border-left: 1px solid var(--rule, #ddd);
+  box-shadow: -8px 0 40px rgba(0, 0, 0, .22);
+  padding-right: env(safe-area-inset-right, 0px);
+}
+.rdr-srcpane[hidden] { display: none !important; }
+
+.rdr-src-head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 1rem;
+  padding: 1rem 1.1rem;
+  padding-top: max(1rem, env(safe-area-inset-top, 0px));
+  border-bottom: 1px solid var(--rule, #ddd);
+  font-family: var(--face-ui, system-ui, sans-serif);
+}
+.rdr-src-book { font-size: 0.95rem; font-weight: 650; line-height: 1.3; }
+.rdr-src-meta {
+  font-size: 0.74rem; color: var(--ink-soft, #666);
+  letter-spacing: 0.04em; margin-top: 0.15rem;
+}
+.rdr-src-close {
+  font-size: 1.5rem; line-height: 1; background: none; border: none;
+  color: var(--ink-soft, #666); cursor: pointer; padding: 0 0.2rem; flex: none;
+}
+.rdr-src-close:hover { color: var(--ink, #222); }
+.rdr-src-close:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+
+.rdr-src-body {
+  overflow-y: auto;
+  padding: 1.1rem;
+  padding-bottom: max(1.1rem, env(safe-area-inset-bottom, 0px));
+  font-size: 0.92rem;
+  line-height: 1.6;
+}
+
+.rdr-src-page + .rdr-src-page {
+  margin-top: 1.6rem; padding-top: 1.2rem; border-top: 1px solid var(--rule, #ddd);
+}
+.rdr-src-pno {
+  font-family: var(--face-ui, system-ui, sans-serif);
+  font-size: 0.66rem; font-weight: 700; letter-spacing: 0.12em; text-transform: uppercase;
+  color: var(--accent, #005f73); margin-bottom: 0.5rem;
+}
+.rdr-src-main { margin: 0.5rem 0; }
+.rdr-src-ctx { margin: 0.5rem 0; color: var(--ink-soft, #666); font-size: 0.86em; }
+
+.rdr-src-foot {
+  font-family: var(--face-ui, system-ui, sans-serif);
+  font-size: 0.72rem; color: var(--ink-soft, #666);
+  padding: 0.7rem 1.1rem;
+  padding-bottom: max(0.7rem, env(safe-area-inset-bottom, 0px));
+  border-top: 1px solid var(--rule, #ddd);
+}
+
+@media (max-width: 640px) {
+  .rdr-srcpane {
+    left: 0; right: 0; top: auto; height: 78vh;
+    width: auto; border-left: none;
+    border-top: 1px solid var(--rule, #ddd);
+    border-radius: 12px 12px 0 0;
+    box-shadow: 0 -8px 40px rgba(0, 0, 0, .22);
+  }
+}
+
+@media print { .rdr-srcpane { display: none !important; } }
+
+/* the live stroke layer sits just above the committed one */
+.rdr-canvas-live { z-index: 6; }
+
+/* eraser granularity, shown only while the eraser is the active tool */
+.rdr-erase-modes {
+  display: flex; flex-direction: column; gap: 4px;
+  margin-top: 4px; padding-top: 6px;
+  border-top: 1px solid var(--rule, #ddd);
+}
+.rdr-erase-modes[hidden] { display: none !important; }
+.rdr-erase-modes button {
+  width: auto; height: auto;
+  font: inherit; font-size: 0.62rem; font-weight: 700;
+  letter-spacing: 0.06em; text-transform: uppercase;
+  color: var(--ink-soft, #666); background: none;
+  border: 1px solid var(--rule, #ddd); border-radius: 5px;
+  padding: 0.22rem 0.3rem; cursor: pointer;
+}
+.rdr-erase-modes button.on {
+  color: var(--accent, #005f73);
+  background: var(--accent-soft, #e3eef0);
+  border-color: var(--accent, #005f73);
+}
+.rdr-pal[hidden] { display: none !important; }
+
+@media (max-width: 640px) {
+  .rdr-erase-modes {
+    flex-direction: row; margin: 0 0 0 4px;
+    padding: 0 0 0 6px; border-top: none; border-left: 1px solid var(--rule, #ddd);
+  }
+}
+
+/* ---------- backup ---------- */
+
+.rdr-note-hint {
+  font-size: 0.78rem; line-height: 1.45;
+  color: var(--ink-soft, #666); margin: 0 0 0.6rem;
+}
+
+.rdr-backup { display: flex; flex-wrap: wrap; gap: 6px; }
+.rdr-backup button {
+  width: auto; height: auto;
+  font: inherit; font-size: 0.8rem; font-weight: 600;
+  color: var(--ink, #222); background: none;
+  border: 1px solid var(--rule, #ddd); border-radius: 6px;
+  padding: 0.34rem 0.7rem; cursor: pointer;
+}
+.rdr-backup button:hover { border-color: var(--accent, #005f73); color: var(--accent, #005f73); }
+.rdr-backup button:focus-visible { outline: 2px solid var(--accent, #005f73); outline-offset: 2px; }
+.rdr-backup .rdr-do-restore {
+  background: var(--accent, #005f73); border-color: var(--accent, #005f73); color: #fff;
+}
+
+.rdr-restore {
+  margin-top: 0.8rem; padding: 0.8rem 0.9rem;
+  border: 1px solid var(--rule, #ddd); border-left: 3px solid var(--flag, #8a5a2b);
+  border-radius: 0 6px 6px 0; background: var(--flag-soft, #f6ece0);
+  font-size: 0.84rem; line-height: 1.5;
+}
+.rdr-restore[hidden] { display: none !important; }
+.rdr-restore p { margin: 0 0 0.5rem; }
+.rdr-restore .rdr-warn { color: var(--flag, #8a5a2b); font-weight: 650; }
+
+.rdr-say {
+  font-size: 0.78rem; color: var(--ink-soft, #666);
+  margin: 0.7rem 0 0; min-height: 1.1em;
+}
