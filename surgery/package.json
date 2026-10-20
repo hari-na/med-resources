@@ -1,0 +1,13 @@
+{
+  "name": "surgery-case-files",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "description": "Build and tests for the surgery case guides. The site itself ships no dependencies; jsdom is here only so the reader's sync can be tested against a real built page.",
+  "scripts": {
+    "test": "node --test test/*.test.mjs"
+  },
+  "devDependencies": {
+    "jsdom": "^26.0.0"
+  }
+}

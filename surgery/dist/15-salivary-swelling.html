@@ -1497,14 +1497,22 @@ body.guide { margin: 0; -webkit-text-size-adjust: 100%; }
   var syncTimer = null;
   var sync = { key: "", syncing: false, syncedAt: 0, retryMs: 4000 };
 
+  var pullTimer = null;
+
   function syncOn() { return !!SYNC_ENDPOINT && student && student !== "_"; }
 
   function syncKey() { return student + "::" + DOC; }
 
   function syncCtx() {
     if (sync.key !== syncKey()) {
-      sync = { key: syncKey(), syncing: false, syncedAt: 0, retryMs: 4000 };
+      // pulled stays false until the server has given a definite answer for this
+      // document. Until then nothing may be pushed: a push before the first successful
+      // pull overwrites whatever the server holds with whatever this device happens to
+      // have, which on a new or cleared browser is nothing at all.
+      sync = { key: syncKey(), syncing: false, syncedAt: 0, serverAt: 0,
+               pulled: false, retryMs: 4000, pullMs: 1000 };
       clearTimeout(syncTimer);
+      clearTimeout(pullTimer);
     }
     return sync;
   }
@@ -1521,14 +1529,23 @@ body.guide { margin: 0; -webkit-text-size-adjust: 100%; }
     var u = SYNC_ENDPOINT + "/api/state?student=" + encodeURIComponent(student) +
             "&doc=" + encodeURIComponent(DOC);
     return fetch(u, { method: "GET" })
-      .then(function (r) { return r.ok ? r.json() : null; })
+      .then(function (r) {
+        // A 503 is not an answer. Reading any non-OK response as "the worker has nothing"
+        // is what let a slow or failing server be mistaken for an empty one, after which
+        // the first local edit was pushed over the real notes and marks.
+        if (!r.ok) throw new Error("sync pull " + r.status);
+        return r.json();
+      })
       .then(function (j) {
         if (mine !== syncKey()) return false;          // the reader moved on; not ours to apply
+        c.pulled = true;                               // the server has answered for this doc
+        c.pullMs = 1000;
         if (!j || !j.found || !j.state) {
-          // the worker has nothing for this document, so everything local is unsent
+          // the worker really does have nothing, so everything local is unsent
           syncLater(600);
           return false;
         }
+        c.serverAt = j.updatedAt || 0;
         c.syncedAt = j.updatedAt || 0;                 // what the server demonstrably holds
         var local = state.updatedAt || 0;
         if (!(j.updatedAt > local)) {
@@ -1547,9 +1564,20 @@ body.guide { margin: 0; -webkit-text-size-adjust: 100%; }
         return true;
       })
       .catch(function () {
-        if (mine === syncKey()) syncLater(sync.retryMs);
+        // could not reach the server, so we still do not know what it holds. Try the pull
+        // again, and leave pulled false so that nothing is pushed in the meantime.
+        if (mine === syncKey()) {
+          pullLater(c.pullMs);
+          c.pullMs = Math.min(c.pullMs * 2, 60000);
+        }
         return false;
       });
+  }
+
+  function pullLater(ms) {
+    if (!syncOn()) return;
+    clearTimeout(pullTimer);
+    pullTimer = setTimeout(syncPull, ms === undefined ? 1000 : ms);
   }
 
   function syncDirty() { return (state.updatedAt || 0) > syncCtx().syncedAt; }
@@ -1557,6 +1585,10 @@ body.guide { margin: 0; -webkit-text-size-adjust: 100%; }
   function syncPush() {
     if (!syncOn() || !syncDirty()) return;
     var c = syncCtx(), mine = c.key;
+    if (!c.pulled) {                             // we do not yet know what the server holds
+      pullLater(c.pullMs);
+      return;
+    }
     if (c.syncing) { syncLater(400); return; }   // overtaken; come back for the newer state
     c.syncing = true;
 
@@ -1584,10 +1616,16 @@ body.guide { margin: 0; -webkit-text-size-adjust: 100%; }
         // stamp it actually holds. Believing the status alone is how a device with a wrong
         // clock, or one racing a second device, marked itself synced while the server kept
         // someone else's copy. Only treat it as stored if the server agrees it is.
-        var stored = j && j.updatedAt;
-        if (stored && stored !== at) {
-          c.syncedAt = stored;
-          syncLater(1200);                       // ours lost; the pull on next open reconciles
+        // The worker reports whether it applied this write, which is not the same as
+        // whether the stamp came back unchanged: it clamps a stamp more than five minutes
+        // in the future, so a device with a fast clock saw its own accepted write come
+        // back "different", stayed dirty and pushed again about every second, forever.
+        c.serverAt = (j && j.updatedAt) || c.serverAt;
+        if (j && j.stored === false) {
+          // the server kept something newer; reconcile by pulling rather than pushing again
+          c.syncedAt = j.updatedAt || c.syncedAt;
+          c.pulled = false;
+          pullLater(600);
           return;
         }
         c.syncedAt = Math.max(c.syncedAt, at);
@@ -2829,6 +2867,10 @@ body.guide { margin: 0; -webkit-text-size-adjust: 100%; }
       reloadState();
       if (!guide) return;          // nothing mounted yet; start() will apply it
       applySettings(); renderMarks(); renderNotes(); redrawInk(); updateLock();
+      // A different student has a different record on the server, and this is the one
+      // path into a mounted guide that did not go through start(), so without this the
+      // new student read their local copy and never learned what the server held.
+      syncPull();
     },
     remount: function (opts) {
       opts = opts || {};

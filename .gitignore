@@ -36,3 +36,6 @@ download_pdfs_v2.py
 # Extracted textbook chapter text. Never commit: the repo is public and these
 # are copyrighted. The build reads them locally to resolve citation chips.
 surgery/sources/
+
+# Node (test harness only; the site itself ships no dependencies)
+node_modules/
