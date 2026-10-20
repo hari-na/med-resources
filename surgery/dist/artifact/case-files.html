@@ -3062,11 +3062,36 @@ body.guide { margin: 0; -webkit-text-size-adjust: 100%; }
   //
   // Pulling on sign-in fixes both: the device starts from what the server holds, so there is
   // nothing to overwrite. Merging is per question and takes whichever side was written last.
+  // answersPulled holds the student whose answers the server has actually answered for.
+  // Until it matches, nothing may be pushed: a push before the first successful pull is
+  // what posted attempts:1 over the server's attempts:12 in the first place.
+  var answersPulled = "";
+  var answerPullTimer = null;
+  var answerPullMs = 1000;
+
+  function answersReady() { return !SYNC || (!!student.key && answersPulled === student.key); }
+
+  function pullAnswersLater(ms) {
+    if (!SYNC || !student.key) return;
+    clearTimeout(answerPullTimer);
+    answerPullTimer = setTimeout(function () { pullAnswers(); }, ms || answerPullMs);
+  }
+
   function pullAnswers(done) {
     if (!SYNC || !student.key) { if (done) done(); return; }
-    fetch(SYNC + "/api/answers?student=" + encodeURIComponent(student.key))
-      .then(function (r) { return r.ok ? r.json() : null; })
+    // the name this request is for. Reading student.key again when the response lands is
+    // how one student's history was merged into the next student's record.
+    var mine = student.key;
+    fetch(SYNC + "/api/answers?student=" + encodeURIComponent(mine))
+      .then(function (r) {
+        // a 503 is not an empty history, and must not be mistaken for one
+        if (!r.ok) throw new Error("answers pull " + r.status);
+        return r.json();
+      })
       .then(function (j) {
+        if (mine !== student.key) return;        // the reader switched name; not ours to apply
+        answersPulled = mine;
+        answerPullMs = 1000;
         if (!j || !j.answers) return;
         var s = store();
         s.students = s.students || {};
@@ -3083,11 +3108,18 @@ body.guide { margin: 0; -webkit-text-size-adjust: 100%; }
           }
         });
         if (merged) {
-          s.students[student.key] = rec;
+          s.students[mine] = rec;
           save(s);
         }
       })
-      .catch(function () { /* offline: the local copy stands, and pushes when it can */ })
+      .catch(function () {
+        // we still do not know what the server holds, so leave answersPulled alone and
+        // try again; nothing is pushed in the meantime
+        if (mine === student.key) {
+          pullAnswersLater(answerPullMs);
+          answerPullMs = Math.min(answerPullMs * 2, 60000);
+        }
+      })
       .then(function () { if (done) done(); });
   }
 
@@ -3103,6 +3135,12 @@ body.guide { margin: 0; -webkit-text-size-adjust: 100%; }
   // harmless: the worker stores the counters it is given and the newest write wins.
   function pushAnswers() {
     if (!SYNC || !student.key) return;
+    var mine = student.key;
+    if (!answersReady()) {       // we do not yet know what the server holds for this name
+      pullAnswersLater(200);
+      pushAnswersLater();
+      return;
+    }
     var s = store();
     var r = (s.students || {})[student.key];
     if (!r || !r.questions) return;
@@ -3125,15 +3163,36 @@ body.guide { margin: 0; -webkit-text-size-adjust: 100%; }
       body: JSON.stringify({ answers: batch })
     }).then(function (res) {
       if (!res.ok) return;
-      // re-read rather than reuse the snapshot: marking may have continued while in flight
-      var s2 = store();
-      var r2 = (s2.students || {})[student.key];
-      if (!r2 || !r2.questions) return;
-      batch.forEach(function (b) {
-        var rec = r2.questions[qKey(b.caseId, b.questionId)];
-        if (rec && rec.at === b.at) rec.synced = true;
+      return res.json().then(function (j) {
+        if (mine !== student.key) return;
+        // Mark synced only what the worker says it stored. It discards a row whose stamp
+        // is older than the one it holds, and a bare ok used to be read as success, so
+        // an attempt from a device with a slow clock was dropped and never retried.
+        // The deployed worker may predate the stored list. Without this, every row would
+        // look rejected, nothing would ever be marked synced, and the client would pull in
+        // a loop against a server that is working perfectly well.
+        var reports = !!(j && j.stored);
+        var applied = {};
+        ((j && j.stored) || []).forEach(function (st) {
+          applied[qKey(st.caseId, st.questionId) + "::" + st.at] = true;
+        });
+        // re-read rather than reuse the snapshot: marking may have continued while in flight
+        var s2 = store();
+        var r2 = (s2.students || {})[mine];
+        if (!r2 || !r2.questions) return;
+        var rejected = 0;
+        batch.forEach(function (b) {
+          var k = qKey(b.caseId, b.questionId);
+          var rec = r2.questions[k];
+          if (!rec || rec.at !== b.at) return;
+          if (!reports || applied[k + "::" + b.at]) rec.synced = true;
+          else rejected++;
+        });
+        save(s2);
+        // the server holds something newer for those questions, so re-read rather than
+        // pushing the same losing write again
+        if (rejected) { answersPulled = ""; pullAnswersLater(600); }
       });
-      save(s2);
     }).catch(function () {
       // offline is normal; the next mark or the next open sends it
     });
@@ -3580,9 +3639,14 @@ body.guide { margin: 0; -webkit-text-size-adjust: 100%; }
 
   function screenProgress() {
     // a pull may still be in flight from sign-in; repaint once it lands
-    if (SYNC && student.key && !screenProgress._pulled) {
-      screenProgress._pulled = true;
-      pullAnswers(function () { if (stack[stack.length - 1] === screenProgress) paint(); });
+    if (SYNC && student.key && screenProgress._pulled !== student.key && !answersReady()) {
+      // keyed by student, and only counted as done once the pull has actually succeeded,
+      // so a failed pull no longer leaves the page showing "nothing drilled yet" forever
+      screenProgress._pulled = student.key;
+      pullAnswers(function () {
+        if (!answersReady()) screenProgress._pulled = "";
+        if (stack[stack.length - 1] === screenProgress) paint();
+      });
     }
 
     var rec = studentRec(student.key);
@@ -3734,30 +3798,46 @@ body.guide { margin: 0; -webkit-text-size-adjust: 100%; }
       var s = store();
       s.asks = (s.asks || []).concat([rec]).slice(-200);
       save(s);
+      // save() swallows a storage failure, so check rather than assume: if the record did
+      // not land, sendAsks has nothing to read and the message is gone.
+      var kept = ((store().asks || []).filter(function (a) { return a.id === rec.id; })).length > 0;
 
       box.value = "";
-      note.textContent = "Noted, thank you. It goes into the next revision of this case.";
-      sendAsks();
+      note.textContent = "Sending...";
+      // Say it has been sent when it has been sent, not when the button was pressed. This
+      // said "Noted, thank you" before the request left, and said it just the same when
+      // storage had failed and nothing was ever sent at all.
+      sendAsk(rec).then(function (ok) {
+        if (ok) note.textContent = "Thank you. It goes into the next revision of this case.";
+        else if (kept) note.textContent = "No connection just now. It is saved and will go when you are back online.";
+        else { note.textContent = "That did not save. Please try again."; box.value = rec.body; }
+      });
     });
+  }
+
+  // Takes the record itself rather than re-reading storage, so a message still goes out
+  // when the browser refused to store it. Resolves true only when the worker accepted it.
+  function sendAsk(a) {
+    if (!SYNC || !a || !a.studentKey) return Promise.resolve(false);
+    return fetch(SYNC + "/api/feedback?student=" + encodeURIComponent(a.studentKey), {
+      method: "POST",
+      headers: { "content-type": "application/json" },
+      body: JSON.stringify({ id: a.id, subject: a.subject, caseId: a.caseId,
+                             body: a.body, at: a.at })
+    }).then(function (r) {
+      if (!r.ok) return false;
+      var s2 = store();
+      (s2.asks || []).forEach(function (x) { if (x.id === a.id) x.sent = true; });
+      save(s2);
+      return true;
+    }).catch(function () { return false; });   // offline; it goes on the next open
   }
 
   function sendAsks() {
     if (!SYNC) return;
     var s = store();
     var pending = (s.asks || []).filter(function (a) { return a && !a.sent && a.studentKey; });
-    pending.slice(-20).forEach(function (a) {
-      fetch(SYNC + "/api/feedback?student=" + encodeURIComponent(a.studentKey), {
-        method: "POST",
-        headers: { "content-type": "application/json" },
-        body: JSON.stringify({ id: a.id, subject: a.subject, caseId: a.caseId,
-                               body: a.body, at: a.at })
-      }).then(function (r) {
-        if (!r.ok) return;
-        var s2 = store();
-        (s2.asks || []).forEach(function (x) { if (x.id === a.id) x.sent = true; });
-        save(s2);
-      }).catch(function () { /* offline; it goes on the next open */ });
-    });
+    pending.slice(-20).forEach(sendAsk);
   }
 
   // ------------------------------------------------------------------ sync
