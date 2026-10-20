@@ -99,6 +99,13 @@ def search(pages, phrase, limit=40):
 
 
 def main(argv=None) -> int:
+    # The books are full of characters the Windows console cannot encode, and a crash here
+    # reads as "the search found nothing", which is the failure mode this tool exists to stop.
+    try:
+        sys.stdout.reconfigure(encoding="utf-8", errors="replace")
+    except Exception:
+        pass
+
     ap = argparse.ArgumentParser(description=__doc__.splitlines()[0])
     ap.add_argument("phrase", nargs="*", help="what to look for")
     ap.add_argument("--book", action="append", help="limit to a book (sdas, bailey, srb)")
