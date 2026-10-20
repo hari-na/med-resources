@@ -356,6 +356,14 @@ def clean_text(raw: str, page: int | None, heads: set, book_heads: set = frozens
     out = []
     for i, line in enumerate(kept):
         nxt = kept[i + 1] if i + 1 < len(kept) else ""
+        # The PDFs break a word at the line end with a soft hyphen rather than a
+        # real one, and that is only ever a hyphenation point, so rejoin it
+        # whatever follows. Removing it later instead left the halves separated by
+        # the line's own space, which is how "essential" reached the published
+        # excerpts as "essen tial" in all three books.
+        if line.endswith("­"):
+            out.append(line[:-1])
+            continue
         # Rejoin a word hyphenated across the line break ("paraum-" + "bilical").
         # Only when a letter precedes the hyphen and the continuation starts
         # lowercase - otherwise the dash is real punctuation ("HISTORY.-",

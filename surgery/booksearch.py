@@ -41,6 +41,13 @@ _LIG_RE = (
 )
 
 
+_LIG_RE_ANY = (
+    re.compile(r"\b(" + "|".join(sorted(LIGATURE_REPAIRS, key=len, reverse=True)) + r")\b",
+               re.IGNORECASE)
+    if LIGATURE_REPAIRS else None
+)
+
+
 def normalise(text: str) -> str:
     """Lowercase, mend hyphenation and ligature loss, collapse whitespace."""
     t = text.lower()
@@ -50,6 +57,28 @@ def normalise(text: str) -> str:
     if _LIG_RE:
         t = _LIG_RE.sub(lambda m: LIGATURE_REPAIRS[m.group(0)], t)
     return t
+
+
+def mend(text: str) -> str:
+    """Repair the ligature loss for reading, keeping the line breaks and the capitals.
+
+    normalise() is for matching, so it lowercases and collapses whitespace. When a page
+    is printed for someone to read, the layout matters and so does the difference
+    between "fat" the word and "Fat" at the start of a sentence.
+    """
+    if not _LIG_RE_ANY:
+        return text
+
+    def one(m):
+        word = m.group(0)
+        fixed = LIGATURE_REPAIRS[word.lower()]
+        if word.isupper():
+            return fixed.upper()
+        if word[:1].isupper():
+            return fixed[:1].upper() + fixed[1:]
+        return fixed
+
+    return _LIG_RE_ANY.sub(one, text)
 
 
 def tighten(text: str) -> str:
@@ -127,7 +156,7 @@ def main(argv=None) -> int:
         for p in pages:
             if p.book == book and p.page == n:
                 print(f"=== {p.book} {p.chapter} book p.{p.page} ===")
-                print(p.raw.strip())
+                print(mend(p.raw.strip()))
                 return 0
         print(f"no page {n} in {book}", file=sys.stderr)
         return 2
