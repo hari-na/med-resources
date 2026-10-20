@@ -308,6 +308,45 @@ body.guide { margin: 0; -webkit-text-size-adjust: 100%; }
   color: var(--ink-soft); margin: 0.55rem 0 0.2rem 1.9rem;
 }
 
+/* ============================== contents =============================== */
+
+/* A long case runs to eight or ten sections and seventeen thousand words, and the viva
+   is at the bottom of all of it. Collapsed by default so it costs nothing to a reader
+   going straight through. */
+.guide .rdr-toc { margin: 0 0 1.8rem; }
+.guide .rdr-toc summary {
+  cursor: pointer; list-style: none;
+  font-family: var(--face-ui); font-size: 0.72em; font-weight: 700;
+  letter-spacing: 0.1em; text-transform: uppercase; color: var(--accent);
+  padding: 0.5rem 0; border-top: 1px solid var(--rule); border-bottom: 1px solid var(--rule);
+}
+.guide .rdr-toc summary::-webkit-details-marker { display: none; }
+.guide .rdr-toc summary::after { content: " +"; }
+.guide .rdr-toc[open] summary::after,
+.guide .rdr-toc details[open] summary::after { content: " 2"; }
+.guide .rdr-toc ol {
+  list-style: none; margin: 0.7rem 0 0; padding: 0;
+  display: grid; gap: 0.1rem;
+}
+.guide .rdr-toc li { margin: 0; }
+.guide .rdr-toc a {
+  display: flex; gap: 0.6rem; align-items: baseline;
+  font-family: var(--face-ui); font-size: 0.82em; line-height: 1.45;
+  color: var(--ink); text-decoration: none;
+  padding: 0.42rem 0.3rem; border-radius: 4px;
+}
+.guide .rdr-toc a b {
+  flex: none; min-width: 1.1em; color: var(--accent); font-weight: 700;
+}
+.guide .rdr-toc a:hover { background: var(--accent-soft); }
+@media (hover: none) { .guide .rdr-toc a:hover { background: none; } }
+@media (pointer: coarse) { .guide .rdr-toc a { padding: 0.62rem 0.3rem; } }
+
+/* so a linked section is not hidden under anything, and lands with a little air */
+.guide h2[id] { scroll-margin-top: 1rem; }
+
+@media print { .guide .rdr-toc { display: none; } }
+
 /* ============================== citations ============================== */
 
 .guide cite.src {
@@ -2968,16 +3007,21 @@ body.guide { margin: 0; -webkit-text-size-adjust: 100%; }
       var k = citeKeyOf(c);
       if (!k) return;
       if (citesState === "ready") { openCite(k); return; }
-      if (citesState === "failed") return;
       loadCites().then(function (j) { if (j) openCite(k); });
     });
 
     guide.addEventListener("keydown", function (ev) {
       if (ev.key !== "Enter" && ev.key !== " ") return;
-      var c = ev.target.closest && ev.target.closest("cite.src[data-cite-key]");
+      // not cite.src[data-cite-key]: that attribute is only set once the excerpts have
+      // loaded, and they only loaded on a mouse click, so a keyboard-only reader could
+      // never open the first citation and therefore never got any of them.
+      var c = ev.target.closest && ev.target.closest("cite.src");
       if (!c) return;
       ev.preventDefault();
-      openCite(c.getAttribute("data-cite-key"));
+      var k = citeKeyOf(c);
+      if (!k) return;
+      if (citesState === "ready") { openCite(k); return; }
+      loadCites().then(function (j) { if (j) openCite(k); });
     });
 
     // recall mode: tap a hidden answer to show it
@@ -3029,8 +3073,64 @@ body.guide { margin: 0; -webkit-text-size-adjust: 100%; }
     citesPromise = fetch("citations.json")
       .then(function (r) { if (!r.ok) throw new Error(r.status); return r.json(); })
       .then(function (j) { CITES = j; citesState = "ready"; markCitesClickable(); return j; })
-      .catch(function () { citesState = "failed"; return null; });
+      .catch(function () {
+        // Drop the cached promise as well as the state. Keeping it meant one bad moment
+        // on a ward connection killed every citation in the guide for the life of the
+        // page, and the only way back was a reload, which costs the reader their place.
+        citesState = "failed";
+        citesPromise = null;
+        return null;
+      });
     return citesPromise;
+  }
+
+  // A long case is eight to ten numbered sections and up to seventeen thousand words,
+  // with no way to reach the viva at the bottom but scrolling. This gives every section
+  // an id and puts a collapsed contents list under the standfirst.
+  function slugOf(text) {
+    return String(text).toLowerCase()
+      .replace(/[^a-z0-9]+/g, "-").replace(/^-+|-+$/g, "").slice(0, 60);
+  }
+
+  function buildContents() {
+    if (!guide || guide.querySelector(".rdr-toc")) return;
+    var hs = [].slice.call(guide.querySelectorAll("h2"));
+    if (hs.length < 3) return;
+
+    var items = hs.map(function (h, i) {
+      var n = h.querySelector(".n");
+      // "<span class=n>1</span>The case in one breath" is read aloud as "1The case in
+      // one breath", and the number is already in the link beside it
+      if (n) n.setAttribute("aria-hidden", "true");
+      var label = (h.textContent || "").replace(/^\s*\d+\s*/, "").trim();
+      if (!h.id) h.id = "s" + (i + 1) + "-" + slugOf(label);
+      return '<li><a href="#' + h.id + '"><b>' + (n ? escHtml(n.textContent) : (i + 1)) +
+             '</b>' + escHtml(label) + "</a></li>";
+    }).join("");
+
+    var nav = document.createElement("nav");
+    nav.className = "rdr-toc";
+    nav.setAttribute("aria-label", "Sections");
+    nav.innerHTML = "<details><summary>Sections</summary><ol>" + items + "</ol></details>";
+
+    var after = guide.querySelector(".standfirst") || guide.querySelector("header");
+    if (after && after.parentNode) after.parentNode.insertBefore(nav, after.nextSibling);
+    else guide.insertBefore(nav, guide.firstChild);
+  }
+
+  // The chips only became focusable once the excerpts had loaded, and the excerpts only
+  // loaded on a mouse click, so a keyboard-only reader could not reach a single one. They
+  // are controls from the moment the guide mounts; the keydown handler loads on demand.
+  function armCites() {
+    if (!guide) return;
+    [].forEach.call(guide.querySelectorAll("cite.src"), function (c) {
+      c.tabIndex = 0;
+      c.setAttribute("role", "button");
+      if (!c.getAttribute("aria-label")) {
+        c.setAttribute("aria-label", "Source: " + (c.textContent || "").trim() +
+                                     ". Opens the passage it cites.");
+      }
+    });
   }
 
   function markCitesClickable() {
@@ -3563,6 +3663,8 @@ body.guide { margin: 0; -webkit-text-size-adjust: 100%; }
     applySettings();
     renderMarks();
     renderNotes();
+    buildContents();
+    armCites();
     markCitesClickable();
     setTimeout(layoutInk, 60);
     updateLock();

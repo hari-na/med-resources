@@ -301,6 +301,45 @@ body.guide { margin: 0; -webkit-text-size-adjust: 100%; }
   color: var(--ink-soft); margin: 0.55rem 0 0.2rem 1.9rem;
 }
 
+/* ============================== contents =============================== */
+
+/* A long case runs to eight or ten sections and seventeen thousand words, and the viva
+   is at the bottom of all of it. Collapsed by default so it costs nothing to a reader
+   going straight through. */
+.guide .rdr-toc { margin: 0 0 1.8rem; }
+.guide .rdr-toc summary {
+  cursor: pointer; list-style: none;
+  font-family: var(--face-ui); font-size: 0.72em; font-weight: 700;
+  letter-spacing: 0.1em; text-transform: uppercase; color: var(--accent);
+  padding: 0.5rem 0; border-top: 1px solid var(--rule); border-bottom: 1px solid var(--rule);
+}
+.guide .rdr-toc summary::-webkit-details-marker { display: none; }
+.guide .rdr-toc summary::after { content: " +"; }
+.guide .rdr-toc[open] summary::after,
+.guide .rdr-toc details[open] summary::after { content: " 2"; }
+.guide .rdr-toc ol {
+  list-style: none; margin: 0.7rem 0 0; padding: 0;
+  display: grid; gap: 0.1rem;
+}
+.guide .rdr-toc li { margin: 0; }
+.guide .rdr-toc a {
+  display: flex; gap: 0.6rem; align-items: baseline;
+  font-family: var(--face-ui); font-size: 0.82em; line-height: 1.45;
+  color: var(--ink); text-decoration: none;
+  padding: 0.42rem 0.3rem; border-radius: 4px;
+}
+.guide .rdr-toc a b {
+  flex: none; min-width: 1.1em; color: var(--accent); font-weight: 700;
+}
+.guide .rdr-toc a:hover { background: var(--accent-soft); }
+@media (hover: none) { .guide .rdr-toc a:hover { background: none; } }
+@media (pointer: coarse) { .guide .rdr-toc a { padding: 0.62rem 0.3rem; } }
+
+/* so a linked section is not hidden under anything, and lands with a little air */
+.guide h2[id] { scroll-margin-top: 1rem; }
+
+@media print { .guide .rdr-toc { display: none; } }
+
 /* ============================== citations ============================== */
 
 .guide cite.src {
