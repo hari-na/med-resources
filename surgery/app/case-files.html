@@ -1,0 +1,1088 @@
+<meta name="claude:viewport-fit-sides" content="cover">
+<title>Surgery Case Files</title>
+<style>
+/* Layout: an index that opens into one case, and a case page offering four ways in,
+   read it, drill it, see where you stand, or take it away. One column throughout,
+   because it is used on a phone between postings as often as at a desk. */
+
+:root {
+  --bg:       #f4f1ec;
+  --card:     #ffffff;
+  --ink:      #1a1e21;
+  --ink-soft: #5c646b;
+  --rule:     #e0dad0;
+  --accent:   #005f73;
+  --accent-dim:#e0ecef;
+  --good:     #2f6b45;
+  --good-dim: #e2efe7;
+  --miss:     #9a4228;
+  --miss-dim: #f7e8e2;
+
+  --serif: "Spectral", Georgia, "Times New Roman", serif;
+  --sans: "Inter", system-ui, -apple-system, "Segoe UI", sans-serif;
+  color-scheme: light;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: #111416; --card: #1a1e21; --ink: #e9e7e2; --ink-soft: #a0a8ae;
+    --rule: #2d3338; --accent: #6fc3d2; --accent-dim: #16292f;
+    --good: #7fc79b; --good-dim: #16281d; --miss: #e09a7c; --miss-dim: #2a1b15;
+    color-scheme: dark;
+  }
+}
+:root[data-theme="dark"] {
+  --bg: #111416; --card: #1a1e21; --ink: #e9e7e2; --ink-soft: #a0a8ae;
+  --rule: #2d3338; --accent: #6fc3d2; --accent-dim: #16292f;
+  --good: #7fc79b; --good-dim: #16281d; --miss: #e09a7c; --miss-dim: #2a1b15;
+  color-scheme: dark;
+}
+
+* { box-sizing: border-box; }
+html, body { height: 100%; }
+
+body {
+  margin: 0;
+  background: var(--bg);
+  color: var(--ink);
+  font-family: var(--sans);
+  font-size: 15px;
+  line-height: 1.6;
+  -webkit-text-size-adjust: 100%;
+}
+
+.shell {
+  max-width: 40rem;
+  margin: 0 auto;
+  padding-left: max(16px, env(safe-area-inset-left, 0px));
+  padding-right: max(16px, env(safe-area-inset-right, 0px));
+  padding-block: 1rem 4rem;
+}
+
+/* ---------- top bar: back on the left, theme on the right ---------- */
+
+.topbar {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  min-height: 2.2rem;
+  margin-bottom: 0.9rem;
+}
+
+.topbar .spacer { flex: 1; }
+
+button.ghost {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  font: inherit;
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: var(--ink-soft);
+  background: none;
+  border: 1px solid transparent;
+  border-radius: 6px;
+  padding: 0.3rem 0.55rem;
+  cursor: pointer;
+}
+button.ghost:hover { color: var(--accent); border-color: var(--rule); }
+button.ghost:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+button.ghost svg { width: 15px; height: 15px; flex: none; }
+
+.card {
+  background: var(--card);
+  border: 1px solid var(--rule);
+  border-radius: 10px;
+  padding: 1.5rem;
+}
+
+h1 {
+  font-family: var(--serif);
+  font-size: 1.9rem; font-weight: 600; letter-spacing: -0.015em;
+  margin: 0 0 0.4rem; text-wrap: balance;
+}
+h2 {
+  font-family: var(--serif);
+  font-size: 1.3rem; font-weight: 600; margin: 0 0 0.5rem; text-wrap: balance;
+}
+h3 {
+  font-size: 0.7rem; font-weight: 700; letter-spacing: 0.12em;
+  text-transform: uppercase; color: var(--accent);
+  margin: 1.8rem 0 0.7rem;
+}
+.eyebrow {
+  font-size: 0.68rem; font-weight: 700; letter-spacing: 0.13em;
+  text-transform: uppercase; color: var(--accent); margin: 0 0 0.55rem;
+}
+.sub { color: var(--ink-soft); margin: 0 0 1.6rem; font-size: 0.95rem; }
+
+/* ---------- entry tiles ---------- */
+
+.tiles { display: grid; gap: 0.8rem; margin-top: 1.4rem; }
+
+.tile {
+  display: grid;
+  grid-template-columns: auto 1fr auto;
+  gap: 0.25rem 1rem;
+  align-items: start;
+  text-align: left;
+  width: 100%;
+  font: inherit;
+  color: var(--ink);
+  background: var(--card);
+  border: 1px solid var(--rule);
+  border-radius: 9px;
+  padding: 1.05rem 1.15rem;
+  cursor: pointer;
+  text-decoration: none;
+  transition: border-color 0.12s, transform 0.12s;
+}
+.tile:hover { border-color: var(--accent); transform: translateY(-1px); }
+.tile:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+
+.tile .ico {
+  grid-column: 1; grid-row: 1 / span 2;
+  width: 34px; height: 34px; border-radius: 7px;
+  background: var(--accent-dim); color: var(--accent);
+  display: grid; place-items: center;
+  font-size: 0.62rem; font-weight: 700; letter-spacing: 0.03em;
+}
+.tile .t-name { grid-column: 2; grid-row: 1; font-weight: 650; font-size: 1.02rem; }
+.tile .t-desc { grid-column: 2; grid-row: 2; font-size: 0.85rem; color: var(--ink-soft); line-height: 1.45; }
+.tile .t-go { grid-column: 3; grid-row: 1 / span 2; color: var(--ink-soft); font-size: 1.1rem; align-self: center; }
+.tile:hover .t-go { color: var(--accent); }
+
+.tile.muted { opacity: 0.5; cursor: default; }
+.tile.muted:hover { border-color: var(--rule); transform: none; }
+
+.meta-line {
+  font-size: 0.78rem; color: var(--ink-soft);
+  margin-top: 1.4rem; padding-top: 1rem; border-top: 1px solid var(--rule);
+}
+.meta-line b { color: var(--ink); }
+
+.srckey { display: flex; flex-wrap: wrap; gap: 0.4rem 1rem; font-size: 0.74rem; color: var(--ink-soft); margin-top: 0.8rem; }
+.srckey span { display: inline-flex; align-items: center; gap: 0.35rem; }
+.srckey i { width: 9px; height: 9px; border-radius: 2px; flex: none; }
+
+/* ---------- buttons ---------- */
+
+button.btn {
+  font: inherit; font-weight: 600; cursor: pointer; border-radius: 6px;
+  border: 1px solid var(--rule); background: var(--card); color: var(--ink);
+  padding: 0.6rem 1rem;
+}
+button.btn:hover:not(:disabled) { border-color: var(--accent); color: var(--accent); }
+button.btn:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+button.btn.primary { background: var(--accent); border-color: var(--accent); color: #fff; }
+:root[data-theme="dark"] button.btn.primary { color: #06191e; }
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) button.btn.primary { color: #06191e; }
+}
+button.btn.primary:hover:not(:disabled) { opacity: 0.9; }
+
+.row { display: flex; flex-wrap: wrap; gap: 0.6rem; }
+.row.end { justify-content: flex-end; }
+
+input[type="text"] {
+  width: 100%; font: inherit; font-size: 1rem; color: var(--ink);
+  background: var(--bg); border: 1px solid var(--rule);
+  border-radius: 6px; padding: 0.6rem 0.75rem;
+}
+input[type="text"]:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+label.fld {
+  display: block; font-size: 0.7rem; font-weight: 700; letter-spacing: 0.1em;
+  text-transform: uppercase; color: var(--accent); margin-bottom: 0.4rem;
+}
+.hint { font-size: 0.8rem; color: var(--ink-soft); margin-top: 0.5rem; }
+
+.known { display: flex; flex-wrap: wrap; gap: 0.4rem; margin-top: 0.8rem; }
+.known button {
+  font: inherit; font-size: 0.82rem; font-weight: 600;
+  color: var(--accent); background: var(--accent-dim);
+  border: 1px solid transparent; border-radius: 999px;
+  padding: 0.25rem 0.7rem; cursor: pointer;
+}
+.known button:hover { border-color: var(--accent); }
+
+/* ---------- viva ---------- */
+
+.levels { display: grid; gap: 0.7rem; margin: 1.2rem 0 1.4rem; }
+.level { text-align: left; display: grid; gap: 0.2rem; padding: 0.9rem 1rem; width: 100%;
+         font: inherit; color: var(--ink); background: var(--card);
+         border: 1px solid var(--rule); border-radius: 8px; cursor: pointer; }
+.level:hover { border-color: var(--accent); }
+.level:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+.level .lv-name { font-weight: 650; font-size: 1rem; }
+.level .lv-desc { font-size: 0.85rem; color: var(--ink-soft); line-height: 1.45; }
+.level .lv-meta { font-size: 0.75rem; color: var(--accent); font-weight: 600; }
+
+.progress { display: flex; justify-content: space-between; align-items: baseline;
+            font-size: 0.72rem; font-weight: 600; letter-spacing: 0.06em;
+            text-transform: uppercase; color: var(--ink-soft); margin-bottom: 0.5rem; }
+.bar { height: 3px; background: var(--rule); border-radius: 2px; overflow: hidden; margin-bottom: 1.4rem; }
+.bar > i { display: block; height: 100%; background: var(--accent); transition: width 0.25s; }
+
+.qtag { display: inline-block; font-size: 0.65rem; font-weight: 700; letter-spacing: 0.09em;
+        text-transform: uppercase; color: var(--accent); background: var(--accent-dim);
+        border-radius: 3px; padding: 0.2rem 0.45rem; margin-bottom: 0.8rem; }
+
+.question { font-family: var(--serif); font-size: 1.28rem; line-height: 1.4;
+            font-weight: 600; margin: 0 0 1.3rem; text-wrap: balance; }
+
+.answer { border-left: 3px solid var(--accent); background: var(--accent-dim);
+          border-radius: 0 6px 6px 0; padding: 0.9rem 1rem; margin-bottom: 1.3rem; font-size: 0.95rem; }
+.answer .tag { display: block; font-size: 0.65rem; font-weight: 700; letter-spacing: 0.1em;
+               text-transform: uppercase; color: var(--accent); margin-bottom: 0.35rem; }
+.answer .ref { display: block; margin-top: 0.6rem; font-size: 0.72rem; color: var(--ink-soft); }
+
+.grade { display: flex; gap: 0.6rem; }
+.grade button { flex: 1; }
+.grade .got:hover { border-color: var(--good); color: var(--good); }
+.grade .missed:hover { border-color: var(--miss); color: var(--miss); }
+
+.score { font-family: var(--serif); font-size: 3rem; font-weight: 600; line-height: 1;
+         margin: 0.4rem 0 0.2rem; font-variant-numeric: tabular-nums; }
+.score small { font-size: 1.05rem; color: var(--ink-soft); font-weight: 400; }
+
+.breakdown { margin: 1.4rem 0; display: grid; gap: 0.5rem; }
+.brow { display: grid; grid-template-columns: 1fr auto; gap: 0.5rem 0.8rem; align-items: center;
+        padding-bottom: 0.5rem; border-bottom: 1px solid var(--rule); }
+.brow .bname { font-size: 0.9rem; font-weight: 600; min-width: 0; }
+.brow .bval { font-size: 0.82rem; font-variant-numeric: tabular-nums; color: var(--ink-soft); white-space: nowrap; }
+.brow .btrack { grid-column: 1 / -1; height: 4px; background: var(--rule); border-radius: 2px; overflow: hidden; }
+.brow .btrack > i { display: block; height: 100%; }
+
+.verdict { padding: 0.9rem 1rem; border-radius: 6px; font-size: 0.92rem;
+           margin: 1.2rem 0; border-left: 3px solid; }
+.verdict.weak { background: var(--miss-dim); border-color: var(--miss); }
+.verdict.strong { background: var(--good-dim); border-color: var(--good); }
+.verdict.info { background: var(--accent-dim); border-color: var(--accent); }
+
+.saved { font-size: 0.78rem; color: var(--ink-soft); margin-top: 1.1rem;
+         padding-top: 0.9rem; border-top: 1px solid var(--rule); }
+
+.who { display: flex; justify-content: space-between; align-items: center; gap: 0.8rem;
+       font-size: 0.78rem; color: var(--ink-soft); margin-bottom: 1rem; }
+
+/* ---------- progress view ---------- */
+
+.stats { display: grid; grid-template-columns: repeat(auto-fit, minmax(7rem, 1fr)); gap: 0.8rem; margin: 1.2rem 0; }
+.stat { border: 1px solid var(--rule); border-radius: 8px; padding: 0.8rem 0.9rem; }
+.stat .sv { font-family: var(--serif); font-size: 1.6rem; font-weight: 600; line-height: 1.1;
+            font-variant-numeric: tabular-nums; }
+.stat .sl { font-size: 0.72rem; color: var(--ink-soft); margin-top: 0.15rem; line-height: 1.35; }
+
+.hist { margin: 0.6rem 0 0; display: grid; gap: 0; }
+.hrow { display: grid; grid-template-columns: 1fr auto auto; gap: 0.8rem; align-items: baseline;
+        padding: 0.55rem 0; border-bottom: 1px solid var(--rule); font-size: 0.86rem; }
+.hrow .hl { font-weight: 600; min-width: 0; }
+.hrow .hd { color: var(--ink-soft); font-size: 0.78rem; white-space: nowrap; }
+.hrow .hp { font-variant-numeric: tabular-nums; font-weight: 650; white-space: nowrap; }
+.hrow .hp.ok { color: var(--good); }
+.hrow .hp.bad { color: var(--miss); }
+
+.empty { color: var(--ink-soft); font-size: 0.9rem; padding: 1.2rem 0; }
+
+/* ---------- the study guide, rendered inside this page ---------- */
+
+.readerwrap { margin: 0 -1.5rem -1.5rem; }
+.readerwrap .guide { border-radius: 0 0 10px 10px; }
+.readerwrap .guide .wrap { padding-block: 1.5rem 3rem; }
+.loading { color: var(--ink-soft); font-size: 0.9rem; padding: 2rem 0; text-align: center; }
+
+@media (prefers-reduced-motion: reduce) { * { transition: none !important; } }
+</style>
+<style id="guideCss">/* INJECT:GUIDE_CSS */</style>
+
+<div class="shell">
+  <div class="topbar" id="topbar"></div>
+  <div id="app" class="card"></div>
+</div>
+
+<script>/* INJECT:READER_JS */</script>
+<script>
+(function () {
+  "use strict";
+
+  // ------------------------------------------------------------------ config
+  // Shaped so other subjects and cases drop in without touching the storage
+  // layer: everything written is tagged with subject and case.
+
+  var SUBJECT = "General Surgery";
+  var CASE = { id: "inguinal-hernia", num: "01", name: "Inguinal Hernia" };
+  // claude.ai refuses to serve a published sibling file as a top-level document
+  // (ERR_BLOCKED_BY_RESPONSE), so the guide is fetched and rendered inside this page
+  // and the PDF is handed over through the downloads capability.
+  var GUIDE_BODY = "01-inguinal-hernia.body.html";
+  var PDF        = "inguinal-hernia.pdf";
+
+  var BANK = [
+    {id:"h01", lv:1, type:"Anatomy", q:"Define a hernia.",
+     a:"S Das: the protrusion of the whole or a part of a viscus through the wall that contains it. Bailey & Love: the bulging of part of the contents of the abdominal cavity through a weakness in the abdominal wall.", ref:"Das 38 p.594 · B&L 60 p.948"},
+    {id:"h02", lv:1, type:"Anatomy", q:"Name the three parts of a hernia, and the four parts of its sac.",
+     a:"Covering, sac and contents. The sac has a mouth, neck, body and fundus.", ref:"SRB 18 p.741"},
+    {id:"h03", lv:1, type:"Anatomy", q:"By what route does an indirect inguinal hernia leave the abdomen?",
+     a:"Through the deep inguinal ring, lateral to the inferior epigastric vessels, obliquely along the inguinal canal, emerging at the superficial ring. Lateral by origin, oblique by course.", ref:"Das 38 p.594 · B&L 60 p.955"},
+    {id:"h04", lv:1, type:"Anatomy", q:"Give the boundaries of Hesselbach's triangle.",
+     a:"Lateral border of rectus abdominis medially, inferior epigastric vessels laterally, inguinal ligament below. B&L names the pubic bone and iliopubic tract as the lower border. The neck of a direct sac lies medial to the inferior epigastric vessels.", ref:"Das 38 p.603 · B&L 60 p.955"},
+    {id:"h05", lv:1, type:"Examination", q:"What are the two classical signs of an uncomplicated hernia, and the two caveats?",
+     a:"Impulse on coughing and reducibility. Caveats: a swelling with a cough impulse is not necessarily a hernia, and a swelling with no cough impulse may still be one.", ref:"Das 38 p.598 · B&L 60 p.951"},
+    {id:"h06", lv:1, type:"Classification", q:"When is an inguinal hernia 'complete'?",
+     a:"Only when the contents reach the bottom of the scrotum. Short of that, incomplete; still inside the superficial ring, a bubonocele.", ref:"Das 38 p.594, p.603"},
+    {id:"h07", lv:1, type:"History", q:"Which inguinal hernia is typical of the young, and which of the old?",
+     a:"Indirect in the young, and always the congenital type in neonates and young children. Direct mostly in older subjects, more common above 40.", ref:"Das 38 p.594, p.604 · B&L 60 p.955"},
+    {id:"h08", lv:1, type:"Classification", q:"Name the possible contents of a hernial sac.",
+     a:"Omentum (omentocele/epiplocele), intestine (enterocele), bladder (cystocele), Meckel's diverticulum (Littre's), part of the bowel circumference (Richter's), appendix (Amyand's), ovary with fallopian tube, and fluid.", ref:"SRB 18 p.741–742"},
+    {id:"h09", lv:1, type:"Examination", q:"Why must the patient be examined standing?",
+     a:"A direct hernia disappears the moment he lies down. S Das examines standing first; B&L lies the patient down first to reduce and assess. Do both: standing to demonstrate, supine to assess the defect.", ref:"Das 38 p.596 · B&L 60 p.951"},
+    {id:"h10", lv:1, type:"Examination", q:"How far must you expose the patient?",
+     a:"Both inguinal regions, from the umbilicus to mid-thigh. Inadequate exposure of this area is exactly why femoral hernias are missed.", ref:"Das 38 p.595 · B&L 60 p.960"},
+    {id:"h11", lv:1, type:"Classification", q:"Name the clinical types of hernia.",
+     a:"Reducible, irreducible, obstructed, inflamed, strangulated, and SRB adds occult. B&L's complexity scale ends in infarcted.", ref:"Das 38 p.604–605 · SRB 18 p.742–743 · B&L 60 p.950"},
+    {id:"h12", lv:1, type:"Anatomy", q:"Where is the superficial inguinal ring, and what should it admit?",
+     a:"A triangular opening in the external oblique aponeurosis, 1.25 cm above the pubic tubercle, bounded by a superomedial and an inferolateral crus. Normally it does not, or only just, admits the tip of the little finger.", ref:"SRB 18 p.743"},
+    {id:"h13", lv:1, type:"Examination", q:"Where does an inguinal hernia lie relative to the pubic tubercle? And a femoral hernia?",
+     a:"Inguinal: above the inguinal ligament and medial to the pubic tubercle. Femoral: below the ligament and lateral to the tubercle. Note B&L 26e says 'above and lateral' for inguinal, answer S Das.", ref:"Das 38 p.597 · cf. B&L 60 p.956"},
+    {id:"h14", lv:1, type:"History", q:"What proportion of adult hernia repairs are inguinal?",
+     a:"Eighty per cent. More than 80% of inguinal hernias are indirect, and almost all hernias in children and women are indirect.", ref:"B&L 60 p.949 · Das 38 p.603"},
+
+    {id:"h20", lv:2, type:"History", q:"Describe the pain of an early hernia. What does it mean when it stops?",
+     a:"Dragging and aching, worse as the day passes, often appearing before the lump. It ceases once the hernia is fully formed: so settling pain means the hernia has finished forming, not that he is improving. B&L: sharp intermittent pain suggests pinching; severe pain means high risk of strangulation.", ref:"Das 38 p.594 · B&L 60 p.950"},
+    {id:"h21", lv:2, type:"History", q:"Give the four set questions for any inguinoscrotal swelling.",
+     a:"How did it start: on straining? Where did it first appear: groin descending, or below the crease ascending? What size when first seen, bottom of scrotum at once, or gradual? Does it disappear on lying down?", ref:"Das 38 p.594–595"},
+    {id:"h22", lv:2, type:"History", q:"Is a hernia caused by heavy lifting?",
+     a:"Classically yes. But B&L reports hernia is no more common in Olympic weightlifters than in the general population, so raised pressure is not a major causative factor; the defect is an inherited collagen abnormality. SRB's 'metastatic emphysema of Read'. Straining is when the patient first notices it.", ref:"B&L 60 p.949 · SRB 18 p.741"},
+    {id:"h23", lv:2, type:"Examination", q:"A hernia with no cough impulse. What does that mean?",
+     a:"A complication, strangulated or incarcerated: or a neck blocked by adhesions. It is also typical of femoral hernia, where its absence leads to misdiagnosis as a lymph node. A saphena varix and a varicocele give false positives.", ref:"Das 38 p.597, p.599 · B&L 60 p.951"},
+    {id:"h24", lv:2, type:"Examination", q:"Describe Zieman's technique and its precondition.",
+     a:"Index on the deep ring (indirect), middle on the superficial ring (direct), ring finger on the saphenous opening 4 cm below and lateral to the pubic tubercle (femoral); the patient holds his nose and blows, or coughs. Only valid with no obvious swelling, or after complete reduction.", ref:"Das 38 p.599"},
+    {id:"h25", lv:2, type:"Examination", q:"In the invagination test, what does the direction of the finger tell you?",
+     a:"Directly backwards, direct. Upwards, backwards and outwards: indirect. Impulse on the pulp means direct; on the tip, oblique.", ref:"Das 38 p.600–601"},
+    {id:"h26", lv:2, type:"Examination", q:"Explain the ring occlusion test and its logic.",
+     a:"Standing, hernia reduced, thumb over the deep ring, cough. An indirect hernia comes through that ring so it is blocked; a direct one comes medial to it and bulges medial to your finger. B&L warns even experienced surgeons cannot distinguish the two with certainty.", ref:"Das 38 p.601 · B&L 60 p.956"},
+    {id:"h27", lv:2, type:"Examination", q:"Distinguish an enterocele from an omentocele at the bedside.",
+     a:"Enterocele: elastic, resonant, reduces with a gurgle, first part difficult and last part easy, may show peristalsis. Omentocele: doughy and granular, dull, no gurgle, first part easy and last part resists.", ref:"Das 38 p.598, p.600 · SRB 18 p.742"},
+    {id:"h28", lv:2, type:"Examination", q:"Why is rectal examination obligatory in a case of hernia?",
+     a:"To exclude chronic constipation and an enlarged prostate, causes of straining that recur the hernia. And prostatic symptoms predict postoperative urinary retention.", ref:"Das 38 p.603 · B&L 60 p.950"},
+    {id:"h29", lv:2, type:"Complications", q:"Differentiate an irreducible from a strangulated hernia.",
+     a:"Both are irreducible. The strangulated one is extremely tense and tender, may have red overlying skin, and has lost its cough impulse. All absent in pure irreducibility.", ref:"Das 38 p.604–605"},
+    {id:"h30", lv:2, type:"Complications", q:"Define obstructed hernia, and say why the diagnosis is dangerous.",
+     a:"Irreducibility plus intestinal obstruction with blood supply intact. It shares two of the three features of strangulation, so calling a strangulated hernia 'obstructed' wastes the time that would have saved the patient.", ref:"Das 38 p.604–605"},
+    {id:"h31", lv:2, type:"Examination", q:"Why examine abdominal muscle tone, and how?",
+     a:"To choose the operation, herniorrhaphy if tone is good, hernioplasty if poor. Observe in profile; the rising test, where weak obliques give Malgaigne's bulgings; and a finger in the superficial ring during a cough.", ref:"Das 38 p.602"},
+    {id:"h32", lv:2, type:"History", q:"A hernia that enlarges before micturition and shrinks after. What is in it?",
+     a:"Urinary bladder: a cystocele, only in a direct or sliding hernia. Pressing it provokes a desire to micturate. The medially placed bladder is pulled into a direct hernia.", ref:"Das 38 p.604 · B&L 60 p.956"},
+    {id:"h33", lv:2, type:"Management", q:"Which investigation establishes the diagnosis?",
+     a:"None, it is clinical. Investigations are for fitness and cause. In doubt: ultrasound first, CT for complex or incisional hernia, MRI for sportsman's groin, herniography for an occult sac, laparoscopy for an occult contralateral hernia. Plain x-ray is of little value.", ref:"B&L 60 p.951"},
+    {id:"h34", lv:2, type:"Management", q:"State the four principles of any hernia repair.",
+     a:"Reduce the contents and remove non-viable tissue; excise and close the sac or replace it deep to the muscles; reapproximate the neck; reinforce permanently with sutures or mesh.", ref:"B&L 60 p.952"},
+    {id:"h35", lv:2, type:"History", q:"A right direct hernia in a man with a right iliac fossa scar. Connect them.",
+     a:"Appendicectomy through a McBurney incision injured the ilioinguinal nerve, weakening the inguinal region and producing a right-sided direct hernia.", ref:"SRB 18 p.741 · Das 38 p.595"},
+
+    {id:"h40", lv:3, type:"Anatomy", q:"Where exactly is the deep inguinal ring?",
+     a:"S Das and SRB: 1.25 cm above the mid-inguinal point, midway between the ASIS and the symphysis pubis. B&L: midway between the ASIS and the pubic tubercle, the midpoint of the inguinal ligament: 2–3 cm above the femoral pulse. The mid-inguinal point overlies the femoral artery; the midpoint of the ligament overlies the deep ring.", ref:"Das 38 p.599 · SRB 18 p.743 · B&L 60 p.955"},
+    {id:"h41", lv:3, type:"Complications", q:"Which hernia strangulates most often?",
+     a:"Two answers to two questions. The most common strangulated hernia is the indirect inguinal, because inguinal hernias are far more numerous. The highest rate of strangulation is in the femoral hernia. Fifty per cent of femoral hernias present as an emergency, against five per cent of inguinal.", ref:"SRB 18 p.743 · B&L 60 p.959, p.960"},
+    {id:"h42", lv:3, type:"Complications", q:"Why can a small hernia be more dangerous than a large one?",
+     a:"Risk depends on the neck, not the bulk. A small rigid-walled defect traps contents, acts as a constriction ring, impedes venous return and progresses to strangulation. A wide-necked direct hernia rarely strangulates.", ref:"B&L 60 p.950, p.952"},
+    {id:"h43", lv:3, type:"Complications", q:"What is Garrey's stricture?",
+     a:"An ischaemic narrowing of small bowel that has been reduced from an obstructed hernia, a stricture forming later at the site of the constriction ring.", ref:"SRB 18 p.742–743"},
+    {id:"h44", lv:3, type:"Classification", q:"What is Amyand's hernia? And Littre's?",
+     a:"Amyand's, the appendix in an inguinal hernial sac, often incarcerated. Littre's: a Meckel's diverticulum in the sac; Littre described it 81 years before Meckel was born.", ref:"SRB 18 p.742–743"},
+    {id:"h45", lv:3, type:"Complications", q:"What is Richter's hernia, and why is it treacherous?",
+     a:"Strangulation of only part of the circumference of the bowel, often complicating a femoral hernia. It mimics gastroenteritis: colic, bowels opening normally, sometimes diarrhoea, so operation is delayed. It may be impossible to detect clinically, yet the bowel can necrose and perforate.", ref:"Das 38 p.605–606 · B&L 60 p.950"},
+    {id:"h46", lv:3, type:"Classification", q:"Classify a hernia by the European Hernia Society system.",
+     a:"Primary or recurrent (P/R); lateral, medial or femoral (L/M/F); defect size in finger breadths at 1.5 cm each. A primary indirect hernia with a 3 cm defect is PL2.", ref:"B&L 60 p.956"},
+    {id:"h47", lv:3, type:"Classification", q:"What is a sliding hernia, and what is the surgical danger?",
+     a:"Extraperitoneal viscus, caecum on the right, sigmoid on the left, bladder either side, slides outside the sac and forms part of its wall. B&L: the sac forms secondarily, which distinguishes it from a classic indirect hernia; the large bowel wall may not be covered by peritoneum and can be damaged at operation.", ref:"Das 38 p.605 · B&L 60 p.956"},
+    {id:"h48", lv:3, type:"Management", q:"Choose the operation, and justify it.",
+     a:"Herniotomy in a child: the wall is normal and in infants the rings are superimposed with no obliquity. Herniorrhaphy in a young adult with good tone. Hernioplasty with mesh where tone is poor, Malgaigne's bulgings are present, or the hernia is large or recurrent. Lichtenstein is commonest worldwide; laparoscopic TEP or TAPP for bilateral or recurrent hernia.", ref:"SRB 18 p.743 · Das 38 p.602 · B&L 60 p.957–958"},
+    {id:"h49", lv:3, type:"Management", q:"Describe the Shouldice repair and how it differs from Bassini.",
+     a:"Bassini sutures conjoint tendon to inguinal ligament from pubic tubercle to deep ring. Shouldice first incises the transversalis fascia from deep ring to pubic tubercle and closes it as a double-thick, two-layered posterior wall, double breasting: then the external oblique likewise. The only one of 150+ modifications with benefit; under 2% lifetime failure in expert hands, identical to Bassini in general hands.", ref:"B&L 60 p.957"},
+    {id:"h50", lv:3, type:"Management", q:"What size mesh, and what must it cover?",
+     a:"Lichtenstein: 8 × 15 cm over the posterior wall, split around the cord at the deep ring. Laparoscopic: 10 × 15 cm crossing the midline into the retropubic space and 5 cm lateral to the deep ring, covering Hesselbach's triangle, the deep ring and the femoral canal together. At least 2 cm overlap, up to 5 cm.", ref:"B&L 60 p.952, p.958"},
+    {id:"h51", lv:3, type:"Management", q:"Why are lightweight large-pore meshes preferred?",
+     a:"Better integration, less shrinkage, more flexibility, better comfort. Heavyweight meshes provoke more fibrosis; shrinkage of up to 50% causes tension, pain and recurrence. Light is under 40 g/m², heavy over 80 g/m².", ref:"B&L 60 p.953"},
+    {id:"h52", lv:3, type:"Management", q:"Groin pain four months after a Lichtenstein repair. What is it?",
+     a:"Chronic pain: defined as pain at three months, the commonest complication of open flat mesh repair, reported up to 20%. Most severe form is neuralgic, from injury to or irritation of the ilioinguinal, iliohypogastric or genital branch of the genitofemoral nerve, or from mesh shrinkage.", ref:"B&L 60 p.958–959"},
+    {id:"h53", lv:3, type:"Management", q:"Laparoscopic or open, what does the evidence say?",
+     a:"Over 60 randomised trials against Lichtenstein. Laparoscopic takes longer but gives less pain after surgery and at five years, faster return to activity, and fewer wound complications. Particular benefit in bilateral cases and recurrence after open repair. The limit is a slow learning curve.", ref:"B&L 60 p.958"},
+    {id:"h54", lv:3, type:"Management", q:"Would you repair the asymptomatic other side?",
+     a:"Ten per cent present bilaterally, up to 20% more have an occult contralateral hernia at laparoscopy, and a patient with one hernia has a lifetime 33% risk on the other side. If the other side is weak, bilateral repair is recommended. Some offer it to all, especially laparoscopically, but that is not widespread practice.", ref:"B&L 60 p.957"},
+    {id:"h55", lv:3, type:"Examination", q:"List the differential diagnosis of a groin swelling.",
+     a:"Integument: sebaceous cyst, lipoma, neurofibroma. Hernia: inguinal, femoral. Lymphatic: inguinal lymphadenopathy. Vascular: saphena varix, aneurysm. Inguinal canal: ectopic testis, lipoma or hydrocele of the cord, hydrocele of the canal of Nuck. Deep: psoas abscess. The common four are inguinal hernia, femoral hernia, inguinal lymphadenopathy and saphena varix.", ref:"SRB 18 p.741"},
+    {id:"h56", lv:3, type:"Complications", q:"A patient has unexplained small bowel obstruction. What must you do?",
+     a:"Examine the groins carefully for a femoral hernia. It is missed because the area is inadequately exposed, it may be only 1–2 cm, it loses its cough impulse early, and it is mistaken for a lymph node. CT in obstruction can identify one the clinician missed.", ref:"B&L 60 p.960"},
+    {id:"h57", lv:3, type:"Management", q:"Does every hernia need repair?",
+     a:"No. Small hernias can be more dangerous than large. Femoral hernia should always be repaired. Watchful waiting is reasonable in the elderly with a small, easily reduced, asymptomatic hernia, but of the two studies, one found it safe and the second was abandoned when patients strangulated. Trusses are not recommended.", ref:"B&L 60 p.952, p.957"}
+  ];
+
+  var LEVELS = [
+    {n:1, name:"Foundation", desc:"Definitions, anatomy and the signs you must never fumble."},
+    {n:2, name:"Clinical",  desc:"History technique, the special tests, and telling complications apart."},
+    {n:3, name:"Examiner's edge", desc:"Where the three books disagree, named varieties, and the evidence."}
+  ];
+
+  // ------------------------------------------------------------------ storage
+  // One record per student, keyed case-insensitively. The typed spelling is kept for display.
+
+  var LS = "surgery-case-files-v2";
+
+  function store() {
+    try { return JSON.parse(localStorage.getItem(LS) || "{}"); } catch (e) { return {}; }
+  }
+  function save(o) {
+    try { localStorage.setItem(LS, JSON.stringify(o)); } catch (e) {}
+  }
+  function keyOf(name) { return String(name).trim().toLowerCase().replace(/\s+/g, " "); }
+
+  // ------------------------------------------------- sync, for the viva results
+  //
+  // The same bargain as the reader: this browser holds the real copy and the worker is a
+  // mirror, so every failure here is swallowed and the viva carries on regardless. Someone
+  // halfway through revising should never see a network error about a score.
+  //
+  // Each session carries an id generated here, and the worker inserts-or-ignores on it, so a
+  // session that goes up twice, from a retry or from a second device, is still one row.
+
+  var SYNC = "https://rx-sync.harnar.workers.dev";
+
+  function newId() {
+    return Date.now().toString(36) + "-" + Math.random().toString(36).slice(2, 10);
+  }
+
+  function markSynced(id) {
+    var s = store(), changed = false;
+    Object.keys(s.students || {}).forEach(function (k) {
+      (s.students[k].sessions || []).forEach(function (r) {
+        if (r.id === id && !r.synced) { r.synced = true; changed = true; }
+      });
+    });
+    if (changed) save(s);
+  }
+
+  function postSession(rec) {
+    if (!SYNC || !rec || !rec.id) return;
+    fetch(SYNC + "/api/sessions", {
+      method: "POST",
+      headers: { "content-type": "application/json" },
+      body: JSON.stringify(rec)
+    }).then(function (r) {
+      if (r.ok) markSynced(rec.id);
+    }).catch(function () {
+      // offline is normal and not worth reporting; flushSessions picks it up next time
+    });
+  }
+
+  // Sessions finished while offline never reached the worker, so they are retried whenever
+  // the page is opened. Without this, a session done on a train would be lost to the
+  // database for good, even though the browser still has it.
+  function flushSessions() {
+    if (!SYNC) return;
+    var s = store(), pending = [];
+    Object.keys(s.students || {}).forEach(function (k) {
+      (s.students[k].sessions || []).forEach(function (r) {
+        if (r && r.id && !r.synced) pending.push(r);
+      });
+    });
+    pending.slice(-50).forEach(postSession);
+  }
+
+  function studentRec(k) {
+    var s = store();
+    return (s.students && s.students[k]) || null;
+  }
+  function allStudents() {
+    var s = store(), out = [];
+    Object.keys(s.students || {}).forEach(function (k) {
+      out.push({ key: k, name: s.students[k].name, sessions: s.students[k].sessions || [] });
+    });
+    return out.sort(function (a, b) { return b.sessions.length - a.sessions.length; });
+  }
+
+  function recordSession(rec) {
+    var s = store();
+    s.students = s.students || {};
+    rec.id = rec.id || newId();
+    rec.synced = false;                  // postSession flips this once the worker has it
+    var r = s.students[rec.studentKey] || { name: rec.studentName, sessions: [] };
+    r.name = rec.studentName;            // keep the latest spelling they typed
+    r.sessions = (r.sessions || []).concat([rec]).slice(-200);
+    s.students[rec.studentKey] = r;
+    s.lastStudent = rec.studentKey;
+    save(s);
+    postSession(rec);                    // saved locally first, so a failure here costs nothing
+  }
+
+  // ------------------------------------------------------------------ theme
+
+  var THEMES = ["system", "light", "dark"];
+  function currentTheme() { return store().theme || "system"; }
+  function applyTheme(t) {
+    var el = document.documentElement;
+    if (t === "system") el.removeAttribute("data-theme");
+    else el.setAttribute("data-theme", t);
+  }
+  function setTheme(t) {
+    var s = store(); s.theme = t; save(s);
+    applyTheme(t);
+    renderTopbar();
+  }
+  applyTheme(currentTheme());
+
+  var ICONS = {
+    system: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><rect x="2" y="4" width="20" height="13" rx="2"/><path d="M8 21h8M12 17v4"/></svg>',
+    light: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"/></svg>',
+    dark:  '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12.8A9 9 0 1111.2 3a7 7 0 009.8 9.8z"/></svg>'
+  };
+  var THEME_LABEL = { system: "Auto", light: "Light", dark: "Dark" };
+
+  // ------------------------------------------------------------------ nav
+
+  var app = document.getElementById("app");
+  var topbar = document.getElementById("topbar");
+  var backTo = null;          // function, or null at the root
+
+  var inGuide = false;
+
+  function renderTopbar() {
+    var t = currentTheme();
+    topbar.innerHTML =
+      (backTo
+        ? '<button class="ghost" id="navBack">' +
+          '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" ' +
+          'stroke-linecap="round" stroke-linejoin="round"><path d="M15 18l-6-6 6-6"/></svg>' +
+          'Back</button>'
+        : '') +
+      '<span class="spacer"></span>' +
+      (inGuide ? '' : '<button class="ghost" id="themeBtn" title="Switch theme" ' +
+      'aria-label="Theme: ' + THEME_LABEL[t] + '">' + ICONS[t] + THEME_LABEL[t] + '</button>');
+
+    var b = document.getElementById("navBack");
+    if (b) b.addEventListener("click", function () { if (backTo) backTo(); });
+    var tb = document.getElementById("themeBtn");
+    if (tb) tb.addEventListener("click", function () {
+      setTheme(THEMES[(THEMES.indexOf(currentTheme()) + 1) % THEMES.length]);
+    });
+  }
+
+  var stack = [];
+
+  function paint() {
+    var render = stack[stack.length - 1];
+    inGuide = (render === screenGuide);
+    backTo = stack.length > 1 ? back : null;
+    renderTopbar();
+    render();
+    window.scrollTo(0, 0);
+  }
+
+  function go(render)      { stack.push(render); paint(); }
+  function replace(render) { stack[stack.length - 1] = render; paint(); }
+  function reset(render)   { stack = [render]; paint(); }
+  function back()          { if (stack.length > 1) { stack.pop(); paint(); } }
+
+  // ------------------------------------------------------------------ helpers
+
+  function esc(s) {
+    return String(s).replace(/[&<>"']/g, function (c) {
+      return {"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c];
+    });
+  }
+  function shuffle(a) {
+    for (var i = a.length - 1; i > 0; i--) {
+      var j = Math.floor(Math.random() * (i + 1));
+      var t = a[i]; a[i] = a[j]; a[j] = t;
+    }
+    return a;
+  }
+  function on(id, ev, fn) { var el = document.getElementById(id); if (el) el.addEventListener(ev, fn); }
+  function when(iso) {
+    var d = new Date(iso), now = new Date();
+    var days = Math.floor((now - d) / 86400000);
+    if (days === 0) return "today";
+    if (days === 1) return "yesterday";
+    if (days < 7) return days + " days ago";
+    return d.toLocaleDateString(undefined, { day: "numeric", month: "short" });
+  }
+
+  // ------------------------------------------------------------------ state
+
+  var student = { key: "", name: "" };
+  var db = null, dbReady = false;
+  var queue = [], idx = 0, results = [], level = 1;
+
+  // ------------------------------------------------------------------ index
+
+  function screenIndex() {
+    app.innerHTML =
+      '<div class="who"><span>Signed in as <b>' + esc(student.name) + '</b></span>' +
+      '<button class="btn" id="swapWho" style="padding:.25rem .6rem;font-size:.75rem">Switch</button></div>' +
+      '<p class="eyebrow">' + esc(SUBJECT) + ' · MBBS final year</p>' +
+      '<h1>Surgery Case Files</h1>' +
+      '<p class="sub">History and examination with the reasoning attached to every step, ' +
+      'management with the rationale for every decision, and a viva drill that tracks what you ' +
+      'keep getting wrong. Built from S Das, Bailey &amp; Love and SRB.</p>' +
+      '<div class="tiles">' +
+        '<button class="tile" id="case1">' +
+          '<span class="ico">' + CASE.num + '</span>' +
+          '<span class="t-name">' + esc(CASE.name) + '</span>' +
+          '<span class="t-desc">Long case. Study guide, viva drill and printable PDF.</span>' +
+          '<span class="t-go">&rarr;</span>' +
+        '</button>' +
+        '<div class="tile muted"><span class="ico">02</span>' +
+          '<span class="t-name">Thyroid Swelling</span>' +
+          '<span class="t-desc">Not built yet.</span><span class="t-go">&middot;</span></div>' +
+        '<div class="tile muted"><span class="ico">03</span>' +
+          '<span class="t-name">Breast Carcinoma</span>' +
+          '<span class="t-desc">Not built yet.</span><span class="t-go">&middot;</span></div>' +
+      '</div>' +
+      '<div class="srckey">' +
+        '<span><i style="background:#005f73"></i> S Das 13e: clinical method</span>' +
+        '<span><i style="background:#5b4a8a"></i> Bailey &amp; Love 26e: mechanism and management</span>' +
+        '<span><i style="background:#1f6b5c"></i> SRB 6e: exam framework</span>' +
+      '</div>';
+    on("case1", "click", function () { go(screenCase); });
+    on("swapWho", "click", function () { reset(screenWelcome); });
+  }
+
+  // ------------------------------------------------------------------ case hub
+
+  function screenCase() {
+    var studs = allStudents();
+    var totalSessions = studs.reduce(function (n, s) { return n + s.sessions.length; }, 0);
+    var line = totalSessions
+      ? '<b>' + totalSessions + '</b> viva session' + (totalSessions === 1 ? '' : 's') +
+        ' recorded on this device across <b>' + studs.length + '</b> ' +
+        (studs.length === 1 ? 'person' : 'people') + '.'
+      : 'Nothing drilled yet. The viva marks itself against your own honesty, so answer out loud first.';
+
+    app.innerHTML =
+      '<p class="eyebrow">Long case ' + CASE.num + '</p>' +
+      '<h1>' + esc(CASE.name) + '</h1>' +
+      '<p class="sub">The most commonly allotted surgical long case, and the one where the ' +
+      'examiner is least interested in your diagnosis. He can see the lump. What he wants is the ' +
+      'reasoning behind each question you asked and each test you performed.</p>' +
+      '<div class="tiles">' +
+        '<button class="tile" id="goGuide">' +
+          '<span class="ico">READ</span><span class="t-name">Study guide</span>' +
+          '<span class="t-desc">Full case with rationale on every history question, examination ' +
+          'finding, investigation and treatment decision. Set it up how you like to read, and ' +
+          'highlight, annotate or write on it.</span>' +
+          '<span class="t-go">&rarr;</span></button>' +
+        '<button class="tile" id="goViva">' +
+          '<span class="ico">VIVA</span><span class="t-name">Viva drill</span>' +
+          '<span class="t-desc">' + BANK.length + ' questions across three levels. Tracks which ' +
+          'kinds of question you miss and tells you what to revise.</span>' +
+          '<span class="t-go">&rarr;</span></button>' +
+        '<button class="tile" id="goProgress">' +
+          '<span class="ico">STATS</span><span class="t-name">Your progress</span>' +
+          '<span class="t-desc">Everything drilled so far: coverage, accuracy by topic, and ' +
+          'every past session.</span>' +
+          '<span class="t-go">&rarr;</span></button>' +
+        '<button class="tile" id="goPdf">' +
+          '<span class="ico">PDF</span><span class="t-name">Printable PDF</span>' +
+          '<span class="t-desc" id="pdfDesc">30 pages, the whole study guide laid out for ' +
+          'paper.</span>' +
+          '<span class="t-go">&darr;</span></button>' +
+      '</div>' +
+      '<p class="meta-line">' + line + '</p>';
+
+    on("goGuide", "click", function () { go(screenGuide); });
+    on("goPdf", "click", savePdf);
+    on("goViva", "click", function () { go(screenLevels); });
+    on("goProgress", "click", function () { go(screenProgress); });
+  }
+
+  // ------------------------------------------------------------------ sign in
+
+
+  // ------------------------------------------------------------------ levels
+
+  function screenLevels() {
+    var rec = studentRec(student.key);
+    var hist = rec ? rec.sessions : [];
+    var mine = hist.filter(function (s) { return s.caseId === CASE.id; });
+
+    var html =
+      '<div class="who"><span>Drilling as <b>' + esc(student.name) + '</b></span></div>' +
+      '<h2>Choose your level</h2>' +
+      '<p class="sub">Answer out loud, then mark yourself honestly, the summary is only useful ' +
+      'if the marking is.</p><div class="levels">';
+
+    LEVELS.forEach(function (L) {
+      var n = BANK.filter(function (q) { return q.lv === L.n; }).length;
+      var past = mine.filter(function (s) { return s.level === L.n; });
+      var meta = n + " questions";
+      if (past.length) {
+        meta += " · best " + Math.max.apply(null, past.map(function (s) { return s.pct; })) +
+                "% · " + past.length + " attempt" + (past.length === 1 ? "" : "s");
+      }
+      html += '<button class="level" data-lv="' + L.n + '">' +
+              '<span class="lv-name">' + esc(L.name) + '</span>' +
+              '<span class="lv-desc">' + esc(L.desc) + '</span>' +
+              '<span class="lv-meta">' + meta + '</span></button>';
+    });
+    html += '</div><div class="row"><button class="btn" id="seeProgress">Your progress</button>' +
+            '<button class="btn" id="switch">Switch person</button></div>';
+
+    app.innerHTML = html;
+    [].forEach.call(app.querySelectorAll(".level"), function (b) {
+      b.addEventListener("click", function () { startDrill(+b.dataset.lv); });
+    });
+    on("switch", "click", function () { reset(screenWelcome); });
+    on("seeProgress", "click", function () { go(screenProgress); });
+  }
+
+  // ------------------------------------------------------------------ drill
+
+  function startDrill(lv, inPlace) {
+    level = lv;
+    queue = shuffle(BANK.filter(function (q) { return q.lv === lv; }).slice());
+    idx = 0; results = [];
+    // back from any question returns to the level list, not the previous question
+    if (inPlace) replace(screenQuestion); else go(screenQuestion);
+  }
+
+  function head(q) {
+    var pct = Math.round(idx / queue.length * 100);
+    return '<div class="progress"><span>' + esc(LEVELS[level-1].name) + '</span>' +
+           '<span>' + (idx + 1) + ' / ' + queue.length + '</span></div>' +
+           '<div class="bar"><i style="width:' + pct + '%"></i></div>' +
+           '<span class="qtag">' + esc(q.type) + '</span>' +
+           '<p class="question">' + esc(q.q) + '</p>';
+  }
+
+  function screenQuestion() {
+    if (idx >= queue.length) { replace(screenSummary); return; }
+    var q = queue[idx];
+    app.innerHTML = head(q) +
+      '<div class="row end"><button class="btn primary" id="reveal">Show the answer</button></div>';
+    on("reveal", "click", function () { revealAnswer(q); });
+  }
+
+  function revealAnswer(q) {
+    app.innerHTML = head(q) +
+      '<div class="answer"><span class="tag">Answer</span>' + esc(q.a) +
+      '<span class="ref">' + esc(q.ref) + '</span></div>' +
+      '<div class="grade">' +
+      '<button class="btn missed" id="no">I missed this</button>' +
+      '<button class="btn got" id="yes">I had it</button></div>';
+    on("yes", "click", function () { mark(q, true); });
+    on("no", "click", function () { mark(q, false); });
+  }
+
+  function mark(q, ok) {
+    results.push({ id: q.id, type: q.type, correct: ok });
+    idx++;
+    screenQuestion();
+  }
+
+  // ------------------------------------------------------------------ summary
+
+  function screenSummary() {
+    var total = results.length;
+    var score = results.filter(function (r) { return r.correct; }).length;
+    var pct = total ? Math.round(score / total * 100) : 0;
+
+    var byType = {};
+    results.forEach(function (r) {
+      if (!byType[r.type]) byType[r.type] = { ok: 0, n: 0 };
+      byType[r.type].n++;
+      if (r.correct) byType[r.type].ok++;
+    });
+    var types = Object.keys(byType).sort(function (a, b) {
+      return (byType[a].ok / byType[a].n) - (byType[b].ok / byType[b].n);
+    });
+    var weakest = types.filter(function (t) { return byType[t].ok / byType[t].n < 0.7; });
+
+    var rec = {
+      studentKey: student.key, studentName: student.name,
+      subject: SUBJECT, caseId: CASE.id, caseName: CASE.name,
+      level: level, levelName: LEVELS[level-1].name,
+      score: score, total: total, pct: pct,
+      byType: byType, weakest: weakest,
+      missed: results.filter(function (r) { return !r.correct; }).map(function (r) { return r.id; }),
+      seen: results.map(function (r) { return r.id; }),
+      at: new Date().toISOString()
+    };
+    recordSession(rec);
+
+    var html =
+      '<div class="who"><span>Session complete · <b>' + esc(student.name) + '</b></span></div>' +
+      '<h2>' + esc(LEVELS[level-1].name) + '</h2>' +
+      '<p class="score">' + pct + '%<small> &nbsp;' + score + ' of ' + total + '</small></p>' +
+      '<div class="breakdown">';
+    types.forEach(function (t) {
+      var d = byType[t], p = Math.round(d.ok / d.n * 100);
+      html += '<div class="brow"><span class="bname">' + esc(t) + '</span>' +
+              '<span class="bval">' + d.ok + '/' + d.n + '</span>' +
+              '<span class="btrack"><i style="width:' + p + '%;background:' +
+              (p >= 70 ? "var(--good)" : "var(--miss)") + '"></i></span></div>';
+    });
+    html += '</div>';
+    html += weakest.length
+      ? '<div class="verdict weak"><b>Work on ' + esc(weakest.join(", ")) + '.</b> Go back to ' +
+        'those sections of the study guide before the next session.</div>'
+      : '<div class="verdict strong"><b>Solid across every category.</b> Move up a level, or come ' +
+        'back in a few days to test retention rather than recall.</div>';
+    html += '<div class="row"><button class="btn" id="retry">Retry this level</button>' +
+            '<button class="btn" id="levels">Another level</button>' +
+            '<button class="btn primary" id="prog">Your progress</button></div>' +
+            '<div class="saved" id="saved">Saving…</div>';
+
+    app.innerHTML = html;
+    on("retry", "click", function () { level = level; startDrill(level, true); });
+    on("levels", "click", function () { replace(screenLevels); });
+    on("prog", "click", function () { go(screenProgress); });
+
+    syncSession(rec);
+  }
+
+  // ------------------------------------------------------------------ progress
+
+  function screenProgress() {
+    var rec = studentRec(student.key);
+    var sessions = (rec ? rec.sessions : []).filter(function (s) { return s.caseId === CASE.id; });
+    sessions = sessions.slice().sort(function (a, b) { return new Date(b.at) - new Date(a.at); });
+
+    var html = '<div class="who"><span>Progress for <b>' + esc(student.name) + '</b> · ' +
+               esc(CASE.name) + '</span></div><h2>Where you stand</h2>';
+
+    if (!sessions.length) {
+      html += '<div class="empty">No sessions yet for this case. Once you have drilled a level, ' +
+              'this page shows your coverage, your accuracy by topic, and every past attempt.</div>' +
+              '<div class="row"><button class="btn primary" id="start">Start a session</button>' +
+              '<button class="btn" id="switch">Switch person</button></div>';
+      app.innerHTML = html;
+      on("start", "click", function () { go(screenLevels); });
+      on("switch", "click", function () { reset(screenWelcome); });
+      return;
+    }
+
+    // coverage and cumulative accuracy
+    var seen = {}, agg = {}, totalQ = 0, totalOk = 0;
+    sessions.forEach(function (s) {
+      (s.seen || []).forEach(function (id) { seen[id] = true; });
+      Object.keys(s.byType || {}).forEach(function (t) {
+        if (!agg[t]) agg[t] = { ok: 0, n: 0 };
+        agg[t].ok += s.byType[t].ok;
+        agg[t].n  += s.byType[t].n;
+      });
+      totalQ += s.total; totalOk += s.score;
+    });
+    var seenCount = Object.keys(seen).length;
+    var coverage = Math.round(seenCount / BANK.length * 100);
+    var overall = totalQ ? Math.round(totalOk / totalQ * 100) : 0;
+    var best = Math.max.apply(null, sessions.map(function (s) { return s.pct; }));
+
+    html += '<div class="stats">' +
+      '<div class="stat"><div class="sv">' + sessions.length + '</div>' +
+        '<div class="sl">session' + (sessions.length === 1 ? '' : 's') + ' done</div></div>' +
+      '<div class="stat"><div class="sv">' + overall + '%</div>' +
+        '<div class="sl">answered right, all sessions</div></div>' +
+      '<div class="stat"><div class="sv">' + best + '%</div>' +
+        '<div class="sl">best single session</div></div>' +
+      '<div class="stat"><div class="sv">' + seenCount + '<span style="font-size:.6em;color:var(--ink-soft)">/' + BANK.length + '</span></div>' +
+        '<div class="sl">questions seen (' + coverage + '%)</div></div>' +
+      '</div>';
+
+    if (seenCount >= BANK.length) {
+      html += '<div class="verdict info"><b>You have been through every question in this case.</b> ' +
+              'Repeating them now tests retention rather than recall, which is the more useful ' +
+              'thing this close to an exam. If you want more, ask for the bank to be extended, ' +
+              'your results are kept, so new questions slot in alongside these.</div>';
+    }
+
+    // cumulative accuracy by topic
+    var types = Object.keys(agg).sort(function (a, b) {
+      return (agg[a].ok / agg[a].n) - (agg[b].ok / agg[b].n);
+    });
+    html += '<h3>Accuracy by topic, all sessions</h3><div class="breakdown">';
+    types.forEach(function (t) {
+      var d = agg[t], p = Math.round(d.ok / d.n * 100);
+      html += '<div class="brow"><span class="bname">' + esc(t) + '</span>' +
+              '<span class="bval">' + d.ok + '/' + d.n + ' · ' + p + '%</span>' +
+              '<span class="btrack"><i style="width:' + p + '%;background:' +
+              (p >= 70 ? "var(--good)" : "var(--miss)") + '"></i></span></div>';
+    });
+    html += '</div>';
+
+    var weak = types.filter(function (t) { return agg[t].ok / agg[t].n < 0.7; });
+    if (weak.length) {
+      html += '<div class="verdict weak"><b>Consistently weak: ' + esc(weak.join(", ")) + '.</b> ' +
+              'These are the sections of the study guide to reread before the next session.</div>';
+    }
+
+    html += '<h3>Every session</h3><div class="hist">';
+    sessions.forEach(function (s) {
+      html += '<div class="hrow"><span class="hl">' + esc(s.levelName || ("Level " + s.level)) + '</span>' +
+              '<span class="hd">' + esc(when(s.at)) + '</span>' +
+              '<span class="hp ' + (s.pct >= 70 ? 'ok' : 'bad') + '">' + s.pct + '%</span></div>';
+    });
+    html += '</div>';
+
+    html += '<div class="row" style="margin-top:1.4rem">' +
+            '<button class="btn primary" id="again">Drill again</button>' +
+            '<button class="btn" id="switch">Switch person</button></div>' +
+            '<div class="saved" id="syncline"></div>';
+
+    app.innerHTML = html;
+    on("again", "click", function () { replace(screenLevels); });
+    on("switch", "click", function () { reset(screenWelcome); });
+
+    var sl = document.getElementById("syncline");
+    if (sl) {
+      sl.textContent = SYNC
+        ? "Saved on this device, and to your name, so it follows you to your other devices."
+        : "Saved on this device.";
+    }
+  }
+
+  // ------------------------------------------------------------------ sync
+
+  function syncSession(rec) {
+    var el = document.getElementById("saved");
+    if (!el) return;
+    if (!dbReady) { el.textContent = "Saved on this device."; return; }
+    if (!db) {
+      // No artifact database here, which is the normal case on the website. The session has
+      // already gone to the worker from recordSession, so this is not a failure.
+      el.textContent = SYNC
+        ? "Saved on this device, and to your name."
+        : "Saved on this device.";
+      return;
+    }
+    var id = rec.at.replace(/[^0-9]/g, "") + "-" + Math.random().toString(36).slice(2, 7);
+    db.collection("sessions").doc(id).set(rec).then(function () {
+      el.textContent = "Saved for " + rec.studentName + " and synced.";
+    }).catch(function () {
+      el.textContent = "Saved on this device; could not sync this time.";
+    });
+  }
+
+  // ------------------------------------------------------------------ study guide
+
+  var guideHtml = null;
+
+  function screenGuide() {
+    app.innerHTML = '<div class="loading">Opening the study guide…</div>';
+
+    function mount(html) {
+      app.innerHTML = '<div class="readerwrap"><div class="guide" id="guideRoot">' + html + '</div></div>';
+      var root = document.getElementById("guideRoot");
+      var opts = { guide: root, doc: CASE.id, student: student.key || "_",
+                   syncRoot: true, onTheme: function () { renderTopbar(); } };
+      if (window.ReaderBoot) window.ReaderBoot(opts);
+      else if (window.Reader && window.Reader.remount) window.Reader.remount(opts);
+    }
+
+    if (guideHtml) { mount(guideHtml); return; }
+
+    fetch(GUIDE_BODY)
+      .then(function (r) { if (!r.ok) throw new Error(r.status); return r.text(); })
+      .then(function (t) { guideHtml = t; mount(t); })
+      .catch(function () {
+        app.innerHTML =
+          '<h2>The study guide could not load</h2>' +
+          '<p class="sub">It is published alongside this page but the request did not ' +
+          'come back. Reloading usually fixes it. The PDF on the case page has the same ' +
+          'content and does not depend on this.</p>' +
+          '<div class="row"><button class="btn primary" id="retry">Try again</button></div>';
+        on("retry", "click", function () { go(screenGuide); });
+      });
+  }
+
+  // ------------------------------------------------------------------ pdf
+
+  var IN_ARTIFACT = !!(window.claude && window.claude.use);
+
+  function savePdf() {
+    var d = document.getElementById("pdfDesc");
+    function say(msg) { if (d) d.textContent = msg; }
+
+    // On the web the sandbox restrictions do not apply, so just open it.
+    if (!IN_ARTIFACT) {
+      window.open(PDF, "_blank", "noopener");
+      return;
+    }
+
+    say("Fetching the PDF…");
+    fetch(PDF)
+      .then(function (r) { if (!r.ok) throw new Error(r.status); return r.blob(); })
+      .then(function (blob) {
+        return window.claude.use("downloads").then(function (dl) {
+          if (!dl) throw new Error("not granted");
+          return dl.save({ filename: "inguinal-hernia.pdf", data: blob });
+        });
+      })
+      .then(function () { say("Saved. 30 pages, the whole study guide laid out for paper."); })
+      .catch(function () {
+        say("Could not save it here, open the study guide above and print it instead, " +
+            "which produces the same 30 pages.");
+      });
+  }
+
+  // ------------------------------------------------------------------ welcome
+
+  function screenWelcome() {
+    var others = allStudents();
+    var last = store().lastStudent;
+    var saved = (last && studentRec(last)) ? studentRec(last).name : "";
+
+    var html =
+      '<p class="eyebrow">' + esc(SUBJECT) + ' · MBBS final year</p>' +
+      '<h1>Surgery Case Files</h1>' +
+      '<label class="fld" for="nm">Your name</label>' +
+      '<input type="text" id="nm" autocomplete="off" placeholder="Name" value="' + esc(saved) + '">';
+
+    if (others.length) {
+      html += '<div class="known">' + others.map(function (o) {
+        return '<button data-k="' + esc(o.key) + '">' + esc(o.name) + '</button>';
+      }).join("") + '</div>';
+    }
+    html += '<div class="row end" style="margin-top:1.3rem">' +
+            '<button class="btn primary" id="go">Continue</button></div>';
+    app.innerHTML = html;
+
+    function enter(name) {
+      var v = String(name).trim();
+      if (!v) { document.getElementById("nm").focus(); return; }
+      student = { key: keyOf(v), name: v };
+      var st = store();
+      st.students = st.students || {};
+      if (st.students[student.key]) student.name = st.students[student.key].name;
+      else st.students[student.key] = { name: student.name, sessions: [] };
+      st.lastStudent = student.key;
+      save(st);
+      if (window.Reader && window.Reader.setStudent) window.Reader.setStudent(student.key);
+      reset(screenIndex);
+    }
+    on("go", "click", function () { enter(document.getElementById("nm").value); });
+    document.getElementById("nm").addEventListener("keydown", function (e) {
+      if (e.key === "Enter") enter(this.value);
+    });
+    [].forEach.call(app.querySelectorAll(".known button"), function (b) {
+      b.addEventListener("click", function () {
+        var r = studentRec(b.dataset.k);
+        enter(r ? r.name : b.dataset.k);
+      });
+    });
+    document.getElementById("nm").focus();
+  }
+
+  // ------------------------------------------------------------------ boot
+
+  reset(screenWelcome);
+
+  // Anything finished while offline goes up now. Deliberately after the first paint, so a
+  // slow or failing network never delays the screen the reader is waiting for.
+  setTimeout(flushSessions, 1200);
+
+  if (window.claude && window.claude.use) {
+    window.claude.use("db").then(function (d) { db = d; dbReady = true; })
+                           .catch(function () { db = null; dbReady = true; });
+  } else { dbReady = true; }
+})();
+</script>
