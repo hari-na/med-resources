@@ -11,6 +11,7 @@ it is verbatim S Das, Bailey & Love and SRB, it is not needed to serve or rebuil
 and a repository is a bad place to keep someone else's book.
 """
 
+import json
 import pathlib
 import re
 import shutil
@@ -56,11 +57,18 @@ SRC_FILES = ["build.py", "build_citations.py", "publish_site.py",
 
 # cleanUrls was stripping .html and 308-redirecting, which put an extra round trip on the
 # guide fetch for no benefit; this site has no pretty URLs to gain.
-VERCEL = """{
+#
+# Raw string, and the backslash is doubled, because this is JSON and not a Python regex. The
+# `source` values are regular expressions, so matching a literal dot needs a backslash in the
+# pattern, which in turn has to be escaped for JSON: "\\." in the file. Writing "\." produced
+# a file no JSON parser would accept, Vercel rejected every build with "Invalid vercel.json
+# file provided", and because a failed build leaves the previous deployment serving, the site
+# went on looking fine while silently being hours out of date.
+VERCEL = r"""{
   "trailingSlash": false,
   "headers": [
     {
-      "source": "/(.*)\.pdf",
+      "source": "/(.*)\\.pdf",
       "headers": [{ "key": "Cache-Control", "value": "public, max-age=3600" }]
     },
     {
@@ -118,6 +126,22 @@ def main() -> int:
 
     (out / "vercel.json").write_text(VERCEL, encoding="utf-8")
     (out / ".gitignore").write_text(GITIGNORE, encoding="utf-8")
+
+    # Every JSON file we serve has to parse, checked here rather than discovered in
+    # production. A malformed vercel.json fails the Vercel build, and a failed build leaves
+    # the previous deployment up, so the site keeps answering with stale content and nothing
+    # about it looks broken. That cost about twelve hours of silently undeployed work once.
+    for name in ("vercel.json", "citations.json"):
+        path = out / name
+        if not path.exists():
+            continue
+        try:
+            json.loads(path.read_text(encoding="utf-8"))
+        except json.JSONDecodeError as exc:
+            print(f"  !  {name} is not valid JSON: {exc}", file=sys.stderr)
+            print("     refusing to publish; Vercel would reject the build and keep "
+                  "serving the previous deployment", file=sys.stderr)
+            return 1
     print(f"\nsite assembled in {out}")
     return 0
 
