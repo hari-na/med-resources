@@ -54,6 +54,24 @@ BOOKS = {
 
 CONTEXT_CHARS = 400  # size of the `before` / `after` excerpts
 
+# How much of a cited page to keep, either side of the passage the chip is pointing at.
+#
+# A chip cites a page, not a sentence, so the obvious implementation is to ship the whole
+# page. That is what this did, and it meant dist/citations.json carried about 130 KB of
+# continuous verbatim textbook prose to a publicly served site. Keeping whole pages of three
+# copyrighted books is not defensible, and it is not what the reader needs either: the point
+# of the pane is to show the sentence behind the claim with enough either side to place it.
+#
+# So the page is narrowed to a window around the passage the citing sentence actually refers
+# to, found by matching the guide's own wording against the page. Truncating from the top of
+# the page instead would be simpler and much worse, because the cited fact is usually not in
+# the first paragraph and would often be cut away entirely.
+WINDOW_CHARS = 600      # kept either side of the matched passage
+WINDOW_MAX = 2600       # ceiling when several chips cite the same page far apart
+WINDOW_FALLBACK = 1200  # when nothing in the page matches, keep this much from the top
+CLAIM_CHARS = 320       # guide text before a chip, read as the claim it is backing
+ELLIPSIS = "… "
+
 # ---------------------------------------------------------------------------
 # Citation chip parsing
 # ---------------------------------------------------------------------------
@@ -168,6 +186,55 @@ LIGATURES = {
     "ﬀ": "ff", "ﬁ": "fi", "ﬂ": "fl", "ﬃ": "ffi",
     "ﬄ": "ffl", "ﬅ": "st", "ﬆ": "st",
 }
+
+# Bailey & Love 28e separately needs repairing. Its embedded font maps the ff/fi/fl ligature
+# glyphs to a bare "f", so the second letter is lost before any Unicode normalisation can see
+# a ligature at all: "fistula" extracts as "fstula", "superficial" as "superfcial". It is
+# confined to that book, and it was showing up 400-odd times across the citation panes.
+#
+# Every entry here is a non-word in English, so an exact whole-word match cannot damage real
+# text. Anything ambiguous is deliberately left alone and simply stays slightly wrong.
+DROPPED_LIGATURE = {
+    "afected": "affected", "afects": "affects", "artifcial": "artificial",
+    "benefcial": "beneficial", "beneft": "benefit", "benefts": "benefits",
+    "classifcation": "classification", "classifed": "classified",
+    "confrm": "confirm", "confrmed": "confirmed", "defciency": "deficiency",
+    "defcit": "deficit", "defne": "define", "defned": "defined",
+    "diferent": "different", "diferentiation": "differentiation",
+    "dificult": "difficult", "dificulty": "difficulty", "difuse": "diffuse",
+    "difusion": "diffusion", "efect": "effect", "efective": "effective",
+    "efectively": "effectively", "efects": "effects", "efusion": "effusion",
+    "fap": "flap", "faps": "flaps", "fexion": "flexion", "fexor": "flexor",
+    "fbrosis": "fibrosis", "fbrous": "fibrous", "fbrin": "fibrin",
+    "fstula": "fistula", "fstulae": "fistulae", "fstulas": "fistulas",
+    "fxation": "fixation", "fxed": "fixed", "fnd": "find", "fndings": "findings",
+    "frst": "first", "fuid": "fluid", "fuids": "fluids",
+    "infammation": "inflammation", "infammatory": "inflammatory",
+    "infltration": "infiltration", "infltrating": "infiltrating",
+    "insufcient": "insufficient", "ofen": "often", "ofer": "offer",
+    "ofers": "offers", "profle": "profile", "refux": "reflux",
+    "signifcant": "significant", "signifcantly": "significantly",
+    "specifc": "specific", "specifcally": "specifically",
+    "specifcity": "specificity", "stif": "stiff", "stifness": "stiffness",
+    "sufcient": "sufficient", "suficient": "sufficient",
+    "superfcial": "superficial", "superfcially": "superficially",
+    "identifed": "identified", "modifed": "modified", "notifed": "notified",
+    "simplifed": "simplified", "verifed": "verified", "magnifcation": "magnification",
+    "calcifcation": "calcification", "ossifcation": "ossification",
+}
+
+DROPPED_LIGATURE_RE = re.compile(
+    r"\b(" + "|".join(sorted(DROPPED_LIGATURE, key=len, reverse=True)) + r")\b",
+    re.IGNORECASE,
+)
+
+
+def repair_ligatures(text: str) -> str:
+    """Put back the letters Bailey & Love 28e's font encoding drops."""
+    def sub(m: re.Match) -> str:
+        word = DROPPED_LIGATURE[m.group(0).lower()]
+        return word.capitalize() if m.group(0)[0].isupper() else word
+    return DROPPED_LIGATURE_RE.sub(sub, text)
 
 # Short words that may legitimately sit alone on a wrapped line; anything else
 # three characters or shorter is almost always scan debris (stray "I", ":::s",
@@ -306,6 +373,7 @@ def clean_text(raw: str, page: int | None, heads: set, book_heads: set = frozens
     text = unicodedata.normalize("NFKC", text)
     for lig, repl in LIGATURES.items():
         text = text.replace(lig, repl)
+    text = repair_ligatures(text)
     text = text.replace("­", "")          # soft hyphens
     text = re.sub(r"\s+", " ", text)           # collapse all whitespace runs
     text = re.sub(r"\s+([,.;:!?%])", r"\1", text)   # " ," -> ","
@@ -330,6 +398,121 @@ def head_context(text: str, n=CONTEXT_CHARS) -> str:
     cut = text[:n]
     space = cut.rfind(" ")
     return cut[:space].strip() if space != -1 else cut.strip()
+
+
+# ---------------------------------------------------------------------------
+# Narrowing a cited page to the passage the chip means
+# ---------------------------------------------------------------------------
+
+# Words too common in surgical prose to locate anything. Deliberately short: the aim is to
+# drop words that appear on every page of every chapter, not to build a real stop list.
+COMMON = {
+    "about", "above", "after", "against", "almost", "along", "also", "although", "always",
+    "among", "another", "around", "because", "become", "becomes", "been", "before", "being",
+    "below", "between", "both", "cases", "cause", "caused", "causes", "common", "commonly",
+    "could", "does", "during", "each", "either", "every", "first", "following", "from",
+    "give", "given", "gives", "have", "however", "important", "into", "known", "large",
+    "later", "less", "like", "likely", "little", "made", "make", "makes", "many", "more",
+    "most", "much", "must", "never", "often", "only", "other", "others", "over", "part",
+    "patient", "patients", "rare", "rarely", "same", "seen", "should", "since", "small",
+    "some", "such", "than", "that", "their", "them", "then", "there", "these", "they",
+    "this", "those", "through", "thus", "time", "under", "until", "upon", "used", "using",
+    "usually", "very", "well", "were", "what", "when", "where", "which", "while", "with",
+    "within", "without", "would", "your",
+}
+
+WORD_RE = re.compile(r"[a-z]{5,}")
+
+
+def claim_terms(claim: str) -> list[str]:
+    """The words in a citing sentence worth looking for in the cited page."""
+    seen, out = set(), []
+    for w in WORD_RE.findall(claim.lower()):
+        if w not in COMMON and w not in seen:
+            seen.add(w)
+            out.append(w)
+    return out
+
+
+def anchor_of(body_lower: str, claim: str) -> int | None:
+    """Where in the page this claim is talking about, or None if nothing matches.
+
+    Each distinctive word of the claim votes for the positions it occurs at, and the
+    densest cluster of votes wins. Matching on a single word would be led astray by one
+    incidental mention; requiring a phrase match would fail constantly, because the guide
+    paraphrases and the page is OCR output.
+    """
+    hits: list[int] = []
+    for term in claim_terms(claim):
+        start = body_lower.find(term)
+        while start != -1 and len(hits) < 400:
+            hits.append(start)
+            start = body_lower.find(term, start + 1)
+    if len(hits) < 2:
+        return hits[0] if hits else None
+
+    hits.sort()
+    # the tightest span containing a third of the hits, which is where the claim really sits
+    span = max(2, len(hits) // 3)
+    best_i, best_width = 0, None
+    for i in range(len(hits) - span + 1):
+        width = hits[i + span - 1] - hits[i]
+        if best_width is None or width < best_width:
+            best_width, best_i = width, i
+    cluster = hits[best_i:best_i + span]
+    return (cluster[0] + cluster[-1]) // 2
+
+
+def narrow(body: str, claims: list[str]) -> str:
+    """Cut a cited page down to the part the citing sentences point at."""
+    if len(body) <= WINDOW_FALLBACK:
+        return body
+
+    lower = body.lower()
+    anchors = [a for a in (anchor_of(lower, c) for c in claims) if a is not None]
+    if not anchors:
+        # nothing recognisable: keep the top of the page rather than guessing
+        return head_context(body, WINDOW_FALLBACK) + ELLIPSIS.rstrip()
+
+    # One window per anchor, merged where they overlap. Spanning from the first anchor to
+    # the last instead would drag in everything between them: a page cited once near the top
+    # and once near the bottom would come through almost whole, which is the thing this is
+    # supposed to avoid.
+    def windows(half: int) -> list[list[int]]:
+        out: list[list[int]] = []
+        for lo, hi in sorted((max(0, a - half), min(len(body), a + half)) for a in anchors):
+            if out and lo <= out[-1][1]:
+                out[-1][1] = max(out[-1][1], hi)
+            else:
+                out.append([lo, hi])
+        return out
+
+    merged = windows(WINDOW_CHARS)
+
+    # Anchors spread across a page produce windows that overlap into one long block, which
+    # would hand back most of the page again. Rather than dropping windows, which would drop
+    # the very passages being cited, every window shrinks together until the total fits.
+    half = WINDOW_CHARS
+    while sum(hi - lo for lo, hi in merged) > WINDOW_MAX and half > 160:
+        half = int(half * 0.8)
+        merged = windows(half)
+
+    chunks = []
+    for lo, hi in merged:
+        if lo:                                      # start on a word, not mid-syllable
+            space = body.find(" ", lo)
+            lo = space + 1 if space != -1 and space - lo < 40 else lo
+        if hi < len(body):
+            space = body.rfind(" ", lo, hi)
+            hi = space if space != -1 and hi - space < 40 else hi
+        chunks.append(body[lo:hi].strip())
+
+    out = (" " + ELLIPSIS).join(chunks)
+    if merged[0][0] > 0:
+        out = ELLIPSIS + out
+    if merged[-1][1] < len(body):
+        out = out + " " + ELLIPSIS.strip()
+    return out
 
 
 # ---------------------------------------------------------------------------
@@ -454,6 +637,7 @@ def main(argv=None):
     library = SourceLibrary(root)
     citations: dict[str, dict] = {}
     pages_out: dict[str, dict] = {}
+    page_claims: dict[str, list[str]] = {}   # which sentences cite each page
     unresolved: list[str] = []          # (chip, reason)
     collisions: list[str] = []
     chip_count = 0
@@ -462,10 +646,14 @@ def main(argv=None):
     for guide in guides:
         with open(guide, encoding="utf-8", errors="replace") as fh:
             markup = fh.read()
-        for book_cls, inner in CITE_RE.findall(markup):
+        for match in CITE_RE.finditer(markup):
+            book_cls, inner = match.group(1), match.group(2)
             chip_count += 1
             book = book_cls.lower()
             text = chip_text(inner)
+            # the guide's own words leading up to the chip: this is the claim the citation
+            # is backing, and it is what locates the passage within the cited page
+            claim = chip_text(markup[max(0, match.start() - CLAIM_CHARS):match.start()])
             if book not in BOOKS:
                 unknown_books.add(book)
                 unresolved.append(f"{text}  [unknown book id '{book}']")
@@ -498,6 +686,7 @@ def main(argv=None):
                         "before": before,
                         "after": after,
                     }
+                page_claims.setdefault(page_key, []).append(claim)
                 if page_key not in page_keys:
                     page_keys.append(page_key)
 
@@ -510,6 +699,18 @@ def main(argv=None):
                 # them apart, so say so loudly instead of silently overwriting.
                 collisions.append(f"{key}: {citations[key]} vs {entry} ({text})")
             citations[key] = entry
+
+    # Narrow each cited page to the passage its citing sentences point at. Done after the
+    # scan rather than during it, because a page is often cited from several places and the
+    # window has to cover all of them.
+    full_chars = sum(len(p["text"]) for p in pages_out.values())
+    anchored = 0
+    for page_key, page in pages_out.items():
+        before = len(page["text"])
+        page["text"] = narrow(page["text"], page_claims.get(page_key, []))
+        if page["text"].startswith(ELLIPSIS) or before != len(page["text"]):
+            anchored += 1
+    kept_chars = sum(len(p["text"]) for p in pages_out.values())
 
     payload = {
         "books": {b: {"title": m["title"], "edition": m["edition"]} for b, m in BOOKS.items()},
@@ -528,7 +729,12 @@ def main(argv=None):
         print(f"  - {os.path.relpath(g, root)}")
     print(f"citation chips      : {chip_count}")
     print(f"unique citations    : {len(citations)}")
-    print(f"unique pages        : {len(pages_out)}")
+    print(f"unique pages        : {len(pages_out)} "
+          f"({anchored} narrowed to the cited passage)")
+    if full_chars:
+        print(f"verbatim text kept  : {kept_chars / 1024:.0f} KiB of "
+              f"{full_chars / 1024:.0f} KiB of page text "
+              f"({100 * kept_chars / full_chars:.0f}%)")
     print(f"unresolved refs     : {len(unresolved)}")
     for item in unresolved:
         print(f"  ! {item}")
