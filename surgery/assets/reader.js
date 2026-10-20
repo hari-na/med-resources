@@ -65,7 +65,11 @@
   var SYNC_ENDPOINT = (window.ReaderConfig && window.ReaderConfig.sync !== undefined)
     ? window.ReaderConfig.sync
     : SYNC_DEFAULT;
-  var syncTimer = null, syncing = false;
+  // syncedAt is the newest stamp the worker has confirmed. Anything newer than it locally is
+  // work the server has not got yet, which is what makes a retry possible at all: without it
+  // a push that failed, or one that was overtaken while in flight, was simply lost from the
+  // remote copy with nothing left to say so.
+  var syncTimer = null, syncing = false, syncedAt = 0, retryMs = 4000;
 
   function syncOn() { return !!SYNC_ENDPOINT && student && student !== "_"; }
 
@@ -82,9 +86,19 @@
     return fetch(u, { method: "GET" })
       .then(function (r) { return r.ok ? r.json() : null; })
       .then(function (j) {
-        if (!j || !j.found || !j.state) return false;
+        if (!j || !j.found || !j.state) {
+          // the worker has nothing for this document, so everything local is unsent
+          syncLater(600);
+          return false;
+        }
+        syncedAt = j.updatedAt || 0;        // what the server demonstrably holds
         var mine = state.updatedAt || 0;
-        if (!(j.updatedAt > mine)) return false;
+        if (!(j.updatedAt > mine)) {
+          // ours is the same or newer: push anything it has not seen, instead of sitting on
+          // work that would otherwise only leave this device at the next edit
+          syncLater(600);
+          return false;
+        }
         Object.keys(DEFAULTS).forEach(function (k) {
           if (j.state[k] !== undefined) state[k] = j.state[k];
         });
@@ -94,32 +108,64 @@
         syncSay("Picked up newer work from another device.");
         return true;
       })
-      .catch(function () { return false; });
+      .catch(function () { syncLater(retryMs); return false; });
   }
 
+  function syncDirty() { return (state.updatedAt || 0) > syncedAt; }
+
   function syncPush() {
-    if (!syncOn() || syncing) return;
+    if (!syncOn() || !syncDirty()) return;
+    if (syncing) { syncLater(400); return; }   // overtaken; come back for the newer state
     syncing = true;
+
+    // snapshot the stamp being sent: edits can land while this is in flight, and confirming
+    // those as synced because an older push succeeded is how work goes missing
+    var at = state.updatedAt || Date.now();
     var u = SYNC_ENDPOINT + "/api/state?student=" + encodeURIComponent(student) +
             "&doc=" + encodeURIComponent(DOC);
     fetch(u, {
       method: "PUT",
       headers: { "content-type": "application/json" },
-      body: JSON.stringify({ state: state, updatedAt: state.updatedAt || Date.now() })
+      body: JSON.stringify({ state: state, updatedAt: at })
     }).then(function (r) {
       syncing = false;
-      syncSay(r.ok ? "Synced." : "");
+      if (r.ok) {
+        syncedAt = Math.max(syncedAt, at);
+        retryMs = 4000;
+        syncSay(syncDirty() ? "" : "Saved to your name.");
+        if (syncDirty()) syncLater(400);       // changed again while in flight
+      } else {
+        syncSay("");
+        syncLater(retryMs);                    // server said no; try again later
+        retryMs = Math.min(retryMs * 2, 60000);
+      }
     }).catch(function () {
       syncing = false;
-      syncSay("");      // offline is normal; say nothing
+      syncSay("");                             // offline is normal; say nothing
+      syncLater(retryMs);
+      retryMs = Math.min(retryMs * 2, 60000);
     });
   }
 
-  function syncLater() {
+  function syncLater(ms) {
     if (!syncOn()) return;
     clearTimeout(syncTimer);
-    syncTimer = setTimeout(syncPush, 2500);   // let a burst of edits settle first
+    syncTimer = setTimeout(syncPush, ms === undefined ? 2500 : ms);
   }
+
+  // A tab is far more likely to be backgrounded or closed than to fire unload, especially on
+  // a phone. Without this, anything highlighted, noted or drawn in the last couple of seconds
+  // stayed on that one device: the debounce had not elapsed and the push never happened.
+  function syncFlush() {
+    if (!syncOn() || !syncDirty()) return;
+    clearTimeout(syncTimer);
+    syncPush();
+  }
+
+  document.addEventListener("visibilitychange", function () {
+    if (document.visibilityState === "hidden") syncFlush();
+  });
+  window.addEventListener("pagehide", syncFlush);
 
   // ------------------------------------------------------------------ settings
 

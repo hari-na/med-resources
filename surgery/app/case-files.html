@@ -491,6 +491,104 @@ label.fld {
   }
   function keyOf(name) { return String(name).trim().toLowerCase().replace(/\s+/g, " "); }
 
+  // --------------------------------------------- per-question history
+  //
+  // A session is only written when a whole level is finished, which meant answering three
+  // questions and walking away left no trace at all: the answers sat in an in-memory array
+  // that went out of scope, so the progress page and the database were both empty and
+  // neither was wrong. Nothing about it looked broken, which is why it survived.
+  //
+  // These records are written the instant a question is marked, so partial work survives
+  // leaving, navigating back, closing the tab or switching person. They are also the thing
+  // that makes a question answerable across sessions: how many times this person has met it,
+  // how often they got it, and whether they had it last time.
+
+  function qKey(caseId, qid) { return caseId + "::" + qid; }
+
+  function recordAnswer(q, ok) {
+    if (!student.key) return;
+    var s = store();
+    s.students = s.students || {};
+    var r = s.students[student.key] || { name: student.name, sessions: [] };
+    r.name = student.name;
+    r.questions = r.questions || {};
+
+    var k = qKey(CASE.id, q.id);
+    var rec = r.questions[k] || { t: q.type, n: 0, ok: 0, last: 0, at: null };
+    rec.t = q.type;                      // kept current, in case a question is recategorised
+    rec.n += 1;
+    if (ok) rec.ok += 1;
+    rec.last = ok ? 1 : 0;
+    rec.at = new Date().toISOString();
+    rec.synced = false;
+
+    r.questions[k] = rec;
+    s.students[student.key] = r;
+    s.lastStudent = student.key;
+    save(s);
+    pushAnswersLater();
+  }
+
+  // Everything this person has ever answered for the case on screen.
+  function answersForCase(key) {
+    var r = (store().students || {})[key];
+    var out = {};
+    if (!r || !r.questions) return out;
+    var prefix = CASE.id + "::";
+    Object.keys(r.questions).forEach(function (k) {
+      if (k.indexOf(prefix) === 0) out[k.slice(prefix.length)] = r.questions[k];
+    });
+    return out;
+  }
+
+  var answerTimer = null;
+
+  function pushAnswersLater() {
+    if (!SYNC) return;
+    clearTimeout(answerTimer);
+    answerTimer = setTimeout(pushAnswers, 1500);   // let a burst of marking settle
+  }
+
+  // Sent as a batch of whole counters rather than individual events, so a repeat delivery is
+  // harmless: the worker stores the counters it is given and the newest write wins.
+  function pushAnswers() {
+    if (!SYNC || !student.key) return;
+    var s = store();
+    var r = (s.students || {})[student.key];
+    if (!r || !r.questions) return;
+
+    var batch = [];
+    Object.keys(r.questions).forEach(function (k) {
+      var rec = r.questions[k];
+      if (rec.synced) return;
+      var cut = k.indexOf("::");
+      batch.push({
+        caseId: k.slice(0, cut), questionId: k.slice(cut + 2), type: rec.t,
+        attempts: rec.n, correct: rec.ok, lastOk: rec.last, at: rec.at
+      });
+    });
+    if (!batch.length) return;
+
+    fetch(SYNC + "/api/answers?student=" + encodeURIComponent(student.key), {
+      method: "POST",
+      headers: { "content-type": "application/json" },
+      body: JSON.stringify({ answers: batch })
+    }).then(function (res) {
+      if (!res.ok) return;
+      // re-read rather than reuse the snapshot: marking may have continued while in flight
+      var s2 = store();
+      var r2 = (s2.students || {})[student.key];
+      if (!r2 || !r2.questions) return;
+      batch.forEach(function (b) {
+        var rec = r2.questions[qKey(b.caseId, b.questionId)];
+        if (rec && rec.at === b.at) rec.synced = true;
+      });
+      save(s2);
+    }).catch(function () {
+      // offline is normal; the next mark or the next open sends it
+    });
+  }
+
   // ------------------------------------------------- sync, for the viva results
   //
   // The same bargain as the reader: this browser holds the real copy and the worker is a
@@ -842,6 +940,7 @@ label.fld {
 
   function mark(q, ok) {
     results.push({ id: q.id, type: q.type, correct: ok });
+    recordAnswer(q, ok);     // durable, before anything can navigate away
     idx++;
     screenQuestion();
   }
@@ -917,9 +1016,15 @@ label.fld {
     var html = '<div class="who"><span>Progress for <b>' + esc(student.name) + '</b> · ' +
                esc(CASE.name) + '</span></div><h2>Where you stand</h2>';
 
-    if (!sessions.length) {
-      html += '<div class="empty">No sessions yet for this case. Once you have drilled a level, ' +
-              'this page shows your coverage, your accuracy by topic, and every past attempt.</div>' +
+    // Everything below is built from the per-question history rather than from finished
+    // sessions. A single answered question counts, which is the whole point: this page used
+    // to say "nothing here" to someone who had just answered three.
+    var qs = answersForCase(student.key);
+    var qids = Object.keys(qs);
+
+    if (!qids.length && !sessions.length) {
+      html += '<div class="empty">Nothing drilled yet for this case. Answer a single question ' +
+              'and it is kept, so this page fills in as you go, even if you stop part way.</div>' +
               '<div class="row"><button class="btn primary" id="start">Start a session</button>' +
               '<button class="btn" id="switch">Switch person</button></div>';
       app.innerHTML = html;
@@ -928,32 +1033,47 @@ label.fld {
       return;
     }
 
-    // coverage and cumulative accuracy
-    var seen = {}, agg = {}, totalQ = 0, totalOk = 0;
-    sessions.forEach(function (s) {
-      (s.seen || []).forEach(function (id) { seen[id] = true; });
-      Object.keys(s.byType || {}).forEach(function (t) {
-        if (!agg[t]) agg[t] = { ok: 0, n: 0 };
-        agg[t].ok += s.byType[t].ok;
-        agg[t].n  += s.byType[t].n;
-      });
-      totalQ += s.total; totalOk += s.score;
+    var agg = {}, totalQ = 0, totalOk = 0, wrongNow = [];
+    qids.forEach(function (id) {
+      var r = qs[id], t = r.t || "Uncategorised";
+      if (!agg[t]) agg[t] = { ok: 0, n: 0 };
+      agg[t].ok += r.ok; agg[t].n += r.n;
+      totalQ += r.n; totalOk += r.ok;
+      if (!r.last) wrongNow.push(id);
     });
-    var seenCount = Object.keys(seen).length;
-    var coverage = Math.round(seenCount / BANK.length * 100);
+
+    var seenCount = qids.length;
+    var coverage = BANK.length ? Math.round(seenCount / BANK.length * 100) : 0;
     var overall = totalQ ? Math.round(totalOk / totalQ * 100) : 0;
-    var best = Math.max.apply(null, sessions.map(function (s) { return s.pct; }));
+    var best = sessions.length
+      ? Math.max.apply(null, sessions.map(function (s) { return s.pct; })) : null;
 
     html += '<div class="stats">' +
-      '<div class="stat"><div class="sv">' + sessions.length + '</div>' +
-        '<div class="sl">session' + (sessions.length === 1 ? '' : 's') + ' done</div></div>' +
+      '<div class="stat"><div class="sv">' + seenCount +
+        '<span style="font-size:.6em;color:var(--ink-soft)">/' + BANK.length + '</span></div>' +
+        '<div class="sl">questions met (' + coverage + '%)</div></div>' +
       '<div class="stat"><div class="sv">' + overall + '%</div>' +
-        '<div class="sl">answered right, all sessions</div></div>' +
-      '<div class="stat"><div class="sv">' + best + '%</div>' +
-        '<div class="sl">best single session</div></div>' +
-      '<div class="stat"><div class="sv">' + seenCount + '<span style="font-size:.6em;color:var(--ink-soft)">/' + BANK.length + '</span></div>' +
-        '<div class="sl">questions seen (' + coverage + '%)</div></div>' +
+        '<div class="sl">answered right, all attempts</div></div>' +
+      '<div class="stat"><div class="sv">' + wrongNow.length + '</div>' +
+        '<div class="sl">wrong last time</div></div>' +
+      '<div class="stat"><div class="sv">' + (best === null ? '&mdash;' : best + '%') + '</div>' +
+        '<div class="sl">' + (best === null ? 'no full level yet' : 'best full level') + '</div></div>' +
       '</div>';
+
+    if (wrongNow.length) {
+      var byTypeWrong = {};
+      wrongNow.forEach(function (id) {
+        var t = qs[id].t || "Uncategorised";
+        byTypeWrong[t] = (byTypeWrong[t] || 0) + 1;
+      });
+      var parts = Object.keys(byTypeWrong).sort(function (a, b) {
+        return byTypeWrong[b] - byTypeWrong[a];
+      }).map(function (t) { return byTypeWrong[t] + " in " + t.toLowerCase(); });
+      html += '<div class="verdict weak"><b>' + wrongNow.length + ' question' +
+              (wrongNow.length === 1 ? '' : 's') + ' you got wrong the last time you met ' +
+              (wrongNow.length === 1 ? 'it' : 'them') + ':</b> ' + esc(parts.join(", ")) +
+              '. These are the ones worth going back to first.</div>';
+    }
 
     if (seenCount >= BANK.length) {
       html += '<div class="verdict info"><b>You have been through every question in this case.</b> ' +
@@ -966,7 +1086,7 @@ label.fld {
     var types = Object.keys(agg).sort(function (a, b) {
       return (agg[a].ok / agg[a].n) - (agg[b].ok / agg[b].n);
     });
-    html += '<h3>Accuracy by topic, all sessions</h3><div class="breakdown">';
+    html += '<h3>Accuracy by topic, every attempt</h3><div class="breakdown">';
     types.forEach(function (t) {
       var d = agg[t], p = Math.round(d.ok / d.n * 100);
       html += '<div class="brow"><span class="bname">' + esc(t) + '</span>' +
@@ -982,7 +1102,11 @@ label.fld {
               'These are the sections of the study guide to reread before the next session.</div>';
     }
 
-    html += '<h3>Every session</h3><div class="hist">';
+    html += '<h3>Completed levels</h3><div class="hist">';
+    if (!sessions.length) {
+      html += '<div class="empty" style="margin:0">No level finished end to end yet. Your ' +
+              'answers so far are all kept either way, this list is just the full runs.</div>';
+    }
     sessions.forEach(function (s) {
       html += '<div class="hrow"><span class="hl">' + esc(s.levelName || ("Level " + s.level)) + '</span>' +
               '<span class="hd">' + esc(when(s.at)) + '</span>' +
@@ -1149,6 +1273,13 @@ label.fld {
   // Anything finished while offline goes up now. Deliberately after the first paint, so a
   // slow or failing network never delays the screen the reader is waiting for.
   setTimeout(flushSessions, 1200);
+  setTimeout(pushAnswers, 1400);
+
+  // A phone does not reliably fire unload, but it does fire this when the tab is hidden or
+  // the app is backgrounded, which is how a session on a phone actually ends.
+  document.addEventListener("visibilitychange", function () {
+    if (document.visibilityState === "hidden") { pushAnswers(); flushSessions(); }
+  });
 
   if (window.claude && window.claude.use) {
     window.claude.use("db").then(function (d) { db = d; dbReady = true; })
