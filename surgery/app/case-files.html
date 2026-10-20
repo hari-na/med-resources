@@ -311,6 +311,22 @@ label.fld {
 
   var SUBJECT = "General Surgery";
   var CASE = { id: "inguinal-hernia", num: "01", name: "Inguinal Hernia" };
+
+  // The other twenty-four guides live in reference/ and are built into dist/ with their own
+  // viva drills and PDFs. Wiring them into this hub is not a cosmetic change: build_artifact()
+  // inlines the stylesheet and reader into this page and ships each guide body as a separate
+  // published sidecar (see SIDECARS in build.py), so every case added here needs its own
+  // sidecar entry and adds its body to what gets published. Left to a deliberate decision
+  // about the size of the published artifact rather than done piecemeal.
+  var OTHERS = [
+    "Thyroid Swelling", "Breast Lump", "Gastric Outlet Obstruction", "Obstructive Jaundice",
+    "Right Iliac Fossa Mass", "Liver Secondaries", "Varicose Veins",
+    "Peripheral Vascular Disease", "Ulcer", "Sinus and Fistula", "Lipoma and Sebaceous Cyst",
+    "Cervical Lymphadenopathy", "Neck Swellings", "Salivary Swelling", "Oral Cavity Lesions",
+    "Hydrocele", "Varicocele", "Undescended Testis", "Dysphagia", "Testicular Tumour",
+    "Lymphoedema", "Carcinoma of the Penis", "Benign Prostatic Hyperplasia",
+    "Haemorrhoids, Fissure and Fistula-in-Ano"
+  ];
   // claude.ai refuses to serve a published sibling file as a top-level document
   // (ERR_BLOCKED_BY_RESPONSE), so the guide is fetched and rendered inside this page
   // and the PDF is handed over through the downloads capability.
@@ -631,12 +647,12 @@ label.fld {
           '<span class="t-desc">Long case. Study guide, viva drill and printable PDF.</span>' +
           '<span class="t-go">&rarr;</span>' +
         '</button>' +
-        '<div class="tile muted"><span class="ico">02</span>' +
-          '<span class="t-name">Thyroid Swelling</span>' +
-          '<span class="t-desc">Guide and PDF built. Not yet wired into this hub.</span><span class="t-go">&middot;</span></div>' +
-        '<div class="tile muted"><span class="ico">03</span>' +
-          '<span class="t-name">Breast Lump</span>' +
-          '<span class="t-desc">Guide and PDF built. Not yet wired into this hub.</span><span class="t-go">&middot;</span></div>' +
+        '<div class="tile muted"><span class="ico">+24</span>' +
+          '<span class="t-name">' + esc(OTHERS.join(", ")) + '</span>' +
+          '<span class="t-desc">Twenty-four further guides are built, each with its own viva ' +
+          'drill and printable PDF. They are not yet wired into this hub: the artifact cannot ' +
+          'link out to sibling files, so each guide has to travel in the page as a sidecar.' +
+          '</span><span class="t-go">&middot;</span></div>' +
       '</div>' +
       '<div class="srckey">' +
         '<span><i style="background:#005f73"></i> S Das 13e: clinical method</span>' +

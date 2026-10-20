@@ -18,8 +18,8 @@ The page ranges are pdf pages, read off each book's own outline.
 Bailey & Love is the 28th edition as of 2026-10-20. The 26th edition it replaced numbered its
 chapters completely differently (thyroid and parathyroid shared ch.51; they are now 55 and 56,
 and hernia moved from 60 to 64), so no citation written against the old edition survives the
-change. The superseded extraction is parked at sources/_bailey26-superseded/ for reference and
-should be deleted once every case has been rebuilt.
+change. The 26th edition extraction that used to be parked at sources/_bailey26-superseded/ was
+deleted on 2026-10-20, once all twenty-five cases had been rebuilt against the 28th edition.
 """
 
 import pathlib
