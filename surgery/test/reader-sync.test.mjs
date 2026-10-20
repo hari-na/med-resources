@@ -190,3 +190,58 @@ test("a write the worker rejected as stale is reconciled by pulling", async () =
     "a rejected write should trigger a fresh pull rather than another push");
   h.close();
 });
+
+test("reading settings follow the reader from one case to the next", async () => {
+  // They used to live in the per-case record, so a student who had set Hyperlegible at XL
+  // with loose spacing got the defaults back on the next case, twenty-five times over.
+  let h;
+  h = await boot({
+    handler: async (url, init, e) =>
+      e.method === "GET" ? ok({ found: false })
+                         : ok({ ok: true, updatedAt: Date.now(), stored: true }),
+  });
+
+  const seg = h.w.document.querySelector('.rdr-seg[data-setting="face"]')
+           || h.w.document.querySelector(".rdr-seg");
+  const setting = seg.getAttribute("data-setting");
+  const btn = [].slice.call(seg.children).find((b) => !b.classList.contains("on"));
+  const chosen = btn.getAttribute("data-v");
+  btn.dispatchEvent(new h.w.MouseEvent("click", { bubbles: true }));
+  await sleep(50);
+  assert.equal(h.w.Reader.state()[setting], chosen, "the setting took on this case");
+
+  // open a different case as the same reader, which is what remount does from the hub
+  h.w.Reader.remount({ student: "hitha", doc: "case02" });
+  await sleep(100);
+  assert.equal(h.w.Reader.state()[setting], chosen,
+    "the same setting should still be in force on the next case");
+  h.close();
+});
+
+test("opening a case does not drag its old settings back over the reader's", async () => {
+  // Documents saved under the old per-case model still carry settings in their record.
+  // Applying those on a pull would undo the reader's own choice every time they opened
+  // an older case.
+  let h;
+  h = await boot({
+    handler: async (url, init, e) => {
+      if (e.method !== "GET") return ok({ ok: true, updatedAt: Date.now(), stored: true });
+      if (url.includes("reader-prefs")) return ok({ found: false });
+      return ok({ found: true, updatedAt: Date.now() + 60000,
+                  state: { face: "mono", size: "1", marks: [{ id: "m1" }] } });
+    },
+  });
+  const seg = h.w.document.querySelector('.rdr-seg[data-setting="face"]');
+  const btn = [].slice.call(seg.children).find((b) => !b.classList.contains("on"));
+  const chosen = btn.getAttribute("data-v");
+  btn.dispatchEvent(new h.w.MouseEvent("click", { bubbles: true }));
+  await sleep(50);
+
+  h.w.Reader.remount({ student: "hitha", doc: "case03" });
+  await sleep(400);
+  assert.equal(h.w.Reader.state().face, chosen,
+    "the document's stored face must not override the reader's own");
+  assert.ok((h.w.Reader.state().marks || []).length >= 1,
+    "but the document's marks are still adopted");
+  h.close();
+});

@@ -1905,10 +1905,41 @@ body.guide { margin: 0; -webkit-text-size-adjust: 100%; }
     marks: [], notes: [], ink: [], inkLayout: null, updatedAt: 0
   };
 
+  // How the page is set is a property of the reader, not of the case. These lived in the
+  // per-case record, so a student who had chosen Hyperlegible at XL with loose spacing got
+  // Georgia at 17px back on the next case, and on the next, twenty-five times over.
+  // Marks, notes and ink stay per case: those really are about this document.
+  var PREFS = ["width", "size", "leading", "face", "theme", "cite", "conflicts",
+               "hlHead", "hlWhy", "hlTerm", "recall"];
+
+  function prefsKey() { return "reader:" + student + ":prefs"; }
+
+  function loadPrefs() {
+    if (cfg.storage && cfg.storage.get) { return cfg.storage.get(prefsKey()) || {}; }
+    try { return JSON.parse(localStorage.getItem(prefsKey()) || "{}") || {}; }
+    catch (e) { return {}; }
+  }
+
+  function savePrefs(at) {
+    var out = { updatedAt: at || Date.now() };
+    PREFS.forEach(function (k) { out[k] = state[k]; });
+    if (cfg.storage && cfg.storage.set) { cfg.storage.set(prefsKey(), out); return; }
+    try { localStorage.setItem(prefsKey(), JSON.stringify(out)); } catch (e) {}
+  }
+
+  // overlay the reader's own settings on top of whatever this document's record holds
+  function applyPrefsTo(target) {
+    var p = loadPrefs();
+    PREFS.forEach(function (k) { if (p[k] !== undefined) target[k] = p[k]; });
+    return p;
+  }
+
   var state = (function () {
-    var s = load(), out = {};
+    var s = load(), out = {}, p = loadPrefs();
     Object.keys(DEFAULTS).forEach(function (k) {
       out[k] = (s[k] === undefined) ? DEFAULTS[k] : s[k];
+      // the reader's own settings win over whatever this case last recorded
+      if (PREFS.indexOf(k) >= 0 && p[k] !== undefined) out[k] = p[k];
     });
     return out;
   })();
@@ -1916,7 +1947,9 @@ body.guide { margin: 0; -webkit-text-size-adjust: 100%; }
   function save() {
     state.updatedAt = Date.now();
     persist(state);
+    savePrefs(state.updatedAt);
     syncLater();
+    prefsLater();
   }
 
 
@@ -2008,6 +2041,10 @@ body.guide { margin: 0; -webkit-text-size-adjust: 100%; }
           return false;
         }
         Object.keys(DEFAULTS).forEach(function (k) {
+          // the settings in a document's record are a leftover of the old per-case model;
+          // the reader's own settings are synced separately and must not be overwritten
+          // by whatever this case happened to be read with
+          if (PREFS.indexOf(k) >= 0) return;
           if (j.state[k] !== undefined) state[k] = j.state[k];
         });
         state.updatedAt = j.updatedAt;
@@ -2105,9 +2142,123 @@ body.guide { margin: 0; -webkit-text-size-adjust: 100%; }
   // a phone. Without this, anything highlighted, noted or drawn in the last couple of seconds
   // stayed on that one device: the debounce had not elapsed and the push never happened.
   function syncFlush() {
-    if (!syncOn() || !syncDirty()) return;
+    if (!syncOn()) return;
+    clearTimeout(prefsTimer);
+    prefsPush();
+    if (!syncDirty()) return;
     clearTimeout(syncTimer);
     syncPush();
+  }
+
+  // ---------------------------------------------------------- settings sync
+  //
+  // The reader's settings are one record per student, not one per case, so they travel as
+  // their own document. Same bargain as everything else here: the local copy is
+  // authoritative, nothing is pushed until the server has said what it holds, and every
+  // failure is swallowed.
+
+  var PREFS_DOC = "reader-prefs";
+  var prefsSync = { key: "", syncing: false, syncedAt: 0, pulled: false,
+                    retryMs: 4000, pullMs: 1000 };
+  var prefsTimer = null, prefsPullTimer = null;
+
+  function prefsSyncKey() { return student + "::prefs"; }
+
+  function prefsCtx() {
+    if (prefsSync.key !== prefsSyncKey()) {
+      prefsSync = { key: prefsSyncKey(), syncing: false, syncedAt: 0, pulled: false,
+                    retryMs: 4000, pullMs: 1000 };
+      clearTimeout(prefsTimer);
+      clearTimeout(prefsPullTimer);
+    }
+    return prefsSync;
+  }
+
+  function prefsUrl() {
+    return SYNC_ENDPOINT + "/api/state?student=" + encodeURIComponent(student) +
+           "&doc=" + encodeURIComponent(PREFS_DOC);
+  }
+
+  function prefsLater(ms) {
+    if (!syncOn()) return;
+    clearTimeout(prefsTimer);
+    prefsTimer = setTimeout(prefsPush, ms === undefined ? 2500 : ms);
+  }
+
+  function prefsPullLater(ms) {
+    if (!syncOn()) return;
+    clearTimeout(prefsPullTimer);
+    prefsPullTimer = setTimeout(prefsPull, ms === undefined ? 1000 : ms);
+  }
+
+  function prefsPull() {
+    if (!syncOn()) return;
+    var c = prefsCtx(), mine = c.key;
+    fetch(prefsUrl(), { method: "GET" })
+      .then(function (r) {
+        if (!r.ok) throw new Error("prefs pull " + r.status);
+        return r.json();
+      })
+      .then(function (j) {
+        if (mine !== prefsSyncKey()) return;
+        c.pulled = true;
+        c.pullMs = 1000;
+        if (!j || !j.found || !j.state) { prefsLater(600); return; }
+        c.syncedAt = j.updatedAt || 0;
+        var local = loadPrefs();
+        if (!(j.updatedAt > (local.updatedAt || 0))) { prefsLater(600); return; }
+        PREFS.forEach(function (k) {
+          if (j.state[k] !== undefined) state[k] = j.state[k];
+        });
+        savePrefs(j.updatedAt);
+        applySettings();
+      })
+      .catch(function () {
+        if (mine === prefsSyncKey()) {
+          prefsPullLater(c.pullMs);
+          c.pullMs = Math.min(c.pullMs * 2, 60000);
+        }
+      });
+  }
+
+  function prefsPush() {
+    if (!syncOn()) return;
+    var c = prefsCtx(), mine = c.key;
+    if (!c.pulled) { prefsPullLater(c.pullMs); return; }
+    if (c.syncing) { prefsLater(400); return; }
+    var p = loadPrefs();
+    var at = p.updatedAt || 0;
+    if (!(at > c.syncedAt)) return;
+    c.syncing = true;
+    fetch(prefsUrl(), {
+      method: "PUT",
+      headers: { "content-type": "application/json" },
+      body: JSON.stringify({ state: p, updatedAt: at })
+    }).then(function (r) {
+      if (mine !== prefsSyncKey()) return;
+      c.syncing = false;
+      if (!r.ok) {
+        prefsLater(c.retryMs);
+        c.retryMs = Math.min(c.retryMs * 2, 60000);
+        return;
+      }
+      return r.json().then(function (j) {
+        if (mine !== prefsSyncKey()) return;
+        if (j && j.stored === false) {
+          c.syncedAt = j.updatedAt || c.syncedAt;
+          c.pulled = false;
+          prefsPullLater(600);
+          return;
+        }
+        c.syncedAt = Math.max(c.syncedAt, at);
+        c.retryMs = 4000;
+      });
+    }).catch(function () {
+      if (mine !== prefsSyncKey()) return;
+      c.syncing = false;
+      prefsLater(c.retryMs);
+      c.retryMs = Math.min(c.retryMs * 2, 60000);
+    });
   }
 
   document.addEventListener("visibilitychange", function () {
@@ -3281,6 +3432,7 @@ body.guide { margin: 0; -webkit-text-size-adjust: 100%; }
     setTimeout(layoutInk, 60);
     updateLock();
     syncPull();
+    prefsPull();
   }
 
   function reloadState() {
@@ -3288,6 +3440,7 @@ body.guide { margin: 0; -webkit-text-size-adjust: 100%; }
     Object.keys(DEFAULTS).forEach(function (k) {
       state[k] = (s[k] === undefined) ? DEFAULTS[k] : s[k];
     });
+    applyPrefsTo(state);
     // strokes saved before the highlighter existed carry no kind, and the old pixel
     // eraser stored erase strokes that the vector model has no use for
     state.ink = (state.ink || []).filter(function (x) { return !x.erase; })
@@ -3324,6 +3477,7 @@ body.guide { margin: 0; -webkit-text-size-adjust: 100%; }
       // path into a mounted guide that did not go through start(), so without this the
       // new student read their local copy and never learned what the server held.
       syncPull();
+      prefsPull();
     },
     remount: function (opts) {
       opts = opts || {};
