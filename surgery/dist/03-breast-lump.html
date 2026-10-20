@@ -24,6 +24,7 @@
   --ink-soft:    #5a6269;
   --rule:        #ddd8ce;
   --accent:      #005f73;
+  --on-accent:   #fff;
   --accent-soft: #e3eef0;
   --flag:        #8a5a2b;
   --flag-soft:   #f6ece0;
@@ -86,21 +87,21 @@
 
 .guide[data-theme="sepia"] {
   --paper: #f4ecd8; --ink: #433422; --ink-soft: #6f5f4a; --rule: #ddd0b4;
-  --accent: #7a4a1e; --accent-soft: #ece0c8; --flag: #8a5a2b; --flag-soft: #ece0c8;
+  --accent: #7a4a1e; --on-accent: #fff; --accent-soft: #ece0c8; --flag: #8a5a2b; --flag-soft: #ece0c8;
   --cite: #8a7b63; --mark: #f5d98a; --bl: #6a4a7a; --srb: #3f6b4a;
   color-scheme: light;
 }
 
 .guide[data-theme="dark"] {
   --paper: #15181a; --ink: #e8e6e1; --ink-soft: #a3abb2; --rule: #2e3338;
-  --accent: #6fc3d2; --accent-soft: #1b2a2e; --flag: #d9a36a; --flag-soft: #2a2119;
+  --accent: #6fc3d2; --on-accent: #0b1416; --accent-soft: #1b2a2e; --flag: #d9a36a; --flag-soft: #2a2119;
   --cite: #78828a; --mark: #4a4120; --bl: #a893dd; --srb: #6fc3a8;
   color-scheme: dark;
 }
 
 .guide[data-theme="contrast"] {
   --paper: #000000; --ink: #ffffff; --ink-soft: #d8d8d8; --rule: #6a6a6a;
-  --accent: #6fe3ff; --accent-soft: #10242b; --flag: #ffc46b; --flag-soft: #2a2008;
+  --accent: #6fe3ff; --on-accent: #000; --accent-soft: #10242b; --flag: #ffc46b; --flag-soft: #2a2008;
   --cite: #bdbdbd; --mark: #4a4a00; --bl: #d0b8ff; --srb: #7fe8c0;
   color-scheme: dark;
 }
@@ -109,7 +110,7 @@
 @media (prefers-color-scheme: dark) {
   .guide[data-theme="auto"] {
     --paper: #15181a; --ink: #e8e6e1; --ink-soft: #a3abb2; --rule: #2e3338;
-    --accent: #6fc3d2; --accent-soft: #1b2a2e; --flag: #d9a36a; --flag-soft: #2a2119;
+    --accent: #6fc3d2; --on-accent: #0b1416; --accent-soft: #1b2a2e; --flag: #d9a36a; --flag-soft: #2a2119;
     --cite: #78828a; --mark: #4a4120; --bl: #a893dd; --srb: #6fc3a8;
     color-scheme: dark;
   }
@@ -141,6 +142,7 @@ body.guide { margin: 0; -webkit-text-size-adjust: 100%; }
   font-family: var(--face-body);
   font-size: 2.1rem; font-weight: 600; line-height: 1.15;
   letter-spacing: -0.015em; text-wrap: balance; margin: 0 0 0.7rem;
+  overflow-wrap: break-word; hyphens: auto;
 }
 
 .guide .standfirst { font-size: 1.02rem; color: var(--ink-soft); margin: 0 0 1.6rem; }
@@ -311,7 +313,11 @@ body.guide { margin: 0; -webkit-text-size-adjust: 100%; }
 .guide cite.src {
   font-family: var(--face-ui); font-style: normal;
   font-size: 0.66em; font-weight: 600; letter-spacing: 0.02em;
-  color: var(--cite); white-space: nowrap;
+  color: var(--cite);
+  /* The chip stays on one line. build.py puts a zero-width space before each one,
+     which is what lets a chip that will not fit move to the next line whole
+     instead of widening the page past the phone. */
+  white-space: nowrap; max-width: 100%;
   border: 1px solid var(--rule); border-radius: 2px;
   padding: 0.05rem 0.28rem; margin-left: 0.3rem; vertical-align: 0.12em;
 }
@@ -331,7 +337,11 @@ body.guide { margin: 0; -webkit-text-size-adjust: 100%; }
   cursor: pointer; list-style: none; display: flex; gap: 0.55rem; align-items: baseline;
   padding: 0.7rem 0.9rem; font-family: var(--face-ui);
   font-size: 0.82em; line-height: 1.45; color: var(--ink);
+  flex-wrap: wrap;
 }
+/* A flex item defaults to min-width:auto and so refuses to shrink below its own
+   content width; a long source line in the summary then widened the whole page. */
+.guide details.conflict > summary > * { min-width: 0; overflow-wrap: break-word; }
 .guide details.conflict > summary::-webkit-details-marker { display: none; }
 .guide details.conflict > summary::before {
   content: "*"; color: var(--flag); font-size: 1em; font-weight: 700;
@@ -419,7 +429,7 @@ body.guide { margin: 0; -webkit-text-size-adjust: 100%; }
 @media print {
   .guide {
     --paper: #fff; --ink: #000; --ink-soft: #333; --rule: #bbb;
-    --accent: #004c5c; --accent-soft: #eef4f5; --cite: #666;
+    --accent: #004c5c; --on-accent: #fff; --accent-soft: #eef4f5; --cite: #666;
     --measure: none; --fs: 10.5pt; --lh: 1.45;
     --face-body: "Spectral", Georgia, serif;
     --face-ui: "Inter", system-ui, sans-serif;
@@ -785,7 +795,9 @@ body.guide { margin: 0; -webkit-text-size-adjust: 100%; }
   background: none; color: var(--ink, #222);
 }
 .rdr-ne-row .rdr-ok {
-  background: var(--accent, #005f73); border-color: var(--accent, #005f73); color: #fff;
+  background: var(--accent, #005f73); border-color: var(--accent, #005f73);
+  /* not #fff: the dark and high-contrast accents are pale, and white on them is 2:1 */
+  color: var(--on-accent, #fff);
 }
 .rdr-ne-row .rdr-del { color: var(--flag, #8a5a2b); }
 
@@ -992,13 +1004,13 @@ body.guide { margin: 0; -webkit-text-size-adjust: 100%; }
     Every patient presenting with a breast lump, nipple discharge or other breast symptom is
     assessed by <b>clinical examination</b>, <b>radiological imaging</b> and <b>tissue sampling</b>
     for cytology or histology. That combination is called <b>triple
-    assessment</b>.<cite class="src bl">B&amp;L 58 &middot; p.915</cite> B&amp;L's figure claims a
+    assessment</b>.​<cite class="src bl">B&amp;L 58 &middot; p.915</cite> B&amp;L's figure claims a
     <b>confident diagnosis in 99.9% of cases</b>, and the text says the positive predictive value
     and diagnostic accuracy of the combination approach
-    <b>100%</b>.<cite class="src bl">B&amp;L 58 &middot; p.915</cite> SRB gives the same three
+    <b>100%</b>.​<cite class="src bl">B&amp;L 58 &middot; p.915</cite> SRB gives the same three
     limbs: clinical assessment including age; radiological imaging, with mammography after 40; and
     cytological or histological analysis by FNAC or core
-    biopsy.<cite class="src srb">SRB 8 &middot; p.538</cite>
+    biopsy.​<cite class="src srb">SRB 8 &middot; p.538</cite>
     <br><br>Say "triple assessment" early and then structure your whole answer around it. It is
     the single phrase that tells the examiner you know how a breast clinic works.
   </div>
@@ -1010,33 +1022,33 @@ body.guide { margin: 0; -webkit-text-size-adjust: 100%; }
     <dd>Second rib above to the sixth rib or the inframammary crease below; lateral border of the
     sternum medially; anterior or mid-axillary line laterally. In the adult male it is
     rudimentary, about <b>2 cm</b> in diameter, lying deep to the areola and extending to the
-    areolar edge.<cite class="src bl">B&amp;L 58 &middot; p.914</cite></dd>
+    areolar edge.​<cite class="src bl">B&amp;L 58 &middot; p.914</cite></dd>
     <dt>The axillary tail, and the trap it sets</dt>
     <dd>Palpable in some women and visible premenstrually or during lactation. <b>A well-developed
     axillary tail is sometimes mistaken for a mass of enlarged lymph nodes, a breast mass or a
-    lipoma.</b><cite class="src bl">B&amp;L 58 &middot; p.914</cite> S Das's instruction follows
+    lipoma.</b>​<cite class="src bl">B&amp;L 58 &middot; p.914</cite> S Das's instruction follows
     from it: <b>also feel the axillary
-    tail</b>,<cite class="src das">Das 30 &middot; p.416</cite> and remember that carcinoma can
-    arise in it.<cite class="src das">Das 30 &middot; p.416</cite></dd>
+    tail</b>,​<cite class="src das">Das 30 &middot; p.416</cite> and remember that carcinoma can
+    arise in it.​<cite class="src das">Das 30 &middot; p.416</cite></dd>
     <dt>The terminal ductal lobular unit, and why the upper outer quadrant matters</dt>
     <dd>The terminal ductule with its lobule is the <b>TDLU</b>, the most active part of the
     breast, responding to <b>oestrogen, progesterone, prolactin and growth hormone</b>. <b>Most
     diseases of the breast arise from the TDLU.</b> About <b>50%</b> of the ductolobular tissue
     lies in the <b>upper outer quadrant</b> and about <b>20%</b> centrally, so examination must
     pay particular attention to the <b>upper outer quadrant, the retroareolar region and the
-    nipple-areola complex</b>.<cite class="src bl">B&amp;L 58 &middot; p.914</cite> That is why
+    nipple-areola complex</b>.​<cite class="src bl">B&amp;L 58 &middot; p.914</cite> That is why
     the commonest site of a carcinoma is the upper outer
-    quadrant,<cite class="src bl">B&amp;L 58 &middot; p.932</cite> and S Das notes fibroadenoma
-    also occurs there most often.<cite class="src das">Das 30 &middot; p.416</cite></dd>
+    quadrant,​<cite class="src bl">B&amp;L 58 &middot; p.932</cite> and S Das notes fibroadenoma
+    also occurs there most often.​<cite class="src das">Das 30 &middot; p.416</cite></dd>
     <dt>The ligaments of Cooper, which produce half the signs you will be asked about</dt>
     <dd>Fibrous suspensory ligaments attached to <b>the undersurface of the dermis superficially
-    and to the pectoral fascia deeply</b>.<cite class="src bl">B&amp;L 58 &middot; p.914&ndash;915</cite>
+    and to the pectoral fascia deeply</b>.​<cite class="src bl">B&amp;L 58 &middot; p.914&ndash;915</cite>
     Everything from dimpling to nipple retraction is these ligaments being shortened.</dd>
     <dt>Two muscles in the nipple worth a mark</dt>
     <dd>Circular fibres are <b>Sappey's muscle</b>, which <b>erects</b> the nipple; longitudinal
     fibres are <b>Myerholtz muscle</b>, which <b>retracts</b> it. The sebaceous glands of the
     areola enlarge in pregnancy to lubricate the nipple in lactation: <b>Montgomery's
-    tubercles</b>.<cite class="src bl">B&amp;L 58 &middot; p.915</cite></dd>
+    tubercles</b>.​<cite class="src bl">B&amp;L 58 &middot; p.915</cite></dd>
   </dl>
 
   <details class="conflict">
@@ -1050,12 +1062,12 @@ body.guide { margin: 0; -webkit-text-size-adjust: 100%; }
       <dd><b>About 15 to 20 lobes</b> develop during puberty, each draining into a single
       lactiferous duct; the breast parenchyma contains <b>15 to 20 lobes</b>; and the nipple is
       <b>pierced by 15 to 20 lactiferous ducts, each opening independently</b>. Each duct is
-      <b>2 to 4 mm</b> in diameter.<cite class="src srb">SRB 8 &middot; p.504, p.505</cite></dd>
+      <b>2 to 4 mm</b> in diameter.​<cite class="src srb">SRB 8 &middot; p.504, p.505</cite></dd>
       <dt>Bailey &amp; Love 28e</dt>
       <dd><b>"There are five to nine major lactiferous (milk) ducts carrying milk from the
       lobes."</b> Approximately <b>10 to 100 lobules</b> empty via ductules into a lactiferous
       duct, and each duct is lined with a <b>spiral arrangement of contractile myoepithelial
-      cells</b>.<cite class="src bl">B&amp;L 58 &middot; p.914</cite></dd>
+      cells</b>.​<cite class="src bl">B&amp;L 58 &middot; p.914</cite></dd>
     </dl>
     <span class="ruling"><b>These are different claims about the same structure, and the modern
     anatomical literature is on B&amp;L's side: the classical 15 to 20 is a count of lobes, and
@@ -1077,7 +1089,7 @@ body.guide { margin: 0; -webkit-text-size-adjust: 100%; }
     nodes receive approximately 85%</b> of the lymph from the breast. The internal mammary nodes
     lie along the internal mammary vessels <b>deep to the costal cartilages and just superficial
     to the parietal pleura</b>, and drain <b>the medial half</b> of the
-    breast.<cite class="src bl">B&amp;L 58 &middot; p.915</cite></dd>
+    breast.​<cite class="src bl">B&amp;L 58 &middot; p.915</cite></dd>
     <dt>The six anatomical groups</dt>
     <dd><b>Lateral</b>, along the lower border of the axillary vein lateral to the thoracodorsal
     pedicle. <b>Anterior or pectoral</b>, between the lateral borders of pectoralis major and
@@ -1086,20 +1098,20 @@ body.guide { margin: 0; -webkit-text-size-adjust: 100%; }
     fat in the centre of the axilla. <b>Interpectoral (Rotter's)</b>, between pectoralis major and
     minor. <b>Apical</b>, above and medial to the pectoralis minor tendon and lateral to the first
     rib, which <b>receive the efferent channels from all the other axillary
-    groups</b>.<cite class="src bl">B&amp;L 58 &middot; p.915</cite></dd>
+    groups</b>.​<cite class="src bl">B&amp;L 58 &middot; p.915</cite></dd>
     <dt>The three surgical levels, which is what you will actually be asked</dt>
     <dd><b>Level I</b>: below and lateral to the lateral border of pectoralis minor, the majority.
     <b>Level II</b>: in front of and behind pectoralis minor, including Rotter's nodes.
     <b>Level III</b>: above and medial to the medial border of pectoralis
-    minor.<cite class="src bl">B&amp;L 58 &middot; p.915</cite> Learn the levels by their relation
+    minor.​<cite class="src bl">B&amp;L 58 &middot; p.915</cite> Learn the levels by their relation
     to pectoralis minor and you can never muddle them.</dd>
     <dt>And onwards</dt>
     <dd>The apical nodes are continuous with the <b>supraclavicular</b> nodes and drain into the
     subclavian lymph trunk, entering the great veins directly or via the <b>thoracic duct or
-    jugular trunk</b>.<cite class="src bl">B&amp;L 58 &middot; p.915</cite> S Das's clinical
+    jugular trunk</b>.​<cite class="src bl">B&amp;L 58 &middot; p.915</cite> S Das's clinical
     sequence matches: spread goes <b>first to the pectoral, then central, then apical</b> group,
     the subscapular and lateral groups being involved
-    later.<cite class="src das">Das 30 &middot; p.420</cite></dd>
+    later.​<cite class="src das">Das 30 &middot; p.420</cite></dd>
   </dl>
 
   <!-- ===================== 2. WHY ===================== -->
@@ -1118,26 +1130,26 @@ body.guide { margin: 0; -webkit-text-size-adjust: 100%; }
       high incidence in England and Wales"</b>, and <b>"breast carcinoma is rare in
       Japan"</b>. Both are <b>more seen in the developed world</b> and are <b>less common in the
       under-developed world where women give birth to multiple
-      children</b>.<cite class="src das">Das 30 &middot; p.410</cite> The mechanism he offers is
+      children</b>.​<cite class="src das">Das 30 &middot; p.410</cite> The mechanism he offers is
       parity, breastfeeding and a diet rich in saturated fatty
-      acids.<cite class="src das">Das 30 &middot; p.410</cite></dd>
+      acids.​<cite class="src das">Das 30 &middot; p.410</cite></dd>
       <dt>Bailey &amp; Love 28e</dt>
       <dd>Treats breast cancer as a global disease with a <b>different presentation</b> rather
       than a lower incidence, and gives three facts that matter for an Indian student. First, the
       median age at presentation is <b>around 60 years in the West but around 48 years in low- and
       middle-income nations</b>. Second, <b>Parsis in India</b> appear in its list of higher-risk
       ethnic groups, alongside American white, African American under 45 and Ashkenazi Jewish
-      women.<cite class="src bl">B&amp;L 58 &middot; p.931</cite> Third, and most important:
+      women.​<cite class="src bl">B&amp;L 58 &middot; p.931</cite> Third, and most important:
       <b>"Few breast cancers in high-income countries present with either locally advanced disease
       or symptoms of metastatic disease; however, the incidence is much greater in resource-poor
       countries, where up to 60% of women still present
-      late."</b><cite class="src bl">B&amp;L 58 &middot; p.933</cite></dd>
+      late."</b>​<cite class="src bl">B&amp;L 58 &middot; p.933</cite></dd>
     </dl>
     <span class="ruling"><b>This one is not an academic disagreement, it is a clinical trap, so
     answer it as a correction rather than a compromise.</b> The parity and breastfeeding risk
     factors S Das gives are real and B&amp;L lists them too: nulliparity or first pregnancy after
     35 raises risk, and <b>more than 12 months of breastfeeding is
-    protective</b>.<cite class="src bl">B&amp;L 58 &middot; p.931</cite> What has dated is the
+    protective</b>.​<cite class="src bl">B&amp;L 58 &middot; p.931</cite> What has dated is the
     conclusion. Say: the classical teaching is that breast cancer is commoner in the West, and the
     risk factors behind that are genuine, <b>but incidence in India is rising, Indian women present
     about twelve years younger, and up to 60% present late</b>. Then draw the practical
@@ -1146,7 +1158,7 @@ body.guide { margin: 0; -webkit-text-size-adjust: 100%; }
     or geography reassure you.</b> S Das himself gives you the licence, in the same paragraph:
     carcinoma usually occurs above 40 <b>"though rarely it may occur earlier, so age should not be
     the criterion to exclude the diagnosis of breast
-    carcinoma"</b>.<cite class="src das">Das 30 &middot; p.410</cite></span>
+    carcinoma"</b>.​<cite class="src das">Das 30 &middot; p.410</cite></span>
     </div>
   </details>
 
@@ -1199,9 +1211,9 @@ body.guide { margin: 0; -webkit-text-size-adjust: 100%; }
     Involution</b>, the <b>ANDI</b> concept, developed by the <b>Cardiff Breast Clinic</b>. It
     exists because the older names, fibroadenosis, fibrocystic disease, mammary dysplasia, caused
     confusion by treating normal variation as
-    disease.<cite class="src bl">B&amp;L 58 &middot; p.918</cite> S Das uses the older vocabulary
+    disease.​<cite class="src bl">B&amp;L 58 &middot; p.918</cite> S Das uses the older vocabulary
     throughout, fibroadenosis and mammary
-    dysplasia.<cite class="src das">Das 30 &middot; p.410</cite> Use ANDI as your framework and
+    dysplasia.​<cite class="src das">Das 30 &middot; p.410</cite> Use ANDI as your framework and
     the old names as synonyms, and you will sound current without abandoning the book your
     examiner read.
   </div>
@@ -1216,14 +1228,14 @@ body.guide { margin: 0; -webkit-text-size-adjust: 100%; }
       <span class="label">Distinguishes</span>S Das's age map: <b>fibroadenoma</b> usually below
       <b>35</b>; <b>fibroadenosis</b> at any age but more in middle age; <b>intramammary abscess</b>
       most commonly in young lactating women; <b>carcinoma</b> usually above
-      <b>40</b>.<cite class="src das">Das 30 &middot; p.410</cite>
+      <b>40</b>.​<cite class="src das">Das 30 &middot; p.410</cite>
       <br><span class="label out">Does not rule out</span>Carcinoma "rarely may occur earlier, so
       <b>age should not be the criterion to exclude the diagnosis of breast
-      carcinoma</b>".<cite class="src das">Das 30 &middot; p.410</cite> And in India the median
-      presenting age is around <b>48</b>, not 60.<cite class="src bl">B&amp;L 58 &middot; p.931</cite>
+      carcinoma</b>".​<cite class="src das">Das 30 &middot; p.410</cite> And in India the median
+      presenting age is around <b>48</b>, not 60.​<cite class="src bl">B&amp;L 58 &middot; p.931</cite>
       <br><span class="label">And it changes the imaging</span>Ultrasound is the primary modality
       in <b>young women with dense breast tissue</b>; <b>mammography should be the first
-      investigation in older women</b>.<cite class="src bl">B&amp;L 58 &middot; p.915, p.916</cite>
+      investigation in older women</b>.​<cite class="src bl">B&amp;L 58 &middot; p.915, p.916</cite>
       So the age answer determines your next sentence.
     </span>
   </div>
@@ -1234,19 +1246,19 @@ body.guide { margin: 0; -webkit-text-size-adjust: 100%; }
       <span class="label">Why</span>S Das: enquire about <b>mode of onset, duration and rate of
       growth</b>. <b>Long history with slow growth</b> suggests fibroadenosis or fibroadenoma.
       <b>Short history with fast growth</b> is probably
-      carcinoma.<cite class="src das">Das 30 &middot; p.410</cite>
+      carcinoma.​<cite class="src das">Das 30 &middot; p.410</cite>
       <br><span class="label out">The exception that proves you have read it</span><b>Atrophic
       scirrhous carcinoma is a slow growing
-      tumour.</b><cite class="src das">Das 30 &middot; p.410</cite> A slow lump in an elderly woman
+      tumour.</b>​<cite class="src das">Das 30 &middot; p.410</cite> A slow lump in an elderly woman
       is not thereby benign.
       <br><span class="label">If there was trauma</span>A lump may follow trauma as a
       <b>haematoma</b> or <b>fat necrosis</b>, but remember the commoner story: <b>trauma may
       simply attract the patient's attention to a pre-existing
-      lump</b>.<cite class="src das">Das 30 &middot; p.410</cite> Never let a history of injury
+      lump</b>.​<cite class="src das">Das 30 &middot; p.410</cite> Never let a history of injury
       close the case.
       <br><span class="label">A number worth quoting</span>The average delay between a patient
       finding a lump and reporting it is <b>about 6 weeks</b> in
-      carcinoma.<cite class="src das">Das 30 &middot; p.410</cite>
+      carcinoma.​<cite class="src das">Das 30 &middot; p.410</cite>
     </span>
   </div>
 
@@ -1256,22 +1268,22 @@ body.guide { margin: 0; -webkit-text-size-adjust: 100%; }
       <span class="label out">Rules out nothing, and this is the point</span>S Das puts it in
       italics for a reason: <b>"carcinoma of the breast is a painless condition"</b>, and <b>all
       neoplasms of the breast, benign or malignant, are painless to start
-      with</b>.<cite class="src das">Das 30 &middot; p.410</cite> So <b>a painless lump found
+      with</b>.​<cite class="src das">Das 30 &middot; p.410</cite> So <b>a painless lump found
       accidentally while washing may be a carcinoma, and the clinician must be more particular in
       examining that case rather than ignoring
-      it</b>.<cite class="src das">Das 30 &middot; p.410</cite> Absence of pain is a reason to
+      it</b>.​<cite class="src das">Das 30 &middot; p.410</cite> Absence of pain is a reason to
       worry, not to relax.
       <br><span class="label">Rules in</span><b>Cyclical</b> pain, worse before menstruation, in a
       young woman: fibroadenosis, that is ANDI. Throbbing pain: pus has formed in an acute
-      mastitis.<cite class="src das">Das 30 &middot; p.410</cite>
+      mastitis.​<cite class="src das">Das 30 &middot; p.410</cite>
       <br><span class="label">After the menopause</span>Localised breast pain may be
       <b>periductal mastitis</b> or <b>referred pain from musculoskeletal
-      disorders</b>.<cite class="src das">Das 30 &middot; p.410</cite> B&amp;L formalises the
+      disorders</b>.​<cite class="src das">Das 30 &middot; p.410</cite> B&amp;L formalises the
       assessment with a pain chart, and the version to know is the <b>All India Institute of
       Medical Sciences modification of the Cardiff Breast Pain
-      Chart</b>.<cite class="src bl">B&amp;L 58 &middot; p.920</cite>
+      Chart</b>.​<cite class="src bl">B&amp;L 58 &middot; p.920</cite>
       <br><span class="label">And pain is sometimes malignant</span>SRB: pain in the lump occurs in
-      <b>10%</b> of carcinomas.<cite class="src srb">SRB 8 &middot; p.527</cite> So neither its
+      <b>10%</b> of carcinomas.​<cite class="src srb">SRB 8 &middot; p.527</cite> So neither its
       presence nor its absence decides anything on its own.
     </span>
   </div>
@@ -1283,13 +1295,13 @@ body.guide { margin: 0; -webkit-text-size-adjust: 100%; }
       blood</b>: duct papilloma or carcinoma. <b>Pus</b>: mammary abscess. <b>Milk</b>: lactation,
       galactocele, or a mammary fistula from a chronic subareolar abscess. <b>Serous or
       greenish</b>: fibroadenosis or mammary duct
-      ectasia.<cite class="src das">Das 30 &middot; p.411</cite>
+      ectasia.​<cite class="src das">Das 30 &middot; p.411</cite>
       <br><span class="label">Why it matters</span>Nipple discharge is one of the three
       presentations that triggers full triple
-      assessment.<cite class="src bl">B&amp;L 58 &middot; p.915</cite> For unilateral discharge
+      assessment.​<cite class="src bl">B&amp;L 58 &middot; p.915</cite> For unilateral discharge
       SRB offers <b>ductography</b>: a fine cannula into the duct opening and 0.2 mL of dilute
       water-soluble contrast, with craniocaudal and mediolateral
-      films.<cite class="src srb">SRB 8 &middot; p.538</cite>
+      films.​<cite class="src srb">SRB 8 &middot; p.538</cite>
     </span>
   </div>
 
@@ -1298,23 +1310,23 @@ body.guide { margin: 0; -webkit-text-size-adjust: 100%; }
     <span class="why">
       <span class="label">Distinguishes</span><b>Retraction for a long time or since puberty may
       be developmental. Recent retraction is of importance and is usually due to underlying
-      carcinoma.</b><cite class="src das">Das 30 &middot; p.411</cite> The question is not "is the
+      carcinoma.</b>​<cite class="src das">Das 30 &middot; p.411</cite> The question is not "is the
       nipple retracted" but "when did it change", and candidates routinely ask the wrong one.
       <br><span class="label">Mechanism</span>Extension of growth along the lactiferous ducts with
-      subsequent fibrosis.<cite class="src das">Das 30 &middot; p.430</cite> B&amp;L's version is
+      subsequent fibrosis.​<cite class="src das">Das 30 &middot; p.430</cite> B&amp;L's version is
       the Cooper's ligament one: tumour growth factors drive a <b>desmoplastic reaction</b>, and
       contraction of the new collagen shortens Cooper's ligaments, giving <b>dimpling</b> from a
       single shortened ligament, <b>puckering or tethering</b> from many, or <b>nipple
-      retraction</b>.<cite class="src bl">B&amp;L 58 &middot; p.932</cite>
+      retraction</b>.​<cite class="src bl">B&amp;L 58 &middot; p.932</cite>
       <br><span class="label out">Careful</span>S Das's caveat: <b>any</b> tumour lying immediately
       deep to the nipple will fix the nipple, <b>benign or malignant</b>, because the main
       mammary ducts may travel through the
-      growth.<cite class="src das">Das 30 &middot; p.418</cite> A fixed nipple is not by itself
+      growth.​<cite class="src das">Das 30 &middot; p.418</cite> A fixed nipple is not by itself
       malignant.
       <br><span class="label">And if the nipple is eroded, not retracted</span>Think <b>Paget's
       disease</b>, which is a unique type of ductal carcinoma in situ arising in the nipple. If a
       nipple lesion fails to heal, <b>exclude Paget's by taking a wedge biopsy of the
-      lesion</b>.<cite class="src bl">B&amp;L 58 &middot; p.924</cite>
+      lesion</b>.​<cite class="src bl">B&amp;L 58 &middot; p.924</cite>
     </span>
   </div>
 
@@ -1324,22 +1336,22 @@ body.guide { margin: 0; -webkit-text-size-adjust: 100%; }
       <span class="label">Why</span>S Das warns that in a long-standing carcinoma patients
       <b>ignore back, hip or shoulder pain, considering it rheumatism and unrelated to the lump of
       the breast</b>, when it is bony
-      metastasis.<cite class="src das">Das 30 &middot; p.411</cite> You have to ask directly.
+      metastasis.​<cite class="src das">Das 30 &middot; p.411</cite> You have to ask directly.
       <br><span class="label">The full list to run through</span>B&amp;L: bony pain, cough,
       breathlessness, haemoptysis, headache, visual disturbance, neurological deficit, epileptic
       fits, abdominal distension, jaundice, anorexia, weakness, weight loss,
-      hypercalcaemia.<cite class="src bl">B&amp;L 58 &middot; p.933</cite> Plus any swelling in the
+      hypercalcaemia.​<cite class="src bl">B&amp;L 58 &middot; p.933</cite> Plus any swelling in the
       neck or armpit.
       <br><span class="label">Where bone secondaries go, in order</span><b>Lumbar vertebrae, neck
       of femur, thoracic vertebrae, rib, skull.</b> Generally <b>osteolytic</b>, though
       osteosclerotic and mixed types occur. In the limbs the deposits occur <b>above the elbow and
       above the knee</b>, because haematopoietic vascular marrow is confined to the axial skeleton
       and to the limbs above those
-      joints.<cite class="src bl">B&amp;L 58 &middot; p.932</cite> That last clause is the reason,
+      joints.​<cite class="src bl">B&amp;L 58 &middot; p.932</cite> That last clause is the reason,
       and giving the reason is what earns the mark.
       <br><span class="label">One named consequence</span>Extensive marrow replacement releases
       immature blast cells into the blood, giving <b>leukoerythroblastic
-      anaemia</b>.<cite class="src bl">B&amp;L 58 &middot; p.932</cite>
+      anaemia</b>.​<cite class="src bl">B&amp;L 58 &middot; p.932</cite>
     </span>
   </div>
 
@@ -1349,7 +1361,7 @@ body.guide { margin: 0; -webkit-text-size-adjust: 100%; }
       <span class="label">Rules in</span>Carcinoma. But S Das gives two other causes you must keep
       in the frame in India: <b>tuberculosis of the breast</b>, and <b>chest wall tuberculosis
       leading to a retromammary
-      abscess</b>.<cite class="src das">Das 30 &middot; p.411</cite> A breast mass with weight
+      abscess</b>.​<cite class="src das">Das 30 &middot; p.411</cite> A breast mass with weight
       loss and night sweats in a young Indian woman is not automatically cancer.
     </span>
   </div>
@@ -1359,28 +1371,28 @@ body.guide { margin: 0; -webkit-text-size-adjust: 100%; }
     <span class="why">
       <span class="label">Why obstetric</span>Fibroadenosis and carcinoma are commoner in
       nulliparous women and in those who have not
-      breastfed.<cite class="src das">Das 30 &middot; p.410, p.411</cite> B&amp;L quantifies both
+      breastfed.​<cite class="src das">Das 30 &middot; p.410, p.411</cite> B&amp;L quantifies both
       sides: first pregnancy after 35 raises risk, and <b>more than 12 months of breastfeeding is
       more protective than
-      less</b>.<cite class="src bl">B&amp;L 58 &middot; p.931</cite>
+      less</b>.​<cite class="src bl">B&amp;L 58 &middot; p.931</cite>
       <br><span class="label">Why lactational</span><b>Suppurative mastitis particularly occurs
       during the first lactational
-      period.</b><cite class="src das">Das 30 &middot; p.411</cite>
+      period.</b>​<cite class="src das">Das 30 &middot; p.411</cite>
       <br><span class="label">Why past history</span>Recurrent abscess occurs with a congenital
       retracted nipple; tuberculosis of the breast may recur; fibroadenosis may recur after a long
       gap, so ask carefully and the patient will often remember a similar episode years ago. <b>And
       above all, carcinoma may recur in the opposite
-      breast.</b><cite class="src das">Das 30 &middot; p.411</cite>
+      breast.</b>​<cite class="src das">Das 30 &middot; p.411</cite>
       <br><span class="label">Why family history, precisely</span>One first-degree relative
       <b>RR 2</b>; two first-degree relatives <b>RR
-      3</b>.<cite class="src bl">B&amp;L 58 &middot; p.931</cite> It also decides whether to refer
+      3</b>.​<cite class="src bl">B&amp;L 58 &middot; p.931</cite> It also decides whether to refer
       for genetic testing, and B&amp;L's indications include <b>breast cancer at or under 50</b>,
       <b>triple negative at or under 60</b>, <b>two breast primaries</b>, <b>male breast
       cancer</b>, and breast cancer at any age with a relative affected under
-      50.<cite class="src bl">B&amp;L 58 &middot; p.942</cite>
+      50.​<cite class="src bl">B&amp;L 58 &middot; p.942</cite>
       <br><span class="label">And ask about radiation</span>Prior radiotherapy, for example for
       Hodgkin's lymphoma, is a risk factor for breast <b>sarcoma</b>, as is chronic
-      lymphoedema.<cite class="src bl">B&amp;L 58 &middot; p.942</cite>
+      lymphoedema.​<cite class="src bl">B&amp;L 58 &middot; p.942</cite>
     </span>
   </div>
 
@@ -1403,11 +1415,11 @@ body.guide { margin: 0; -webkit-text-size-adjust: 100%; }
       compromise between lying flat, which makes the breasts flatten out and fall sideways, and
       sitting upright, which makes the breasts pendulous and bulky"</b>; and in the
       <b>recumbent</b> position, so as to <b>palpate the lump against the chest
-      wall</b>.<cite class="src das">Das 30 &middot; p.411</cite></dd>
+      wall</b>.​<cite class="src das">Das 30 &middot; p.411</cite></dd>
       <dt>Bailey &amp; Love 28e</dt>
       <dd>Its clinical examination figure shows the <b>patient lying supine for palpation</b>,
       using <b>the pad of three fingers</b> and <b>the dial of a clock method</b> for a
-      comprehensive examination.<cite class="src bl">B&amp;L 58 &middot; p.916</cite></dd>
+      comprehensive examination.​<cite class="src bl">B&amp;L 58 &middot; p.916</cite></dd>
     </dl>
     <span class="ruling"><b>Live difference of method, and unusually, S Das has already resolved
     it for you, so quote his own resolution.</b> Do it in three stages and say why as you go:
@@ -1418,8 +1430,8 @@ body.guide { margin: 0; -webkit-text-size-adjust: 100%; }
     technique within those positions, the <b>pads of three fingers</b> working round <b>the dial
     of a clock</b>, and name the three areas that must not be skipped: <b>upper outer quadrant,
     retroareolar region and nipple-areola
-    complex</b>,<cite class="src bl">B&amp;L 58 &middot; p.914, p.916</cite> plus the <b>axillary
-    tail</b>.<cite class="src das">Das 30 &middot; p.416</cite> Saying which position you are in
+    complex</b>,​<cite class="src bl">B&amp;L 58 &middot; p.914, p.916</cite> plus the <b>axillary
+    tail</b>.​<cite class="src das">Das 30 &middot; p.416</cite> Saying which position you are in
     and what you are looking for in it turns a disagreement into a demonstration of
     method.</span>
     </div>
@@ -1429,26 +1441,26 @@ body.guide { margin: 0; -webkit-text-size-adjust: 100%; }
 
   <p>
     S Das's sequence, and each position exists to reveal a different sign. Do all four and say what
-    you are looking for.<cite class="src das">Das 30 &middot; p.412</cite>
+    you are looking for.​<cite class="src das">Das 30 &middot; p.412</cite>
   </p>
 
   <dl class="findings">
     <dt>1. Sitting, arms by the side</dt>
     <dd>The baseline. <b>Compare the level of the nipples.</b> Note the position of each breast,
     its size and shape, and any puckering or
-    dimpling.<cite class="src das">Das 30 &middot; p.412</cite></dd>
+    dimpling.​<cite class="src das">Das 30 &middot; p.412</cite></dd>
     <dt>2. Arms raised straight above the head</dt>
     <dd><b>The lump or dimple may be more marked.</b> Raising the arms puts Cooper's ligaments on
-    stretch, so a shortened one shows.<cite class="src das">Das 30 &middot; p.412</cite></dd>
+    stretch, so a shortened one shows.​<cite class="src das">Das 30 &middot; p.412</cite></dd>
     <dt>3. Hands on hips, pressing and relaxing to command</dt>
     <dd><b>Abnormal movement of the nipple or exaggeration of skin dimples</b> becomes evident,
     because contracting pectoralis major moves anything tethered to its
-    fascia.<cite class="src das">Das 30 &middot; p.412</cite></dd>
+    fascia.​<cite class="src das">Das 30 &middot; p.412</cite></dd>
     <dt>4. Bending forwards from the waist so the breasts fall away from the body</dt>
     <dd><b>Any failure of one nipple to fall away from the chest indicates abnormal fibrosis
-    behind the nipple.</b><cite class="src das">Das 30 &middot; p.412</cite> S Das shows that
+    behind the nipple.</b>​<cite class="src das">Das 30 &middot; p.412</cite> S Das shows that
     retraction due to carcinoma <b>"can be so well detected in bending forward
-    position"</b>.<cite class="src das">Das 30 &middot; p.412</cite> This is the position most
+    position"</b>.​<cite class="src das">Das 30 &middot; p.412</cite> This is the position most
     candidates omit and the one that most often shows the sign.</dd>
   </dl>
 
@@ -1458,38 +1470,38 @@ body.guide { margin: 0; -webkit-text-size-adjust: 100%; }
     <dt>Red, warm and oedematous</dt>
     <dd><b>Acute mastitis.</b> But S Das's warning: <b>a similar picture may be seen, very rarely,
     in acute mastitis carcinomatosa</b>, the acute lactational
-    carcinoma.<cite class="src das">Das 30 &middot; p.412, p.416</cite> SRB describes the same
+    carcinoma.​<cite class="src das">Das 30 &middot; p.412, p.416</cite> SRB describes the same
     entity as diffuse, painful, warm, often involving the whole breast with <b>peau d'orange</b>
     and often extending to the chest wall, with <b>more than a third of the skin</b>
-    involved.<cite class="src srb">SRB 8 &middot; p.525</cite> B&amp;L's figure gives the
+    involved.​<cite class="src srb">SRB 8 &middot; p.525</cite> B&amp;L's figure gives the
     threshold the same way: <b>diffuse erythema and skin oedema involving more than one-third of
     the breast</b> are the features of inflammatory
-    carcinoma.<cite class="src bl">B&amp;L 58 &middot; p.932</cite> A hot red breast in a
+    carcinoma.​<cite class="src bl">B&amp;L 58 &middot; p.932</cite> A hot red breast in a
     non-lactating woman that does not settle on antibiotics is a cancer until proved otherwise.</dd>
     <dt>Engorged veins</dt>
     <dd>Commonly seen in a large soft fibroadenoma (<b>cystosarcoma phyllodes</b>) and in rapidly
     growing sarcoma; also in acute lactational mastitis with a huge
-    abscess.<cite class="src das">Das 30 &middot; p.412&ndash;413</cite></dd>
+    abscess.​<cite class="src das">Das 30 &middot; p.412&ndash;413</cite></dd>
     <dt>Dimple, retraction or puckering</dt>
     <dd>Often noticed in <b>scirrhous</b> carcinoma, where the breast may be shrunken and drawn in
     towards the growth. <b>Dimpling may be made prominent by lifting the breast gently
-    upwards.</b><cite class="src das">Das 30 &middot; p.412, p.413</cite></dd>
+    upwards.</b>​<cite class="src das">Das 30 &middot; p.412, p.413</cite></dd>
     <dt>Ulceration, fungation, satellite nodules</dt>
     <dd>Advanced disease. <b>Cancer en cuirasse</b> is extensive tumour infiltration of the skin
     of the breast and chest, and in post-mastectomy recurrence also of the upper limb and
-    abdomen.<cite class="src bl">B&amp;L 58 &middot; p.932</cite><cite class="src srb">SRB 8 &middot; p.528</cite>
+    abdomen.​<cite class="src bl">B&amp;L 58 &middot; p.932</cite>​<cite class="src srb">SRB 8 &middot; p.528</cite>
     S Das says hard nodules may be felt in the skin as part of
-    it.<cite class="src das">Das 30 &middot; p.418</cite></dd>
+    it.​<cite class="src das">Das 30 &middot; p.418</cite></dd>
     <dt>Brawny oedema of the arm</dt>
     <dd>Extensive neoplastic infiltration of the axillary nodes, mainly from lymphatic
-    blockage.<cite class="src das">Das 30 &middot; p.415</cite> SRB characterises it: <b>indurated,
+    blockage.​<cite class="src das">Das 30 &middot; p.415</cite> SRB characterises it: <b>indurated,
     painful, non-pitting, occurring with fixed
-    nodes</b>.<cite class="src srb">SRB 8 &middot; p.530</cite> Note the contrast with
+    nodes</b>.​<cite class="src srb">SRB 8 &middot; p.530</cite> Note the contrast with
     post-operative lymphoedema, which S Das says may also follow
-    treatment.<cite class="src das">Das 30 &middot; p.415</cite></dd>
+    treatment.​<cite class="src das">Das 30 &middot; p.415</cite></dd>
     <dt>And inspect the axilla and supraclavicular fossa</dt>
     <dd>Not only palpate them. <b>These regions should particularly be inspected for any
-    swelling.</b><cite class="src das">Das 30 &middot; p.415</cite></dd>
+    swelling.</b>​<cite class="src das">Das 30 &middot; p.415</cite></dd>
   </dl>
 
   <details class="conflict">
@@ -1502,23 +1514,23 @@ body.guide { margin: 0; -webkit-text-size-adjust: 100%; }
       <dt>S Das, p.413</dt>
       <dd>Due to blockage of <b>subcuticular</b> lymphatics with oedema of the skin, <b>"which
       deepens the mouths of the sweat glands and hair
-      follicles"</b>.<cite class="src das">Das 30 &middot; p.413</cite></dd>
+      follicles"</b>.​<cite class="src das">Das 30 &middot; p.413</cite></dd>
       <dt>S Das, p.430, on the same sign</dt>
       <dd>Oedema with pitting, <b>"oedema being due to obstruction of the lymphatics by cancer
       cells and pitting being due to fixation of the hair follicles and sebaceous glands to the
-      subcutaneous tissue"</b>.<cite class="src das">Das 30 &middot; p.430</cite> So the book names
+      subcutaneous tissue"</b>.​<cite class="src das">Das 30 &middot; p.430</cite> So the book names
       <b>sweat</b> glands in one chapter-section and <b>sebaceous</b> glands in another.</dd>
       <dt>SRB</dt>
       <dd>Due to obstruction of <b>dermal</b> lymphatics, affecting the <b>openings of the
       sebaceous glands and hair
-      follicles</b>.<cite class="src srb">SRB 8 &middot; p.527</cite></dd>
+      follicles</b>.​<cite class="src srb">SRB 8 &middot; p.527</cite></dd>
       <dt>Bailey &amp; Love 28e</dt>
       <dd>Names no gland at all, and makes a clinically larger point instead. Peau d'orange is
       <b>a sign of locally advanced disease</b> due to obstruction of cutaneous lymphatic
       drainage, <b>"by infiltration of either subdermal lymphatics or axillary lymph nodes by
-      tumour cells"</b>.<cite class="src bl">B&amp;L 58 &middot; p.932</cite> It also notes that
+      tumour cells"</b>.​<cite class="src bl">B&amp;L 58 &middot; p.932</cite> It also notes that
       <b>in people with darker skins the erythema takes on a brownish
-      hue</b>,<cite class="src bl">B&amp;L 58 &middot; p.932</cite> which matters at an Indian
+      hue</b>,​<cite class="src bl">B&amp;L 58 &middot; p.932</cite> which matters at an Indian
       bedside and appears in no other text here.</dd>
     </dl>
     <span class="ruling"><b>The gland question is trivia on which one book contradicts itself, so
@@ -1530,7 +1542,7 @@ body.guide { margin: 0; -webkit-text-size-adjust: 100%; }
     lymphatics or at the axillary nodes</b>, so the sign tells you the disease is locally advanced
     without telling you where the block is. And add the pigmentation point for a dark-skinned
     patient: the accompanying erythema is <b>brownish, not
-    red</b>.<cite class="src bl">B&amp;L 58 &middot; p.932</cite></span>
+    red</b>.​<cite class="src bl">B&amp;L 58 &middot; p.932</cite></span>
     </div>
   </details>
 
@@ -1540,35 +1552,35 @@ body.guide { margin: 0; -webkit-text-size-adjust: 100%; }
     <dt>Begin on the normal side</dt>
     <dd>S Das: start with the normal side so you have the findings to compare against; then palpate
     <b>the four quadrants systematically</b>, and <b>do not miss the axillary
-    tail</b>.<cite class="src das">Das 30 &middot; p.416</cite></dd>
+    tail</b>.​<cite class="src das">Das 30 &middot; p.416</cite></dd>
     <dt>Situation</dt>
     <dd>Which quadrant. Carcinoma can occur anywhere including the axillary tail, but is
     <b>commonly in the upper and outer quadrant</b>; so is
-    fibroadenoma.<cite class="src das">Das 30 &middot; p.416</cite> The reason is the TDLU
+    fibroadenoma.​<cite class="src das">Das 30 &middot; p.416</cite> The reason is the TDLU
     distribution: <b>50% of terminal ductal lobular units lie
-    there</b>.<cite class="src bl">B&amp;L 58 &middot; p.932</cite></dd>
+    there</b>.​<cite class="src bl">B&amp;L 58 &middot; p.932</cite></dd>
     <dt>Consistency</dt>
     <dd>An encapsulated tumour is firm or globular; <b>carcinoma is stony hard</b>; in sarcoma
     <b>consistency may vary from place to
-    place</b>.<cite class="src das">Das 30 &middot; p.418</cite></dd>
+    place</b>.​<cite class="src das">Das 30 &middot; p.418</cite></dd>
     <dt>Fluctuation, done properly</dt>
     <dd>Stand behind the seated patient with both hands over her shoulders. Hold the cyst with one
     hand and tap its centre gently with the index finger of the other. Positive also in a
     <b>chronic abscess</b>, which may not be tender, and in a <b>lipoma</b>. <b>A very tense cyst
-    may not fluctuate.</b><cite class="src das">Das 30 &middot; p.418</cite> So a negative
+    may not fluctuate.</b>​<cite class="src das">Das 30 &middot; p.418</cite> So a negative
     fluctuation test does not exclude a cyst, and a tense cyst can feel hard enough to be mistaken
     for a carcinoma: let the ultrasound, not your finger, decide whether a lump is
-    cystic.<cite class="src bl">B&amp;L 58 &middot; p.915</cite></dd>
+    cystic.​<cite class="src bl">B&amp;L 58 &middot; p.915</cite></dd>
     <dt>Transillumination</dt>
     <dd>Only in a dark room. Torch on the undersurface of the breast, light directed through to
     the examiner. <b>Fat is translucent, a solid tumour is
-    opaque.</b><cite class="src das">Das 30 &middot; p.418</cite></dd>
+    opaque.</b>​<cite class="src das">Das 30 &middot; p.418</cite></dd>
   </dl>
 
   <div class="pearl">
     <span class="tag">Tethering versus fixity: learn this verbatim</span>
     These two words are the commonest place to lose marks in the whole case, and S Das defines
-    both.<cite class="src das">Das 30 &middot; p.418</cite>
+    both.​<cite class="src das">Das 30 &middot; p.418</cite>
     <br><br><b>Tethered</b> means the disease has spread to the fine fibrous septa running from
     the glandular tissue to the skin, <b>Astley Cooper's ligaments</b>. Infiltration makes them
     <b>shorter and inelastic</b>, pulling the skin inwards and puckering it. <b>The lump can still
@@ -1580,7 +1592,7 @@ body.guide { margin: 0; -webkit-text-size-adjust: 100%; }
     pinched up</b>.
     <br><br>And the sign that connects this to peau d'orange: <b>when a wide area of skin over the
     tumour is attempted to be pinched up, peau d'orange becomes
-    prominent</b>.<cite class="src das">Das 30 &middot; p.418</cite>
+    prominent</b>.​<cite class="src das">Das 30 &middot; p.418</cite>
   </div>
 
   <dl class="findings">
@@ -1589,7 +1601,7 @@ body.guide { margin: 0; -webkit-text-size-adjust: 100%; }
     fibroadenoma is not fixed to the breast tissue and moves easily within the breast substance,
     which is why it is called a "breast mouse".</b> A carcinoma is fixed to the breast substance
     and cannot be moved within it, and <b>fibrous strands can be felt radiating from the mass into
-    the breast substance</b>.<cite class="src das">Das 30 &middot; p.418</cite></dd>
+    the breast substance</b>.​<cite class="src das">Das 30 &middot; p.418</cite></dd>
     <dt>Fixity to pectoralis major, step by step</dt>
     <dd>Ask the patient to <b>place her hand on her hip lightly</b>. Move the lump along the
     direction of the pectoralis major fibres, then at right angles to them: it should be mobile
@@ -1598,18 +1610,18 @@ body.guide { margin: 0; -webkit-text-size-adjust: 100%; }
     and compare the range. <b>Restriction indicates fixity to the pectoral fascia and pectoralis
     major</b>, and if truly fixed there is <b>total restriction along the line of the muscle fibres
     with perhaps slight movement at right angles to
-    them</b>.<cite class="src das">Das 30 &middot; p.418</cite> Verifying that the muscle is
+    them</b>.​<cite class="src das">Das 30 &middot; p.418</cite> Verifying that the muscle is
     actually contracted is the step candidates skip and examiners watch for.</dd>
     <dt>Fixity to serratus anterior</dt>
     <dd>For a lump in the <b>outer and lower</b> quadrant, which lies on serratus anterior. Ask the
     patient to <b>push against a wall with the outstretched hand of the affected side</b> while you
     test mobility; if fixed, the swelling <b>moves very
-    little</b>.<cite class="src das">Das 30 &middot; p.418</cite></dd>
+    little</b>.​<cite class="src das">Das 30 &middot; p.418</cite></dd>
     <dt>And fixity to the chest wall</dt>
     <dd>The end of the same sequence: a tumour fixed with the muscle relaxed is fixed to the chest
     wall itself. B&amp;L's pathological sequence is the justification: the tumour invades adjacent
     parenchyma, then skin with ulceration and satellite nodules, then <b>pectoralis major, serratus
-    anterior and even the chest wall</b>.<cite class="src bl">B&amp;L 58 &middot; p.932</cite></dd>
+    anterior and even the chest wall</b>.​<cite class="src bl">B&amp;L 58 &middot; p.932</cite></dd>
   </dl>
 
   <h3>The axilla, in the order S Das palpates it</h3>
@@ -1618,25 +1630,25 @@ body.guide { margin: 0; -webkit-text-size-adjust: 100%; }
     <dt>Pectoral (anterior) group</dt>
     <dd><b>Just behind the anterior axillary fold.</b> Support the patient's arm so it rests
     comfortably on your forearm, which relaxes the fold and lets your fingers behind
-    it.<cite class="src das">Das 30 &middot; p.419</cite> These are <b>the sentinel nodes in most
-    patients</b>.<cite class="src bl">B&amp;L 58 &middot; p.915</cite></dd>
+    it.​<cite class="src das">Das 30 &middot; p.419</cite> These are <b>the sentinel nodes in most
+    patients</b>.​<cite class="src bl">B&amp;L 58 &middot; p.915</cite></dd>
     <dt>Central group</dt>
     <dd>In the fat of the centre of the axilla, felt against the chest
-    wall.<cite class="src das">Das 30 &middot; p.421</cite></dd>
+    wall.​<cite class="src das">Das 30 &middot; p.421</cite></dd>
     <dt>Subscapular (posterior) group</dt>
     <dd>On the posterior axillary fold; palpated from
-    behind.<cite class="src das">Das 30 &middot; p.420</cite></dd>
+    behind.​<cite class="src das">Das 30 &middot; p.420</cite></dd>
     <dt>Lateral (brachial) group</dt>
     <dd>Along the medial side of the upper arm against the humerus, up to the axillary
-    vein.<cite class="src das">Das 30 &middot; p.421</cite></dd>
+    vein.​<cite class="src das">Das 30 &middot; p.421</cite></dd>
     <dt>Apical, and then supraclavicular</dt>
     <dd>Apical nodes above and medial to the pectoralis minor tendon. Then the supraclavicular
     fossa, and S Das's instruction: <b>both sides should be
-    palpated</b>.<cite class="src das">Das 30 &middot; p.421</cite></dd>
+    palpated</b>.​<cite class="src das">Das 30 &middot; p.421</cite></dd>
     <dt>Why that order</dt>
     <dd>Because spread follows it: <b>first to the pectoral, then the central, then the apical
     group</b>, with the subscapular and lateral groups involved
-    later.<cite class="src das">Das 30 &middot; p.420</cite> Reporting nodes in the sequence
+    later.​<cite class="src das">Das 30 &middot; p.420</cite> Reporting nodes in the sequence
     disease takes shows you understand the anatomy rather than reciting a list.</dd>
     <dt>And the contralateral axilla</dt>
     <dd>Involvement of contralateral nodes <b>in the absence of a contralateral primary represents
@@ -1647,7 +1659,7 @@ body.guide { margin: 0; -webkit-text-size-adjust: 100%; }
     haematogenous spread from a contralateral primary; spread via <b>subdermal lymphatics in front
     of the sternum</b>; a tumour in an <b>epithelial embryonic cell rest</b> trapped in a node,
     which is rare; and simply a primary tumour of the opposite
-    breast.<cite class="src bl">B&amp;L 58 &middot; p.932</cite></dd>
+    breast.​<cite class="src bl">B&amp;L 58 &middot; p.932</cite></dd>
   </dl>
 
   <div class="pearl">
@@ -1659,7 +1671,7 @@ body.guide { margin: 0; -webkit-text-size-adjust: 100%; }
     shortened ligament, <b>puckering or tethering</b> from many, or <b>nipple retraction</b>. And
     at a tumour size of only <b>1 to 2 mm, about 10<sup>5</sup> cells, neoangiogenesis occurs</b>,
     which <b>ushers in rapid growth, invasion and metastatic
-    potential</b>.<cite class="src bl">B&amp;L 58 &middot; p.932</cite> That paragraph connects
+    potential</b>.​<cite class="src bl">B&amp;L 58 &middot; p.932</cite> That paragraph connects
     every physical sign you have just elicited to a molecular cause, and it is the single most
     useful thing to be able to say in this case.
   </div>
@@ -1679,24 +1691,24 @@ body.guide { margin: 0; -webkit-text-size-adjust: 100%; }
     fibroadenoma and has an <b>extremely low likelihood of malignancy</b>, needing reassurance and
     imaging follow-up. <b>Solid masses with an irregular shape and ill-defined margins</b>,
     indistinct, angular or spiculated, are <b>suspicious and require
-    biopsy</b>.<cite class="src bl">B&amp;L 58 &middot; p.915</cite>
+    biopsy</b>.​<cite class="src bl">B&amp;L 58 &middot; p.915</cite>
     <br><span class="label">And the axilla</span><b>Ultrasonography of the axilla is performed
     when cancer is diagnosed, with guided percutaneous biopsy of any suspicious
-    nodes.</b><cite class="src bl">B&amp;L 58 &middot; p.915</cite></dd>
+    nodes.</b>​<cite class="src bl">B&amp;L 58 &middot; p.915</cite></dd>
 
     <dt>Mammography</dt>
     <dd>Two planes, with ultrasound, as <b>first-line</b>; and <b>mammography should be the first
     investigation in older women</b> presenting with breast symptoms. The dose is approximately
-    <b>1 mGy per film</b>.<cite class="src bl">B&amp;L 58 &middot; p.916</cite> SRB's note:
+    <b>1 mGy per film</b>.​<cite class="src bl">B&amp;L 58 &middot; p.916</cite> SRB's note:
     radiological imaging means ultrasound, MRI or mammography, the last <b>after
-    40</b>.<cite class="src srb">SRB 8 &middot; p.538</cite>
+    40</b>.​<cite class="src srb">SRB 8 &middot; p.538</cite>
     <br><span class="label">The three malignant features</span><b>Irregular spiculated mass</b>;
     <b>fine pleomorphic microcalcifications</b>; <b>architectural distortion</b>. Ancillary signs
     in advanced disease: lymphadenopathy, breast oedema, skin or areolar thickening or
-    retraction.<cite class="src bl">B&amp;L 58 &middot; p.916</cite>
+    retraction.​<cite class="src bl">B&amp;L 58 &middot; p.916</cite>
     <br><span class="label out">The limit</span><b>Mammographic and ultrasonographic features are
     not diagnostic of cancer. Biopsy is required for definitive diagnosis in lesions with a
-    BI-RADS score of 4 or 5.</b><cite class="src bl">B&amp;L 58 &middot; p.916</cite></dd>
+    BI-RADS score of 4 or 5.</b>​<cite class="src bl">B&amp;L 58 &middot; p.916</cite></dd>
 
     <dt>MRI</dt>
     <dd>A valuable <b>adjunct</b> because of its high sensitivity. Five uses: dense breasts or
@@ -1704,19 +1716,19 @@ body.guide { margin: 0; -webkit-text-size-adjust: 100%; }
     recurrence</b> after previous breast conservation; to assess <b>multifocality and
     multicentricity</b>, and in lobular cancer and high-grade DCIS; in <b>BRCA</b> or other genetic
     mutation or a strong family history; and in women with <b>breast
-    implants</b>.<cite class="src bl">B&amp;L 58 &middot; p.916&ndash;917</cite> MRI-guided biopsy
+    implants</b>.​<cite class="src bl">B&amp;L 58 &middot; p.916&ndash;917</cite> MRI-guided biopsy
     is possible for lesions not visible on ultrasound or
-    mammogram.<cite class="src bl">B&amp;L 58 &middot; p.917</cite></dd>
+    mammogram.​<cite class="src bl">B&amp;L 58 &middot; p.917</cite></dd>
 
     <dt>PET, and the Indian caveat</dt>
     <dd>Used for <b>staging in T3, T4, N2, N3</b> disease, and in <b>T1, T2, N0, N1</b> disease
     only <b>in the presence of symptoms or signs suggesting
-    metastasis</b>.<cite class="src bl">B&amp;L 58 &middot; p.917</cite>
+    metastasis</b>.​<cite class="src bl">B&amp;L 58 &middot; p.917</cite>
     <br><span class="label out">Why it misleads here</span><b>Inflammatory lesions, namely
     mediastinal lymphadenopathy and pleuropulmonary lesions due to pulmonary tuberculosis, may
     give false-positive results, especially in Asian patients.</b> And <b>PET is very expensive
     and insurance policies may not cover its
-    cost</b>.<cite class="src bl">B&amp;L 58 &middot; p.917</cite> Quoting that sentence is the
+    cost</b>.​<cite class="src bl">B&amp;L 58 &middot; p.917</cite> Quoting that sentence is the
     single best way to show you are thinking about an Indian patient rather than a textbook
     one.</dd>
   </dl>
@@ -1754,30 +1766,30 @@ body.guide { margin: 0; -webkit-text-size-adjust: 100%; }
   <dl class="findings">
     <dt>Core biopsy is the standard</dt>
     <dd>Triple assessment's third limb is <b>core biopsy</b> in B&amp;L's
-    figure,<cite class="src bl">B&amp;L 58 &middot; p.915</cite> while SRB allows <b>FNAC or core
-    biopsy</b>.<cite class="src srb">SRB 8 &middot; p.538</cite> Prefer core: it gives
+    figure,​<cite class="src bl">B&amp;L 58 &middot; p.915</cite> while SRB allows <b>FNAC or core
+    biopsy</b>.​<cite class="src srb">SRB 8 &middot; p.538</cite> Prefer core: it gives
     architecture, so it separates in situ from invasive disease and provides tissue for receptors.
     SRB says it plainly of FNAC in DCIS: <b>FNAC confirms the disease but will not differentiate
-    DCIS from invasive carcinoma</b>.<cite class="src srb">SRB 8 &middot; p.525</cite></dd>
+    DCIS from invasive carcinoma</b>.​<cite class="src srb">SRB 8 &middot; p.525</cite></dd>
     <dt>Image-guided and newer techniques</dt>
     <dd>SRB's list: <b>stereotactic core biopsy</b> using computer mammography;
     <b>vacuum-assisted biopsy</b> with an 11-gauge probe, becoming popular; <b>needle-localised
     biopsy</b> under mammographic guidance; and <b>iodine-125 seed localisation
-    biopsy</b>.<cite class="src srb">SRB 8 &middot; p.538</cite></dd>
+    biopsy</b>.​<cite class="src srb">SRB 8 &middot; p.538</cite></dd>
     <dt>What the pathologist must report</dt>
     <dd>Grade by the <b>modified Bloom-Richardson</b> system, scoring three variables from 1 to 3
     each: <b>percentage of tumour cells with tubule formation</b>, <b>nuclear pleomorphism</b>, and
     <b>the size and number of mitoses per high-power field</b>. Total <b>3 to 5 is grade I, 6 or 7
-    grade II, 8 or 9 grade III</b>.<cite class="src bl">B&amp;L 58 &middot; p.931</cite> Plus
+    grade II, 8 or 9 grade III</b>.​<cite class="src bl">B&amp;L 58 &middot; p.931</cite> Plus
     <b>ER, PR, HER2/neu</b> and the <b>Ki-67</b> mitotic index. SRB adds the handling detail:
     specimen in <b>formalin</b> for histology and margins, but in <b>saline at low temperature</b>
-    for receptor study.<cite class="src srb">SRB 8 &middot; p.539</cite></dd>
+    for receptor study.​<cite class="src srb">SRB 8 &middot; p.539</cite></dd>
     <dt>Molecular subtype, which now drives treatment</dt>
     <dd>Five subtypes from gene array: <b>luminal A</b> (ER or PR positive, HER2 negative, Ki-67
     low), <b>luminal B</b> (ER or PR positive, Ki-67 high), <b>basal or triple negative</b>,
     <b>HER2/neu enriched</b>, and a <b>normal-like</b> group. Where gene array such as PAM-50 is
     unavailable, <b>immunohistochemical receptor staining serves as a surrogate
-    marker</b>.<cite class="src bl">B&amp;L 58 &middot; p.931</cite> That last clause is the one to
+    marker</b>.​<cite class="src bl">B&amp;L 58 &middot; p.931</cite> That last clause is the one to
     remember in a resource-limited setting.</dd>
   </dl>
 
@@ -1788,24 +1800,24 @@ body.guide { margin: 0; -webkit-text-size-adjust: 100%; }
     <dd>The <b>eighth edition of the UICC-AJCC TNM</b> system. Beyond anatomy it incorporates
     <b>histological grade, ER, PR, HER2/neu and Ki-67, multigene testing with Oncotype DX, and the
     response to neoadjuvant chemotherapy</b>, to refine the
-    prognosis.<cite class="src bl">B&amp;L 58 &middot; p.933</cite>
+    prognosis.​<cite class="src bl">B&amp;L 58 &middot; p.933</cite>
     <br><span class="label">Four points from the eighth edition</span>Lobular carcinoma in situ is
     now classed as a <b>high-risk benign lesion</b>, not a cancer; multiple synchronous tumours are
     marked with the <b>(m)</b> modifier; <b>(y)</b> prefixes post-neoadjuvant status; and
     <b>satellite skin nodules must be separate from the primary</b> for T4b to
-    apply.<cite class="src bl">B&amp;L 58 &middot; p.933</cite></dd>
+    apply.​<cite class="src bl">B&amp;L 58 &middot; p.933</cite></dd>
     <dt>Who gets a metastatic work-up</dt>
     <dd><b>Locally advanced disease, T3, T4, N2 or N3</b>: contrast-enhanced CT of chest, abdomen
     and pelvis, <b>and an isotope bone scan</b>. <b>Early disease, T1, T2, N0 or N1</b>: metastatic
     evaluation <b>only if there are symptoms suggesting metastasis or a raised serum alkaline
-    phosphatase</b>.<cite class="src bl">B&amp;L 58 &middot; p.933</cite> Knowing who does
+    phosphatase</b>.​<cite class="src bl">B&amp;L 58 &middot; p.933</cite> Knowing who does
     <i>not</i> need staging scans is as examinable as knowing who does.</dd>
     <dt>SRB's practical equivalents</dt>
     <dd><b>Isotope bone scan is a must</b> in locally advanced disease or T3. <b>Chest
     radiograph</b> for pleural effusion, cannon-ball secondaries, mediastinal nodes and rib
     deposits. <b>Ultrasound abdomen</b> for liver secondaries, ascites and a <b>Krukenberg</b>
     tumour. <b>X-ray spine</b> for osteolytic
-    secondaries.<cite class="src srb">SRB 8 &middot; p.538</cite> In a hospital without PET this is
+    secondaries.​<cite class="src srb">SRB 8 &middot; p.538</cite> In a hospital without PET this is
     the work-up you will actually order, so learn it alongside the ideal one.</dd>
   </dl>
 
@@ -1818,18 +1830,18 @@ body.guide { margin: 0; -webkit-text-size-adjust: 100%; }
     <dl>
       <dt>The formula, on which both agree</dt>
       <dd><b>NPI = (0.2 × tumour size in cm) + lymph node stage + tumour
-      grade.</b><cite class="src srb">SRB 8 &middot; p.525</cite><cite class="src bl">B&amp;L 58 &middot; p.942</cite></dd>
+      grade.</b>​<cite class="src srb">SRB 8 &middot; p.525</cite>​<cite class="src bl">B&amp;L 58 &middot; p.942</cite></dd>
       <dt>SRB, three bands with survival</dt>
       <dd><b>Under 3.4</b>: good prognosis, <b>80% survival at 15 years</b>. <b>3.4 to 5.4</b>:
       moderate, <b>40%</b>. <b>Over 5.4</b>: poor,
-      <b>15%</b>.<cite class="src srb">SRB 8 &middot; p.525</cite></dd>
+      <b>15%</b>.​<cite class="src srb">SRB 8 &middot; p.525</cite></dd>
       <dt>Bailey &amp; Love 28e, four bands</dt>
       <dd><b>I excellent, 2.4 or less. II good, over 2.4 up to 3.4. III moderate, over 3.4 up to
       5.4. IV poor, over 5.4.</b> No survival figures
-      given.<cite class="src bl">B&amp;L 58 &middot; p.942</cite> It describes NPI as used
+      given.​<cite class="src bl">B&amp;L 58 &middot; p.942</cite> It describes NPI as used
       <b>to determine prognosis following surgery</b>, and notes the three variables it is built
       from are tumour size, number of involved nodes and
-      grade.<cite class="src bl">B&amp;L 58 &middot; p.942</cite></dd>
+      grade.​<cite class="src bl">B&amp;L 58 &middot; p.942</cite></dd>
     </dl>
     <span class="ruling"><b>Live difference, and it is a real one: B&amp;L splits SRB's "good"
     band at 2.4 into excellent and good, so the two books will disagree about a patient scoring
@@ -1853,24 +1865,24 @@ body.guide { margin: 0; -webkit-text-size-adjust: 100%; }
       <dt>SRB</dt>
       <dd><b>Screening mammography is done after 40 years</b>, with <b>earlier screening where
       there is a family history or a histological risk
-      factor</b>.<cite class="src srb">SRB 8 &middot; p.507</cite> It also teaches <b>breast
+      factor</b>.​<cite class="src srb">SRB 8 &middot; p.507</cite> It also teaches <b>breast
       self-examination</b>, ideally <b>once a month just after
-      menstruation</b>.<cite class="src srb">SRB 8 &middot; p.531</cite></dd>
+      menstruation</b>.​<cite class="src srb">SRB 8 &middot; p.531</cite></dd>
       <dt>Bailey &amp; Love 28e, the United Kingdom</dt>
       <dd><b>All women aged between 50 and 70 are invited for mammographic screening every 3
       years.</b> In high-income countries population-based mammographic screening achieves
       <b>90 to 95% long-term survival in screen-detected
-      tumours</b>.<cite class="src bl">B&amp;L 58 &middot; p.943</cite></dd>
+      tumours</b>.​<cite class="src bl">B&amp;L 58 &middot; p.943</cite></dd>
       <dt>Bailey &amp; Love 28e, India and comparable settings</dt>
       <dd><b>"In low- and middle-income countries, population-based mammographic screening is not
       available."</b> In some Asian countries <b>clinical breast examination by a trained
       healthcare professional</b>, with breast health awareness through self-examination, is being
       encouraged instead. <b>"In India, national screening involves multidisease screening for
       cancer of the mouth, breast and cervix for all women aged 30 to 65
-      years."</b><cite class="src bl">B&amp;L 58 &middot; p.943</cite> And it separates the two
+      years."</b>​<cite class="src bl">B&amp;L 58 &middot; p.943</cite> And it separates the two
       roles: <b>clinical breast examination can detect disease early, while self-examination helps
       women become aware of breast health and report
-      early</b>.<cite class="src bl">B&amp;L 58 &middot; p.943</cite></dd>
+      early</b>.​<cite class="src bl">B&amp;L 58 &middot; p.943</cite></dd>
     </dl>
     <span class="ruling"><b>These are not contradictory facts, they are three different countries'
     programmes, and the examiner wants the Indian one.</b> Answer in that order: <b>in India,
@@ -1892,64 +1904,64 @@ body.guide { margin: 0; -webkit-text-size-adjust: 100%; }
   <dl class="findings">
     <dt>Fibroadenoma</dt>
     <dd>Usually under <b>35</b>; most often upper outer
-    quadrant;<cite class="src das">Das 30 &middot; p.410, p.416</cite> firm or globular, <b>not
+    quadrant;​<cite class="src das">Das 30 &middot; p.410, p.416</cite> firm or globular, <b>not
     fixed to breast tissue, hence "breast
-    mouse"</b>.<cite class="src das">Das 30 &middot; p.418</cite> On ultrasound a
+    mouse"</b>.​<cite class="src das">Das 30 &middot; p.418</cite> On ultrasound a
     well-circumscribed mobile solid mass in a young woman with an <b>extremely low likelihood of
     malignancy</b>: reassurance and imaging
-    follow-up.<cite class="src bl">B&amp;L 58 &middot; p.915</cite> <b>Regression with
+    follow-up.​<cite class="src bl">B&amp;L 58 &middot; p.915</cite> <b>Regression with
     antioestrogen drugs has been observed with tamoxifen and
-    ormeloxifene.</b><cite class="src bl">B&amp;L 58 &middot; p.922</cite> <b>Giant
+    ormeloxifene.</b>​<cite class="src bl">B&amp;L 58 &middot; p.922</cite> <b>Giant
     fibroadenomas</b> occur occasionally at
-    puberty.<cite class="src bl">B&amp;L 58 &middot; p.922</cite></dd>
+    puberty.​<cite class="src bl">B&amp;L 58 &middot; p.922</cite></dd>
     <dt>Phyllodes tumour</dt>
     <dd>S Das's older name is <b>cystosarcoma phyllodes</b>, and a large soft one shows <b>engorged
-    veins</b>.<cite class="src das">Das 30 &middot; p.412&ndash;413</cite> B&amp;L: <b>massive,
+    veins</b>.​<cite class="src das">Das 30 &middot; p.412&ndash;413</cite> B&amp;L: <b>massive,
     recurrent and malignant-type tumours require mastectomy</b>, with postoperative radiotherapy
     offered for recurrent or malignant
-    phyllodes.<cite class="src bl">B&amp;L 58 &middot; p.923</cite></dd>
+    phyllodes.​<cite class="src bl">B&amp;L 58 &middot; p.923</cite></dd>
     <dt>ANDI: breast pain and nodularity</dt>
     <dd><b>Nodularity</b> is often bilateral and <b>most conspicuous in the upper outer
     quadrant</b>, and may be <b>cyclical, appearing 1 to 2 weeks before menstruation and
-    regressing</b> after.<cite class="src bl">B&amp;L 58 &middot; p.919</cite>
+    regressing</b> after.​<cite class="src bl">B&amp;L 58 &middot; p.919</cite>
     <b>Nodularity without pain should undergo triple assessment</b>, and the tool B&amp;L names for
     grading it is the <b>Cardiff-Lucknow nodularity scale</b>, a five-point ordinal
-    scale.<cite class="src bl">B&amp;L 58 &middot; p.921</cite>
+    scale.​<cite class="src bl">B&amp;L 58 &middot; p.921</cite>
     <br><span class="label">Treatment, with doses</span>Reassurance after normal imaging. If
     needed, an antioestrogen: <b>tamoxifen 10 mg daily</b> or <b>ormeloxifene (Centchroman) 30
     mg</b>, for <b>3 to 6 months</b>, or <b>danazol 50 to 300 mg
-    daily</b>.<cite class="src bl">B&amp;L 58 &middot; p.921</cite> Note that B&amp;L 28e lists
+    daily</b>.​<cite class="src bl">B&amp;L 58 &middot; p.921</cite> Note that B&amp;L 28e lists
     <b>ormeloxifene</b>, an Indian drug, alongside tamoxifen throughout this
-    chapter;<cite class="src bl">B&amp;L 58 &middot; p.919, p.921</cite> it is worth naming,
+    chapter;​<cite class="src bl">B&amp;L 58 &middot; p.919, p.921</cite> it is worth naming,
     because most candidates will not.</dd>
     <dt>Breast cyst</dt>
     <dd><b>Simple cysts need no further work-up and no follow-up.</b> Therapeutic aspiration for a
-    painful cyst.<cite class="src bl">B&amp;L 58 &middot; p.915</cite> On the malignant risk in
+    painful cyst.​<cite class="src bl">B&amp;L 58 &middot; p.915</cite> On the malignant risk in
     cystic swellings generally, see the thyroid-style caution: a tense cyst can feel hard and mimic
     carcinoma.</dd>
     <dt>Fat necrosis and haematoma</dt>
-    <dd>After trauma.<cite class="src das">Das 30 &middot; p.410</cite> But remember trauma may
+    <dd>After trauma.​<cite class="src das">Das 30 &middot; p.410</cite> But remember trauma may
     only have drawn attention to a pre-existing lump.</dd>
     <dt>Mastitis and abscess</dt>
-    <dd>Commonest in the <b>first lactational period</b>;<cite class="src das">Das 30 &middot; p.411</cite>
+    <dd>Commonest in the <b>first lactational period</b>;​<cite class="src das">Das 30 &middot; p.411</cite>
     pain is the first symptom, <b>throbbing once pus has formed</b>, and bacteria enter through the
     lactiferous ducts after trauma during lactation, or through the
-    blood.<cite class="src das">Das 30 &middot; p.426</cite> <b>Always exclude inflammatory
+    blood.​<cite class="src das">Das 30 &middot; p.426</cite> <b>Always exclude inflammatory
     carcinoma</b> if more than a third of the skin is involved or it fails to
-    settle.<cite class="src bl">B&amp;L 58 &middot; p.932</cite><cite class="src srb">SRB 8 &middot; p.525</cite></dd>
+    settle.​<cite class="src bl">B&amp;L 58 &middot; p.932</cite>​<cite class="src srb">SRB 8 &middot; p.525</cite></dd>
     <dt>Tuberculosis of the breast, and the retromammary abscess</dt>
     <dd>Presents with weight loss and a breast mass; chest wall tuberculosis can produce a
     retromammary abscess. <b>Tuberculosis of the breast may
-    recur.</b><cite class="src das">Das 30 &middot; p.411</cite> An important differential in India
+    recur.</b>​<cite class="src das">Das 30 &middot; p.411</cite> An important differential in India
     that the British text does not emphasise.</dd>
     <dt>Gynaecomastia, if the patient is male</dt>
     <dd>Hypertrophy of the male breast from increase in ductal epithelial and stromal elements,
     due to <b>oestrogen excess or androgen deficiency</b>, unilateral or
-    bilateral.<cite class="src srb">SRB 8 &middot; p.519, p.520</cite> It is the main differential
+    bilateral.​<cite class="src srb">SRB 8 &middot; p.519, p.520</cite> It is the main differential
     for male breast cancer, and <b>80% of Klinefelter's syndrome shows gynaecomastia, with a very
-    high risk</b> attached.<cite class="src srb">SRB 8 &middot; p.521</cite> Treatment of
+    high risk</b> attached.​<cite class="src srb">SRB 8 &middot; p.521</cite> Treatment of
     macromastia or significant gynaecomastia is <b>reduction mammoplasty or subcutaneous mastectomy
-    with reconstruction</b>.<cite class="src bl">B&amp;L 58 &middot; p.926</cite></dd>
+    with reconstruction</b>.​<cite class="src bl">B&amp;L 58 &middot; p.926</cite></dd>
   </dl>
 
   <!-- ===================== 7. TREATMENT ===================== -->
@@ -1961,7 +1973,7 @@ body.guide { margin: 0; -webkit-text-size-adjust: 100%; }
     <b>"There has been a general de-escalation towards more conservative techniques, backed up by
     clinical trials and meta-analyses showing equal efficacy in locoregional cancer control and
     survival between mastectomy and wide local excision or breast conservation surgery followed by
-    radiotherapy."</b><cite class="src bl">B&amp;L 58 &middot; p.935</cite> Every modern answer in
+    radiotherapy."</b>​<cite class="src bl">B&amp;L 58 &middot; p.935</cite> Every modern answer in
     this case follows from that: smaller breast operation plus radiotherapy, smaller axillary
     operation, and systemic therapy chosen by tumour biology rather than by size alone.
   </div>
@@ -1971,17 +1983,17 @@ body.guide { margin: 0; -webkit-text-size-adjust: 100%; }
   <dl class="findings">
     <dt>The aim</dt>
     <dd>Remove all disease in <b>the breast and the axilla</b> with <b>negative
-    margins</b>.<cite class="src bl">B&amp;L 58 &middot; p.935</cite></dd>
+    margins</b>.​<cite class="src bl">B&amp;L 58 &middot; p.935</cite></dd>
     <dt>The margin rule, which differs by pathology</dt>
     <dd>Indelible <b>India ink</b> is applied to the specimen surfaces and the pathologist reports
     the distance from tumour to the nearest margin. For <b>invasive</b> cancer there should be
     <b>no tumour cells on the inked margin</b>. For <b>DCIS</b>, a minimum of <b>2 mm</b> is
-    considered safe.<cite class="src bl">B&amp;L 58 &middot; p.935</cite> "No ink on tumour" for
+    considered safe.​<cite class="src bl">B&amp;L 58 &middot; p.935</cite> "No ink on tumour" for
     invasive, "2 mm" for DCIS, is the pair to memorise.</dd>
     <dt>Orient the specimen, or you cannot act on the report</dt>
     <dd>Sutures: <b>long lateral, "L" for lateral; short superior, "S" for superior</b>. This
     matters if a margin is positive. <b>Patients with involved margins should have a revision of
-    margins called a "cavity shave".</b><cite class="src bl">B&amp;L 58 &middot; p.935</cite></dd>
+    margins called a "cavity shave".</b>​<cite class="src bl">B&amp;L 58 &middot; p.935</cite></dd>
   </dl>
 
   <h3>Surgery to the breast: mastectomy or conservation</h3>
@@ -1991,47 +2003,47 @@ body.guide { margin: 0; -webkit-text-size-adjust: 100%; }
     <dd><b>Large tumours in relation to breast size</b>; <b>multicentric</b> disease; <b>diffuse
     microcalcification</b> on mammography indicating DCIS; <b>BRCA-positive</b> cancers; <b>local
     recurrence after breast conservation</b>; or <b>the patient's
-    preference</b>.<cite class="src bl">B&amp;L 58 &middot; p.935</cite></dd>
+    preference</b>.​<cite class="src bl">B&amp;L 58 &middot; p.935</cite></dd>
     <dt>How far the breast actually extends, which 28e has changed</dt>
     <dd>Breast tissue extends to where the <b>anterior premammary fascia fuses with the posterior
     pectoral fascia</b>, so remove to that point of fusion: <b>second rib above, parasternal edge
     medially, inframammary crease below, anterior border of latissimus dorsi laterally</b>.
     B&amp;L flags this explicitly as <b>different from the traditional view</b> of raising flaps up
     to the inferior border of the clavicle and 2 to 3 cm below the inframammary
-    crease.<cite class="src bl">B&amp;L 58 &middot; p.935</cite> If you describe the old flap
+    crease.​<cite class="src bl">B&amp;L 58 &middot; p.935</cite> If you describe the old flap
     limits, know that you are describing the old ones.</dd>
     <dt>When breast conservation</dt>
     <dd>BCS removes the tumour with a <b>1 cm margin</b> of normal breast tissue, and <b>all
     patients with BCS receive radiotherapy</b>. The equation to quote: <b>BCS + RT =
-    BCT</b>.<cite class="src bl">B&amp;L 58 &middot; p.935</cite></dd>
+    BCT</b>.​<cite class="src bl">B&amp;L 58 &middot; p.935</cite></dd>
     <dt>When conservation is best avoided, which is the better question</dt>
     <dd>Multicentric tumour; diffuse microcalcification; a large tumour-to-breast ratio; <b>twice
     positive surgical margins after re-excision</b>; previous breast or chest wall radiation;
     <b>systemic lupus erythematosus or other collagen vascular disease</b>, because of a high risk
     of radiation reaction; <b>ankylosing spondylitis</b>; and <b>severe orthopnoea, because the
     patient cannot lie on the radiation
-    table</b>.<cite class="src bl">B&amp;L 58 &middot; p.935</cite> That last one is a beautifully
+    table</b>.​<cite class="src bl">B&amp;L 58 &middot; p.935</cite> That last one is a beautifully
     concrete reason and worth remembering.
     <br><span class="label">SRB's overlapping list</span>Earlier breast irradiation; <b>tumour
     beneath the nipple</b>; <b>extensive intraductal
-    carcinoma</b>.<cite class="src srb">SRB 8 &middot; p.548</cite></dd>
+    carcinoma</b>.​<cite class="src srb">SRB 8 &middot; p.548</cite></dd>
     <dt>Skin- and nipple-sparing mastectomy</dt>
     <dd>An option in DCIS and early cancer where mastectomy is indicated and the tumour is
     <b>more than 1 cm from the skin and more than 2 cm from the nipple</b>; the breast is then
     reconstructed with autologous tissue, fat, or a silicone
-    implant.<cite class="src bl">B&amp;L 58 &middot; p.935</cite></dd>
+    implant.​<cite class="src bl">B&amp;L 58 &middot; p.935</cite></dd>
     <dt>Oncoplasty, and the 20% rule</dt>
     <dd><b>Wide local excision of up to 20% of breast volume</b> can be closed by approximating
     breast tissue. <b>Volume loss greater than 20%</b>, or an unfavourable breast-to-tumour ratio,
     <b>requires an oncoplastic procedure</b>. Level 1 is <b>volume displacement</b>, level 2 is
     <b>volume replacement</b> with a local or distant
-    flap.<cite class="src bl">B&amp;L 58 &middot; p.935</cite></dd>
+    flap.​<cite class="src bl">B&amp;L 58 &middot; p.935</cite></dd>
     <dt>Radical mastectomy, and why it is history</dt>
     <dd>The <b>Halsted</b> radical mastectomy removed the breast, all the axillary nodes and
     <b>both pectoralis major and minor</b>. It is <b>rarely indicated</b>: excessive morbidity from
     limited shoulder movement, extensive upper limb lymphoedema, pain and chest wall deformity,
     <b>with no survival benefit compared with less radical
-    surgery</b>.<cite class="src bl">B&amp;L 58 &middot; p.935</cite></dd>
+    surgery</b>.​<cite class="src bl">B&amp;L 58 &middot; p.935</cite></dd>
   </dl>
 
   <details class="conflict">
@@ -2044,24 +2056,24 @@ body.guide { margin: 0; -webkit-text-size-adjust: 100%; }
       <dt>Bailey &amp; Love 28e, p.935</dt>
       <dd><b>"The modified radical mastectomy (MRM) entails mastectomy along with removal of the
       level I, II and III axillary lymph
-      nodes."</b><cite class="src bl">B&amp;L 58 &middot; p.935</cite> Its summary box of surgical
+      nodes."</b>​<cite class="src bl">B&amp;L 58 &middot; p.935</cite> Its summary box of surgical
       techniques likewise glosses mastectomy as <b>"+ level I, II, III axillary lymph node
       dissection"</b> for all four named
-      modifications.<cite class="src bl">B&amp;L 58 &middot; p.937</cite></dd>
+      modifications.​<cite class="src bl">B&amp;L 58 &middot; p.937</cite></dd>
       <dt>Bailey &amp; Love 28e, two pages later</dt>
       <dd>On axillary dissection itself: <b>"Level I and II nodes are routinely removed. Level III
       axillary dissection is reserved for patients who have enlarged level I and II lymph
-      nodes."</b><cite class="src bl">B&amp;L 58 &middot; p.937</cite> So within one chapter the
+      nodes."</b>​<cite class="src bl">B&amp;L 58 &middot; p.937</cite> So within one chapter the
       book both defines MRM as a three-level clearance and says three-level clearance is
       selective.</dd>
       <dt>SRB</dt>
       <dd>Resolves it by naming the operations separately. <b>Patey's</b> operation is total
       mastectomy with <b>clearance of all levels</b>, pectoralis minor detached from the coracoid
       or removed, interpectoral nodes cleared with it, and level III cleared from the apex of the
-      axilla.<cite class="src srb">SRB 8 &middot; p.538</cite> <b>Auchincloss</b> leaves
+      axilla.​<cite class="src srb">SRB 8 &middot; p.538</cite> <b>Auchincloss</b> leaves
       <b>pectoralis minor intact</b> and does <b>not</b> remove level III, clearing Rotter's nodes
       by sweeping a finger under pectoralis major, and SRB says it is <b>"commonly done
-      now"</b>.<cite class="src srb">SRB 8 &middot; p.539</cite></dd>
+      now"</b>.​<cite class="src srb">SRB 8 &middot; p.539</cite></dd>
     </dl>
     <span class="ruling"><b>Answer by naming the operation rather than the category, because
     "modified radical mastectomy" is the ambiguous term and that ambiguity is the whole
@@ -2070,7 +2082,7 @@ body.guide { margin: 0; -webkit-text-size-adjust: 100%; }
     minor. Auchincloss leaves pectoralis minor intact and clears levels I and II, and that is what
     is commonly done now.</b> Then give the modern rule, on which both books agree in practice:
     <b>levels I and II are cleared routinely, and level III is added when levels I and II are
-    grossly involved.</b><cite class="src bl">B&amp;L 58 &middot; p.937</cite><cite class="src srb">SRB 8 &middot; p.539</cite>
+    grossly involved.</b>​<cite class="src bl">B&amp;L 58 &middot; p.937</cite>​<cite class="src srb">SRB 8 &middot; p.539</cite>
     If an examiner insists MRM is by definition a three-level clearance, that is B&amp;L p.935 and
     you can say so, but do not let it stop you describing the selective approach, because that is
     what happens in theatre.</span>
@@ -2087,16 +2099,16 @@ body.guide { margin: 0; -webkit-text-size-adjust: 100%; }
       <dt>SRB, the three names an Indian examiner will use</dt>
       <dd><b>Patey</b>: pectoralis minor <b>removed, or detached from the coracoid process</b>,
       enabling clearance of all levels; interpectoral nodes come away with
-      it.<cite class="src srb">SRB 8 &middot; p.538</cite>
+      it.​<cite class="src srb">SRB 8 &middot; p.538</cite>
       <b>Scanlon</b>: a modified Patey in which, <b>instead of removing pectoralis minor, it is
       incised</b> to reach the affected level III
-      nodes.<cite class="src srb">SRB 8 &middot; p.538</cite>
+      nodes.​<cite class="src srb">SRB 8 &middot; p.538</cite>
       <b>Auchincloss</b>: pectoralis minor <b>left intact</b>, level III not removed; commonly
-      done now.<cite class="src srb">SRB 8 &middot; p.539</cite></dd>
+      done now.​<cite class="src srb">SRB 8 &middot; p.539</cite></dd>
       <dt>Bailey &amp; Love 28e</dt>
       <dd>One line covering four names: pectoralis minor is <b>"removed in Patey/Madden, retracted
       in Auchincloss and is divided but not removed in Scanlon
-      modifications"</b>.<cite class="src bl">B&amp;L 58 &middot; p.937</cite> It agrees with SRB
+      modifications"</b>.​<cite class="src bl">B&amp;L 58 &middot; p.937</cite> It agrees with SRB
       on Patey, on Scanlon (incised or divided, not removed) and in substance on Auchincloss
       (retracted rather than intact is a difference of wording, not of surgery). <b>Madden does not
       appear anywhere in SRB's breast chapter</b>, so an Indian candidate will meet the name for
@@ -2119,15 +2131,15 @@ body.guide { margin: 0; -webkit-text-size-adjust: 100%; }
     <dt>The two jobs</dt>
     <dd>Axillary surgery exists <b>to stage</b> the patient, by sentinel lymph node biopsy, and
     <b>to treat</b> disease, by axillary lymph node dissection in node-positive
-    patients.<cite class="src bl">B&amp;L 58 &middot; p.936</cite> Say which job you are doing and
+    patients.​<cite class="src bl">B&amp;L 58 &middot; p.936</cite> Say which job you are doing and
     you will not be caught out.</dd>
     <dt>Sentinel node biopsy: the concept</dt>
     <dd><b>Sentinel means "a guard".</b> Like a guard, the first echelon of axillary nodes sits at
     the gateway of the axilla and reports on the status of the
-    rest.<cite class="src bl">B&amp;L 58 &middot; p.936</cite> SRB: the first node draining the
+    rest.​<cite class="src bl">B&amp;L 58 &middot; p.936</cite> SRB: the first node draining the
     breast by direct drainage; its involvement or otherwise predicts the rest of the
-    axilla.<cite class="src srb">SRB 8 &middot; p.536</cite> Anatomically these are usually the
-    <b>anterior or pectoral group</b>.<cite class="src bl">B&amp;L 58 &middot; p.915</cite></dd>
+    axilla.​<cite class="src srb">SRB 8 &middot; p.536</cite> Anatomically these are usually the
+    <b>anterior or pectoral group</b>.​<cite class="src bl">B&amp;L 58 &middot; p.915</cite></dd>
     <dt>How it is found, with the detection rates</dt>
     <dd><b>Blue dye</b> (patent blue or methylene blue) and <b>technetium-99m</b>-labelled
     albumin, sulphur colloid or antimony. Where radioisotope is unavailable, <b>fluorescein or
@@ -2135,40 +2147,40 @@ body.guide { margin: 0; -webkit-text-size-adjust: 100%; }
     identification; indocyanine green with 95 to 100%.</b> Inject peritumoral, periareolar,
     subareolar or intradermal. Detect as a <b>blue node</b>, a <b>hot node</b> on a handheld gamma
     probe, or a <b>fluorescent node</b> under blue light at 480 nm for fluorescein or infrared at
-    780 nm for indocyanine green.<cite class="src bl">B&amp;L 58 &middot; p.936</cite></dd>
+    780 nm for indocyanine green.​<cite class="src bl">B&amp;L 58 &middot; p.936</cite></dd>
     <dt>Which nodes come out</dt>
     <dd>All nodes with <b>more than 10% of the ex vivo count of the hottest node</b>, plus all
-    <b>blue</b> nodes.<cite class="src bl">B&amp;L 58 &middot; p.936</cite></dd>
+    <b>blue</b> nodes.​<cite class="src bl">B&amp;L 58 &middot; p.936</cite></dd>
     <dt>How they are assessed, and the figure to quote</dt>
     <dd>Frozen section, touch imprint cytology, or molecular methods detecting <b>cytokeratin 19
     or mammaglobin by RT-PCR</b>. <b>Frozen-section evaluation of sentinel nodes has a
     false-negative rate of 10 to 12%.</b> Where frozen section is unavailable, send the node for
     <b>formalin-preserved paraffin section with haematoxylin and
-    eosin</b>.<cite class="src bl">B&amp;L 58 &middot; p.937</cite></dd>
+    eosin</b>.​<cite class="src bl">B&amp;L 58 &middot; p.937</cite></dd>
     <dt>When you must not do it</dt>
     <dd><b>Inflammatory breast cancer</b>; <b>T4 disease</b>; previous breast or chest wall
     surgery; breast scarring from burns; or previous
-    radiotherapy.<cite class="src bl">B&amp;L 58 &middot; p.937</cite> SRB's reason is the
+    radiotherapy.​<cite class="src bl">B&amp;L 58 &middot; p.937</cite> SRB's reason is the
     mechanism: disrupted lymphatic trunks make the false-negative rate
-    high.<cite class="src srb">SRB 8 &middot; p.536</cite></dd>
+    high.​<cite class="src srb">SRB 8 &middot; p.536</cite></dd>
     <dt>Axillary dissection: when</dt>
     <dd>For <b>staging and local control</b> in patients with node-positive tumours, clinically or
     biopsy-proven, and in those with <b>three or more sentinel nodes positive for
-    macrometastasis</b>.<cite class="src bl">B&amp;L 58 &middot; p.937</cite></dd>
+    macrometastasis</b>.​<cite class="src bl">B&amp;L 58 &middot; p.937</cite></dd>
     <dt>Axillary dissection: what to protect</dt>
     <dd><b>Axillary vein; thoracodorsal vessels; medial and lateral pectoral nerves;
     intercostobrachial nerves; long thoracic and thoracodorsal nerves.</b> <b>The
     intercostobrachial nerve may be divided in the presence of heavy nodal burden to achieve
-    oncological clearance.</b><cite class="src bl">B&amp;L 58 &middot; p.937</cite> SRB adds the
+    oncological clearance.</b>​<cite class="src bl">B&amp;L 58 &middot; p.937</cite> SRB adds the
     consequence of getting the pectoral nerves wrong: <b>atrophy of the pectoral
-    muscle</b>,<cite class="src srb">SRB 8 &middot; p.538</cite> and an anatomical point worth a
+    muscle</b>,​<cite class="src srb">SRB 8 &middot; p.538</cite> and an anatomical point worth a
     mark: <b>the axillary vein is not covered by axillary fascia, but the axillary artery and
-    brachial plexus are within it</b>.<cite class="src srb">SRB 8 &middot; p.539</cite></dd>
+    brachial plexus are within it</b>.​<cite class="src srb">SRB 8 &middot; p.539</cite></dd>
     <dt>And when there is no axillary clearance</dt>
     <dd><b>Total or simple mastectomy</b> removes the tumour, the entire breast, areola, nipple,
     skin and axillary tail with the pectoral fascia, <b>without</b> axillary clearance; the axilla
     may then be irradiated, or staged by sentinel node
-    biopsy.<cite class="src srb">SRB 8 &middot; p.539</cite><cite class="src bl">B&amp;L 58 &middot; p.937</cite></dd>
+    biopsy.​<cite class="src srb">SRB 8 &middot; p.539</cite>​<cite class="src bl">B&amp;L 58 &middot; p.937</cite></dd>
   </dl>
 
   <h3>Systemic therapy, enough to answer without reciting</h3>
@@ -2180,45 +2192,45 @@ body.guide { margin: 0; -webkit-text-size-adjust: 100%; }
     <b>inflammatory cancer</b>, <b>triple negative cancer</b>, <b>premenopausal women under
     50</b>, and <b>patients with axillary node metastasis</b>. Neoadjuvant <b>trastuzumab and
     pertuzumab</b> for HER2/neu-positive tumours over <b>5
-    mm</b>.<cite class="src bl">B&amp;L 58 &middot; p.933</cite></dd>
+    mm</b>.​<cite class="src bl">B&amp;L 58 &middot; p.933</cite></dd>
     <dt>How response is reported, and what to do with each answer</dt>
     <dd><b>RECIST</b>, four categories: <b>complete response</b>, not detectable on palpation or
     imaging; <b>partial response</b>, 30% or more reduction in maximal diameter; <b>stable
     disease</b>, under 30% reduction; <b>progressive disease</b>, 20% or more increase. With
     complete or partial response, the <b>entire regimen may be delivered before surgery</b>. With
     <b>stable or progressive disease after the initial two cycles, operate and give second-line
-    chemotherapy afterwards</b>.<cite class="src bl">B&amp;L 58 &middot; p.935</cite></dd>
+    chemotherapy afterwards</b>.​<cite class="src bl">B&amp;L 58 &middot; p.935</cite></dd>
     <dt>The practical problem neoadjuvant therapy creates, and the low-cost answer</dt>
     <dd>If the tumour vanishes, the surgeon cannot find it. So a <b>radio-opaque clip or magnetic
     marker</b> is placed under image guidance at the epicentre before treatment. <b>If clip
     placement is unavailable, a 0.5 cm piece of silicone or a polyvinylchloride catheter tip may be
     inserted through a small skin incision just anterior to the tumour</b>: it <b>remains palpable
     even after complete regression</b> and lets the surgeon excise 2 cm all round
-    it.<cite class="src bl">B&amp;L 58 &middot; p.935</cite> That improvisation is in the book, it
+    it.​<cite class="src bl">B&amp;L 58 &middot; p.935</cite> That improvisation is in the book, it
     is clearly written for a resource-limited theatre, and almost no candidate will know it.</dd>
     <dt>Adjuvant chemotherapy: the benefit, and who gets it</dt>
     <dd>Purpose: <b>control micrometastases, delay relapse, prolong survival</b>. The NSABP trials
     and the Oxford overview meta-analyses by the EBCTCG show chemotherapy improves
     <b>relapse-free survival by approximately 30% and overall survival by 10% at 15
-    years</b>.<cite class="src bl">B&amp;L 58 &middot; p.940</cite>
+    years</b>.​<cite class="src bl">B&amp;L 58 &middot; p.940</cite>
     Indicated for <b>all invasive carcinomas over 1 cm</b>, tumours <b>over 0.5 cm with poor
     prognostic factors</b> (lymphovascular invasion, high grade, HER2 positive, triple negative),
-    and <b>node-positive</b> tumours.<cite class="src bl">B&amp;L 58 &middot; p.940</cite>
+    and <b>node-positive</b> tumours.​<cite class="src bl">B&amp;L 58 &middot; p.940</cite>
     Regimens: <b>CMF</b>; anthracycline-based <b>CAF or CEF</b>; and <b>taxane-based</b>
-    regimens.<cite class="src bl">B&amp;L 58 &middot; p.940</cite></dd>
+    regimens.​<cite class="src bl">B&amp;L 58 &middot; p.940</cite></dd>
     <dt>By molecular subtype, which is how it is actually decided</dt>
     <dd><b>Luminal A</b> may <b>avoid chemotherapy</b> with a low Oncotype DX or clinical risk
     score. <b>Luminal B</b> should receive anthracycline or taxane, <b>because of the greater risk
     of relapse</b>. <b>HER2-positive</b>: trastuzumab plus pertuzumab with taxane and
     anthracycline. <b>Triple negative</b>: taxane and anthracycline, with carboplatin-based
     regimens possibly beneficial for aggressive
-    biology.<cite class="src bl">B&amp;L 58 &middot; p.940</cite></dd>
+    biology.​<cite class="src bl">B&amp;L 58 &middot; p.940</cite></dd>
     <dt>Gene signatures, and the one number to quote</dt>
     <dd>For ER-positive, HER2-negative, node-negative tumours: <b>Oncotype DX</b> (21-gene),
     <b>Prosigna PAM-50</b>, <b>MammaPrint</b> (70-gene). Oncotype DX is the most widely used and
     measures 16 cancer-related and 5 reference genes; it scores risk of recurrence as <b>low under
     18, moderate 19 to 30, high over 30</b>. <b>In patients with a low score, chemotherapy can be
-    avoided.</b><cite class="src bl">B&amp;L 58 &middot; p.940</cite></dd>
+    avoided.</b>​<cite class="src bl">B&amp;L 58 &middot; p.940</cite></dd>
     <dt>Hormone therapy, with durations</dt>
     <dd><b>Premenopausal: tamoxifen only</b>, for <b>5 years</b> in low-risk patients and <b>10
     years</b> where the risk of relapse is high (node positive, tumour over 5 cm, lymphovascular
@@ -2226,17 +2238,17 @@ body.guide { margin: 0; -webkit-text-size-adjust: 100%; }
     which beat tamoxifen for relapse-free and overall survival but are <b>more expensive</b> and
     cause <b>bone density loss and fracture risk</b>, so <b>a bone density scan is advised before
     starting</b> and bisphosphonates with vitamin D and calcium are used, which <b>may also reduce
-    recurrence</b>.<cite class="src bl">B&amp;L 58 &middot; p.941</cite></dd>
+    recurrence</b>.​<cite class="src bl">B&amp;L 58 &middot; p.941</cite></dd>
     <dt>Targeted therapy</dt>
     <dd><b>Trastuzumab (Herceptin)</b> against the HER2/neu receptor, with <b>pertuzumab</b> and
     chemotherapy. <b>T-DM1</b> conjugates the cytotoxic <b>emtansine</b> to trastuzumab, delivering
     chemotherapy to HER2-positive cells
-    selectively.<cite class="src bl">B&amp;L 58 &middot; p.941</cite></dd>
+    selectively.​<cite class="src bl">B&amp;L 58 &middot; p.941</cite></dd>
     <dt>Follow-up</dt>
     <dd>Clinical examination <b>every 3 months for 2 years</b>, then <b>every 6 months for 3
     years</b>, then <b>yearly</b>; <b>mammogram yearly</b>. Contrast breast <b>MRI annually</b> for
     patients with an implant and for those with BRCA or other genetic
-    mutations.<cite class="src bl">B&amp;L 58 &middot; p.941</cite></dd>
+    mutations.​<cite class="src bl">B&amp;L 58 &middot; p.941</cite></dd>
   </dl>
 
   <div class="pearl">
@@ -2247,7 +2259,7 @@ body.guide { margin: 0; -webkit-text-size-adjust: 100%; }
     <b>lymphovascular invasion</b>; an <b>extensive DCIS component</b>; <b>high Ki-67</b>;
     <b>younger age</b> and <b>premenopausal</b> status; <b>BRCA-associated</b>; family history;
     prior history; <b>obesity and a sedentary lifestyle</b>; and <b>failure to complete intended
-    treatment</b>.<cite class="src bl">B&amp;L 58 &middot; p.942</cite> That last item is the one
+    treatment</b>.​<cite class="src bl">B&amp;L 58 &middot; p.942</cite> That last item is the one
     worth saying aloud in an Indian clinic, because it is the one the surgeon can actually do
     something about.
   </div>
@@ -2262,13 +2274,13 @@ body.guide { margin: 0; -webkit-text-size-adjust: 100%; }
       <dt>SRB</dt>
       <dd>Prints the note itself: <b>"Manchester staging and Columbia classification are obsolete
       (not used now)"</b>, and directs readers wanting them to its own <b>4th
-      edition</b>.<cite class="src srb">SRB 8 &middot; p.533</cite> It still prints Manchester
+      edition</b>.​<cite class="src srb">SRB 8 &middot; p.533</cite> It still prints Manchester
       stage 1, a mobile tumour with no deeper fixation, for
-      reference.<cite class="src srb">SRB 8 &middot; p.533</cite></dd>
+      reference.​<cite class="src srb">SRB 8 &middot; p.533</cite></dd>
       <dt>Bailey &amp; Love 28e</dt>
       <dd>Does not mention either. It uses the <b>eighth edition UICC-AJCC TNM</b> system,
       incorporating grade, receptors, Ki-67, multigene testing and neoadjuvant
-      response.<cite class="src bl">B&amp;L 58 &middot; p.933</cite></dd>
+      response.​<cite class="src bl">B&amp;L 58 &middot; p.933</cite></dd>
     </dl>
     <span class="ruling"><b>Nothing to reconcile: both books agree, and this box exists only
     because older notes and seniors still teach these systems.</b> <b>Stage with AJCC TNM, eighth
@@ -2289,16 +2301,16 @@ body.guide { margin: 0; -webkit-text-size-adjust: 100%; }
     <b>Triple assessment is needed to exclude underlying malignancy.</b> <b>Without</b> underlying
     malignancy: <b>central core excision</b> of the nipple and areola down to pectoralis major,
     followed by radiotherapy. <b>With</b> underlying malignancy: <b>mastectomy and evaluation of
-    the axilla</b>.<cite class="src bl">B&amp;L 58 &middot; p.924</cite></dd>
+    the axilla</b>.​<cite class="src bl">B&amp;L 58 &middot; p.924</cite></dd>
     <dt>Male breast cancer</dt>
     <dd><b>Under 0.5%</b> of breast cancers. Commonest presentation a <b>painless subareolar
     lump</b>, and <b>involvement of the nipple-areolar complex and underlying pectoral muscle
     occurs early</b>. Treatment: <b>mastectomy with a 2 cm margin along with a portion of
     underlying pectoralis major</b>, then radiotherapy; <b>sentinel node biopsy</b> if
     node-negative; <b>tamoxifen 20 mg daily for 5 years</b> if ER
-    positive.<cite class="src bl">B&amp;L 58 &middot; p.942</cite> And <b>BRCA mutation is more
+    positive.​<cite class="src bl">B&amp;L 58 &middot; p.942</cite> And <b>BRCA mutation is more
     common in males with breast cancer</b>, so offer genetic
-    evaluation.<cite class="src bl">B&amp;L 58 &middot; p.941, p.942</cite></dd>
+    evaluation.​<cite class="src bl">B&amp;L 58 &middot; p.941, p.942</cite></dd>
     <dt>Breast cancer in pregnancy</dt>
     <dd>Associated with <b>aggressive biology such as triple negative</b>. Ultrasound, mammogram
     and chest radiograph <b>with abdominal shielding</b>; MRI <b>without gadolinium</b> if needed;
@@ -2309,7 +2321,7 @@ body.guide { margin: 0; -webkit-text-size-adjust: 100%; }
     the first trimester</b>, the period of organogenesis, but is safe in the second and third
     <b>until 34 weeks</b>; anthracyclines and taxanes are preferred and <b>5-fluorouracil should be
     avoided</b>. Anti-HER2 and endocrine therapy wait until after
-    delivery.<cite class="src bl">B&amp;L 58 &middot; p.941, p.942</cite></dd>
+    delivery.​<cite class="src bl">B&amp;L 58 &middot; p.941, p.942</cite></dd>
     <dt>Hereditary and familial disease</dt>
     <dd><b>Hereditary</b> breast cancer has an identifiable mutation and accounts for
     <b>5 to 10%</b>; <b>familial</b> affects several relatives with no known mutation and accounts
@@ -2317,12 +2329,12 @@ body.guide { margin: 0; -webkit-text-size-adjust: 100%; }
     multicentric and bilateral</b>. <b>BRCA1 (17q21)</b>: 50 to 85% lifetime breast cancer risk, up
     to 40% ovarian, and <b>mostly triple negative</b> tumours. <b>BRCA2 (13q12.3)</b>: 50 to 60%
     breast, 20% ovarian, and also prostate, colon, gallbladder, bile duct, stomach and
-    pancreas.<cite class="src bl">B&amp;L 58 &middot; p.941</cite>
+    pancreas.​<cite class="src bl">B&amp;L 58 &middot; p.941</cite>
     <br><span class="label">Risk reduction, with the numbers</span>Bilateral risk-reducing
     mastectomy with immediate reconstruction <b>reduces risk by 90%</b>; chemoprophylaxis with
     tamoxifen or anastrozole <b>by 50%</b>; and bilateral salpingo-oophorectomy may be offered
     once the family is complete, at <b>around 35 to 40
-    years</b>.<cite class="src bl">B&amp;L 58 &middot; p.941</cite></dd>
+    years</b>.​<cite class="src bl">B&amp;L 58 &middot; p.941</cite></dd>
     <dt>Metastatic disease</dt>
     <dd>Aim: <b>palliate symptoms, improve quality of life, prevent disabling complications,
     attempt to prolong life</b>. <b>Endocrine therapy</b> for hormone receptor-positive disease
@@ -2331,19 +2343,19 @@ body.guide { margin: 0; -webkit-text-size-adjust: 100%; }
     cytostatic and antiangiogenic effects and may improve quality of life. Bony metastases:
     <b>palliative radiotherapy to weight-bearing and painful sites, with bisphosphonates</b>.
     Pleural effusion: <b>intercostal drainage and
-    pleurodesis</b>.<cite class="src bl">B&amp;L 58 &middot; p.941</cite></dd>
+    pleurodesis</b>.​<cite class="src bl">B&amp;L 58 &middot; p.941</cite></dd>
     <dt>Local recurrence</dt>
     <dd><b>Biopsy it, because receptor status may have changed</b> and that changes therapy. Stage
     with whole-body MRI or PET-CT. <b>Systemic chemotherapy then surgical excision</b>; most
     surgeons perform mastectomy, though second BCS with re-irradiation may be
-    considered.<cite class="src bl">B&amp;L 58 &middot; p.941</cite></dd>
+    considered.​<cite class="src bl">B&amp;L 58 &middot; p.941</cite></dd>
     <dt>Sarcoma and angiosarcoma</dt>
     <dd>Fibrosarcoma and angiosarcoma may arise de novo. Associated with <b>Li-Fraumeni,
     neurofibromatosis type 1</b>, alkylating agents, vinyl chloride, arsenic, <b>prior
     radiotherapy</b> and <b>chronic lymphoedema</b>. <b>Angiosarcoma is the most aggressive of all
     breast tumours</b>, arises from vascular or lymphatic endothelium, is associated with prior
     radiotherapy and carries a <b>very poor
-    prognosis</b>.<cite class="src bl">B&amp;L 58 &middot; p.942</cite></dd>
+    prognosis</b>.​<cite class="src bl">B&amp;L 58 &middot; p.942</cite></dd>
   </dl>
 
   <!-- ===================== 8. VIVA ===================== -->
@@ -2357,9 +2369,9 @@ body.guide { margin: 0; -webkit-text-size-adjust: 100%; }
       or histology, applied together to every patient with a breast lump, nipple discharge or other
       breast symptom. Bailey and Love gives a confident diagnosis in 99.9% of cases, with the
       positive predictive value and diagnostic accuracy of the combination at
-      100%.<cite class="src bl">B&amp;L 58 &middot; p.915</cite> SRB's version specifies
+      100%.​<cite class="src bl">B&amp;L 58 &middot; p.915</cite> SRB's version specifies
       mammography after 40 and FNAC or core biopsy for the third
-      limb.<cite class="src srb">SRB 8 &middot; p.538</cite></p>
+      limb.​<cite class="src srb">SRB 8 &middot; p.538</cite></p>
     </details>
 
     <details>
@@ -2367,7 +2379,7 @@ body.guide { margin: 0; -webkit-text-size-adjust: 100%; }
       <p class="ans">Because about 50% of the ductolobular tissue, and so 50% of terminal ductal
       lobular units, lies there, and most breast disease arises from the TDLU. About 20% lies
       centrally, which is why examination must also concentrate on the retroareolar region and the
-      nipple-areola complex.<cite class="src bl">B&amp;L 58 &middot; p.914, p.932</cite></p>
+      nipple-areola complex.​<cite class="src bl">B&amp;L 58 &middot; p.914, p.932</cite></p>
     </details>
 
     <details>
@@ -2378,7 +2390,7 @@ body.guide { margin: 0; -webkit-text-size-adjust: 100%; }
       some distance. Test it by moving the lump side to side and watching for a dimple at the
       extremes of movement. Fixity means direct continuous infiltration of the skin: the lump
       cannot be moved independently of the skin and the skin cannot be pinched
-      up.<cite class="src das">Das 30 &middot; p.418</cite> And if you try to pinch up a wide area
+      up.​<cite class="src das">Das 30 &middot; p.418</cite> And if you try to pinch up a wide area
       of skin over the tumour, peau d'orange becomes prominent.</p>
     </details>
 
@@ -2390,7 +2402,7 @@ body.guide { margin: 0; -webkit-text-size-adjust: 100%; }
       muscle is actually taut, which is the step most candidates omit. Move the lump again in both
       directions and compare the range. Restriction means fixity to the pectoral fascia and muscle,
       and if truly fixed there is total restriction along the line of the fibres with perhaps
-      slight movement at right angles.<cite class="src das">Das 30 &middot; p.418</cite> For an
+      slight movement at right angles.​<cite class="src das">Das 30 &middot; p.418</cite> For an
       outer and lower quadrant lump, test serratus anterior instead by asking her to push against
       a wall with the outstretched hand of that side.</p>
     </details>
@@ -2400,11 +2412,11 @@ body.guide { margin: 0; -webkit-text-size-adjust: 100%; }
       <p class="ans">No, it does not. It is obstruction of cutaneous lymphatic drainage, and Bailey
       and Love is explicit that the obstruction may be either infiltration of subdermal lymphatics
       or infiltration of the axillary lymph nodes, so the skin itself need not be
-      involved.<cite class="src bl">B&amp;L 58 &middot; p.932</cite> The oedematous skin is tethered
+      involved.​<cite class="src bl">B&amp;L 58 &middot; p.932</cite> The oedematous skin is tethered
       at the openings of the hair follicles and their associated glands, giving the orange-peel
-      pitting.<cite class="src srb">SRB 8 &middot; p.527</cite> It is a sign of locally advanced
+      pitting.​<cite class="src srb">SRB 8 &middot; p.527</cite> It is a sign of locally advanced
       disease. In a dark-skinned patient the accompanying erythema is brownish rather than
-      red.<cite class="src bl">B&amp;L 58 &middot; p.932</cite></p>
+      red.​<cite class="src bl">B&amp;L 58 &middot; p.932</cite></p>
     </details>
 
     <details>
@@ -2413,9 +2425,9 @@ body.guide { margin: 0; -webkit-text-size-adjust: 100%; }
       neoplasms, benign or malignant, are painless to start with. S Das's instruction is that a
       painless lump found accidentally while washing may be a carcinoma and the clinician must be
       <i>more</i> particular about examining that case rather than ignoring
-      it.<cite class="src das">Das 30 &middot; p.410</cite> Cyclical pain before menstruation in a
+      it.​<cite class="src das">Das 30 &middot; p.410</cite> Cyclical pain before menstruation in a
       young woman suggests ANDI instead. But pain does occur in about 10% of
-      carcinomas,<cite class="src srb">SRB 8 &middot; p.527</cite> so neither its presence nor its
+      carcinomas,​<cite class="src srb">SRB 8 &middot; p.527</cite> so neither its presence nor its
       absence settles anything alone.</p>
     </details>
 
@@ -2424,7 +2436,7 @@ body.guide { margin: 0; -webkit-text-size-adjust: 100%; }
       <p class="ans">All defined by pectoralis minor. Level I, below and lateral to its lateral
       border, which is the majority of nodes. Level II, in front of and behind the muscle,
       including the interpectoral or Rotter's nodes. Level III, above and medial to its medial
-      border.<cite class="src bl">B&amp;L 58 &middot; p.915</cite> The apical nodes receive the
+      border.​<cite class="src bl">B&amp;L 58 &middot; p.915</cite> The apical nodes receive the
       efferents from all the other axillary groups and are continuous with the supraclavicular
       nodes.</p>
     </details>
@@ -2434,11 +2446,11 @@ body.guide { margin: 0; -webkit-text-size-adjust: 100%; }
       <p class="ans">The pectoral or anterior group, just behind the anterior axillary fold, with
       the patient's arm resting on your forearm so the fold relaxes. Then central, subscapular,
       lateral or brachial, apical, and finally both supraclavicular
-      fossae.<cite class="src das">Das 30 &middot; p.419&ndash;421</cite> The order matters because
+      fossae.​<cite class="src das">Das 30 &middot; p.419&ndash;421</cite> The order matters because
       spread follows it: pectoral first, then central, then apical, with the subscapular and
-      lateral groups involved later.<cite class="src das">Das 30 &middot; p.420</cite> The pectoral
+      lateral groups involved later.​<cite class="src das">Das 30 &middot; p.420</cite> The pectoral
       group is also the sentinel node in most
-      patients.<cite class="src bl">B&amp;L 58 &middot; p.915</cite></p>
+      patients.​<cite class="src bl">B&amp;L 58 &middot; p.915</cite></p>
     </details>
 
     <details>
@@ -2449,7 +2461,7 @@ body.guide { margin: 0; -webkit-text-size-adjust: 100%; }
       the interconnecting lymphatics behind the sternum, to the contralateral internal mammary
       nodes, to the other breast and then its axilla; a tumour developing in an epithelial
       embryonic cell rest trapped in a node, which is rare; and simply an occult primary in the
-      opposite breast.<cite class="src bl">B&amp;L 58 &middot; p.932</cite></p>
+      opposite breast.​<cite class="src bl">B&amp;L 58 &middot; p.932</cite></p>
     </details>
 
     <details>
@@ -2457,17 +2469,17 @@ body.guide { margin: 0; -webkit-text-size-adjust: 100%; }
       <p class="ans">Both are first-line, but the choice is by age. Ultrasound is the primary
       modality in young women with dense breasts, where mammograms are hard to interpret, and it
       distinguishes cystic from solid. Mammography should be the first investigation in older women
-      with breast symptoms.<cite class="src bl">B&amp;L 58 &middot; p.915, p.916</cite> SRB puts
-      mammography after 40.<cite class="src srb">SRB 8 &middot; p.538</cite> And neither is
+      with breast symptoms.​<cite class="src bl">B&amp;L 58 &middot; p.915, p.916</cite> SRB puts
+      mammography after 40.​<cite class="src srb">SRB 8 &middot; p.538</cite> And neither is
       diagnostic: biopsy is required for a BI-RADS 4 or
-      5.<cite class="src bl">B&amp;L 58 &middot; p.916</cite></p>
+      5.​<cite class="src bl">B&amp;L 58 &middot; p.916</cite></p>
     </details>
 
     <details>
       <summary>A mammogram is reported BI-RADS 4b. What does that mean and what do you do?</summary>
       <p class="ans">A suspicious abnormality with intermediate suspicion of malignancy,
       corresponding to a probability of more than 10% and up to 50%. Biopsy should be
-      considered.<cite class="src bl">B&amp;L 58 &middot; p.917</cite> For context: BI-RADS 3 is
+      considered.​<cite class="src bl">B&amp;L 58 &middot; p.917</cite> For context: BI-RADS 3 is
       probably benign at 2% or less and gets six-month follow-up; BI-RADS 5 is 95% or more and
       requires biopsy or surgical treatment; BI-RADS 0 means the assessment is incomplete and more
       imaging is needed.</p>
@@ -2478,7 +2490,7 @@ body.guide { margin: 0; -webkit-text-size-adjust: 100%; }
       <p class="ans">Two reasons, both in the book. Inflammatory lesions, specifically mediastinal
       lymphadenopathy and pleuropulmonary lesions due to pulmonary tuberculosis, give
       false-positive results, especially in Asian patients. And PET is very expensive and insurance
-      may not cover it.<cite class="src bl">B&amp;L 58 &middot; p.917</cite> Its proper indications
+      may not cover it.​<cite class="src bl">B&amp;L 58 &middot; p.917</cite> Its proper indications
       are staging T3, T4, N2 or N3 disease, or T1 to T2, N0 to N1 disease when there are symptoms
       or signs suggesting metastasis.</p>
     </details>
@@ -2488,10 +2500,10 @@ body.guide { margin: 0; -webkit-text-size-adjust: 100%; }
       <p class="ans">Patients with T1, T2 and N0, N1 disease need metastatic evaluation only if
       they have symptoms suggesting metastasis or a raised serum alkaline phosphatase. Locally
       advanced disease, T3, T4, N2 or N3, needs contrast-enhanced CT of chest, abdomen and pelvis
-      plus an isotope bone scan.<cite class="src bl">B&amp;L 58 &middot; p.933</cite> Where
+      plus an isotope bone scan.​<cite class="src bl">B&amp;L 58 &middot; p.933</cite> Where
       cross-sectional imaging is limited, SRB's work-up is a chest radiograph, ultrasound abdomen
       and an isotope bone scan, which is a must in locally advanced
-      disease.<cite class="src srb">SRB 8 &middot; p.538</cite></p>
+      disease.​<cite class="src srb">SRB 8 &middot; p.538</cite></p>
     </details>
 
     <details>
@@ -2501,21 +2513,21 @@ body.guide { margin: 0; -webkit-text-size-adjust: 100%; }
       the distance from tumour to the nearest margin. Breast conservation removes the tumour with a
       1 cm margin of normal tissue. Involved margins get a revision called a cavity shave, and the
       specimen must be oriented with sutures, long lateral and short superior, or you cannot act on
-      the report.<cite class="src bl">B&amp;L 58 &middot; p.935</cite></p>
+      the report.​<cite class="src bl">B&amp;L 58 &middot; p.935</cite></p>
     </details>
 
     <details>
       <summary>Mastectomy or breast conservation?</summary>
       <p class="ans">Trials and meta-analyses show equal locoregional control and survival between
       mastectomy and wide local excision followed by radiotherapy, so conservation is preferred
-      where possible.<cite class="src bl">B&amp;L 58 &middot; p.935</cite> Mastectomy is indicated
+      where possible.​<cite class="src bl">B&amp;L 58 &middot; p.935</cite> Mastectomy is indicated
       for a large tumour relative to breast size, multicentric disease, diffuse microcalcification
       indicating DCIS, BRCA-positive cancer, local recurrence after conservation, or the patient's
       preference. Conservation is best avoided with multicentric tumour, diffuse
       microcalcification, a large tumour-to-breast ratio, twice-positive margins after re-excision,
       previous chest wall radiation, collagen vascular disease or ankylosing spondylitis because of
       radiation reaction, and severe orthopnoea, since the patient cannot lie on the radiation
-      table.<cite class="src bl">B&amp;L 58 &middot; p.935</cite></p>
+      table.​<cite class="src bl">B&amp;L 58 &middot; p.935</cite></p>
     </details>
 
     <details>
@@ -2523,7 +2535,7 @@ body.guide { margin: 0; -webkit-text-size-adjust: 100%; }
       <p class="ans">Breast conservation therapy, which is breast conservation surgery plus
       radiotherapy: BCS + RT = BCT. All patients having breast conservation surgery receive
       radiotherapy, which is why the two are named as one
-      treatment.<cite class="src bl">B&amp;L 58 &middot; p.935</cite></p>
+      treatment.​<cite class="src bl">B&amp;L 58 &middot; p.935</cite></p>
     </details>
 
     <details>
@@ -2536,13 +2548,13 @@ body.guide { margin: 0; -webkit-text-size-adjust: 100%; }
       cleared from the apex. Medial and lateral pectoral nerves are preserved, or the pectoral
       muscle atrophies, as are the nerves to serratus anterior and latissimus dorsi, the
       intercostobrachial nerve, the axillary and cephalic veins and pectoralis
-      major.<cite class="src srb">SRB 8 &middot; p.538</cite> Scanlon incises rather than removes
+      major.​<cite class="src srb">SRB 8 &middot; p.538</cite> Scanlon incises rather than removes
       pectoralis minor to reach level III. Auchincloss leaves pectoralis minor intact and does not
       take level III, clearing Rotter's nodes by sweeping a finger under pectoralis major, and it is
-      what is commonly done now.<cite class="src srb">SRB 8 &middot; p.539</cite> Bailey and Love
+      what is commonly done now.​<cite class="src srb">SRB 8 &middot; p.539</cite> Bailey and Love
       puts the same thing as one axis: pectoralis minor removed in Patey and Madden, divided but
       not removed in Scanlon, retracted in
-      Auchincloss.<cite class="src bl">B&amp;L 58 &middot; p.937</cite></p>
+      Auchincloss.​<cite class="src bl">B&amp;L 58 &middot; p.937</cite></p>
     </details>
 
     <details>
@@ -2550,7 +2562,7 @@ body.guide { margin: 0; -webkit-text-size-adjust: 100%; }
       <p class="ans">It removed the breast, all the axillary nodes and both pectoralis major and
       minor, and causes excessive morbidity: limited shoulder movement, extensive upper limb
       lymphoedema, pain and chest wall deformity, with no survival benefit over less radical
-      surgery.<cite class="src bl">B&amp;L 58 &middot; p.935</cite></p>
+      surgery.​<cite class="src bl">B&amp;L 58 &middot; p.935</cite></p>
     </details>
 
     <details>
@@ -2563,18 +2575,18 @@ body.guide { margin: 0; -webkit-text-size-adjust: 100%; }
       100% of sentinel nodes. The dye is injected peritumorally, periareolarly, subareolarly or
       intradermally, and the node is detected as blue, as hot on a gamma probe, or as fluorescent.
       All blue nodes and all nodes with more than 10% of the ex vivo count of the hottest node are
-      removed.<cite class="src bl">B&amp;L 58 &middot; p.915, p.936</cite></p>
+      removed.​<cite class="src bl">B&amp;L 58 &middot; p.915, p.936</cite></p>
     </details>
 
     <details>
       <summary>When can you not do a sentinel node biopsy?</summary>
       <p class="ans">Inflammatory breast cancer, T4 disease, previous breast or chest wall surgery,
       breast scarring from burns, and previous
-      radiotherapy.<cite class="src bl">B&amp;L 58 &middot; p.937</cite> The reason in each case is
+      radiotherapy.​<cite class="src bl">B&amp;L 58 &middot; p.937</cite> The reason in each case is
       that the lymphatic trunks are disrupted, so the false-negative rate is
-      high.<cite class="src srb">SRB 8 &middot; p.536</cite> Note also that frozen-section
+      high.​<cite class="src srb">SRB 8 &middot; p.536</cite> Note also that frozen-section
       evaluation of a sentinel node itself has a false-negative rate of 10 to
-      12%.<cite class="src bl">B&amp;L 58 &middot; p.937</cite></p>
+      12%.​<cite class="src bl">B&amp;L 58 &middot; p.937</cite></p>
     </details>
 
     <details>
@@ -2582,21 +2594,21 @@ body.guide { margin: 0; -webkit-text-size-adjust: 100%; }
       <p class="ans">The axillary vein, the thoracodorsal vessels, the medial and lateral pectoral
       nerves, the intercostobrachial nerves, and the long thoracic and thoracodorsal nerves. The
       intercostobrachial nerve may be deliberately divided when the nodal burden is heavy, to
-      achieve oncological clearance.<cite class="src bl">B&amp;L 58 &middot; p.937</cite> Losing the
+      achieve oncological clearance.​<cite class="src bl">B&amp;L 58 &middot; p.937</cite> Losing the
       pectoral nerves causes atrophy of the pectoral
-      muscle.<cite class="src srb">SRB 8 &middot; p.538</cite> One anatomical point: the axillary
+      muscle.​<cite class="src srb">SRB 8 &middot; p.538</cite> One anatomical point: the axillary
       vein is not covered by axillary fascia, whereas the axillary artery and brachial plexus lie
-      within it.<cite class="src srb">SRB 8 &middot; p.539</cite></p>
+      within it.​<cite class="src srb">SRB 8 &middot; p.539</cite></p>
     </details>
 
     <details>
       <summary>Calculate and interpret the Nottingham Prognostic Index.</summary>
       <p class="ans">NPI = (0.2 × tumour size in cm) + lymph node stage + tumour grade. Classically
       three bands: under 3.4 good with 80% survival at 15 years, 3.4 to 5.4 moderate with 40%, over
-      5.4 poor with 15%.<cite class="src srb">SRB 8 &middot; p.525</cite> Bailey and Love 28e uses
+      5.4 poor with 15%.​<cite class="src srb">SRB 8 &middot; p.525</cite> Bailey and Love 28e uses
       four bands, subdividing the good group at 2.4: I excellent 2.4 or less, II good over 2.4 to
       3.4, III moderate over 3.4 to 5.4, IV poor over
-      5.4.<cite class="src bl">B&amp;L 58 &middot; p.942</cite> Give the formula and the 3.4 and
+      5.4.​<cite class="src bl">B&amp;L 58 &middot; p.942</cite> Give the formula and the 3.4 and
       5.4 cut-offs, which both books share.</p>
     </details>
 
@@ -2605,7 +2617,7 @@ body.guide { margin: 0; -webkit-text-size-adjust: 100%; }
       <p class="ans">The modified Bloom-Richardson system, scoring three variables 1 to 3 each: the
       percentage of tumour cells with tubule formation, nuclear pleomorphism, and the size and
       number of mitoses per high-power field. Total 3 to 5 is grade I, 6 or 7 grade II, 8 or 9
-      grade III.<cite class="src bl">B&amp;L 58 &middot; p.931</cite></p>
+      grade III.​<cite class="src bl">B&amp;L 58 &middot; p.931</cite></p>
     </details>
 
     <details>
@@ -2617,7 +2629,7 @@ body.guide { margin: 0; -webkit-text-size-adjust: 100%; }
       anthracycline. Basal or triple negative, which gets taxane and anthracycline, with
       carboplatin possibly beneficial in aggressive biology. And a normal-like group. Where gene
       array such as PAM-50 is not available, immunohistochemical receptor staining is the surrogate
-      marker.<cite class="src bl">B&amp;L 58 &middot; p.931, p.940</cite></p>
+      marker.​<cite class="src bl">B&amp;L 58 &middot; p.931, p.940</cite></p>
     </details>
 
     <details>
@@ -2629,7 +2641,7 @@ body.guide { margin: 0; -webkit-text-size-adjust: 100%; }
       diameter; stable, under 30% reduction; progressive, 20% or more increase. Complete or partial
       response means the whole regimen may be given before surgery; stable or progressive disease
       after two cycles means operate now and give second-line chemotherapy
-      afterwards.<cite class="src bl">B&amp;L 58 &middot; p.933, p.935</cite></p>
+      afterwards.​<cite class="src bl">B&amp;L 58 &middot; p.933, p.935</cite></p>
     </details>
 
     <details>
@@ -2639,7 +2651,7 @@ body.guide { margin: 0; -webkit-text-size-adjust: 100%; }
       silicone or a polyvinylchloride catheter tip can be inserted through a small skin incision
       just anterior to the tumour; it stays palpable even after complete regression, and the
       surgeon excises 2 cm of tissue all round
-      it.<cite class="src bl">B&amp;L 58 &middot; p.935</cite></p>
+      it.​<cite class="src bl">B&amp;L 58 &middot; p.935</cite></p>
     </details>
 
     <details>
@@ -2650,7 +2662,7 @@ body.guide { margin: 0; -webkit-text-size-adjust: 100%; }
       letrozole or exemestane, which outperform tamoxifen for relapse-free and overall survival,
       but are more expensive and cause bone density loss and fracture risk, so get a bone density
       scan before starting and add bisphosphonates with vitamin D and calcium, which may themselves
-      reduce recurrence.<cite class="src bl">B&amp;L 58 &middot; p.941</cite></p>
+      reduce recurrence.​<cite class="src bl">B&amp;L 58 &middot; p.941</cite></p>
     </details>
 
     <details>
@@ -2660,7 +2672,7 @@ body.guide { margin: 0; -webkit-text-size-adjust: 100%; }
       a wedge biopsy of the lesion, and do triple assessment to exclude underlying malignancy.
       Without underlying malignancy: central core excision of nipple and areola down to pectoralis
       major, followed by radiotherapy. With underlying malignancy: mastectomy and evaluation of the
-      axilla.<cite class="src bl">B&amp;L 58 &middot; p.924</cite></p>
+      axilla.​<cite class="src bl">B&amp;L 58 &middot; p.924</cite></p>
     </details>
 
     <details>
@@ -2668,9 +2680,9 @@ body.guide { margin: 0; -webkit-text-size-adjust: 100%; }
       <p class="ans">Inflammatory carcinoma. The threshold all three books use is skin involvement
       of more than one-third of the breast, with diffuse erythema and skin oedema, often with peau
       d'orange and often extending onto the chest
-      wall.<cite class="src bl">B&amp;L 58 &middot; p.932</cite><cite class="src srb">SRB 8 &middot; p.525</cite>
+      wall.​<cite class="src bl">B&amp;L 58 &middot; p.932</cite>​<cite class="src srb">SRB 8 &middot; p.525</cite>
       S Das's name for it is acute mastitis carcinomatosa, or acute lactational carcinoma, and he
-      warns it can mimic acute mastitis exactly.<cite class="src das">Das 30 &middot; p.412, p.416</cite>
+      warns it can mimic acute mastitis exactly.​<cite class="src das">Das 30 &middot; p.412, p.416</cite>
       Remember also that in a dark-skinned patient the erythema is brownish rather than red. And a
       sentinel node biopsy is contraindicated in inflammatory cancer.</p>
     </details>
@@ -2680,20 +2692,20 @@ body.guide { margin: 0; -webkit-text-size-adjust: 100%; }
       <p class="ans">Tuberculosis of the breast, and chest wall tuberculosis producing a
       retromammary abscess, both of which S Das lists as causes of weight loss with a breast mass,
       and tuberculosis of the breast may
-      recur.<cite class="src das">Das 30 &middot; p.411</cite> This is a differential the British
+      recur.​<cite class="src das">Das 30 &middot; p.411</cite> This is a differential the British
       text does not emphasise and an Indian examiner expects. Carcinoma remains on the list: Indian
       women present at a median of about 48 years, and age is never a reason to exclude
-      it.<cite class="src bl">B&amp;L 58 &middot; p.931</cite><cite class="src das">Das 30 &middot; p.410</cite></p>
+      it.​<cite class="src bl">B&amp;L 58 &middot; p.931</cite>​<cite class="src das">Das 30 &middot; p.410</cite></p>
     </details>
 
     <details>
       <summary>Why is a mobile lump in the breast of a 22-year-old called a breast mouse?</summary>
       <p class="ans">Because a fibroadenoma is not fixed to the breast tissue and can be moved
       easily within the breast substance, unlike a carcinoma, which is fixed to the breast
-      substance with fibrous strands radiating from it.<cite class="src das">Das 30 &middot; p.418</cite>
+      substance with fibrous strands radiating from it.​<cite class="src das">Das 30 &middot; p.418</cite>
       On ultrasound it is a well-circumscribed mobile solid mass with an extremely low likelihood
       of malignancy, so reassurance and imaging follow-up are
-      appropriate.<cite class="src bl">B&amp;L 58 &middot; p.915</cite></p>
+      appropriate.​<cite class="src bl">B&amp;L 58 &middot; p.915</cite></p>
     </details>
 
     <details>
@@ -2704,14 +2716,14 @@ body.guide { margin: 0; -webkit-text-size-adjust: 100%; }
       above the elbow and above the knee, because haematopoietic vascular bone marrow is confined
       to the axial skeleton and, in the limbs, to above those joints. Extensive marrow replacement
       releases immature blast cells and gives leukoerythroblastic
-      anaemia.<cite class="src bl">B&amp;L 58 &middot; p.932</cite></p>
+      anaemia.​<cite class="src bl">B&amp;L 58 &middot; p.932</cite></p>
     </details>
 
     <details>
       <summary>At what size does a breast tumour acquire metastatic potential?</summary>
       <p class="ans">At 1 to 2 mm, about 10<sup>5</sup> cells, when neoangiogenesis occurs. The
       onset of angiogenesis ushers in rapid growth, invasion and metastatic
-      potential.<cite class="src bl">B&amp;L 58 &middot; p.932</cite></p>
+      potential.​<cite class="src bl">B&amp;L 58 &middot; p.932</cite></p>
     </details>
 
     <details>
@@ -2720,11 +2732,11 @@ body.guide { margin: 0; -webkit-text-size-adjust: 100%; }
       and middle-income countries. India's national screening is multidisease screening for cancer
       of the mouth, breast and cervix for all women aged 30 to 65, using clinical breast
       examination by a trained healthcare professional, with breast health awareness through
-      self-examination.<cite class="src bl">B&amp;L 58 &middot; p.943</cite> Keep the two roles
+      self-examination.​<cite class="src bl">B&amp;L 58 &middot; p.943</cite> Keep the two roles
       distinct: clinical breast examination can detect disease early, whereas self-examination
       makes women aware and brings them in sooner. For comparison, the UK invites women aged 50 to
       70 for mammography every 3 years, and opportunistic screening mammography is usually offered
-      from 40.<cite class="src srb">SRB 8 &middot; p.507</cite></p>
+      from 40.​<cite class="src srb">SRB 8 &middot; p.507</cite></p>
     </details>
 
     <details>
@@ -2732,23 +2744,23 @@ body.guide { margin: 0; -webkit-text-size-adjust: 100%; }
       <p class="ans">Aberrations of Normal Development and Involution, a concept developed by the
       Cardiff Breast Clinic to replace the confusing older labels fibroadenosis, fibrocystic
       disease and mammary dysplasia, which treated normal variation as
-      disease.<cite class="src bl">B&amp;L 58 &middot; p.918</cite> Nodularity under it is often
+      disease.​<cite class="src bl">B&amp;L 58 &middot; p.918</cite> Nodularity under it is often
       bilateral, most conspicuous in the upper outer quadrant, and may be cyclical, appearing one
       to two weeks before menstruation; it is graded on the Cardiff-Lucknow nodularity scale, and
       painless nodularity still gets triple
-      assessment.<cite class="src bl">B&amp;L 58 &middot; p.919, p.921</cite> Treatment after normal
+      assessment.​<cite class="src bl">B&amp;L 58 &middot; p.919, p.921</cite> Treatment after normal
       imaging is reassurance, or an antioestrogen: tamoxifen 10 mg daily, ormeloxifene 30 mg, or
       danazol 50 to 300 mg daily, for 3 to 6
-      months.<cite class="src bl">B&amp;L 58 &middot; p.921</cite></p>
+      months.​<cite class="src bl">B&amp;L 58 &middot; p.921</cite></p>
     </details>
 
     <details>
       <summary>Would you offer Manchester staging?</summary>
       <p class="ans">No. SRB itself prints that Manchester staging and the Columbia classification
       are obsolete and not used now, referring readers who want them to its own fourth
-      edition.<cite class="src srb">SRB 8 &middot; p.533</cite> Stage with the eighth edition
+      edition.​<cite class="src srb">SRB 8 &middot; p.533</cite> Stage with the eighth edition
       UICC-AJCC TNM system, which also incorporates grade, ER, PR, HER2/neu, Ki-67, multigene
-      testing and neoadjuvant response.<cite class="src bl">B&amp;L 58 &middot; p.933</cite></p>
+      testing and neoadjuvant response.​<cite class="src bl">B&amp;L 58 &middot; p.933</cite></p>
     </details>
 
     <details>
@@ -2758,10 +2770,10 @@ body.guide { margin: 0; -webkit-text-size-adjust: 100%; }
       muscle early. Treatment is mastectomy with a 2 cm margin including a portion of underlying
       pectoralis major, followed by radiotherapy, with sentinel node biopsy if node-negative and
       tamoxifen 20 mg daily for 5 years if ER
-      positive.<cite class="src bl">B&amp;L 58 &middot; p.942</cite> BRCA mutation is more common in
+      positive.​<cite class="src bl">B&amp;L 58 &middot; p.942</cite> BRCA mutation is more common in
       men with breast cancer, so offer genetic evaluation. The main differential is gynaecomastia,
       and 80% of patients with Klinefelter's syndrome have gynaecomastia with a high attached
-      risk.<cite class="src srb">SRB 8 &middot; p.521</cite></p>
+      risk.​<cite class="src srb">SRB 8 &middot; p.521</cite></p>
     </details>
 
   </div>

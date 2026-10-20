@@ -24,6 +24,7 @@
   --ink-soft:    #5a6269;
   --rule:        #ddd8ce;
   --accent:      #005f73;
+  --on-accent:   #fff;
   --accent-soft: #e3eef0;
   --flag:        #8a5a2b;
   --flag-soft:   #f6ece0;
@@ -86,21 +87,21 @@
 
 .guide[data-theme="sepia"] {
   --paper: #f4ecd8; --ink: #433422; --ink-soft: #6f5f4a; --rule: #ddd0b4;
-  --accent: #7a4a1e; --accent-soft: #ece0c8; --flag: #8a5a2b; --flag-soft: #ece0c8;
+  --accent: #7a4a1e; --on-accent: #fff; --accent-soft: #ece0c8; --flag: #8a5a2b; --flag-soft: #ece0c8;
   --cite: #8a7b63; --mark: #f5d98a; --bl: #6a4a7a; --srb: #3f6b4a;
   color-scheme: light;
 }
 
 .guide[data-theme="dark"] {
   --paper: #15181a; --ink: #e8e6e1; --ink-soft: #a3abb2; --rule: #2e3338;
-  --accent: #6fc3d2; --accent-soft: #1b2a2e; --flag: #d9a36a; --flag-soft: #2a2119;
+  --accent: #6fc3d2; --on-accent: #0b1416; --accent-soft: #1b2a2e; --flag: #d9a36a; --flag-soft: #2a2119;
   --cite: #78828a; --mark: #4a4120; --bl: #a893dd; --srb: #6fc3a8;
   color-scheme: dark;
 }
 
 .guide[data-theme="contrast"] {
   --paper: #000000; --ink: #ffffff; --ink-soft: #d8d8d8; --rule: #6a6a6a;
-  --accent: #6fe3ff; --accent-soft: #10242b; --flag: #ffc46b; --flag-soft: #2a2008;
+  --accent: #6fe3ff; --on-accent: #000; --accent-soft: #10242b; --flag: #ffc46b; --flag-soft: #2a2008;
   --cite: #bdbdbd; --mark: #4a4a00; --bl: #d0b8ff; --srb: #7fe8c0;
   color-scheme: dark;
 }
@@ -109,7 +110,7 @@
 @media (prefers-color-scheme: dark) {
   .guide[data-theme="auto"] {
     --paper: #15181a; --ink: #e8e6e1; --ink-soft: #a3abb2; --rule: #2e3338;
-    --accent: #6fc3d2; --accent-soft: #1b2a2e; --flag: #d9a36a; --flag-soft: #2a2119;
+    --accent: #6fc3d2; --on-accent: #0b1416; --accent-soft: #1b2a2e; --flag: #d9a36a; --flag-soft: #2a2119;
     --cite: #78828a; --mark: #4a4120; --bl: #a893dd; --srb: #6fc3a8;
     color-scheme: dark;
   }
@@ -141,6 +142,7 @@ body.guide { margin: 0; -webkit-text-size-adjust: 100%; }
   font-family: var(--face-body);
   font-size: 2.1rem; font-weight: 600; line-height: 1.15;
   letter-spacing: -0.015em; text-wrap: balance; margin: 0 0 0.7rem;
+  overflow-wrap: break-word; hyphens: auto;
 }
 
 .guide .standfirst { font-size: 1.02rem; color: var(--ink-soft); margin: 0 0 1.6rem; }
@@ -311,7 +313,11 @@ body.guide { margin: 0; -webkit-text-size-adjust: 100%; }
 .guide cite.src {
   font-family: var(--face-ui); font-style: normal;
   font-size: 0.66em; font-weight: 600; letter-spacing: 0.02em;
-  color: var(--cite); white-space: nowrap;
+  color: var(--cite);
+  /* The chip stays on one line. build.py puts a zero-width space before each one,
+     which is what lets a chip that will not fit move to the next line whole
+     instead of widening the page past the phone. */
+  white-space: nowrap; max-width: 100%;
   border: 1px solid var(--rule); border-radius: 2px;
   padding: 0.05rem 0.28rem; margin-left: 0.3rem; vertical-align: 0.12em;
 }
@@ -331,7 +337,11 @@ body.guide { margin: 0; -webkit-text-size-adjust: 100%; }
   cursor: pointer; list-style: none; display: flex; gap: 0.55rem; align-items: baseline;
   padding: 0.7rem 0.9rem; font-family: var(--face-ui);
   font-size: 0.82em; line-height: 1.45; color: var(--ink);
+  flex-wrap: wrap;
 }
+/* A flex item defaults to min-width:auto and so refuses to shrink below its own
+   content width; a long source line in the summary then widened the whole page. */
+.guide details.conflict > summary > * { min-width: 0; overflow-wrap: break-word; }
 .guide details.conflict > summary::-webkit-details-marker { display: none; }
 .guide details.conflict > summary::before {
   content: "*"; color: var(--flag); font-size: 1em; font-weight: 700;
@@ -419,7 +429,7 @@ body.guide { margin: 0; -webkit-text-size-adjust: 100%; }
 @media print {
   .guide {
     --paper: #fff; --ink: #000; --ink-soft: #333; --rule: #bbb;
-    --accent: #004c5c; --accent-soft: #eef4f5; --cite: #666;
+    --accent: #004c5c; --on-accent: #fff; --accent-soft: #eef4f5; --cite: #666;
     --measure: none; --fs: 10.5pt; --lh: 1.45;
     --face-body: "Spectral", Georgia, serif;
     --face-ui: "Inter", system-ui, sans-serif;
@@ -785,7 +795,9 @@ body.guide { margin: 0; -webkit-text-size-adjust: 100%; }
   background: none; color: var(--ink, #222);
 }
 .rdr-ne-row .rdr-ok {
-  background: var(--accent, #005f73); border-color: var(--accent, #005f73); color: #fff;
+  background: var(--accent, #005f73); border-color: var(--accent, #005f73);
+  /* not #fff: the dark and high-contrast accents are pale, and white on them is 2:1 */
+  color: var(--on-accent, #fff);
 }
 .rdr-ne-row .rdr-del { color: var(--flag, #8a5a2b); }
 
@@ -990,14 +1002,14 @@ body.guide { margin: 0; -webkit-text-size-adjust: 100%; }
     like congenital, inflammatory or neoplastic. Mass denotes a lesion which has difficulty to
     define the extent, e.g. mass abdomen; Lump denotes a defined lesion within an organ or the one
     causing the alteration in the gross nature or shape of a part or organ, e.g. breast
-    lump."</b><cite class="src srb">SRB 1 &middot; p.68</cite> Using the right word in your opening
+    lump."</b>​<cite class="src srb">SRB 1 &middot; p.68</cite> Using the right word in your opening
     sentence costs nothing and sets the tone.</dd>
     <dt>And the questions every swelling answers</dt>
     <dd>Site, size, shape, surface, margin, consistency, fluctuation, transillumination, mobility,
     relation to skin and to deeper structures, and the regional nodes. For deciding whether a
     swelling is in the wall or deep to it, use the muscle-contraction test: an intra-abdominal mass
     becomes less prominent, a parietal one persists and becomes less
-    mobile.<cite class="src srb">SRB 16 &middot; p.723</cite></dd>
+    mobile.​<cite class="src srb">SRB 16 &middot; p.723</cite></dd>
   </dl>
 
   <!-- ===================== LIPOMA ===================== -->
@@ -1008,21 +1020,21 @@ body.guide { margin: 0; -webkit-text-size-adjust: 100%; }
     <dt>What it is</dt>
     <dd>SRB: <b>"It is a benign neoplasm arising from yellow fat... composed of mature adipocytes
     and uniform nuclei that are identical to those seen in normal adult
-    fat."</b><cite class="src srb">SRB 1 &middot; p.68</cite></dd>
+    fat."</b>​<cite class="src srb">SRB 1 &middot; p.68</cite></dd>
     <dt>The three facts that make it quotable</dt>
     <dd><b>"It is the most common benign tumour (karyotype 12q change). Prevalence is 2.1 per 100
     people. It is called the universal tumour or ubiquitous tumour as it can occur anywhere in the
-    body except brain."</b><cite class="src srb">SRB 1 &middot; p.68</cite>
+    body except brain."</b>​<cite class="src srb">SRB 1 &middot; p.68</cite>
     <br><span class="label">And one more that explains a clinical observation</span><b>"The fat in
     lipoma is considered unavailable for general
-    metabolism."</b><cite class="src srb">SRB 1 &middot; p.68</cite> So a lipoma does not shrink
+    metabolism."</b>​<cite class="src srb">SRB 1 &middot; p.68</cite> So a lipoma does not shrink
     when the patient loses weight, which is why a starving patient can still have a large one.</dd>
     <dt>Localised or diffuse, and why it matters surgically</dt>
     <dd><b>Localised</b> lipoma is <b>encapsulated, yellowish-orange</b>. <b>Diffuse</b> lipomas
     are <b>not encapsulated and not localised</b>, are <b>common in palm, sole, head and neck</b>,
     lie in <b>subcutaneous and intermuscular tissues</b>, and are <b>"difficult to remove
     surgically. Recurrence is high after incomplete
-    removal."</b><cite class="src srb">SRB 1 &middot; p.68</cite> So the encapsulation is the whole
+    removal."</b>​<cite class="src srb">SRB 1 &middot; p.68</cite> So the encapsulation is the whole
     difference between a five-minute excision and a recurrence.</dd>
   </dl>
 
@@ -1030,7 +1042,7 @@ body.guide { margin: 0; -webkit-text-size-adjust: 100%; }
     <span class="tag">The signs of a lipoma, and the one with a name</span>
     SRB's description: <b>soft, lobulated, non-transilluminant, mobile, with edges slipping between
     the palpating fingers, the slip sign. The skin is free. Lipomas may be pedunculated at times.
-    It is rare in children.</b><cite class="src srb">SRB 1 &middot; p.69</cite>
+    It is rare in children.</b>​<cite class="src srb">SRB 1 &middot; p.69</cite>
     <br><br><b>The slip sign</b> is the examinable one: press the edge of the swelling and the
     margin slips away from under your finger, because the lobulated fat is soft and the capsule
     thin. <b>Lobulation</b> is the second: feel across the surface and it is not smooth, because
@@ -1055,12 +1067,12 @@ body.guide { margin: 0; -webkit-text-size-adjust: 100%; }
       <dd>Use <b>sebaceous cyst</b> as the name of the entity throughout, and explain the punctum
       by the sebaceous duct: <b>"Punctum is present over the summit in 70% of cases because here
       the sebaceous duct opens directly into the skin which gets
-      blocked."</b><cite class="src srb">SRB 1 &middot; p.75</cite></dd>
+      blocked."</b>​<cite class="src srb">SRB 1 &middot; p.75</cite></dd>
       <dt>Bailey &amp; Love 28e</dt>
       <dd>Names them differently and gives a different origin: they are <b>"derived from hair
       follicle infundibuli or traumatic inclusion. Commonly known as sebaceous cysts, they can
       occur anywhere. They are fixed to the skin and usually have a central
-      punctum."</b><cite class="src bl">B&amp;L 45 &middot; p.645</cite> The phrase <b>"commonly
+      punctum."</b>​<cite class="src bl">B&amp;L 45 &middot; p.645</cite> The phrase <b>"commonly
       known as"</b> is doing the work: the formal name is <b>epidermoid cyst</b>, and the cyst is
       a keratin-filled epidermal inclusion rather than a retained sebaceous secretion.</dd>
     </dl>
@@ -1069,10 +1081,10 @@ body.guide { margin: 0; -webkit-text-size-adjust: 100%; }
     <br><br>Say: <b>"Clinically this is a sebaceous cyst. Strictly it is an epidermoid cyst,
     derived from hair follicle infundibula or from traumatic inclusion of epidermis, and it is
     filled with keratin rather than sebum, which is why 'sebaceous cyst' is regarded as a
-    misnomer."</b><cite class="src bl">B&amp;L 45 &middot; p.645</cite>
+    misnomer."</b>​<cite class="src bl">B&amp;L 45 &middot; p.645</cite>
     <br><br>Then use the misnomer to explain a sign, which turns vocabulary into understanding:
     <b>the punctum is black because of denuded squamous epithelium, that is
-    keratin</b>,<cite class="src srb">SRB 1 &middot; p.75</cite> and keratin is an epidermal
+    keratin</b>,​<cite class="src srb">SRB 1 &middot; p.75</cite> and keratin is an epidermal
     product, not a sebaceous one. The content of the cyst is the evidence that the name is wrong.
     <br><br>Do not refuse to say "sebaceous cyst" in an Indian examination: it is the term in both
     Indian texts and in the examiner's question.</span>
@@ -1083,44 +1095,44 @@ body.guide { margin: 0; -webkit-text-size-adjust: 100%; }
     <dt>The signs</dt>
     <dd>SRB: <b>soft or firm, smooth, free from deeper structures but fixed to the skin, fluctuant,
     with a positive Paget's test, non-transilluminating, with a punctum over the
-    summit</b>.<cite class="src srb">SRB 1 &middot; p.75</cite>
+    summit</b>.​<cite class="src srb">SRB 1 &middot; p.75</cite>
     <br><span class="label">And the sign with a name</span><b>"It moulds on finger
     indentation"</b>: the <b>moulding
-    sign</b>.<cite class="src srb">SRB 1 &middot; p.75</cite> Press it and it keeps the shape of
+    sign</b>.​<cite class="src srb">SRB 1 &middot; p.75</cite> Press it and it keeps the shape of
     your finger for a moment, because the contents are putty-like keratin rather than fluid.</dd>
     <dt>The punctum, with the numbers</dt>
     <dd><b>Present in 70% of cases</b>, because there the duct opens directly into the skin and
     gets blocked. <b>In 30% the duct opens into the hair follicle instead, so no punctum is
     seen.</b> The punctum is a <b>depressed, black-coloured spot over the summit</b>, and it is
     <b>black because of the denuded squamous epithelium, that is
-    keratin</b>.<cite class="src srb">SRB 1 &middot; p.75</cite>
+    keratin</b>.​<cite class="src srb">SRB 1 &middot; p.75</cite>
     <br><span class="label">So</span>Absence of a punctum does not exclude the diagnosis, and that
     is a 30% caveat worth quoting.</dd>
     <dt>Why the skin is fixed, and the lipoma's is not</dt>
     <dd>Because the cyst arises <b>from the skin</b>, from a hair follicle infundibulum, so it
-    cannot be separated from it;<cite class="src bl">B&amp;L 45 &middot; p.645</cite> a lipoma lies
+    cannot be separated from it;​<cite class="src bl">B&amp;L 45 &middot; p.645</cite> a lipoma lies
     <b>under</b> the skin, so the skin moves freely over
-    it.<cite class="src srb">SRB 1 &middot; p.69</cite> That single difference separates the two
+    it.​<cite class="src srb">SRB 1 &middot; p.69</cite> That single difference separates the two
     diagnoses in one manoeuvre.</dd>
     <dt>Hair loss over the surface</dt>
     <dd>SRB: <b>"Hair loss over the surface is common due to constant pressure over the roots of
     the hair follicles."</b> And <b>"unpleasant odour of sebum content is
-    typical"</b>.<cite class="src srb">SRB 1 &middot; p.76</cite> Both are visible or detectable
+    typical"</b>.​<cite class="src srb">SRB 1 &middot; p.76</cite> Both are visible or detectable
     without touching the patient.</dd>
   </dl>
 
   <div class="pearl">
     <span class="tag">The three complications, and the one with a famous name</span>
     SRB: <b>infection and abscess formation</b>; <b>surface</b>
-    ulceration;<cite class="src srb">SRB 1 &middot; p.76</cite> and the two named sequelae.
+    ulceration;​<cite class="src srb">SRB 1 &middot; p.76</cite> and the two named sequelae.
     <br><br><b>Cock's peculiar tumour</b>: when the cyst ulcerates it forms <b>"a painful,
     fungating mass with discharge... often resembles epithelioma. It is a misnomer as it is not a
     tumour. It is a chronic granuloma on an ulcerated surface of a sebaceous
-    cyst."</b><cite class="src srb">SRB 1 &middot; p.76</cite> So it looks like a squamous carcinoma
+    cyst."</b>​<cite class="src srb">SRB 1 &middot; p.76</cite> So it looks like a squamous carcinoma
     and is not one, which is exactly why it gets biopsied.
     <br><br><b>Sebaceous horn</b>: <b>"results from hardening of slowly discharged sebum through
     the punctum"</b>, a horn being something with greater length than
-    breadth.<cite class="src srb">SRB 1 &middot; p.76</cite>
+    breadth.​<cite class="src srb">SRB 1 &middot; p.76</cite>
     <br><br>Two misnomers in one case: a cyst that is not sebaceous, and a tumour that is not a
     tumour.
   </div>
@@ -1163,7 +1175,7 @@ body.guide { margin: 0; -webkit-text-size-adjust: 100%; }
     SRB on the dermoid: it <b>"extends often into deeper planes or cavities through a suture
     line"</b>, <b>bone resorption and indentation is common</b>, mobility is <b>restricted</b>, and
     it <b>"needs proper evaluation with X-ray or CT scan"</b> with <b>excision under general
-    anaesthesia</b>.<cite class="src srb">SRB 1 &middot; p.76</cite>
+    anaesthesia</b>.​<cite class="src srb">SRB 1 &middot; p.76</cite>
     <br><br>So the question to ask yourself before excising any midline or periorbital swelling in
     a child is: <b>could this be a dermoid with an intracranial extension?</b> If mobility is
     restricted or it sits over a suture line, image it first. That is the one way this short case
@@ -1177,7 +1189,7 @@ body.guide { margin: 0; -webkit-text-size-adjust: 100%; }
     <dd>Excision, usually under local anaesthetic for a small localised one. The capsule makes
     enucleation easy. <b>A diffuse lipoma is difficult to remove and recurrence is high after
     incomplete removal</b>, so warn the patient and excise
-    completely.<cite class="src srb">SRB 1 &middot; p.68</cite>
+    completely.​<cite class="src srb">SRB 1 &middot; p.68</cite>
     <br><span class="label out">And one caution</span>A large, rapidly growing, deep or painful
     fatty swelling, particularly if intermuscular or retroperitoneal, must raise
     <b>liposarcoma</b> and be imaged and biopsied rather than simply shelled out.</dd>
@@ -1185,14 +1197,14 @@ body.guide { margin: 0; -webkit-text-size-adjust: 100%; }
     <dd>Excision of the cyst <b>with its wall intact</b>, including the punctum, because any
     retained wall recurs. If infected, drain first and excise later when the inflammation has
     settled; SRB's complications are <b>infection and abscess
-    formation</b>.<cite class="src srb">SRB 1 &middot; p.76</cite></dd>
+    formation</b>.​<cite class="src srb">SRB 1 &middot; p.76</cite></dd>
     <dt>Cock's peculiar tumour</dt>
     <dd>Because it resembles an epithelioma, <b>biopsy it</b>; it is a chronic granuloma on an
     ulcerated sebaceous cyst and is treated by excision once the diagnosis is
-    secure.<cite class="src srb">SRB 1 &middot; p.76</cite></dd>
+    secure.​<cite class="src srb">SRB 1 &middot; p.76</cite></dd>
     <dt>Dermoid</dt>
     <dd><b>Radiograph or CT first, then excision under general
-    anaesthesia.</b><cite class="src srb">SRB 1 &middot; p.76</cite></dd>
+    anaesthesia.</b>​<cite class="src srb">SRB 1 &middot; p.76</cite></dd>
   </dl>
 
   <h2><span class="n">6</span>Rapid-fire viva</h2>
@@ -1203,7 +1215,7 @@ body.guide { margin: 0; -webkit-text-size-adjust: 100%; }
       <p class="ans">Move the skin over the swelling. A sebaceous cyst is fixed to the skin,
       because it arises from a hair follicle infundibulum in the skin itself, and usually has a
       punctum; a lipoma lies beneath the skin, so the skin moves freely over
-      it.<cite class="src bl">B&amp;L 45 &middot; p.645</cite><cite class="src srb">SRB 1 &middot; p.69, p.75</cite>
+      it.​<cite class="src bl">B&amp;L 45 &middot; p.645</cite>​<cite class="src srb">SRB 1 &middot; p.69, p.75</cite>
       Then confirm with the lipoma's two signs: lobulated surface and a positive slip sign.</p>
     </details>
 
@@ -1212,20 +1224,20 @@ body.guide { margin: 0; -webkit-text-size-adjust: 100%; }
       <p class="ans">Press the edge of the swelling and the margin slips away from under the
       palpating finger, because the lobulated fat is soft and the capsule thin. SRB describes a
       lipoma as soft, lobulated, non-transilluminant, mobile, with edges slipping between the
-      palpating fingers, and the skin free.<cite class="src srb">SRB 1 &middot; p.69</cite></p>
+      palpating fingers, and the skin free.​<cite class="src srb">SRB 1 &middot; p.69</cite></p>
     </details>
 
     <details>
       <summary>Why is lipoma called the universal tumour?</summary>
       <p class="ans">Because it can occur anywhere in the body except the brain; SRB also calls it
       the ubiquitous tumour. It is the commonest benign tumour, with a karyotype 12q change, and a
-      prevalence of 2.1 per 100 people.<cite class="src srb">SRB 1 &middot; p.68</cite></p>
+      prevalence of 2.1 per 100 people.​<cite class="src srb">SRB 1 &middot; p.68</cite></p>
     </details>
 
     <details>
       <summary>Does a lipoma get smaller if the patient loses weight?</summary>
       <p class="ans">No. The fat in a lipoma is considered unavailable for general
-      metabolism,<cite class="src srb">SRB 1 &middot; p.68</cite> which is why a lipoma persists
+      metabolism,​<cite class="src srb">SRB 1 &middot; p.68</cite> which is why a lipoma persists
       and may even look more prominent in a patient who has lost weight.</p>
     </details>
 
@@ -1235,7 +1247,7 @@ body.guide { margin: 0; -webkit-text-size-adjust: 100%; }
       palm, sole, head and neck, lying in subcutaneous and intermuscular tissue; it is difficult to
       remove surgically and recurrence is high after incomplete removal. The localised type is
       encapsulated and yellowish-orange and shells out
-      easily.<cite class="src srb">SRB 1 &middot; p.68</cite></p>
+      easily.​<cite class="src srb">SRB 1 &middot; p.68</cite></p>
     </details>
 
     <details>
@@ -1243,9 +1255,9 @@ body.guide { margin: 0; -webkit-text-size-adjust: 100%; }
       <p class="ans">Clinically yes, strictly no. Bailey and Love 28e calls these epidermoid cysts,
       derived from hair follicle infundibula or from traumatic inclusion, and says they are
       "commonly known as sebaceous cysts"; they are fixed to the skin and usually have a central
-      punctum.<cite class="src bl">B&amp;L 45 &middot; p.645</cite> The contents are keratin rather
+      punctum.​<cite class="src bl">B&amp;L 45 &middot; p.645</cite> The contents are keratin rather
       than sebum, which is also why the punctum is black: SRB says it is black because of denuded
-      squamous epithelium, that is keratin.<cite class="src srb">SRB 1 &middot; p.75</cite> Use the
+      squamous epithelium, that is keratin.​<cite class="src srb">SRB 1 &middot; p.75</cite> Use the
       clinical name and then show you know why it is a misnomer.</p>
     </details>
 
@@ -1253,14 +1265,14 @@ body.guide { margin: 0; -webkit-text-size-adjust: 100%; }
       <summary>There is no punctum. Can it still be a sebaceous cyst?</summary>
       <p class="ans">Yes. The punctum is present in 70% of cases, where the duct opens directly
       into the skin and becomes blocked; in the other 30% the duct opens into a hair follicle
-      instead, so no punctum is seen.<cite class="src srb">SRB 1 &middot; p.75</cite></p>
+      instead, so no punctum is seen.​<cite class="src srb">SRB 1 &middot; p.75</cite></p>
     </details>
 
     <details>
       <summary>What is the moulding sign?</summary>
       <p class="ans">The cyst moulds on finger indentation, keeping the shape of the examining
       finger for a moment, because its contents are putty-like keratin rather than free
-      fluid.<cite class="src srb">SRB 1 &middot; p.75</cite> It sits alongside fluctuation, a
+      fluid.​<cite class="src srb">SRB 1 &middot; p.75</cite> It sits alongside fluctuation, a
       positive Paget's test, and absent transillumination.</p>
     </details>
 
@@ -1269,7 +1281,7 @@ body.guide { margin: 0; -webkit-text-size-adjust: 100%; }
       <p class="ans">An ulcerated sebaceous cyst that forms a painful fungating mass with
       discharge, closely resembling an epithelioma. It is a misnomer, because it is not a tumour at
       all but a chronic granuloma on the ulcerated surface of a sebaceous
-      cyst.<cite class="src srb">SRB 1 &middot; p.76</cite> Because it looks like a squamous
+      cyst.​<cite class="src srb">SRB 1 &middot; p.76</cite> Because it looks like a squamous
       carcinoma, biopsy it.</p>
     </details>
 
@@ -1277,14 +1289,14 @@ body.guide { margin: 0; -webkit-text-size-adjust: 100%; }
       <summary>What is a sebaceous horn?</summary>
       <p class="ans">It results from hardening of slowly discharged sebum through the punctum, a
       horn being a projection with greater length than
-      breadth.<cite class="src srb">SRB 1 &middot; p.76</cite></p>
+      breadth.​<cite class="src srb">SRB 1 &middot; p.76</cite></p>
     </details>
 
     <details>
       <summary>Why is there hair loss over a scalp sebaceous cyst?</summary>
       <p class="ans">Constant pressure on the roots of the hair follicles. SRB also notes the
       unpleasant odour of the sebum content is
-      typical.<cite class="src srb">SRB 1 &middot; p.76</cite></p>
+      typical.​<cite class="src srb">SRB 1 &middot; p.76</cite></p>
     </details>
 
     <details>
@@ -1292,7 +1304,7 @@ body.guide { margin: 0; -webkit-text-size-adjust: 100%; }
       <p class="ans">No. Consider a dermoid cyst. SRB's features are skin free, no punctum, often
       extending into a deeper plane or cavity through a suture line, commonly with bone resorption
       and indentation, with restricted mobility, needing proper evaluation with radiograph or CT,
-      and excision under general anaesthesia.<cite class="src srb">SRB 1 &middot; p.76</cite>
+      and excision under general anaesthesia.​<cite class="src srb">SRB 1 &middot; p.76</cite>
       Restricted mobility or a position over a suture line means image before you cut, because of
       the possibility of deep or intracranial extension.</p>
     </details>
@@ -1301,7 +1313,7 @@ body.guide { margin: 0; -webkit-text-size-adjust: 100%; }
       <summary>When would you worry about a fatty swelling?</summary>
       <p class="ans">If it is large, rapidly growing, deep, painful, intermuscular or
       retroperitoneal, raise liposarcoma and image and biopsy rather than shelling it out. Also
-      note that lipoma is rare in children,<cite class="src srb">SRB 1 &middot; p.69</cite> so a
+      note that lipoma is rare in children,​<cite class="src srb">SRB 1 &middot; p.69</cite> so a
       soft subcutaneous swelling in a child deserves a wider differential.</p>
     </details>
 
@@ -1311,7 +1323,7 @@ body.guide { margin: 0; -webkit-text-size-adjust: 100%; }
       inflammatory or neoplastic causes. A mass is a lesion whose extent is difficult to define, as
       in a mass per abdomen. A lump is a defined lesion within an organ, or one altering the gross
       shape of a part or organ, as in a breast
-      lump.<cite class="src srb">SRB 1 &middot; p.68</cite></p>
+      lump.​<cite class="src srb">SRB 1 &middot; p.68</cite></p>
     </details>
 
   </div>

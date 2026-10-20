@@ -24,6 +24,7 @@
   --ink-soft:    #5a6269;
   --rule:        #ddd8ce;
   --accent:      #005f73;
+  --on-accent:   #fff;
   --accent-soft: #e3eef0;
   --flag:        #8a5a2b;
   --flag-soft:   #f6ece0;
@@ -86,21 +87,21 @@
 
 .guide[data-theme="sepia"] {
   --paper: #f4ecd8; --ink: #433422; --ink-soft: #6f5f4a; --rule: #ddd0b4;
-  --accent: #7a4a1e; --accent-soft: #ece0c8; --flag: #8a5a2b; --flag-soft: #ece0c8;
+  --accent: #7a4a1e; --on-accent: #fff; --accent-soft: #ece0c8; --flag: #8a5a2b; --flag-soft: #ece0c8;
   --cite: #8a7b63; --mark: #f5d98a; --bl: #6a4a7a; --srb: #3f6b4a;
   color-scheme: light;
 }
 
 .guide[data-theme="dark"] {
   --paper: #15181a; --ink: #e8e6e1; --ink-soft: #a3abb2; --rule: #2e3338;
-  --accent: #6fc3d2; --accent-soft: #1b2a2e; --flag: #d9a36a; --flag-soft: #2a2119;
+  --accent: #6fc3d2; --on-accent: #0b1416; --accent-soft: #1b2a2e; --flag: #d9a36a; --flag-soft: #2a2119;
   --cite: #78828a; --mark: #4a4120; --bl: #a893dd; --srb: #6fc3a8;
   color-scheme: dark;
 }
 
 .guide[data-theme="contrast"] {
   --paper: #000000; --ink: #ffffff; --ink-soft: #d8d8d8; --rule: #6a6a6a;
-  --accent: #6fe3ff; --accent-soft: #10242b; --flag: #ffc46b; --flag-soft: #2a2008;
+  --accent: #6fe3ff; --on-accent: #000; --accent-soft: #10242b; --flag: #ffc46b; --flag-soft: #2a2008;
   --cite: #bdbdbd; --mark: #4a4a00; --bl: #d0b8ff; --srb: #7fe8c0;
   color-scheme: dark;
 }
@@ -109,7 +110,7 @@
 @media (prefers-color-scheme: dark) {
   .guide[data-theme="auto"] {
     --paper: #15181a; --ink: #e8e6e1; --ink-soft: #a3abb2; --rule: #2e3338;
-    --accent: #6fc3d2; --accent-soft: #1b2a2e; --flag: #d9a36a; --flag-soft: #2a2119;
+    --accent: #6fc3d2; --on-accent: #0b1416; --accent-soft: #1b2a2e; --flag: #d9a36a; --flag-soft: #2a2119;
     --cite: #78828a; --mark: #4a4120; --bl: #a893dd; --srb: #6fc3a8;
     color-scheme: dark;
   }
@@ -141,6 +142,7 @@ body.guide { margin: 0; -webkit-text-size-adjust: 100%; }
   font-family: var(--face-body);
   font-size: 2.1rem; font-weight: 600; line-height: 1.15;
   letter-spacing: -0.015em; text-wrap: balance; margin: 0 0 0.7rem;
+  overflow-wrap: break-word; hyphens: auto;
 }
 
 .guide .standfirst { font-size: 1.02rem; color: var(--ink-soft); margin: 0 0 1.6rem; }
@@ -311,7 +313,11 @@ body.guide { margin: 0; -webkit-text-size-adjust: 100%; }
 .guide cite.src {
   font-family: var(--face-ui); font-style: normal;
   font-size: 0.66em; font-weight: 600; letter-spacing: 0.02em;
-  color: var(--cite); white-space: nowrap;
+  color: var(--cite);
+  /* The chip stays on one line. build.py puts a zero-width space before each one,
+     which is what lets a chip that will not fit move to the next line whole
+     instead of widening the page past the phone. */
+  white-space: nowrap; max-width: 100%;
   border: 1px solid var(--rule); border-radius: 2px;
   padding: 0.05rem 0.28rem; margin-left: 0.3rem; vertical-align: 0.12em;
 }
@@ -331,7 +337,11 @@ body.guide { margin: 0; -webkit-text-size-adjust: 100%; }
   cursor: pointer; list-style: none; display: flex; gap: 0.55rem; align-items: baseline;
   padding: 0.7rem 0.9rem; font-family: var(--face-ui);
   font-size: 0.82em; line-height: 1.45; color: var(--ink);
+  flex-wrap: wrap;
 }
+/* A flex item defaults to min-width:auto and so refuses to shrink below its own
+   content width; a long source line in the summary then widened the whole page. */
+.guide details.conflict > summary > * { min-width: 0; overflow-wrap: break-word; }
 .guide details.conflict > summary::-webkit-details-marker { display: none; }
 .guide details.conflict > summary::before {
   content: "*"; color: var(--flag); font-size: 1em; font-weight: 700;
@@ -419,7 +429,7 @@ body.guide { margin: 0; -webkit-text-size-adjust: 100%; }
 @media print {
   .guide {
     --paper: #fff; --ink: #000; --ink-soft: #333; --rule: #bbb;
-    --accent: #004c5c; --accent-soft: #eef4f5; --cite: #666;
+    --accent: #004c5c; --on-accent: #fff; --accent-soft: #eef4f5; --cite: #666;
     --measure: none; --fs: 10.5pt; --lh: 1.45;
     --face-body: "Spectral", Georgia, serif;
     --face-ui: "Inter", system-ui, sans-serif;
@@ -785,7 +795,9 @@ body.guide { margin: 0; -webkit-text-size-adjust: 100%; }
   background: none; color: var(--ink, #222);
 }
 .rdr-ne-row .rdr-ok {
-  background: var(--accent, #005f73); border-color: var(--accent, #005f73); color: #fff;
+  background: var(--accent, #005f73); border-color: var(--accent, #005f73);
+  /* not #fff: the dark and high-contrast accents are pale, and white on them is 2:1 */
+  color: var(--on-accent, #fff);
 }
 .rdr-ne-row .rdr-del { color: var(--flag, #8a5a2b); }
 
@@ -990,30 +1002,30 @@ body.guide { margin: 0; -webkit-text-size-adjust: 100%; }
     <dd>All three books agree on the headline. S Das: <b>"though these tumours only constitute 1% of
     all malignant tumours in man, yet these are one of the commonest forms of malignant tumours in
     the young. Almost all (99%) testicular tumours are
-    malignant."</b><cite class="src das">Das 40 &middot; p.630</cite> SRB repeats both
-    figures.<cite class="src srb">SRB 26 &middot; p.1070</cite> B&amp;L: <b>"testicular cancer
+    malignant."</b>​<cite class="src das">Das 40 &middot; p.630</cite> SRB repeats both
+    figures.​<cite class="src srb">SRB 26 &middot; p.1070</cite> B&amp;L: <b>"testicular cancer
     represents around 1 to 1.5% of male neoplasms"</b>, with <b>"3 to 10 new cases per 100 000
     males per year in western societies"</b>, and <b>"they are the commonest form of tumour in young
-    men."</b><cite class="src bl">B&amp;L 86 &middot; p.1569</cite>
+    men."</b>​<cite class="src bl">B&amp;L 86 &middot; p.1569</cite>
     <br><span class="label">Why "99% malignant" is the one to say</span>Because it is the
     justification for everything that follows. There is no safe period of observation and no place
     for a needle. A solid intratesticular mass is treated as cancer until the histology says
     otherwise.</dd>
     <dt>Germ cell or not</dt>
-    <dd><b>Germ cell tumours are 90 to 95%.</b><cite class="src bl">B&amp;L 86 &middot; p.1569</cite>
+    <dd><b>Germ cell tumours are 90 to 95%.</b>​<cite class="src bl">B&amp;L 86 &middot; p.1569</cite>
     SRB puts germ cell at <b>95%</b> and non-germ-cell at
-    <b>5%</b>.<cite class="src srb">SRB 26 &middot; p.1070</cite> Everything else, lymphoma, sex
+    <b>5%</b>.​<cite class="src srb">SRB 26 &middot; p.1070</cite> Everything else, lymphoma, sex
     cord-stromal tumours, secondaries, shares the remainder.</dd>
     <dt>Bilateral, and the figure differs slightly</dt>
     <dd>B&amp;L: <b>"in 1 to 2% of cases the tumour is bilateral at
-    diagnosis."</b><cite class="src bl">B&amp;L 86 &middot; p.1571</cite> SRB: <b>"3% of testicular
-    tumours are bilateral."</b><cite class="src srb">SRB 26 &middot; p.1072</cite> Say <b>1 to 3%</b>
+    diagnosis."</b>​<cite class="src bl">B&amp;L 86 &middot; p.1571</cite> SRB: <b>"3% of testicular
+    tumours are bilateral."</b>​<cite class="src srb">SRB 26 &middot; p.1072</cite> Say <b>1 to 3%</b>
     and you are safe in either room. The practical consequence is the same in both books:
     <b>ultrasound the other testis too</b>.</dd>
     <dt>And one genetic marker worth naming</dt>
     <dd><b>"A specific genetic marker, an isochromosome of the short arm of chromosome 12 (i12p), is
     pathognomonic of all types of adult GCTs as well as germ cell neoplasia in situ
-    (GCNIS)."</b><cite class="src bl">B&amp;L 86 &middot; p.1569</cite> <b>GCNIS</b> is the term
+    (GCNIS)."</b>​<cite class="src bl">B&amp;L 86 &middot; p.1569</cite> <b>GCNIS</b> is the term
     that has replaced carcinoma in situ of the testis; if you say it, say it as germ cell neoplasia
     in situ.</dd>
   </dl>
@@ -1024,14 +1036,14 @@ body.guide { margin: 0; -webkit-text-size-adjust: 100%; }
     <span class="ask">1. How old?</span>
     <span class="why">Because the two main tumours sit in different decades. S Das: <b>"teratoma
     occurs between the ages of 20 and 30 years, whereas seminoma occurs between the ages of 30 and
-    50 years."</b><cite class="src das">Das 40 &middot; p.630</cite> B&amp;L: <b>"the peak incidence
+    50 years."</b>​<cite class="src das">Das 40 &middot; p.630</cite> B&amp;L: <b>"the peak incidence
     of seminomas is in the fourth decade of life, with the non-seminomatous germ cell tumours
     (NSGCT) being more common in the third decade of
-    life."</b><cite class="src bl">B&amp;L 86 &middot; p.1569</cite></span>
+    life."</b>​<cite class="src bl">B&amp;L 86 &middot; p.1569</cite></span>
     <span class="label">The rule that survives both</span><b>Younger means teratoma or NSGCT, older
     means seminoma.</b> Both books put the crossover around 30. Lymphoma of the testis is the
     tumour of the man over 50, and <b>spermatocytic seminoma</b> is seen <b>"only in adult men
-    usually over 50 years old"</b>.<cite class="src bl">B&amp;L 86 &middot; p.1570</cite>
+    usually over 50 years old"</b>.​<cite class="src bl">B&amp;L 86 &middot; p.1570</cite>
   </div>
 
   <div class="step">
@@ -1039,9 +1051,9 @@ body.guide { margin: 0; -webkit-text-size-adjust: 100%; }
     <span class="why"><b>"The commonest presentation is a painless swelling of the testis. Duration
     is about a few months. Trivial injury may draw the attention of the patient towards the swelling
     and he often incriminates trauma to be the
-    cause."</b><cite class="src das">Das 40 &middot; p.630</cite> B&amp;L: <b>"occasionally, an
+    cause."</b>​<cite class="src das">Das 40 &middot; p.630</cite> B&amp;L: <b>"occasionally, an
     episode of trauma calls attention to the
-    swelling."</b><cite class="src bl">B&amp;L 86 &middot; p.1571</cite></span>
+    swelling."</b>​<cite class="src bl">B&amp;L 86 &middot; p.1571</cite></span>
     <span class="label out">The trap, and it is a common one</span>A man presents after a minor
     knock to the scrotum with a swelling he blames on the injury. <b>The trauma did not cause the
     tumour; it made him examine himself.</b> Accepting the patient's attribution is how these
@@ -1052,16 +1064,16 @@ body.guide { margin: 0; -webkit-text-size-adjust: 100%; }
     <span class="ask">3. Is there pain?</span>
     <span class="why">Usually not, and that is itself the point. B&amp;L: <b>"a sensation of
     heaviness can occur if large, but few patients experience
-    pain."</b><cite class="src bl">B&amp;L 86 &middot; p.1571</cite> SRB puts pain in the testis at
-    <b>30%</b>.<cite class="src srb">SRB 26 &middot; p.1071</cite> S Das: <b>"dull aching or dragging
+    pain."</b>​<cite class="src bl">B&amp;L 86 &middot; p.1571</cite> SRB puts pain in the testis at
+    <b>30%</b>.​<cite class="src srb">SRB 26 &middot; p.1071</cite> S Das: <b>"dull aching or dragging
     pain may be experienced in the scrotum if the swelling has grown very
-    large."</b><cite class="src das">Das 40 &middot; p.630</cite></span>
+    large."</b>​<cite class="src das">Das 40 &middot; p.630</cite></span>
     <span class="label out">The presentation that gets misdiagnosed</span>Both books warn of it.
     B&amp;L: <b>"some cases may simulate epididymo-orchitis and, rarely, acute painful enlargement of
     the testis occurs because of haemorrhage into the tumour, which can mimic testicular
-    torsion."</b><cite class="src bl">B&amp;L 86 &middot; p.1571</cite> S Das: <b>"acute pain and
+    torsion."</b>​<cite class="src bl">B&amp;L 86 &middot; p.1571</cite> S Das: <b>"acute pain and
     tenderness is very rare form of presentation which is indistinguishable from acute
-    epididymo-orchitis."</b><cite class="src das">Das 40 &middot; p.630</cite> So <b>an
+    epididymo-orchitis."</b>​<cite class="src das">Das 40 &middot; p.630</cite> So <b>an
     epididymo-orchitis that does not settle on antibiotics must be imaged, not re-treated.</b>
   </div>
 
@@ -1071,15 +1083,15 @@ body.guide { margin: 0; -webkit-text-size-adjust: 100%; }
     epidemiological risk factors are <b>"cryptorchidism, male factor infertility (including
     Klinefelter syndrome), familial history of testicular tumours among first-grade relatives and
     the presence of a contralateral tumour or
-    GCNIS"</b>.<cite class="src bl">B&amp;L 86 &middot; p.1569</cite> SRB's predisposing factors are
+    GCNIS"</b>.​<cite class="src bl">B&amp;L 86 &middot; p.1569</cite> SRB's predisposing factors are
     <b>undescended testis and testicular
-    atrophy</b>.<cite class="src srb">SRB 26 &middot; p.1070</cite></span>
+    atrophy</b>.​<cite class="src srb">SRB 26 &middot; p.1070</cite></span>
     <span class="label">And look at the other side of the scrotum</span>SRB gives the sign:
     <b>"hemiscrotum with absence of rugae with suspicious mass in the groin suggests undescended
-    testis with testicular tumour."</b><cite class="src srb">SRB 26 &middot; p.1072</cite> An empty,
+    testis with testicular tumour."</b>​<cite class="src srb">SRB 26 &middot; p.1072</cite> An empty,
     smooth hemiscrotum plus an inguinal or abdominal mass is a tumour in an undescended testis, and
     SRB illustrates exactly that case being removed through a suprainguinal
-    approach.<cite class="src srb">SRB 26 &middot; p.1072</cite>
+    approach.​<cite class="src srb">SRB 26 &middot; p.1072</cite>
     <span class="label out">How much does it raise the risk?</span>The books differ sharply, by an
     order of magnitude. See the amber box.
   </div>
@@ -1091,40 +1103,40 @@ body.guide { margin: 0; -webkit-text-size-adjust: 100%; }
     or lumbar pain. Lung metastases are usually silent, but they can cause chest pain, dyspnoea and
     haemoptysis in the later stages... the primary tumour may not have been noticed by the patient,
     and indeed may be detected only by
-    ultrasound."</b><cite class="src bl">B&amp;L 86 &middot; p.1571</cite> S Das: <b>"rarely this
+    ultrasound."</b>​<cite class="src bl">B&amp;L 86 &middot; p.1571</cite> S Das: <b>"rarely this
     condition may present itself as abdominal pain and swelling of the legs due to secondary
     metastasis in the pre- and para-aortic groups of lymph
-    nodes."</b><cite class="src das">Das 40 &middot; p.630</cite></span>
+    nodes."</b>​<cite class="src das">Das 40 &middot; p.630</cite></span>
     <span class="label">Why the legs swell</span>Bulky para-aortic nodes compress the inferior vena
     cava and the iliac veins. A young man with bilateral leg oedema and back pain needs his testes
     examined.
     <span class="label">SRB's checklist of metastatic symptoms</span><b>Haemoptysis, altered breath
     sounds and pleural effusion; bone pain and tenderness; nodular secondaries in the liver;</b> and
-    central nervous system involvement.<cite class="src srb">SRB 26 &middot; p.1072</cite> SRB adds
+    central nervous system involvement.​<cite class="src srb">SRB 26 &middot; p.1072</cite> SRB adds
     that in <b>10% of cases it presents asymptomatically, found
-    incidentally</b>.<cite class="src srb">SRB 26 &middot; p.1072</cite>
+    incidentally</b>.​<cite class="src srb">SRB 26 &middot; p.1072</cite>
   </div>
 
   <div class="step">
     <span class="ask">6. Any breast enlargement, or change in body hair or libido?</span>
     <span class="why">Because a hormone-producing tumour declares itself this way. B&amp;L:
     <b>"around 5% of cases have gynaecomastia (mainly
-    NSGCT)."</b><cite class="src bl">B&amp;L 86 &middot; p.1571</cite> SRB agrees and gives the
+    NSGCT)."</b>​<cite class="src bl">B&amp;L 86 &middot; p.1571</cite> SRB agrees and gives the
     mechanism: <b>"gynaecomastia may be present in few teratomas, 5%. It is due to raised
-    beta-HCG."</b><cite class="src srb">SRB 26 &middot; p.1072</cite></span>
+    beta-HCG."</b>​<cite class="src srb">SRB 26 &middot; p.1072</cite></span>
     <span class="label">The two sex cord-stromal tumours, and the mnemonic that works</span>
     <b>Leydig masculinises, Sertoli feminises.</b> SRB: Leydig cell tumour is a <b>prepubertal</b>
     tumour with <b>"excessive output of androgens causing sexual precocity, extreme muscular
     development often mimicking infant hercules"</b>; Sertoli cell tumour is <b>postpubertal</b>
     and <b>"causes feminising effect with gynaecomastia, loss of libido and
-    aspermia"</b>.<cite class="src srb">SRB 26 &middot; p.1071</cite> S Das puts it the same
-    way.<cite class="src das">Das 40 &middot; p.630</cite>
+    aspermia"</b>.​<cite class="src srb">SRB 26 &middot; p.1071</cite> S Das puts it the same
+    way.​<cite class="src das">Das 40 &middot; p.630</cite>
     <span class="label out">And the treatment point SRB adds</span>The Leydig cell tumour is
     <b>"radioresistant and chemoresistant"</b>, so <b>surgery is the only
-    treatment</b>.<cite class="src srb">SRB 26 &middot; p.1071</cite> B&amp;L agrees in principle:
+    treatment</b>.​<cite class="src srb">SRB 26 &middot; p.1071</cite> B&amp;L agrees in principle:
     <b>"most of these tumours are benign (around 80%), so conservative treatment of small lesions
     with organ-sparing surgery is feasible, if the diagnosis is
-    considered."</b><cite class="src bl">B&amp;L 86 &middot; p.1572</cite>
+    considered."</b>​<cite class="src bl">B&amp;L 86 &middot; p.1572</cite>
   </div>
 
   <h2><span class="n">3</span>Examination: five findings, each with its reason</h2>
@@ -1132,16 +1144,16 @@ body.guide { margin: 0; -webkit-text-size-adjust: 100%; }
   <div class="step">
     <span class="ask">1. Is the swelling purely scrotal, and can you get above it?</span>
     <span class="why">S Das: <b>"on examination, the swelling is purely
-    scrotal."</b><cite class="src das">Das 40 &middot; p.630</cite> You can get above a testicular
+    scrotal."</b>​<cite class="src das">Das 40 &middot; p.630</cite> You can get above a testicular
     tumour, which separates it at once from an inguinoscrotal hernia, and it does not
     transilluminate, which separates it from a hydrocele unless there is a secondary
     one.</span>
     <span class="label out">S Das's warning about the torch</span>Do it in darkness, and place the
     pencil torch <b>laterally</b> over the swollen scrotum, with the rolled paper on the other side.
-    A red glow throughout the scrotum means clear fluid.<cite class="src das">Das 40 &middot; p.621</cite>
+    A red glow throughout the scrotum means clear fluid.​<cite class="src das">Das 40 &middot; p.621</cite>
     <br><b>The error to avoid:</b> putting the torch on the <b>posterior</b> aspect with the paper in
     front. The testis then comes in the way of the light and the test reads
-    <b>false negative</b>, so a genuine hydrocele looks solid.<cite class="src das">Das 40 &middot; p.621</cite>
+    <b>false negative</b>, so a genuine hydrocele looks solid.​<cite class="src das">Das 40 &middot; p.621</cite>
   </div>
 
   <div class="step">
@@ -1150,14 +1162,14 @@ body.guide { margin: 0; -webkit-text-size-adjust: 100%; }
     reliable: <b>"the testis is enlarged, firm, smooth and heavy. This is more noticed in case of
     seminoma, but slight nodularity can be felt. In teratoma the surface is irregular or nodular.
     Consistency may be varying with soft bosses in
-    between."</b><cite class="src das">Das 40 &middot; p.630</cite> And he states the limit plainly:
+    between."</b>​<cite class="src das">Das 40 &middot; p.630</cite> And he states the limit plainly:
     <b>"clinically it may not be possible to differentiate between seminoma from teratoma and final
-    differentiation rests on histology."</b><cite class="src das">Das 40 &middot; p.630</cite></span>
+    differentiation rests on histology."</b>​<cite class="src das">Das 40 &middot; p.630</cite></span>
     <span class="label">The word to use</span><b>Heavy.</b> Weight out of proportion to size is the
     oldest sign of a testicular tumour and the one examiners listen for. B&amp;L's formulation is
     <b>"an intratesticular solid mass"</b>, and its summary box reduces the whole case to: <b>"a
     solid testicular lump that cannot be felt separately from the testis may be a malignant
-    tumour."</b><cite class="src bl">B&amp;L 86 &middot; p.1571</cite>
+    tumour."</b>​<cite class="src bl">B&amp;L 86 &middot; p.1571</cite>
   </div>
 
   <div class="step">
@@ -1165,14 +1177,14 @@ body.guide { margin: 0; -webkit-text-size-adjust: 100%; }
     <span class="why">Gentle pressure on a normal testis produces a characteristic sickening
     discomfort referred to the epigastrium. S Das: <b>"in gumma and malignant tumour of the testis,
     the testicular sensation quickly dwindles away (more so in case of
-    gumma)."</b><cite class="src das">Das 40 &middot; p.622</cite> And of tumours specifically:
+    gumma)."</b>​<cite class="src das">Das 40 &middot; p.622</cite> And of tumours specifically:
     <b>"testicular sensation is always lost early, but one must be very gentle in finding out this
-    sign."</b><cite class="src das">Das 40 &middot; p.630</cite> SRB lists <b>"loss of testicular
+    sign."</b>​<cite class="src das">Das 40 &middot; p.630</cite> SRB lists <b>"loss of testicular
     sensation (in early stage only)"</b> among its
-    findings.<cite class="src srb">SRB 26 &middot; p.1071</cite></span>
+    findings.​<cite class="src srb">SRB 26 &middot; p.1071</cite></span>
     <span class="label out">Be careful how you claim it</span>S Das elsewhere writes that testicular
     sensation <b>"is always absent in testicular
-    tumours"</b>,<cite class="src das">Das 40 &middot; p.626</cite> which is the stronger claim. The
+    tumours"</b>,​<cite class="src das">Das 40 &middot; p.626</cite> which is the stronger claim. The
     sign is useful when <b>lost</b>; its presence does not exclude a tumour, and the whole sign is
     absent from Bailey &amp; Love. Use it to support your diagnosis, never to abandon one. And
     elicit it gently: this is a painful test done badly.
@@ -1183,18 +1195,18 @@ body.guide { margin: 0; -webkit-text-size-adjust: 100%; }
     <span class="why">This is the single most useful discriminator against infection, and SRB names
     it: <b>"sign of vas: to differentiate tumour from infection, in testicular tumours vas is
     normal, cord structures may become bulky because of cremasteric hypertrophy whereas in infection
-    vas is thickened, beaded, tender."</b><cite class="src srb">SRB 26 &middot; p.1072</cite> S Das
+    vas is thickened, beaded, tender."</b>​<cite class="src srb">SRB 26 &middot; p.1072</cite> S Das
     says the same: <b>"the spermatic cord remains normal for quite a long time. But eventually it
     may be thickened due to cremasteric hypertrophy and enlargement of testicular vessels, but the
-    vas is never thickened."</b><cite class="src das">Das 40 &middot; p.630</cite></span>
+    vas is never thickened."</b>​<cite class="src das">Das 40 &middot; p.630</cite></span>
     <span class="label">The logic</span>A tumour is confined by the tunica albuginea and spreads
     along <b>lymphatics</b>, which do not thicken the vas. Tuberculous epididymitis spreads along
     the <b>vas itself</b>, which becomes <b>thickened and beaded</b> from subepithelial tubercles.
     One palpates a tube, the other does not.
     <span class="label">And do a rectal examination</span>S Das: <b>"rectal examination will reveal
     no abnormality of the prostate and seminal
-    vesicles."</b><cite class="src das">Das 40 &middot; p.630</cite> SRB: <b>"vas, prostate and
-    seminal vesicles are normal."</b><cite class="src srb">SRB 26 &middot; p.1071</cite> A
+    vesicles."</b>​<cite class="src das">Das 40 &middot; p.630</cite> SRB: <b>"vas, prostate and
+    seminal vesicles are normal."</b>​<cite class="src srb">SRB 26 &middot; p.1071</cite> A
     <b>normal</b> finding here is positive evidence against genitourinary tuberculosis, which is
     why you do it.
   </div>
@@ -1204,28 +1216,28 @@ body.guide { margin: 0; -webkit-text-size-adjust: 100%; }
     <span class="why">S Das: <b>"lymphatic metastasis will cause enlargement of the pre- and
     para-aortic groups of lymph nodes which are situated just above the level of the umbilicus.
     Liver should be palpated. Lung should be examined including chest X-ray to exclude blood-borne
-    metastasis there."</b><cite class="src das">Das 40 &middot; p.630</cite> SRB describes exactly
+    metastasis there."</b>​<cite class="src das">Das 40 &middot; p.630</cite> SRB describes exactly
     how the nodal mass feels: <b>"often in epigastric region para-aortic lymph nodes may be palpable
     as hard, nodular, nontender, nonmobile, vertically placed, resonant mass (not moving with
-    respiration)."</b><cite class="src srb">SRB 26 &middot; p.1072</cite></span>
+    respiration)."</b>​<cite class="src srb">SRB 26 &middot; p.1072</cite></span>
     <span class="label out">Do not examine the groin and call it staging</span>This is the classic
     error. B&amp;L: <b>"the lymphatic drainage of the testes is to the para-aortic lymph nodes near
     the origin of the gonadal vessels. The contralateral para-aortic lymph nodes are sometimes
     involved by tumour spread, but the inguinal lymph nodes are affected only if the scrotal skin is
-    involved."</b><cite class="src bl">B&amp;L 86 &middot; p.1569</cite> The embryological reason is
+    involved."</b>​<cite class="src bl">B&amp;L 86 &middot; p.1569</cite> The embryological reason is
     the one to give: <b>the testis descends from the posterior abdominal wall and takes its lymphatic
     drainage with it</b>, so the first-echelon nodes are para-aortic, not inguinal. SRB adds that
     previous scrotal or inguinal surgery can also open the inguinal
-    route.<cite class="src srb">SRB 26 &middot; p.1072</cite>
+    route.​<cite class="src srb">SRB 26 &middot; p.1072</cite>
     <span class="label">And the supraclavicular fossa</span>SRB: from the retroperitoneal and
     para-aortic nodes, spread goes on <b>"to left supraclavicular nodes and posterior mediastinal
-    nodes"</b>.<cite class="src srb">SRB 26 &middot; p.1071</cite>
+    nodes"</b>.​<cite class="src srb">SRB 26 &middot; p.1071</cite>
   </div>
 
   <div class="pearl">
     <span class="tag">The primary landing zone, which separates a good answer from a very good one</span>
     SRB gives the side-specific first nodes, and no other book here
-    does.<cite class="src srb">SRB 26 &middot; p.1071</cite>
+    does.​<cite class="src srb">SRB 26 &middot; p.1071</cite>
     <br><br><b>Right testicular tumour:</b> <b>interaortocaval nodes immediately below the renal
     vessels (L2 level)</b> as the primary landing zone, then para-aortic, paracaval, preaortic and
     common iliac.
@@ -1234,7 +1246,7 @@ body.guide { margin: 0; -webkit-text-size-adjust: 100%; }
     <br><br>And one more route worth knowing, because it explains iliac nodes in a testis tumour:
     <b>"lymphatics along the medial side of testis may run with the artery of vas draining into the
     common iliac nodes at the bifurcation of common iliac
-    artery."</b><cite class="src srb">SRB 26 &middot; p.1071</cite>
+    artery."</b>​<cite class="src srb">SRB 26 &middot; p.1071</cite>
   </div>
 
   <h2><span class="n">4</span>Differential diagnosis</h2>
@@ -1250,36 +1262,36 @@ body.guide { margin: 0; -webkit-text-size-adjust: 100%; }
           felt separately because fluid surrounds it. Remember a tumour can have a
           <b>secondary hydrocele</b>: SRB and B&amp;L both say it is common, so a hydrocele that
           will not transilluminate fully, or in a young man, must be
-          imaged<cite class="src srb">SRB 26 &middot; p.1071</cite><cite class="src bl">B&amp;L 86 &middot; p.1571</cite></td></tr>
+          imaged​<cite class="src srb">SRB 26 &middot; p.1071</cite>​<cite class="src bl">B&amp;L 86 &middot; p.1571</cite></td></tr>
       <tr><td><b>Acute epididymo-orchitis</b></td><td>Painful, tender, febrile, <b>vas thickened and
           tender</b>, and it settles on antibiotics. A tumour with intratumoural haemorrhage can
-          mimic it<cite class="src bl">B&amp;L 86 &middot; p.1571</cite></td></tr>
+          mimic it​<cite class="src bl">B&amp;L 86 &middot; p.1571</cite></td></tr>
       <tr><td><b>Tuberculous epididymitis</b></td><td>Begins in the <b>epididymis</b>, especially
           the globus minor; <b>vas beaded</b> from subepithelial tubercles; prostate and seminal
           vesicles may be indurated on rectal examination; a secondary hydrocele in about 30% of
-          cases<cite class="src srb">SRB 26 &middot; p.1059</cite></td></tr>
+          cases​<cite class="src srb">SRB 26 &middot; p.1059</cite></td></tr>
       <tr><td><b>Acute or chronic haematocele</b></td><td>History of trauma or of repeated
           aspiration; S Das notes the absence of gradual enlargement, <b>preserved testicular
           sensation</b> and absence of metastases favour
-          haematocele<cite class="src das">Das 40 &middot; p.626</cite></td></tr>
+          haematocele​<cite class="src das">Das 40 &middot; p.626</cite></td></tr>
       <tr><td><b>Gumma of the testis</b></td><td>Painless, hard, <b>testicular sensation lost early
           and more completely than in a tumour</b>; the testis later softens; a secondary hydrocele
-          is almost always present<cite class="src das">Das 40 &middot; pp.622, 628</cite></td></tr>
+          is almost always present​<cite class="src das">Das 40 &middot; pp.622, 628</cite></td></tr>
       <tr><td><b>Torsion of the testis</b></td><td><b>A surgical emergency, not a differential to
           work through at leisure.</b> Sudden severe pain; the affected testis <b>lies higher</b>
-          than its fellow<cite class="src srb">SRB 26 &middot; p.1071</cite>
+          than its fellow​<cite class="src srb">SRB 26 &middot; p.1071</cite>
           <b>Direction, as SRB teaches it:</b> the <b>right testis rotates clockwise, the left
-          anticlockwise</b>.<cite class="src srb">SRB 26 &middot; p.1068</cite>
+          anticlockwise</b>.​<cite class="src srb">SRB 26 &middot; p.1068</cite>
           <br><b>Explore on clinical suspicion.</b> B&amp;L: Doppler <b>"is not routinely
           recommended"</b>, and <b>"if there is any doubt as to the diagnosis, then urgent scrotal
           exploration is indicated"</b>. Salvage is <b>nearly 100% within 6 hours</b> against
-          <b>20% at 24 hours</b>.<cite class="src bl">B&amp;L 86 &middot; pp.1561, 1562</cite>
+          <b>20% at 24 hours</b>.​<cite class="src bl">B&amp;L 86 &middot; pp.1561, 1562</cite>
           At exploration the testis is untwisted, viability checked, and SRB's rule applied:
           <b>"when in doubt, always testis is left in place and observed"</b>, with orchidectomy
-          only after consent.<cite class="src srb">SRB 26 &middot; p.1069</cite></td></tr>
+          only after consent.​<cite class="src srb">SRB 26 &middot; p.1069</cite></td></tr>
       <tr><td><b>Epididymal cyst</b></td><td><b>Felt separately</b> from the testis, behind and
           above it; multilocular; brilliantly transilluminant, finely tessellated like a
-          <b>Chinese lantern</b><cite class="src das">Das 40 &middot; p.630</cite></td></tr>
+          <b>Chinese lantern</b>​<cite class="src das">Das 40 &middot; p.630</cite></td></tr>
     </tbody>
   </table>
   </div>
@@ -1294,17 +1306,17 @@ body.guide { margin: 0; -webkit-text-size-adjust: 100%; }
       <dt>SRB's text, which is the answer to give</dt>
       <dd>The <b>right testis rotates clockwise and the left anticlockwise</b>. This is in the body
       of SRB's torsion section and is what an Indian examiner is marking
-      against.<cite class="src srb">SRB 26 &middot; p.1068</cite></dd>
+      against.​<cite class="src srb">SRB 26 &middot; p.1068</cite></dd>
       <dt>The line at the foot of SRB p.1073</dt>
       <dd>A one-line quotation sits at the bottom of a page about retroperitoneal node dissection:
       <b>"In torsion testis, testis always twists away from midline"</b>, attributed to
-      <b>John P Sparks</b>.<cite class="src srb">SRB 26 &middot; p.1073</cite> SRB prints several of
+      <b>John P Sparks</b>.​<cite class="src srb">SRB 26 &middot; p.1073</cite> SRB prints several of
       these epigrams as page furniture. It is <b>not</b> part of the torsion teaching, and it does
       not agree with SRB's own text above.</dd>
       <dt>Bailey &amp; Love</dt>
       <dd>Gives <b>no direction at all</b>. It is concerned with the twist's extent and duration:
       720&deg; causes ischaemia faster than 360&deg;, and the window is <b>6
-      hours</b>.<cite class="src bl">B&amp;L 86 &middot; p.1561</cite></dd>
+      hours</b>.​<cite class="src bl">B&amp;L 86 &middot; p.1561</cite></dd>
       <dt>Outside the three books</dt>
       <dd><i>Not from S Das, Bailey &amp; Love or SRB, and flagged as such:</i> standard surgical
       teaching elsewhere is that the testis usually rotates <b>medially</b>, which is why manual
@@ -1324,48 +1336,48 @@ body.guide { margin: 0; -webkit-text-size-adjust: 100%; }
   <dl class="findings">
     <dt>The three prohibitions, first</dt>
     <dd>SRB states them as a heading, and they are worth a mark each: <b>"No FNAC; no scrotal
-    approach; no incision biopsy."</b><cite class="src srb">SRB 26 &middot; p.1073</cite>
+    approach; no incision biopsy."</b>​<cite class="src srb">SRB 26 &middot; p.1073</cite>
     <br><span class="label">Why</span>A needle or an incision through the scrotal skin breaches the
     tunica and opens the <b>inguinal and scrotal lymphatics</b>, which are not the tumour's natural
     route. That converts a disease staged and treated through the para-aortic nodes into one with
     unpredictable inguinal spread, and it changes the field for any later radiotherapy. B&amp;L makes
     the same point from the anatomy: the inguinal nodes are involved <b>"only if the scrotal skin is
-    involved"</b>.<cite class="src bl">B&amp;L 86 &middot; p.1569</cite></dd>
+    involved"</b>.​<cite class="src bl">B&amp;L 86 &middot; p.1569</cite></dd>
     <dt>Ultrasound of the scrotum, and it is mandatory</dt>
     <dd>B&amp;L: <b>"the diagnosis is confirmed by ultrasound scanning of the testis, which is also
     able to assess the contralateral testis. It is a mandatory test in all suspected cases of
-    testicular tumour."</b><cite class="src bl">B&amp;L 86 &middot; p.1571</cite> Its summary box
+    testicular tumour."</b>​<cite class="src bl">B&amp;L 86 &middot; p.1571</cite> Its summary box
     repeats it: <b>"ultrasound is a mandatory investigation in all cases of suspected testicular
-    tumour."</b><cite class="src bl">B&amp;L 86 &middot; p.1571</cite> Say <b>mandatory</b> and say
+    tumour."</b>​<cite class="src bl">B&amp;L 86 &middot; p.1571</cite> Say <b>mandatory</b> and say
     <b>both testes</b>.</dd>
     <dt>Tumour markers, taken <i>before</i> orchidectomy</dt>
     <dd>B&amp;L is explicit about the timing: <b>"blood is taken prior to orchidectomy to measure the
     levels of tumour markers, which are raised in around 50% of
-    cases."</b><cite class="src bl">B&amp;L 86 &middot; p.1571</cite>
+    cases."</b>​<cite class="src bl">B&amp;L 86 &middot; p.1571</cite>
     <br><span class="label">Why before</span>Because the post-operative fall is the measurement that
     tells you whether all tumour has gone, and you cannot interpret a fall without a baseline.
     B&amp;L: <b>"the mean serum half-lives of AFP and HCG are 5 to 7 days and 2 to 3 days,
     respectively, and reassessment of the markers following orchidectomy can indicate whether all the
-    tumour tissue has been removed."</b><cite class="src bl">B&amp;L 86 &middot; p.1571</cite>
+    tumour tissue has been removed."</b>​<cite class="src bl">B&amp;L 86 &middot; p.1571</cite>
     SRB's half-life for beta-HCG is <b>18 to 36 hours</b>, which is the figure Indian papers
-    expect.<cite class="src srb">SRB 26 &middot; p.1073</cite>
+    expect.​<cite class="src srb">SRB 26 &middot; p.1073</cite>
     <br><span class="label">The three markers, and what each means</span>
     <br><b>AFP</b>, from yolk sac elements. SRB: <b>"raised AFP always indicates teratomatous
     tumour. AFP level increase is not seen in pure
-    seminomas."</b><cite class="src srb">SRB 26 &middot; p.1073</cite> That is the single most
+    seminomas."</b>​<cite class="src srb">SRB 26 &middot; p.1073</cite> That is the single most
     examined sentence about markers: <b>a raised AFP means it is not a pure seminoma, whatever the
     histology says.</b>
     <br><b>Beta-HCG</b>, from syncytiotrophoblast. SRB: <b>"beta-HCG is never found in normal
     individual. It is secreted by syncytiotrophoblasts"</b>, and it is raised in
     <b>choriocarcinoma 100%, embryonal carcinoma 65%</b>, teratoma, and in recurrent or residual
-    disease.<cite class="src srb">SRB 26 &middot; p.1073</cite>
+    disease.​<cite class="src srb">SRB 26 &middot; p.1073</cite>
     <br><b>LDH</b>, a burden marker rather than a tissue marker. B&amp;L: <b>"lactate dehydrogenase
     (LDH) is expressed on chromosome 12p, which is often amplified in testis cancer cells. LDH is
     less specific for testis cancer than HCG or AFP. However, elevated LDH levels are associated with
     high tumour burden in seminoma and recurrence in
-    NSGCT."</b><cite class="src bl">B&amp;L 86 &middot; p.1571</cite>
+    NSGCT."</b>​<cite class="src bl">B&amp;L 86 &middot; p.1571</cite>
     <br><b>PLAP</b>, which only SRB gives: <b>"placental alkaline phosphatase (PLAP) is increased in
-    seminoma."</b><cite class="src srb">SRB 26 &middot; p.1073</cite> It does not appear in B&amp;L
+    seminoma."</b>​<cite class="src srb">SRB 26 &middot; p.1073</cite> It does not appear in B&amp;L
     28e's chapter, so offer it as a seminoma marker but do not rest an answer on it.
     <br><span class="label out">The percentages differ between books</span>See the amber box on
     markers. Give the pattern, not a bare number.</dd>
@@ -1373,24 +1385,24 @@ body.guide { margin: 0; -webkit-text-size-adjust: 100%; }
     <dd><b>CT of chest, abdomen and pelvis.</b> B&amp;L: <b>"while a chest radiograph can show the
     'classical' cannonball metastases, CT scanning of the chest, abdomen and pelvis has taken over as
     the most useful means of detecting metastases and monitoring the response to
-    therapy."</b><cite class="src bl">B&amp;L 86 &middot; p.1571</cite> Its summary box: <b>"CT
+    therapy."</b>​<cite class="src bl">B&amp;L 86 &middot; p.1571</cite> Its summary box: <b>"CT
     scanning of chest, abdomen and pelvis is central to the staging of testicular
-    tumours."</b><cite class="src bl">B&amp;L 86 &middot; p.1572</cite> SRB agrees, calling CT better
+    tumours."</b>​<cite class="src bl">B&amp;L 86 &middot; p.1572</cite> SRB agrees, calling CT better
     than ultrasound for the abdomen and <b>HRCT ideal</b> for the
-    chest.<cite class="src srb">SRB 26 &middot; p.1073</cite>
+    chest.​<cite class="src srb">SRB 26 &middot; p.1073</cite>
     <br><span class="label">Say "cannonball metastases"</span>It is the classical chest film
     appearance and it is still in the book, even though CT has superseded the film for staging.</dd>
     <dt>Semen analysis and sperm banking, which candidates forget</dt>
     <dd>B&amp;L puts it first under Treatment: <b>"men should be offered semen analysis and sperm
     banking prior to interventions such as surgery and chemotherapy that may render them
-    infertile."</b><cite class="src bl">B&amp;L 86 &middot; p.1572</cite> These are young men with a
+    infertile."</b>​<cite class="src bl">B&amp;L 86 &middot; p.1572</cite> These are young men with a
     curable cancer. Offering fertility preservation before treatment is part of the correct answer,
     not an afterthought.</dd>
     <dt>Risk-group classification, which SRB expects by name</dt>
     <dd>Based on AFP, beta-HCG, LDH and the presence of non-pulmonary visceral secondaries in bone,
     liver or brain: <b>good risk and intermediate risk for seminomatous germ cell tumour; good,
     intermediate and poor risk for
-    non-seminomatous</b>.<cite class="src srb">SRB 26 &middot; p.1073</cite> There is no poor-risk
+    non-seminomatous</b>.​<cite class="src srb">SRB 26 &middot; p.1073</cite> There is no poor-risk
     category for seminoma, which is the detail worth remembering.</dd>
   </dl>
 
@@ -1405,7 +1417,7 @@ body.guide { margin: 0; -webkit-text-size-adjust: 100%; }
     <dl>
       <dt>S Das</dt>
       <dd><b>"Undescended testis is more vulnerable (about 50 times) to malignant transformation
-      which is not reduced by late orchidopexy."</b><cite class="src das">Das 40 &middot; p.630</cite>
+      which is not reduced by late orchidopexy."</b>​<cite class="src das">Das 40 &middot; p.630</cite>
       Fifty-fold, and no benefit from operating late.</dd>
       <dt>Bailey &amp; Love 28e</dt>
       <dd>Two separate figures, both an order of magnitude lower, and the timing does matter:
@@ -1413,11 +1425,11 @@ body.guide { margin: 0; -webkit-text-size-adjust: 100%; }
       to three times that of the general population. It is five to six times higher when orchidopexy
       is done after puberty. The risk of cancer does not seem to be different when orchidopexy is
       done early in infancy compared with later in
-      childhood."</b><cite class="src bl">B&amp;L 86 &middot; p.1559</cite> It also notes the
+      childhood."</b>​<cite class="src bl">B&amp;L 86 &middot; p.1559</cite> It also notes the
       histology shifts: seminoma is <b>"the most common type of testicular cancer in untreated
       undescended testes"</b>, whereas <b>"after orchidopexy, seminomas represent only 30% of
       testicular tumours in previously undescended
-      testes"</b>.<cite class="src bl">B&amp;L 86 &middot; p.1559</cite></dd>
+      testes"</b>.​<cite class="src bl">B&amp;L 86 &middot; p.1559</cite></dd>
       <dt>Why the figures are so far apart</dt>
       <dd>They are not the same quantity. The old 35 to 50 fold figures come from series of
       <b>untreated, often intra-abdominal</b> testes, where the risk is genuinely much higher.
@@ -1454,12 +1466,12 @@ body.guide { margin: 0; -webkit-text-size-adjust: 100%; }
       <dt>Bailey &amp; Love 28e</dt>
       <dd><b>"A rise in AFP is seen in around 50 to 70% of NSGCTs and a rise in HCG is seen in 40 to
       60% of NSGCTs and around 30% of seminomas."</b> Overall, markers are <b>"raised in around 50%
-      of cases"</b>.<cite class="src bl">B&amp;L 86 &middot; p.1571</cite></dd>
+      of cases"</b>.​<cite class="src bl">B&amp;L 86 &middot; p.1571</cite></dd>
       <dt>SRB</dt>
       <dd><b>"AFP and beta-HCG are elevated in nonseminomatous germ cell tumours (teratomas), 65%...
       beta-HCG may be elevated in advanced cases of seminomas (10%)... LDH is increased in 80% of
       advanced seminomas and 60% of nonseminomatous germ cell
-      tumour."</b><cite class="src srb">SRB 26 &middot; p.1073</cite></dd>
+      tumour."</b>​<cite class="src srb">SRB 26 &middot; p.1073</cite></dd>
       <dt>Where they really differ, and where they only seem to</dt>
       <dd>The <b>NSGCT</b> figures are compatible: SRB's 65% for the pair together sits inside
       B&amp;L's 50 to 70% for AFP and 40 to 60% for HCG. The <b>seminoma</b> figures do not agree:
@@ -1468,7 +1480,7 @@ body.guide { margin: 0; -webkit-text-size-adjust: 100%; }
       figure. The reason may be the <b>syncytiotrophoblastic variant</b>, which SRB itself says
       <b>occurs in 15% of classic seminomas and produces high levels of beta-HCG</b>; depending on
       whether a series counts those, the proportion of HCG-positive seminomas moves
-      substantially.<cite class="src srb">SRB 26 &middot; p.1070</cite></dd>
+      substantially.​<cite class="src srb">SRB 26 &middot; p.1070</cite></dd>
     </dl>
     <span class="ruling"><b>How to answer:</b> answer the pattern, which no book disputes, and quote
     a number only if asked. The pattern: <b>AFP is never raised in a pure seminoma, so a raised AFP
@@ -1479,7 +1491,7 @@ body.guide { margin: 0; -webkit-text-size-adjust: 100%; }
     paper is marked against SRB, and flag that the proportion of HCG-positive seminomas is quoted
     anywhere between 10 and 30%. The clinically important consequence is in both books: <b>a seminoma
     with high markers is treated as a non-seminomatous
-    tumour.</b><cite class="src srb">SRB 26 &middot; p.1073</cite></span>
+    tumour.</b>​<cite class="src srb">SRB 26 &middot; p.1073</cite></span>
     </div>
   </details>
 
@@ -1498,7 +1510,7 @@ body.guide { margin: 0; -webkit-text-size-adjust: 100%; }
       to the cord at or above the level of the deep ring so as to prevent dissemination through
       blood. Frozen section biopsy is done from the suspected area. If tumour is positive, high
       orchidectomy is done (Chevassu
-      manoeuvre)."</b><cite class="src srb">SRB 26 &middot; p.1073</cite> The clamp goes on
+      manoeuvre)."</b>​<cite class="src srb">SRB 26 &middot; p.1073</cite> The clamp goes on
       <b>before</b> the testis is delivered, and the decision to remove it is made on histology
       obtained in theatre.</dd>
       <dt>Bailey &amp; Love 28e</dt>
@@ -1508,7 +1520,7 @@ body.guide { margin: 0; -webkit-text-size-adjust: 100%; }
       dividing the external oblique aponeurosis and a soft clamp is placed across the cord to stop
       dissemination of malignant cells as the testis is mobilised into the wound. If there is a
       tumour the cord should be double transfixed and divided at the level of the internal inguinal
-      ring and the testis removed."</b><cite class="src bl">B&amp;L 86 &middot; pp.1571, 1572</cite>
+      ring and the testis removed."</b>​<cite class="src bl">B&amp;L 86 &middot; pp.1571, 1572</cite>
       The soft clamp is identical. What has gone is the intraoperative histology.</dd>
       <dt>Why the step has faded</dt>
       <dd>High-resolution scrotal ultrasound now makes the diagnosis of a solid intratesticular mass
@@ -1518,7 +1530,7 @@ body.guide { margin: 0; -webkit-text-size-adjust: 100%; }
       cord-stromal tumours and for children with a normal AFP: <b>"a normal AFP level in children
       suggests a strong likelihood of a benign tumour. For such tumours, as in cases of epidermoid
       cysts, testis-sparing surgery of the mass rather than radical orchidectomy can be
-      considered."</b><cite class="src bl">B&amp;L 86 &middot; p.1572</cite></dd>
+      considered."</b>​<cite class="src bl">B&amp;L 86 &middot; p.1572</cite></dd>
     </dl>
     <span class="ruling"><b>How to answer:</b> give the three steps that both books share and
     mention the eponym as an option rather than a requirement. "I would do a radical orchidectomy
@@ -1542,59 +1554,59 @@ body.guide { margin: 0; -webkit-text-size-adjust: 100%; }
     <b>non-seminomatous</b>; and <b>non-germ-cell (5 to 10%)</b>: sex cord-stromal tumours,
     lymphoma, and the rest. B&amp;L's version gives the proportions: <b>GCTs 90 to 95%; sex
     cord-stromal tumours 1 to 2%; lymphoma 3 to 7%; other tumours 1 to
-    2%.</b><cite class="src bl">B&amp;L 86 &middot; p.1569</cite> SRB's incidence list is the one
+    2%.</b>​<cite class="src bl">B&amp;L 86 &middot; p.1569</cite> SRB's incidence list is the one
     Indian papers quote: <b>seminoma 40%, teratoma 32%, seminoma plus teratoma 14%, interstitial
-    tumours 1.5%, lymphoma 7%.</b><cite class="src srb">SRB 26 &middot; p.1070</cite> S Das gives
+    tumours 1.5%, lymphoma 7%.</b>​<cite class="src srb">SRB 26 &middot; p.1070</cite> S Das gives
     <b>seminoma 40%, teratoma 35%, mixed 15%, lymphoma 6%, interstitial 2%, other
-    2%.</b><cite class="src das">Das 40 &middot; p.630</cite></dd>
+    2%.</b>​<cite class="src das">Das 40 &middot; p.630</cite></dd>
     <dt>Seminoma: what it looks like and what it means</dt>
     <dd><b>Gross.</b> <b>"A seminoma typically has a cut surface that is homogeneous and pinkish
     cream in colour. It appears to compress neighbouring testicular
-    tissue."</b><cite class="src bl">B&amp;L 86 &middot; p.1569</cite> SRB: <b>"lobulated, fleshy,
+    tissue."</b>​<cite class="src bl">B&amp;L 86 &middot; p.1569</cite> SRB: <b>"lobulated, fleshy,
     homogeneous, creamy or pinkish"</b> and starting <b>"in the mediastinum of testis and lower
-    pole"</b>.<cite class="src srb">SRB 26 &middot; p.1070</cite>
+    pole"</b>.​<cite class="src srb">SRB 26 &middot; p.1070</cite>
     <br><b>Microscopy.</b> <b>"It consists of oval cells with clear cytoplasm and large, rounded
     nuclei with prominent acidophilic nucleoli. Sheets of cells resembling spermatocytes are
-    separated by a fine fibrous stroma."</b><cite class="src bl">B&amp;L 86 &middot; p.1569</cite>
+    separated by a fine fibrous stroma."</b>​<cite class="src bl">B&amp;L 86 &middot; p.1569</cite>
     <br><span class="label">The one prognostic detail to add</span><b>"Active lymphocytic
     infiltration of the tumour suggests a good host response and a better
-    prognosis."</b><cite class="src bl">B&amp;L 86 &middot; p.1569</cite> SRB mentions the same
-    lymphocytic infiltrate.<cite class="src srb">SRB 26 &middot; p.1070</cite> It is the kind of
+    prognosis."</b>​<cite class="src bl">B&amp;L 86 &middot; p.1569</cite> SRB mentions the same
+    lymphocytic infiltrate.​<cite class="src srb">SRB 26 &middot; p.1070</cite> It is the kind of
     detail that distinguishes an answer.
     <br><b>Spread.</b> <b>"Seminomas metastasise mainly via the lymphatics and haematogenous spread
-    is uncommon."</b><cite class="src bl">B&amp;L 86 &middot; p.1569</cite> S Das: <b>"seminomas
+    is uncommon."</b>​<cite class="src bl">B&amp;L 86 &middot; p.1569</cite> S Das: <b>"seminomas
     first metastasise by lymphatic spread and bloodborne metastasis is late; whereas in teratomas
-    blood-borne metastasis is early."</b><cite class="src das">Das 40 &middot; p.630</cite> That
+    blood-borne metastasis is early."</b>​<cite class="src das">Das 40 &middot; p.630</cite> That
     single contrast explains why the two are staged and treated differently.
     <br><b>Proportion and age.</b> <b>"Seminoma accounts for 50% of all testicular germinal cell
     tumours. They seldom occur in childhood, in young adults or in patients over 70 years of
-    age."</b><cite class="src bl">B&amp;L 86 &middot; p.1570</cite>
+    age."</b>​<cite class="src bl">B&amp;L 86 &middot; p.1570</cite>
     <br><b>SRB's four types</b>, which an Indian paper may ask for: <b>typical or classic</b> (with
     a <b>syncytiotrophoblastic</b> form in 15% producing high beta-HCG); <b>spermatocytic</b>, in
     older men, in which <b>"spread is very rare"</b>; <b>anaplastic</b>, with <b>"high mitotic
     index, nuclear pleomorphism, anaplasia with high potentiality to spread"</b>; and
-    <b>atypical</b>.<cite class="src srb">SRB 26 &middot; p.1070</cite> On spermatocytic seminoma
+    <b>atypical</b>.​<cite class="src srb">SRB 26 &middot; p.1070</cite> On spermatocytic seminoma
     the two books now part company, which the amber box below sets out.</dd>
     <dt>The non-seminomatous tumours, and the marker each produces</dt>
     <dd>B&amp;L's four, <b>"which may coexist within a single
-    tumour"</b>:<cite class="src bl">B&amp;L 86 &middot; p.1569</cite>
+    tumour"</b>:​<cite class="src bl">B&amp;L 86 &middot; p.1569</cite>
     <br><b>Embryonal carcinoma.</b> <b>"Highly malignant tumours that occasionally invade cord
-    structures."</b><cite class="src bl">B&amp;L 86 &middot; p.1569</cite>
+    structures."</b>​<cite class="src bl">B&amp;L 86 &middot; p.1569</cite>
     <br><b>Yolk sac tumour.</b> Produces <b>AFP</b>. <b>"It appears as a single tumour type in
     children and part of a mixed tumour in
-    adults."</b><cite class="src bl">B&amp;L 86 &middot; pp.1569, 1570</cite> SRB adds the histology
+    adults."</b>​<cite class="src bl">B&amp;L 86 &middot; pp.1569, 1570</cite> SRB adds the histology
     detail: the endodermal sinus tumour <b>"contains Schiller-Duval
-    bodies"</b>.<cite class="src srb">SRB 26 &middot; p.1070</cite>
+    bodies"</b>.​<cite class="src srb">SRB 26 &middot; p.1070</cite>
     <br><b>Teratoma.</b> <b>"Teratomas consist of different tissues derived from ectoderm, endoderm
-    and mesoderm."</b><cite class="src bl">B&amp;L 86 &middot; p.1570</cite> SRB: <b>"it arises from
+    and mesoderm."</b>​<cite class="src bl">B&amp;L 86 &middot; p.1570</cite> SRB: <b>"it arises from
     totipotent cells"</b>, the cut surface shows <b>"solid and cystic spaces with areas of
     haemorrhage... gelatinous fluid and cartilaginous nodules"</b>, and <b>"teratoma spreads mainly
     through blood, less commonly through
-    lymphatics"</b>.<cite class="src srb">SRB 26 &middot; p.1070</cite>
+    lymphatics"</b>.​<cite class="src srb">SRB 26 &middot; p.1070</cite>
     <br><b>Choriocarcinoma.</b> Produces <b>beta-HCG</b>. <b>"This is part of a testicular GCT in
     25% of tumours in adults. It very seldom appears as the single tumour component... this is a
     highly malignant tumour that metastasises early via both the lymphatics and the
-    bloodstream."</b><cite class="src bl">B&amp;L 86 &middot; p.1570</cite>
+    bloodstream."</b>​<cite class="src bl">B&amp;L 86 &middot; p.1570</cite>
     <br><span class="label out">And how teratoma is subclassified, which has changed</span>See the
     amber box: B&amp;L has abandoned the mature and immature split that SRB still teaches, and SRB
     additionally gives the four British Testicular Tumour Panel types.</dd>
@@ -1604,17 +1616,17 @@ body.guide { margin: 0; -webkit-text-size-adjust: 100%; }
     with Klinefelter's syndrome... most of these tumours are benign. Malignant transformation occurs
     in 10% and is related to increased size (over 5 cm), increased cellular atypia, increased cell
     proliferation, necrosis, vessel invasion and DNA
-    aneuploidy."</b><cite class="src bl">B&amp;L 86 &middot; p.1570</cite>
+    aneuploidy."</b>​<cite class="src bl">B&amp;L 86 &middot; p.1570</cite>
     <br><b>Sertoli cell tumour</b>: <b>"less than 1% of testicular tumours, and the mean age at
     diagnosis is around 45 years... rarely, these occur in patients with androgen insensitivity
     syndrome and Peutz-Jeghers syndrome. The rate of malignancy ranges between 10% and
-    22%."</b><cite class="src bl">B&amp;L 86 &middot; p.1570</cite>
+    22%."</b>​<cite class="src bl">B&amp;L 86 &middot; p.1570</cite>
     <br><b>Granulosa cell tumour</b>: <b>"extremely rare in adult men, but a juvenile type accounts
-    for 6% of testis tumours in childhood."</b><cite class="src bl">B&amp;L 86 &middot; p.1571</cite>
+    for 6% of testis tumours in childhood."</b>​<cite class="src bl">B&amp;L 86 &middot; p.1571</cite>
     <br><b>Gonadoblastoma</b>, the mixed germ cell and sex cord tumour: <b>"seen in individuals with
     mixed gonadal dysgenesis (risk 15 to 25%), which is associated with cryptorchidism, hypospadias,
     gynaecomastia or female internal genitalia. It seldom occurs in phenotypical and genotypical
-    males."</b><cite class="src bl">B&amp;L 86 &middot; p.1571</cite></dd>
+    males."</b>​<cite class="src bl">B&amp;L 86 &middot; p.1571</cite></dd>
     <dt>Tumours in children are a different disease</dt>
     <dd><b>"Paediatric testicular tumours are distinct from adult testicular tumours. GCTs in adults
     represent about 95% of all testicular tumours but only 60 to 75% in children. The most common
@@ -1623,12 +1635,12 @@ body.guide { margin: 0; -webkit-text-size-adjust: 100%; }
     radical orchidectomy, which is often recommended whenever the AFP level is elevated (suggesting
     the presence of a yolk sac tumour at age over 1 year). A normal AFP level in children suggests a
     strong likelihood of a benign
-    tumour."</b><cite class="src bl">B&amp;L 86 &middot; p.1572</cite></dd>
+    tumour."</b>​<cite class="src bl">B&amp;L 86 &middot; p.1572</cite></dd>
     <dt>SRB's two terms that B&amp;L does not use</dt>
     <dd><b>Hurricane type</b>: <b>"a very aggressive, highly malignant testicular tumour which is
-    more often fatal in few weeks."</b><cite class="src srb">SRB 26 &middot; p.1072</cite> And SRB
+    more often fatal in few weeks."</b>​<cite class="src srb">SRB 26 &middot; p.1072</cite> And SRB
     names the other classifications an examiner may mention: <b>Dixon and Moore, WHO, and the
-    British tumour panel</b>.<cite class="src srb">SRB 26 &middot; p.1070</cite> Neither "hurricane"
+    British tumour panel</b>.​<cite class="src srb">SRB 26 &middot; p.1070</cite> Neither "hurricane"
     nor "Dixon" appears in B&amp;L 28e's chapter, so recognise them without relying on them.</dd>
   </dl>
 
@@ -1649,14 +1661,14 @@ body.guide { margin: 0; -webkit-text-size-adjust: 100%; }
       2. Teratoma intermediate (30%) common, two subtypes are A and B. Type A contains matured cells
       but type B is more malignant consisting of less proper differentiated tissues. 3. Teratoma
       anaplastic (15%), secretes alpha-fetoprotein. 4. Teratoma trophoblastic (1%), it shows high
-      levels of beta-HCG."</b><cite class="src srb">SRB 26 &middot; p.1070</cite></dd>
+      levels of beta-HCG."</b>​<cite class="src srb">SRB 26 &middot; p.1070</cite></dd>
       <dt>Bailey &amp; Love 28e</dt>
       <dd>Describes the tissues and then deletes the classification: <b>"immature components are
       often neuroectodermal or mesenchymal tissue, while more mature tissue is often cystic with
       epithelial differentiation or consists of smooth muscle, connective tissue or cartilage. Since
       most teratomas consist of a mixture of tissues, the old separation into mature and immature
       types has been abandoned. All can
-      metastasise."</b><cite class="src bl">B&amp;L 86 &middot; p.1570</cite> The <b>British
+      metastasise."</b>​<cite class="src bl">B&amp;L 86 &middot; p.1570</cite> The <b>British
       Testicular Tumour Panel is not named</b>, and none of the subtype phrases appears: not
       <b>teratoma differentiated</b>, <b>teratoma intermediate</b>, <b>teratoma anaplastic</b>,
       <b>teratoma trophoblastic</b>, nor the abbreviations <b>MTU</b> and <b>MTI</b>. The word
@@ -1670,7 +1682,7 @@ body.guide { margin: 0; -webkit-text-size-adjust: 100%; }
       specimen labelled by its predominant tissue tells you little, and modern management is driven
       instead by <b>stage, markers and lymphovascular invasion</b>, not by the teratoma subtype.
       That is why B&amp;L's management section stratifies NSGCT by lymphovascular invasion rather
-      than by histological grade.<cite class="src bl">B&amp;L 86 &middot; p.1572</cite></dd>
+      than by histological grade.​<cite class="src bl">B&amp;L 86 &middot; p.1572</cite></dd>
     </dl>
     <span class="ruling"><b>How to answer:</b> this one depends on who is asking, so prepare both and
     lead with the reasoning. For an <b>Indian written paper or a viva from an Indian textbook</b>,
@@ -1696,14 +1708,14 @@ body.guide { margin: 0; -webkit-text-size-adjust: 100%; }
       <dt>SRB</dt>
       <dd>Lists it among the <i>types of seminoma</i>, under the seminomatous germ cell tumours:
       <b>"spermatocytic seminoma occurs in older people with different phases of spermatogonia.
-      Spread in this type is very rare."</b><cite class="src srb">SRB 26 &middot; p.1070</cite></dd>
+      Spread in this type is very rare."</b>​<cite class="src srb">SRB 26 &middot; p.1070</cite></dd>
       <dt>Bailey &amp; Love 28e</dt>
       <dd>Gives it its own heading and reclassifies it: <b>"this tumour was earlier believed to be a
       variant of seminoma, but is now considered to be a separate tumour type, accounting for 1 to
       2% of all GCTs of the testis. Only seen in adult men usually over 50 years old, they rarely
       metastasise; therefore, an orchidectomy is the only necessary treatment, even in large
       tumours. Development of sarcomas has been reported when left untreated for long
-      time."</b><cite class="src bl">B&amp;L 86 &middot; p.1570</cite></dd>
+      time."</b>​<cite class="src bl">B&amp;L 86 &middot; p.1570</cite></dd>
       <dt>What follows from it</dt>
       <dd>The clinical teaching is the same in both books, that it barely metastasises. B&amp;L just
       draws the explicit management conclusion that SRB leaves implicit: because it so rarely
@@ -1727,28 +1739,28 @@ body.guide { margin: 0; -webkit-text-size-adjust: 100%; }
     <dt>The clinical four-stage system SRB expects</dt>
     <dd><b>I.</b> Lesion confined to the testis. <b>II.</b> Nodes involved below the diaphragm.
     <b>III.</b> Nodes involved above the diaphragm. <b>IV.</b> Distant, blood-borne
-    spread.<cite class="src srb">SRB 26 &middot; p.1072</cite> Easy to recite, easy to draw, and
+    spread.​<cite class="src srb">SRB 26 &middot; p.1072</cite> Easy to recite, easy to draw, and
     the one to write if the question says "stage a testicular tumour".</dd>
     <dt>The TNM elements worth knowing</dt>
     <dd><b>T1</b> limited to testis and epididymis, no vascular or lymphatic invasion, may invade
     tunica albuginea but not tunica vaginalis. <b>T2</b> the same but <b>with</b> vascular or
     lymphatic invasion, or extending through tunica albuginea into tunica vaginalis. <b>T3</b>
     invades spermatic cord. <b>T4</b> invades
-    scrotum.<cite class="src srb">SRB 26 &middot; p.1072</cite>
+    scrotum.​<cite class="src srb">SRB 26 &middot; p.1072</cite>
     <br><b>N</b> by node size: <b>N1</b> not more than 2 cm; <b>N2</b> 2 to 5 cm; <b>N3</b> over
-    5 cm.<cite class="src srb">SRB 26 &middot; p.1072</cite>
+    5 cm.​<cite class="src srb">SRB 26 &middot; p.1072</cite>
     <br><b>M1a</b> non-regional nodes or lung; <b>M1b</b>
-    elsewhere.<cite class="src srb">SRB 26 &middot; p.1072</cite>
+    elsewhere.​<cite class="src srb">SRB 26 &middot; p.1072</cite>
     <br><span class="label">The S category, which is unique to this cancer</span>Testis is one of
     the few sites where <b>serum markers are part of the stage</b>. <b>S0</b> normal; <b>S1</b> LDH
     under 1.5 times normal and HCG under 5000 mIU/mL and AFP under 1000 ng/mL; <b>S2</b> LDH 1.5 to
     10 times normal, or HCG 5000 to 50 000, or AFP 1000 to 10
-    000.<cite class="src srb">SRB 26 &middot; p.1072</cite> Saying that markers are built into the
+    000.​<cite class="src srb">SRB 26 &middot; p.1072</cite> Saying that markers are built into the
     staging system, and that this is unusual, is worth a mark on its own.</dd>
     <dt>How many patients present early</dt>
     <dd>B&amp;L: <b>"between 75% and 80% of patients with seminoma and about 55 to 64% of patients
     with NSGCT have stage I disease at
-    diagnosis."</b><cite class="src bl">B&amp;L 86 &middot; p.1572</cite> So most present with
+    diagnosis."</b>​<cite class="src bl">B&amp;L 86 &middot; p.1572</cite> So most present with
     disease confined to the testis, which is why the cure rates are what they are.</dd>
   </dl>
 
@@ -1763,20 +1775,20 @@ body.guide { margin: 0; -webkit-text-size-adjust: 100%; }
       <dt>SRB</dt>
       <dd>Four, split at the diaphragm, with blood-borne spread as a separate stage: <b>"I. Lesion
       confined to testis. II. Nodes involved below the diaphragm. III. Nodes involved above the
-      diaphragm. IV. Distant (blood) spread."</b><cite class="src srb">SRB 26 &middot; p.1072</cite>
+      diaphragm. IV. Distant (blood) spread."</b>​<cite class="src srb">SRB 26 &middot; p.1072</cite>
       SRB then also gives the full TNM with stage groupings to <b>IIIC</b>, where distant metastasis
       sits in <b>stage III</b>, so SRB's own two systems do not quite agree with each
-      other.<cite class="src srb">SRB 26 &middot; p.1073</cite></dd>
+      other.​<cite class="src srb">SRB 26 &middot; p.1073</cite></dd>
       <dt>Bailey &amp; Love 28e</dt>
       <dd>Three prognostic groups, and no stage IV: <b>"prognostic groups can be defined according
       to non-metastatic (stage I) and metastatic disease (lymph node metastasis, stage II; distant
       metastasis or nodal metastasis with elevated tumour markers, stage III)."</b> It then refers
       the detail out: <b>"the exact classification details can be found in the TNM Classification of
       Malignant Tumours, 8th
-      edn."</b><cite class="src bl">B&amp;L 86 &middot; p.1572</cite> Note what B&amp;L puts in
+      edn."</b>​<cite class="src bl">B&amp;L 86 &middot; p.1572</cite> Note what B&amp;L puts in
       stage III: not only distant metastasis but also <b>nodal disease with elevated markers</b>.
       And its management strategies are <b>"adapted from the European Association of Urology's
-      current guidelines"</b>.<cite class="src bl">B&amp;L 86 &middot; p.1572</cite></dd>
+      current guidelines"</b>.​<cite class="src bl">B&amp;L 86 &middot; p.1572</cite></dd>
       <dt>Where the trap is</dt>
       <dd>In SRB's clinical system, <b>stage III means supradiaphragmatic nodes</b> and stage IV
       means blood-borne spread. In B&amp;L and in TNM 8, <b>stage III means distant metastasis</b>,
@@ -1805,9 +1817,9 @@ body.guide { margin: 0; -webkit-text-size-adjust: 100%; }
     and a soft clamp is placed across the cord to stop dissemination of malignant cells as the testis
     is mobilised into the wound. If there is a tumour the cord should be double transfixed and divided
     at the level of the internal inguinal ring and the testis
-    removed."</b><cite class="src bl">B&amp;L 86 &middot; p.1572</cite> SRB: <b>high orchidectomy
+    removed."</b>​<cite class="src bl">B&amp;L 86 &middot; p.1572</cite> SRB: <b>high orchidectomy
     through the inguinal approach, with the cord ligated at or above the internal ring,
-    <i>not</i> through a scrotal incision</b>.<cite class="src srb">SRB 26 &middot; p.1074</cite>
+    <i>not</i> through a scrotal incision</b>.​<cite class="src srb">SRB 26 &middot; p.1074</cite>
     <br><span class="label">The three things to say, in order</span><b>Inguinal, not scrotal.
     Clamp the cord before you mobilise the testis. Divide the cord at the internal ring.</b> Each has
     a reason: the incision avoids opening the scrotal lymphatics; the clamp prevents venous
@@ -1818,41 +1830,41 @@ body.guide { margin: 0; -webkit-text-size-adjust: 100%; }
     <dd>B&amp;L states why the outlook is good: <b>"the treatment of patients with GCTs of the testis
     is usually successful, even in advanced cases. This largely reflects the excellent response of
     these tumours to chemotherapy and (for seminomatous tumours) to
-    radiotherapy."</b><cite class="src bl">B&amp;L 86 &middot; p.1572</cite> Its summary box:
+    radiotherapy."</b>​<cite class="src bl">B&amp;L 86 &middot; p.1572</cite> Its summary box:
     <b>"testicular tumours are extremely sensitive to platinum-based chemotherapy"</b> and
     <b>"prognosis is excellent when the patient is treated with combination chemotherapy in a cancer
-    centre."</b><cite class="src bl">B&amp;L 86 &middot; p.1572</cite></dd>
+    centre."</b>​<cite class="src bl">B&amp;L 86 &middot; p.1572</cite></dd>
     <dt>Stage I seminoma: three options, and the choice has changed</dt>
     <dd>The risk you are treating: <b>"about 15% of patients with clinical stage I seminoma have
     subclinical metastatic disease, usually in the retroperitoneum, and will relapse after
-    orchidectomy alone."</b><cite class="src bl">B&amp;L 86 &middot; p.1572</cite>
+    orchidectomy alone."</b>​<cite class="src bl">B&amp;L 86 &middot; p.1572</cite>
     <br><b>Surveillance.</b> <b>"Recurrence rates of 6% have been described in patients with low-risk
     features, including tumour size under 4 cm and no stromal rete testis invasion, with
     cancer-specific survival rate reported with surveillance at over 95%. The main limitation of
-    surveillance is the need for intensive follow-up."</b><cite class="src bl">B&amp;L 86 &middot; p.1572</cite>
+    surveillance is the need for intensive follow-up."</b>​<cite class="src bl">B&amp;L 86 &middot; p.1572</cite>
     <br><b>Adjuvant carboplatin.</b> <b>"One course of adjuvant carboplatin therapy compared with
     radiotherapy shows no significant difference in recurrence rate, time to recurrence and survival
-    after a median follow-up of 4 years."</b><cite class="src bl">B&amp;L 86 &middot; p.1572</cite>
+    after a median follow-up of 4 years."</b>​<cite class="src bl">B&amp;L 86 &middot; p.1572</cite>
     <br><b>Adjuvant radiotherapy.</b> <b>"Seminomas are radiosensitive. Radiotherapy to a para-aortic
     field or to para-aortic and ipsilateral iliac nodes reduces the relapse rate to 1 to 3%. The rate
     of severe radiation toxicity is under 2%. The main concern is the long-term risk of secondary
-    malignancies."</b><cite class="src bl">B&amp;L 86 &middot; p.1572</cite>
+    malignancies."</b>​<cite class="src bl">B&amp;L 86 &middot; p.1572</cite>
     <br><span class="label out">And this is where the books diverge</span>See the amber box. SRB
     calls radiotherapy the treatment of choice; B&amp;L no longer does.</dd>
     <dt>Stage I NSGCT: three options, and here the balance has also shifted</dt>
     <dd>The risk: <b>"up to 50% of patients with NSGCT with clinical stage I disease have subclinical
     metastases and will relapse during
-    surveillance."</b><cite class="src bl">B&amp;L 86 &middot; p.1572</cite>
+    surveillance."</b>​<cite class="src bl">B&amp;L 86 &middot; p.1572</cite>
     <br><b>Surveillance</b>, for selected patients: <b>"14 to 48% of CSI-NSGCT patients undergoing
     surveillance have recurrence within 2 years of orchidectomy. Careful surveillance can be an
     option for compliant, risk-stratified (based on the presence of lymphovascular invasion) patients
     who are well informed about the expected recurrence rate as well as the salvage
-    treatment."</b><cite class="src bl">B&amp;L 86 &middot; p.1572</cite> Note the stratifier:
+    treatment."</b>​<cite class="src bl">B&amp;L 86 &middot; p.1572</cite> Note the stratifier:
     <b>lymphovascular invasion</b>.
     <br><b>Adjuvant chemotherapy</b>: <b>"one cycle of bleomycin-etoposide-cisplatin (BEP) is now the
     recommended strategy with recurrence rates of around 3%. The very long-term side effects,
     particularly cardiovascular, remain to be
-    ascertained."</b><cite class="src bl">B&amp;L 86 &middot; p.1572</cite>
+    ascertained."</b>​<cite class="src bl">B&amp;L 86 &middot; p.1572</cite>
     <br><b>RPLND</b>: its role <b>"has now decreased"</b>. See the amber box.</dd>
     <dt>Metastatic disease, stages II and III</dt>
     <dd><b>"Treatment for metastatic testicular cancer is chemotherapy. Previously, radiotherapy was
@@ -1860,37 +1872,37 @@ body.guide { margin: 0; -webkit-text-size-adjust: 100%; }
     led to chemotherapy (three cycles of BEP or four cycles of etoposide and cisplatin) being the
     preferred alternative... the initial treatment is chemotherapy (BEP) in all advanced cases of
     NSGCT except postpubertal teratoma without elevated tumour markers, which can be managed by
-    RPLND surgery."</b><cite class="src bl">B&amp;L 86 &middot; p.1572</cite> SRB's regimen is the
+    RPLND surgery."</b>​<cite class="src bl">B&amp;L 86 &middot; p.1572</cite> SRB's regimen is the
     same: <b>"BEP regimen is commonly used"</b>, with cisplatin, bleomycin, vinblastine, etoposide,
     ifosfamide, mesna and paclitaxel among the available
-    drugs.<cite class="src srb">SRB 26 &middot; p.1074</cite></dd>
+    drugs.​<cite class="src srb">SRB 26 &middot; p.1074</cite></dd>
     <dt>RPLND: what it removes and what it costs</dt>
     <dd>SRB describes the field in detail, which is what an Indian examiner will ask for:
     <b>"removal of precaval, retrocaval, paracaval, interaortocaval, retroaortic, para-aortic, common
     iliac nodes along with removal of gonadal vein and adjacent fibrofatty tissues from internal ring
     level to its insertion into renal vein on left side and inferior vena cava on right
-    side."</b><cite class="src srb">SRB 26 &middot; p.1073</cite>
+    side."</b>​<cite class="src srb">SRB 26 &middot; p.1073</cite>
     <br><b>Mortality 1%.</b> <b>Complications:</b> haemorrhage; injury to major vessels, ureter or
     bowel; chylous ascites; lymphocele; and <b>retrograde
-    ejaculation</b>.<cite class="src srb">SRB 26 &middot; p.1074</cite>
+    ejaculation</b>.​<cite class="src srb">SRB 26 &middot; p.1074</cite>
     <br><span class="label">The modification that exists only to save ejaculation</span><b>"Modified
     RPLND is same side lymph node dissection both above and below the inferior mesenteric artery
     (IMA); opposite side dissection is limited to above the level of IMA so that sympathetic chain on
     opposite side is preserved to retain
-    ejaculation."</b><cite class="src srb">SRB 26 &middot; p.1074</cite> SRB adds that <b>nerve
+    ejaculation."</b>​<cite class="src srb">SRB 26 &middot; p.1074</cite> SRB adds that <b>nerve
     sparing RPLND is ideal if technically possible</b>, done on the side opposite the tumour, and
     that <b>laparoscopic RPLND is also advocated
-    safely</b>.<cite class="src srb">SRB 26 &middot; p.1074</cite> The anatomical point to say is
+    safely</b>.​<cite class="src srb">SRB 26 &middot; p.1074</cite> The anatomical point to say is
     that ejaculation depends on the <b>sympathetic chain and the hypogastric plexus</b>, which lie in
     the field of dissection.</dd>
     <dt>Follow-up and prognosis</dt>
     <dd>SRB: <b>"measurement of tumour markers at regular intervals for 5 years and yearly after 5
     years. CT abdomen and chest once a
-    year."</b><cite class="src srb">SRB 26 &middot; p.1074</cite> Prognosis depends on
+    year."</b>​<cite class="src srb">SRB 26 &middot; p.1074</cite> Prognosis depends on
     <b>histology and stage</b>: SRB gives <b>stage II 90% and stage III 70% five-year
-    survival</b>.<cite class="src srb">SRB 26 &middot; p.1074</cite> B&amp;L's framing is that
+    survival</b>.​<cite class="src srb">SRB 26 &middot; p.1074</cite> B&amp;L's framing is that
     <b>prognosis is excellent with combination chemotherapy in a cancer
-    centre</b>.<cite class="src bl">B&amp;L 86 &middot; p.1572</cite></dd>
+    centre</b>.​<cite class="src bl">B&amp;L 86 &middot; p.1572</cite></dd>
   </dl>
 
   <details open class="conflict">
@@ -1906,7 +1918,7 @@ body.guide { margin: 0; -webkit-text-size-adjust: 100%; }
       <dd>Unqualified: <b>"seminomas are radiosensitive. So after high orchidectomy, radiotherapy is
       given to increase the cure rate and also to reduce relapse. It is the treatment of choice in
       stage I seminomas. Opposite testis should be shielded during
-      radiotherapy."</b><cite class="src srb">SRB 26 &middot; p.1073</cite> Chemotherapy is
+      radiotherapy."</b>​<cite class="src srb">SRB 26 &middot; p.1073</cite> Chemotherapy is
       mentioned as <b>"also effective"</b>, with cisplatin named, and surveillance is not offered as
       an option at all.</dd>
       <dt>Bailey &amp; Love 28e</dt>
@@ -1914,15 +1926,15 @@ body.guide { margin: 0; -webkit-text-size-adjust: 100%; }
       are radiosensitive and that radiotherapy <b>"reduces the relapse rate to 1 to 3%"</b> with
       <b>"the rate of severe radiation toxicity under 2%"</b>, and then adds the sentence that has
       changed practice: <b>"the main concern is the long-term risk of secondary
-      malignancies."</b><cite class="src bl">B&amp;L 86 &middot; p.1572</cite> It notes that one
+      malignancies."</b>​<cite class="src bl">B&amp;L 86 &middot; p.1572</cite> It notes that one
       course of carboplatin is equivalent to radiotherapy on recurrence, time to recurrence and
       survival, and that surveillance in low-risk disease (under 4 cm, no stromal rete testis
       invasion) gives 6% recurrence with over 95% cancer-specific
-      survival.<cite class="src bl">B&amp;L 86 &middot; p.1572</cite> For <b>stage II</b> seminoma it
+      survival.​<cite class="src bl">B&amp;L 86 &middot; p.1572</cite> For <b>stage II</b> seminoma it
       goes further and states the reversal explicitly: <b>"previously, radiotherapy was often used
       for early stage II seminoma but the cardiovascular and second malignancy risks have led to
       chemotherapy... being the preferred
-      alternative."</b><cite class="src bl">B&amp;L 86 &middot; p.1572</cite></dd>
+      alternative."</b>​<cite class="src bl">B&amp;L 86 &middot; p.1572</cite></dd>
       <dt>Why it changed</dt>
       <dd>Not because radiotherapy stopped working. It works extremely well: 1 to 3% relapse. The
       problem is that these are men in their thirties who will be cured and then live for fifty
@@ -1960,8 +1972,8 @@ body.guide { margin: 0; -webkit-text-size-adjust: 100%; }
       teratoma, retroperitoneal radical lymph node dissection (RPLND) is beneficial after high
       orchidectomy. Even in stage I disease, chances of existing retroperitoneal spread is 30%. So
       RPLND (infrahilar) has a major role especially in teratomas which are relatively
-      radioresistant."</b><cite class="src srb">SRB 26 &middot; p.1073</cite> It adds <b>"radiotherapy
-      is not beneficial in teratoma"</b>,<cite class="src srb">SRB 26 &middot; p.1074</cite> which is
+      radioresistant."</b>​<cite class="src srb">SRB 26 &middot; p.1073</cite> It adds <b>"radiotherapy
+      is not beneficial in teratoma"</b>,​<cite class="src srb">SRB 26 &middot; p.1074</cite> which is
       the reason surgery carried the burden: if the tumour will not respond to radiation, the
       alternatives were surgery or chemotherapy.</dd>
       <dt>Bailey &amp; Love 28e</dt>
@@ -1969,11 +1981,11 @@ body.guide { margin: 0; -webkit-text-size-adjust: 100%; }
       compares the two strategies head to head: <b>"the role of this surgery has now decreased with
       2-year recurrence-free survival with adjuvant BEP times 1 versus RPLND favouring chemotherapy
       with recurrence-free survival of 99.5% versus
-      91%."</b><cite class="src bl">B&amp;L 86 &middot; p.1572</cite> One cycle of BEP is
+      91%."</b>​<cite class="src bl">B&amp;L 86 &middot; p.1572</cite> One cycle of BEP is
       <b>"now the recommended strategy"</b>, with recurrence around
-      3%.<cite class="src bl">B&amp;L 86 &middot; p.1572</cite> RPLND survives for one specific
+      3%.​<cite class="src bl">B&amp;L 86 &middot; p.1572</cite> RPLND survives for one specific
       indication: <b>"postpubertal teratoma without elevated tumour markers, which can be managed by
-      RPLND surgery"</b>.<cite class="src bl">B&amp;L 86 &middot; p.1572</cite></dd>
+      RPLND surgery"</b>.​<cite class="src bl">B&amp;L 86 &middot; p.1572</cite></dd>
       <dt>What actually settles it</dt>
       <dd>A direct comparison: 99.5% against 91% recurrence-free survival at two years. Both books
       are reasoning from the same premise, that a third to a half of clinical stage I NSGCTs harbour
@@ -1981,7 +1993,7 @@ body.guide { margin: 0; -webkit-text-size-adjust: 100%; }
       treat it with one cycle of chemotherapy, which also treats disease outside the dissection field
       and avoids retrograde ejaculation. SRB itself concedes the price, listing retrograde ejaculation
       among the complications and describing modified and nerve-sparing dissections designed to avoid
-      it.<cite class="src srb">SRB 26 &middot; p.1074</cite></dd>
+      it.​<cite class="src srb">SRB 26 &middot; p.1074</cite></dd>
     </dl>
     <span class="ruling"><b>How to answer:</b> state the problem, then both solutions with the
     numbers. "Up to a third to a half of clinical stage I non-seminomatous tumours have occult
@@ -2004,7 +2016,7 @@ body.guide { margin: 0; -webkit-text-size-adjust: 100%; }
       <summary>What proportion of testicular swellings that are tumours are malignant?</summary>
       <p class="ans">99%. Testicular tumours are about 1% of all male malignancies but one of the
       commonest cancers in young men, which is why a solid intratesticular mass is treated as
-      malignant from the outset.<cite class="src das">Das 40 &middot; p.630</cite><cite class="src bl">B&amp;L 86 &middot; p.1569</cite></p>
+      malignant from the outset.​<cite class="src das">Das 40 &middot; p.630</cite>​<cite class="src bl">B&amp;L 86 &middot; p.1569</cite></p>
     </details>
 
     <details open>
@@ -2013,7 +2025,7 @@ body.guide { margin: 0; -webkit-text-size-adjust: 100%; }
       The non-seminomatous group contains embryonal carcinoma, yolk sac tumour, teratoma and
       choriocarcinoma. Non-germ-cell tumours, 5 to 10%, are the sex cord-stromal tumours (Leydig,
       Sertoli, granulosa), gonadoblastoma, lymphoma and
-      secondaries.<cite class="src bl">B&amp;L 86 &middot; p.1569</cite><cite class="src srb">SRB 26 &middot; p.1070</cite>
+      secondaries.​<cite class="src bl">B&amp;L 86 &middot; p.1569</cite>​<cite class="src srb">SRB 26 &middot; p.1070</cite>
       By frequency, SRB: seminoma 40%, teratoma 32%, mixed 14%, lymphoma 7%, interstitial
       1.5%.</p>
     </details>
@@ -2021,16 +2033,16 @@ body.guide { margin: 0; -webkit-text-size-adjust: 100%; }
     <details open>
       <summary>Seminoma or teratoma, from the age?</summary>
       <p class="ans">Teratoma in the twenties, seminoma in the thirties and forties, with the
-      crossover around 30.<cite class="src das">Das 40 &middot; p.630</cite><cite class="src bl">B&amp;L 86 &middot; p.1569</cite>
+      crossover around 30.​<cite class="src das">Das 40 &middot; p.630</cite>​<cite class="src bl">B&amp;L 86 &middot; p.1569</cite>
       But S Das is explicit that clinical differentiation is unreliable and the final answer rests on
-      histology.<cite class="src das">Das 40 &middot; p.630</cite></p>
+      histology.​<cite class="src das">Das 40 &middot; p.630</cite></p>
     </details>
 
     <details open>
       <summary>Which spreads by blood and which by lymph?</summary>
       <p class="ans">Seminoma spreads mainly by lymphatics, to the para-aortic nodes, and
       blood-borne spread is late and uncommon. In teratoma, blood-borne spread is
-      early.<cite class="src das">Das 40 &middot; p.630</cite><cite class="src bl">B&amp;L 86 &middot; p.1569</cite>
+      early.​<cite class="src das">Das 40 &middot; p.630</cite>​<cite class="src bl">B&amp;L 86 &middot; p.1569</cite>
       That is why a chest CT matters particularly in a teratoma.</p>
     </details>
 
@@ -2039,7 +2051,7 @@ body.guide { margin: 0; -webkit-text-size-adjust: 100%; }
       <p class="ans">The para-aortic nodes near the origin of the gonadal vessels, because the testis
       descends from the posterior abdominal wall and takes its lymphatic drainage with it. The
       inguinal nodes are involved only if the scrotal skin is involved, or after previous scrotal or
-      inguinal surgery.<cite class="src bl">B&amp;L 86 &middot; p.1569</cite><cite class="src srb">SRB 26 &middot; p.1072</cite></p>
+      inguinal surgery.​<cite class="src bl">B&amp;L 86 &middot; p.1569</cite>​<cite class="src srb">SRB 26 &middot; p.1072</cite></p>
     </details>
 
     <details open>
@@ -2047,7 +2059,7 @@ body.guide { margin: 0; -webkit-text-size-adjust: 100%; }
       <p class="ans">The interaortocaval nodes immediately below the renal vessels, at about L2, then
       the para-aortic, paracaval, preaortic and common iliac nodes. For a left-sided tumour it is the
       true para-aortic nodes just below the renal vessels, then preaortic and common
-      iliac.<cite class="src srb">SRB 26 &middot; p.1071</cite></p>
+      iliac.​<cite class="src srb">SRB 26 &middot; p.1071</cite></p>
     </details>
 
     <details open>
@@ -2055,7 +2067,7 @@ body.guide { margin: 0; -webkit-text-size-adjust: 100%; }
       <p class="ans">The sign of the vas. In a tumour the vas is normal, though the cord may be bulky
       from cremasteric hypertrophy; in tuberculous infection the vas is thickened, beaded and tender,
       and the prostate and seminal vesicles may be indurated on rectal
-      examination.<cite class="src srb">SRB 26 &middot; p.1072</cite><cite class="src das">Das 40 &middot; p.630</cite>
+      examination.​<cite class="src srb">SRB 26 &middot; p.1072</cite>​<cite class="src das">Das 40 &middot; p.630</cite>
       A tumour also begins in the body of the testis and tuberculosis in the epididymis.</p>
     </details>
 
@@ -2063,7 +2075,7 @@ body.guide { margin: 0; -webkit-text-size-adjust: 100%; }
       <summary>A man has an epididymo-orchitis that has not settled after two weeks of antibiotics. What do you do?</summary>
       <p class="ans">Scrotal ultrasound and tumour markers. A tumour can mimic epididymo-orchitis,
       and acute painful enlargement from haemorrhage into a tumour can even mimic
-      torsion.<cite class="src bl">B&amp;L 86 &middot; p.1571</cite><cite class="src das">Das 40 &middot; p.630</cite>
+      torsion.​<cite class="src bl">B&amp;L 86 &middot; p.1571</cite>​<cite class="src das">Das 40 &middot; p.630</cite>
       Re-treating with antibiotics without imaging is how the diagnosis is missed.</p>
     </details>
 
@@ -2071,7 +2083,7 @@ body.guide { margin: 0; -webkit-text-size-adjust: 100%; }
       <summary>A young man with a hydrocele. Anything you would add?</summary>
       <p class="ans">Ultrasound, to exclude an underlying tumour. A secondary hydrocele is common in
       testicular tumours and may prevent you palpating the
-      testis.<cite class="src srb">SRB 26 &middot; p.1071</cite><cite class="src bl">B&amp;L 86 &middot; p.1571</cite>
+      testis.​<cite class="src srb">SRB 26 &middot; p.1071</cite>​<cite class="src bl">B&amp;L 86 &middot; p.1571</cite>
       And never aspirate or operate through the scrotum before the testis has been
       assessed.</p>
     </details>
@@ -2081,8 +2093,8 @@ body.guide { margin: 0; -webkit-text-size-adjust: 100%; }
       <p class="ans">Scrotal ultrasound of both testes, which is mandatory. Serum tumour markers,
       AFP, beta-HCG and LDH, taken before orchidectomy so there is a baseline. Then CT of chest,
       abdomen and pelvis for staging. Offer semen analysis and sperm banking before any
-      treatment.<cite class="src bl">B&amp;L 86 &middot; pp.1571, 1572</cite> No FNAC, no scrotal
-      approach, no incision biopsy.<cite class="src srb">SRB 26 &middot; p.1073</cite></p>
+      treatment.​<cite class="src bl">B&amp;L 86 &middot; pp.1571, 1572</cite> No FNAC, no scrotal
+      approach, no incision biopsy.​<cite class="src srb">SRB 26 &middot; p.1073</cite></p>
     </details>
 
     <details open>
@@ -2090,14 +2102,14 @@ body.guide { margin: 0; -webkit-text-size-adjust: 100%; }
       <p class="ans">Because breaching the scrotum opens the inguinal and scrotal lymphatics, which
       are not the tumour's natural route of spread. That gives the tumour access to nodes outside the
       para-aortic field, alters staging and alters any later radiotherapy
-      field.<cite class="src srb">SRB 26 &middot; p.1073</cite><cite class="src bl">B&amp;L 86 &middot; p.1569</cite></p>
+      field.​<cite class="src srb">SRB 26 &middot; p.1073</cite>​<cite class="src bl">B&amp;L 86 &middot; p.1569</cite></p>
     </details>
 
     <details open>
       <summary>Which marker tells you it is not a pure seminoma?</summary>
       <p class="ans">AFP. A raised AFP always indicates a teratomatous or non-seminomatous element,
       and AFP is not raised in a pure
-      seminoma.<cite class="src srb">SRB 26 &middot; p.1073</cite> Beta-HCG can be raised in either,
+      seminoma.​<cite class="src srb">SRB 26 &middot; p.1073</cite> Beta-HCG can be raised in either,
       and a seminoma with high markers is treated as a non-seminomatous
       tumour.</p>
     </details>
@@ -2107,7 +2119,7 @@ body.guide { margin: 0; -webkit-text-size-adjust: 100%; }
       <p class="ans">Tumour burden, not tissue type. It is less specific than AFP or HCG, and is
       expressed on chromosome 12p, which is often amplified in testicular cancer cells. A raised LDH
       indicates high tumour burden in seminoma and predicts recurrence in
-      NSGCT.<cite class="src bl">B&amp;L 86 &middot; p.1571</cite></p>
+      NSGCT.​<cite class="src bl">B&amp;L 86 &middot; p.1571</cite></p>
     </details>
 
     <details open>
@@ -2115,7 +2127,7 @@ body.guide { margin: 0; -webkit-text-size-adjust: 100%; }
       <p class="ans">To establish a baseline, so that the post-operative fall can be interpreted.
       AFP has a mean serum half-life of 5 to 7 days and HCG of 2 to 3 days, so failure of the markers
       to fall as predicted after orchidectomy indicates residual tumour
-      tissue.<cite class="src bl">B&amp;L 86 &middot; p.1571</cite></p>
+      tissue.​<cite class="src bl">B&amp;L 86 &middot; p.1571</cite></p>
     </details>
 
     <details open>
@@ -2124,9 +2136,9 @@ body.guide { margin: 0; -webkit-text-size-adjust: 100%; }
       external oblique aponeurosis is divided to display the cord; a soft clamp is applied to the
       cord at or above the deep ring before the testis is mobilised into the wound, to prevent
       dissemination; the cord is then double transfixed and divided at the level of the internal
-      ring and the testis removed.<cite class="src bl">B&amp;L 86 &middot; p.1572</cite><cite class="src srb">SRB 26 &middot; p.1074</cite>
+      ring and the testis removed.​<cite class="src bl">B&amp;L 86 &middot; p.1572</cite>​<cite class="src srb">SRB 26 &middot; p.1074</cite>
       Where the diagnosis is in doubt a frozen section may be taken first, the Chevassu
-      manoeuvre.<cite class="src srb">SRB 26 &middot; p.1073</cite></p>
+      manoeuvre.​<cite class="src srb">SRB 26 &middot; p.1073</cite></p>
     </details>
 
     <details open>
@@ -2134,7 +2146,7 @@ body.guide { margin: 0; -webkit-text-size-adjust: 100%; }
       <p class="ans">Exposing the cord and testis through an inguinal incision, applying a soft clamp
       to the cord at or above the deep ring, taking a frozen section from the suspicious area, and
       proceeding to high orchidectomy only if the frozen section confirms
-      tumour.<cite class="src srb">SRB 26 &middot; p.1073</cite> With a mandatory pre-operative
+      tumour.​<cite class="src srb">SRB 26 &middot; p.1073</cite> With a mandatory pre-operative
       ultrasound the step is now rarely needed, and it does not appear in Bailey and Love 28e.</p>
     </details>
 
@@ -2144,9 +2156,9 @@ body.guide { margin: 0; -webkit-text-size-adjust: 100%; }
       with no stromal rete testis invasion, around 6% recurrence with over 95% cancer-specific
       survival. One course of adjuvant carboplatin. Or adjuvant radiotherapy to a para-aortic field,
       which cuts relapse to 1 to 3% but carries a long-term risk of second
-      malignancy.<cite class="src bl">B&amp;L 86 &middot; p.1572</cite> SRB teaches radiotherapy as
+      malignancy.​<cite class="src bl">B&amp;L 86 &middot; p.1572</cite> SRB teaches radiotherapy as
       the treatment of choice, with the opposite testis
-      shielded.<cite class="src srb">SRB 26 &middot; p.1073</cite></p>
+      shielded.​<cite class="src srb">SRB 26 &middot; p.1073</cite></p>
     </details>
 
     <details open>
@@ -2155,14 +2167,14 @@ body.guide { margin: 0; -webkit-text-size-adjust: 100%; }
       recommended adjuvant strategy, with recurrence around 3%. Surveillance is an option for a
       compliant patient risk-stratified on lymphovascular invasion, with 14 to 48% recurrence within
       two years. RPLND has a decreased role: adjuvant BEP gave 99.5% against 91% two-year
-      recurrence-free survival.<cite class="src bl">B&amp;L 86 &middot; p.1572</cite></p>
+      recurrence-free survival.​<cite class="src bl">B&amp;L 86 &middot; p.1572</cite></p>
     </details>
 
     <details open>
       <summary>What is the BEP regimen?</summary>
       <p class="ans">Bleomycin, etoposide and cisplatin. One cycle as adjuvant treatment in stage I
       NSGCT; three cycles, or four of etoposide and cisplatin, for metastatic
-      disease.<cite class="src bl">B&amp;L 86 &middot; p.1572</cite><cite class="src srb">SRB 26 &middot; p.1074</cite></p>
+      disease.​<cite class="src bl">B&amp;L 86 &middot; p.1572</cite>​<cite class="src srb">SRB 26 &middot; p.1074</cite></p>
     </details>
 
     <details open>
@@ -2173,7 +2185,7 @@ body.guide { margin: 0; -webkit-text-size-adjust: 100%; }
       complication is retrograde ejaculation, from damage to the sympathetic chain and hypogastric
       plexus; hence modified and nerve-sparing dissections. Others are haemorrhage, injury to major
       vessels, ureter or bowel, chylous ascites and lymphocele. Mortality about
-      1%.<cite class="src srb">SRB 26 &middot; pp.1073, 1074</cite></p>
+      1%.​<cite class="src srb">SRB 26 &middot; pp.1073, 1074</cite></p>
     </details>
 
     <details open>
@@ -2181,7 +2193,7 @@ body.guide { margin: 0; -webkit-text-size-adjust: 100%; }
       <p class="ans">Spermatocytic seminoma. It occurs in men over fifty and very rarely
       metastasises, so orchidectomy is the only necessary treatment even for a large tumour. Bailey
       and Love now regards it as a separate tumour type rather than a variant of
-      seminoma.<cite class="src bl">B&amp;L 86 &middot; p.1570</cite></p>
+      seminoma.​<cite class="src bl">B&amp;L 86 &middot; p.1570</cite></p>
     </details>
 
     <details open>
@@ -2190,7 +2202,7 @@ body.guide { margin: 0; -webkit-text-size-adjust: 100%; }
       marked muscular development. The Sertoli cell tumour feminises: a postpubertal man gets
       gynaecomastia, loss of libido and aspermia. Both are treated by surgery; the Leydig cell tumour
       is radioresistant and
-      chemoresistant.<cite class="src srb">SRB 26 &middot; p.1071</cite><cite class="src das">Das 40 &middot; p.630</cite></p>
+      chemoresistant.​<cite class="src srb">SRB 26 &middot; p.1071</cite>​<cite class="src das">Das 40 &middot; p.630</cite></p>
     </details>
 
     <details open>
@@ -2199,14 +2211,14 @@ body.guide { margin: 0; -webkit-text-size-adjust: 100%; }
       tumours are only 60 to 75% of childhood testicular tumours against 95% in adults. A raised AFP
       suggests a yolk sac tumour and prompts radical orchidectomy; a normal AFP in a child suggests a
       benign tumour, where testis-sparing surgery can be
-      considered.<cite class="src bl">B&amp;L 86 &middot; p.1572</cite></p>
+      considered.​<cite class="src bl">B&amp;L 86 &middot; p.1572</cite></p>
     </details>
 
     <details open>
       <summary>What would you tell a young man before you start treatment?</summary>
       <p class="ans">That the cancer is highly curable, and that treatment may affect his fertility,
       so he should be offered semen analysis and sperm banking before surgery or
-      chemotherapy.<cite class="src bl">B&amp;L 86 &middot; p.1572</cite> That is in the book as the
+      chemotherapy.​<cite class="src bl">B&amp;L 86 &middot; p.1572</cite> That is in the book as the
       first line of the treatment section, and candidates routinely omit it.</p>
     </details>
 
@@ -2214,16 +2226,16 @@ body.guide { margin: 0; -webkit-text-size-adjust: 100%; }
       <summary>How is a testicular tumour staged?</summary>
       <p class="ans">Clinically, in four stages: I confined to the testis, II nodes below the
       diaphragm, III nodes above the diaphragm, IV blood-borne
-      metastasis.<cite class="src srb">SRB 26 &middot; p.1072</cite> TNM 8, used in current
+      metastasis.​<cite class="src srb">SRB 26 &middot; p.1072</cite> TNM 8, used in current
       practice, has three stages, with distant metastasis as stage III, and uniquely incorporates
       serum tumour markers as an S
-      category.<cite class="src bl">B&amp;L 86 &middot; p.1572</cite><cite class="src srb">SRB 26 &middot; p.1072</cite></p>
+      category.​<cite class="src bl">B&amp;L 86 &middot; p.1572</cite>​<cite class="src srb">SRB 26 &middot; p.1072</cite></p>
     </details>
 
     <details open>
       <summary>What proportion present with stage I disease?</summary>
       <p class="ans">75 to 80% of seminomas and about 55 to 64% of non-seminomatous germ cell
-      tumours.<cite class="src bl">B&amp;L 86 &middot; p.1572</cite> That early presentation, with
+      tumours.​<cite class="src bl">B&amp;L 86 &middot; p.1572</cite> That early presentation, with
       the platinum sensitivity of these tumours, is why the prognosis is so much better than for most
       solid cancers.</p>
     </details>

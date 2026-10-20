@@ -24,6 +24,7 @@
   --ink-soft:    #5a6269;
   --rule:        #ddd8ce;
   --accent:      #005f73;
+  --on-accent:   #fff;
   --accent-soft: #e3eef0;
   --flag:        #8a5a2b;
   --flag-soft:   #f6ece0;
@@ -86,21 +87,21 @@
 
 .guide[data-theme="sepia"] {
   --paper: #f4ecd8; --ink: #433422; --ink-soft: #6f5f4a; --rule: #ddd0b4;
-  --accent: #7a4a1e; --accent-soft: #ece0c8; --flag: #8a5a2b; --flag-soft: #ece0c8;
+  --accent: #7a4a1e; --on-accent: #fff; --accent-soft: #ece0c8; --flag: #8a5a2b; --flag-soft: #ece0c8;
   --cite: #8a7b63; --mark: #f5d98a; --bl: #6a4a7a; --srb: #3f6b4a;
   color-scheme: light;
 }
 
 .guide[data-theme="dark"] {
   --paper: #15181a; --ink: #e8e6e1; --ink-soft: #a3abb2; --rule: #2e3338;
-  --accent: #6fc3d2; --accent-soft: #1b2a2e; --flag: #d9a36a; --flag-soft: #2a2119;
+  --accent: #6fc3d2; --on-accent: #0b1416; --accent-soft: #1b2a2e; --flag: #d9a36a; --flag-soft: #2a2119;
   --cite: #78828a; --mark: #4a4120; --bl: #a893dd; --srb: #6fc3a8;
   color-scheme: dark;
 }
 
 .guide[data-theme="contrast"] {
   --paper: #000000; --ink: #ffffff; --ink-soft: #d8d8d8; --rule: #6a6a6a;
-  --accent: #6fe3ff; --accent-soft: #10242b; --flag: #ffc46b; --flag-soft: #2a2008;
+  --accent: #6fe3ff; --on-accent: #000; --accent-soft: #10242b; --flag: #ffc46b; --flag-soft: #2a2008;
   --cite: #bdbdbd; --mark: #4a4a00; --bl: #d0b8ff; --srb: #7fe8c0;
   color-scheme: dark;
 }
@@ -109,7 +110,7 @@
 @media (prefers-color-scheme: dark) {
   .guide[data-theme="auto"] {
     --paper: #15181a; --ink: #e8e6e1; --ink-soft: #a3abb2; --rule: #2e3338;
-    --accent: #6fc3d2; --accent-soft: #1b2a2e; --flag: #d9a36a; --flag-soft: #2a2119;
+    --accent: #6fc3d2; --on-accent: #0b1416; --accent-soft: #1b2a2e; --flag: #d9a36a; --flag-soft: #2a2119;
     --cite: #78828a; --mark: #4a4120; --bl: #a893dd; --srb: #6fc3a8;
     color-scheme: dark;
   }
@@ -141,6 +142,7 @@ body.guide { margin: 0; -webkit-text-size-adjust: 100%; }
   font-family: var(--face-body);
   font-size: 2.1rem; font-weight: 600; line-height: 1.15;
   letter-spacing: -0.015em; text-wrap: balance; margin: 0 0 0.7rem;
+  overflow-wrap: break-word; hyphens: auto;
 }
 
 .guide .standfirst { font-size: 1.02rem; color: var(--ink-soft); margin: 0 0 1.6rem; }
@@ -311,7 +313,11 @@ body.guide { margin: 0; -webkit-text-size-adjust: 100%; }
 .guide cite.src {
   font-family: var(--face-ui); font-style: normal;
   font-size: 0.66em; font-weight: 600; letter-spacing: 0.02em;
-  color: var(--cite); white-space: nowrap;
+  color: var(--cite);
+  /* The chip stays on one line. build.py puts a zero-width space before each one,
+     which is what lets a chip that will not fit move to the next line whole
+     instead of widening the page past the phone. */
+  white-space: nowrap; max-width: 100%;
   border: 1px solid var(--rule); border-radius: 2px;
   padding: 0.05rem 0.28rem; margin-left: 0.3rem; vertical-align: 0.12em;
 }
@@ -331,7 +337,11 @@ body.guide { margin: 0; -webkit-text-size-adjust: 100%; }
   cursor: pointer; list-style: none; display: flex; gap: 0.55rem; align-items: baseline;
   padding: 0.7rem 0.9rem; font-family: var(--face-ui);
   font-size: 0.82em; line-height: 1.45; color: var(--ink);
+  flex-wrap: wrap;
 }
+/* A flex item defaults to min-width:auto and so refuses to shrink below its own
+   content width; a long source line in the summary then widened the whole page. */
+.guide details.conflict > summary > * { min-width: 0; overflow-wrap: break-word; }
 .guide details.conflict > summary::-webkit-details-marker { display: none; }
 .guide details.conflict > summary::before {
   content: "*"; color: var(--flag); font-size: 1em; font-weight: 700;
@@ -419,7 +429,7 @@ body.guide { margin: 0; -webkit-text-size-adjust: 100%; }
 @media print {
   .guide {
     --paper: #fff; --ink: #000; --ink-soft: #333; --rule: #bbb;
-    --accent: #004c5c; --accent-soft: #eef4f5; --cite: #666;
+    --accent: #004c5c; --on-accent: #fff; --accent-soft: #eef4f5; --cite: #666;
     --measure: none; --fs: 10.5pt; --lh: 1.45;
     --face-body: "Spectral", Georgia, serif;
     --face-ui: "Inter", system-ui, sans-serif;
@@ -785,7 +795,9 @@ body.guide { margin: 0; -webkit-text-size-adjust: 100%; }
   background: none; color: var(--ink, #222);
 }
 .rdr-ne-row .rdr-ok {
-  background: var(--accent, #005f73); border-color: var(--accent, #005f73); color: #fff;
+  background: var(--accent, #005f73); border-color: var(--accent, #005f73);
+  /* not #fff: the dark and high-contrast accents are pale, and white on them is 2:1 */
+  color: var(--on-accent, #fff);
 }
 .rdr-ne-row .rdr-del { color: var(--flag, #8a5a2b); }
 
@@ -987,15 +999,15 @@ body.guide { margin: 0; -webkit-text-size-adjust: 100%; }
     <span class="tag">The sentence to open with, and all three books support it</span>
     S Das: <b>"It must be remembered that the clinical importance of prostatic hyperplasia is
     measured by the severity of symptoms and the amount of residual urine, and not by the size of
-    the gland."</b><cite class="src das">Das 37 &middot; p.564</cite>
+    the gland."</b>​<cite class="src das">Das 37 &middot; p.564</cite>
     <br><br>B&amp;L says the same thing in modern language: <b>"it is important to realise that the
     relationship between anatomical prostatic enlargement, LUTS and urodynamic evidence of BOO is
     complex"</b>, and then enumerates the possible combinations, which is the best way to see
-    it:<cite class="src bl">B&amp;L 84 &middot; p.1522</cite>
+    it:​<cite class="src bl">B&amp;L 84 &middot; p.1522</cite>
     <br><b>No symptoms, no bladder outflow obstruction. No symptoms, but urodynamic evidence of
     obstruction. Symptoms, no evidence of obstruction. Symptoms and obstruction.</b> Plus the
     complications: acute or chronic retention, haematuria, infection and
-    stones.<cite class="src bl">B&amp;L 84 &middot; p.1522</cite>
+    stones.​<cite class="src bl">B&amp;L 84 &middot; p.1522</cite>
     <br><br>Four separate things can be present or absent independently: <b>a big prostate,
     symptoms, obstruction, and complications</b>. A candidate who treats them as one thing will get
     the management wrong.
@@ -1006,35 +1018,35 @@ body.guide { margin: 0; -webkit-text-size-adjust: 100%; }
   <dl class="findings">
     <dt>The lobes, and which does what</dt>
     <dd>SRB: five lobes, <b>anterior, posterior, two lateral and one middle or
-    median</b>.<cite class="src srb">SRB 26 &middot; p.1032</cite>
+    median</b>.​<cite class="src srb">SRB 26 &middot; p.1032</cite>
     <br><b>Median lobe:</b> <b>"produces an elevation in the lower part of the trigone of bladder
     (uvula vesicae). Adenoma is more common here due to more amount of glandular
-    tissue."</b><cite class="src srb">SRB 26 &middot; p.1032</cite> B&amp;L: when BPH affects the
+    tissue."</b>​<cite class="src srb">SRB 26 &middot; p.1032</cite> B&amp;L: when BPH affects the
     central zone glands, <b>"a 'middle' lobe develops that projects up into the bladder within the
-    internal sphincter."</b><cite class="src bl">B&amp;L 84 &middot; p.1522</cite>
+    internal sphincter."</b>​<cite class="src bl">B&amp;L 84 &middot; p.1522</cite>
     <br><b>Lateral lobes:</b> SRB, <b>"lateral lobes narrow the urethra causing
-    obstruction."</b><cite class="src srb">SRB 26 &middot; p.1033</cite>
+    obstruction."</b>​<cite class="src srb">SRB 26 &middot; p.1033</cite>
     <br><b>Posterior lobe:</b> SRB, <b>"primary carcinoma is said to begin in posterior
-    lobe."</b><cite class="src srb">SRB 26 &middot; p.1032</cite>
+    lobe."</b>​<cite class="src srb">SRB 26 &middot; p.1032</cite>
     <br><span class="label">So the one-line distinction</span><b>Benign hyperplasia starts centrally
     and medially; carcinoma starts posteriorly and peripherally.</b> That is why a cancer is felt
     first on rectal examination and a benign median lobe may not be felt at all.</dd>
     <dt>McNeal's zones, which is how the books now describe it</dt>
     <dd>SRB: <b>"McNeal divided prostate into three zones. 1. Peripheral zone, prone for carcinoma.
     2. Periurethral transition zone where BPH arises. 3. Central
-    zone."</b><cite class="src srb">SRB 26 &middot; p.1032</cite> And the note that follows is the
+    zone."</b>​<cite class="src srb">SRB 26 &middot; p.1032</cite> And the note that follows is the
     crux: <b>"prostate carcinoma develops in prostatic gland proper. BPH develops in submucosal
-    glands."</b><cite class="src srb">SRB 26 &middot; p.1032</cite>
+    glands."</b>​<cite class="src srb">SRB 26 &middot; p.1032</cite>
     <br>B&amp;L agrees in the same terms: <b>"BPH typically affects the submucous group of glands in
     the transitional zone, forming a nodular enlargement. Eventually, this overgrowth compresses the
     peripheral zone glands into a false capsule and causes the appearance of the typical 'lateral'
-    lobes."</b><cite class="src bl">B&amp;L 84 &middot; p.1522</cite>
+    lobes."</b>​<cite class="src bl">B&amp;L 84 &middot; p.1522</cite>
     <br><span class="label out">Two things follow from that one sentence, and both are examined</span>
     <b>1. The false capsule exists because BPH compresses normal gland.</b> It is not a true capsule
     but flattened peripheral-zone tissue, and it is the plane in which an adenoma is enucleated.
     B&amp;L describes HOLEP as cutting <b>"all the attachments of the adenoma to the false
     capsule"</b> in <b>"the relatively avascular plane between the peripheral and transitional
-    zones"</b>.<cite class="src bl">B&amp;L 84 &middot; p.1529</cite>
+    zones"</b>.​<cite class="src bl">B&amp;L 84 &middot; p.1529</cite>
     <br><b>2. A TURP or an enucleation does not remove the peripheral zone</b>, which is where
     cancer arises. So <b>a man who has had a prostatectomy can still get prostate
     cancer.</b></dd>
@@ -1042,21 +1054,21 @@ body.guide { margin: 0; -webkit-text-size-adjust: 100%; }
     <dd><b>True capsule:</b> <b>"formed by the condensation of the peripheral part of the gland;
     continues with the stroma of the gland."</b> <b>False capsule:</b> <b>"derived from the pelvic
     fascia. On each side prostatic venous plexus are embedded in
-    it."</b><cite class="src srb">SRB 26 &middot; p.1032</cite>
+    it."</b>​<cite class="src srb">SRB 26 &middot; p.1032</cite>
     <br><span class="label">Why the venous plexus matters</span>Because it is the source of the
     haemorrhage that is the main risk of every prostatectomy, and because SRB uses it to explain
     haematuria in BPH: <b>"enlarged prostate compresses the prostatic venous plexus causing
     congestion, called as vesical piles leading to
-    haematuria."</b><cite class="src srb">SRB 26 &middot; p.1033</cite></dd>
+    haematuria."</b>​<cite class="src srb">SRB 26 &middot; p.1033</cite></dd>
     <dt>And the surgical landmark that protects continence</dt>
     <dd><b>The verumontanum.</b> Resection stops there. B&amp;L: <b>"strips of tissue are cut from
     the bladder neck down to the level of the
-    verumontanum"</b>,<cite class="src bl">B&amp;L 84 &middot; p.1529</cite> and <b>"damage to the
+    verumontanum"</b>,​<cite class="src bl">B&amp;L 84 &middot; p.1529</cite> and <b>"damage to the
     external sphincter is avoided provided the verumontanum is used as a guide to the most distal
     point of the resection, vaporisation or
-    enucleation."</b><cite class="src bl">B&amp;L 84 &middot; p.1529</cite> SRB says the same:
+    enucleation."</b>​<cite class="src bl">B&amp;L 84 &middot; p.1529</cite> SRB says the same:
     resection is done <b>"above the level of
-    verumontanum"</b>.<cite class="src srb">SRB 26 &middot; p.1034</cite>
+    verumontanum"</b>.​<cite class="src srb">SRB 26 &middot; p.1034</cite>
     <br><span class="label">Say the landmark and the reason together</span><b>Resect from the bladder
     neck down to the verumontanum, and no further, because the external sphincter lies distal to
     it.</b> That is the answer to "how do you avoid incontinence?"</dd>
@@ -1070,35 +1082,35 @@ body.guide { margin: 0; -webkit-text-size-adjust: 100%; }
     however, levels of oestrogenic steroids are not decreased equally. According to this theory, the
     prostate enlarges because of increased oestrogenic effects. It is likely that the secretion of
     intermediate peptide growth factors plays a part in the development of
-    BPH."</b><cite class="src bl">B&amp;L 84 &middot; p.1522</cite> SRB puts it in the same words:
+    BPH."</b>​<cite class="src bl">B&amp;L 84 &middot; p.1522</cite> SRB puts it in the same words:
     <b>"with age TS level drops slowly. But fall of oestrogen level is not equal. So prostate
     enlarges through intermediate peptide growth
-    factor."</b><cite class="src srb">SRB 26 &middot; p.1033</cite></dd>
+    factor."</b>​<cite class="src srb">SRB 26 &middot; p.1033</cite></dd>
     <dt>And SRB's hormonal axis, which is worth reciting because it explains the drugs</dt>
     <dd><b>"Hypothalamus, pulsatile release of LHRH, release of luteinising hormone from anterior
     pituitary, stimulates Leydig cells of testes, releases testosterone, reaches prostate, releases
     5-alpha reductase type II of prostate, converts testosterone to dihydrotestosterone (DHT) for
     its effects."</b> With the two facts that make it clinically useful: <b>"DHT is five times more
     potent than TS. 90% TS is from testes. Remaining 10% TS is from adrenal
-    cortex."</b><cite class="src srb">SRB 26 &middot; p.1033</cite>
+    cortex."</b>​<cite class="src srb">SRB 26 &middot; p.1033</cite>
     <br><span class="label out">That axis is the drug chart</span><b>5-alpha reductase inhibitors</b>
     block the conversion of testosterone to DHT, which is exactly the step SRB names. B&amp;L
     describes them as inhibiting <b>"the conversion of testosterone to 1,5-dihydrotestosterone (DHT),
-    the most active form of androgen."</b><cite class="src bl">B&amp;L 84 &middot; p.1528</cite> And
+    the most active form of androgen."</b>​<cite class="src bl">B&amp;L 84 &middot; p.1528</cite> And
     the <b>10% adrenal contribution</b> is why androgen deprivation for prostate cancer is never
     complete with orchidectomy alone.</dd>
     <dt>The other associations</dt>
     <dd>B&amp;L: <b>"metabolic syndrome and hereditary factors have also been implicated in its
-    development."</b><cite class="src bl">B&amp;L 84 &middot; p.1522</cite> SRB adds the historical
+    development."</b>​<cite class="src bl">B&amp;L 84 &middot; p.1522</cite> SRB adds the historical
     neoplastic theory and then withdraws it: <b>"BPH is a benign neoplasm, also called as
     fibromyoadenoma. The neoplastic theory is old one, not universally accepted now, under
-    debate."</b><cite class="src srb">SRB 26 &middot; p.1033</cite></dd>
+    debate."</b>​<cite class="src srb">SRB 26 &middot; p.1033</cite></dd>
     <dt>Age and frequency</dt>
     <dd>B&amp;L: <b>"occurs in men over 50 years of age; by the age of 60 years, 50% of men have
     histological evidence of BPH"</b>, and it is <b>"the most common cause of bladder outflow
     obstruction in men over 70 years of
-    age"</b>.<cite class="src bl">B&amp;L 84 &middot; p.1522</cite> SRB: <b>"occurs after 50 years,
-    usually between 60 and 70 years."</b><cite class="src srb">SRB 26 &middot; p.1033</cite></dd>
+    age"</b>.​<cite class="src bl">B&amp;L 84 &middot; p.1522</cite> SRB: <b>"occurs after 50 years,
+    usually between 60 and 70 years."</b>​<cite class="src srb">SRB 26 &middot; p.1033</cite></dd>
   </dl>
 
   <h2><span class="n">3</span>History: the symptoms, named properly</h2>
@@ -1107,7 +1119,7 @@ body.guide { margin: 0; -webkit-text-size-adjust: 100%; }
     <dt>Use the modern vocabulary</dt>
     <dd>The term is <b>lower urinary tract symptoms (LUTS)</b>, divided into <b>voiding</b> and
     <b>storage</b>. SRB's table is the one to
-    learn:<cite class="src srb">SRB 26 &middot; p.1034</cite>
+    learn:​<cite class="src srb">SRB 26 &middot; p.1034</cite>
     <br><b>Voiding symptoms:</b> <b>"hesitancy; poor flow not improving by straining; dribbling even
     after micturition; intermittent stream, stops and starts; poor bladder emptying; episodes of near
     retention."</b>
@@ -1116,61 +1128,61 @@ body.guide { margin: 0; -webkit-text-size-adjust: 100%; }
     <br><span class="label out">Why the division matters more than the list</span>Because it predicts
     the result of surgery. B&amp;L: men <b>"who are unobstructed and have detrusor instability do not
     respond well to TURP; in fact, their storage symptoms could accentuate
-    postoperatively."</b><cite class="src bl">B&amp;L 84 &middot; p.1528</cite> <b>Voiding symptoms
+    postoperatively."</b>​<cite class="src bl">B&amp;L 84 &middot; p.1528</cite> <b>Voiding symptoms
     with a low flow rate get better after TURP; pure storage symptoms may get worse.</b> That one
     sentence is the most useful thing in the case.</dd>
     <dt>The older term, which examiners still use</dt>
     <dd>SRB: <b>"prostatism is a combination of symptoms like frequency both at day and night, poor
     stream, delay in starting and difficulty in
-    micturition."</b><cite class="src srb">SRB 26 &middot; p.1034</cite> Recognise it, then use
+    micturition."</b>​<cite class="src srb">SRB 26 &middot; p.1034</cite> Recognise it, then use
     <b>LUTS</b>.</dd>
     <dt>Two historical details from S Das that discriminate</dt>
     <dd><b>Does straining help or hinder?</b> <b>"Straining improves the stream (e.g. urethral
     stricture) or retards the stream (e.g. enlarged prostate, the median lobe pressing on the
-    internal urethral meatus)."</b><cite class="src das">Das 37 &middot; p.558</cite> A patient whose
+    internal urethral meatus)."</b>​<cite class="src das">Das 37 &middot; p.558</cite> A patient whose
     stream gets <b>worse</b> when he strains has a ball-valve median lobe; a stricture improves with
     straining. This is a question almost nobody asks and it separates the two commonest causes of a
     poor stream.
     <br><b>Does posture help?</b> S Das notes that with a diverticulum of the bladder,
     <b>"the micturition may be started again by changing
-    posture."</b><cite class="src das">Das 37 &middot; p.558</cite></dd>
+    posture."</b>​<cite class="src das">Das 37 &middot; p.558</cite></dd>
     <dt>Chronic retention is painless, and that is the trap</dt>
     <dd>S Das: <b>"in chronic retention of urine the patient experiences little or no suprapubic
     discomfort even though the bladder"</b> is grossly
-    distended.<cite class="src das">Das 37 &middot; p.557</cite> B&amp;L describes how such men
+    distended.​<cite class="src das">Das 37 &middot; p.557</cite> B&amp;L describes how such men
     present: <b>"such men may present with overflow incontinence, enuresis and renal insufficiency.
     These symptoms should alert the doctor to the presence of this
-    condition."</b><cite class="src bl">B&amp;L 84 &middot; p.1525</cite>
+    condition."</b>​<cite class="src bl">B&amp;L 84 &middot; p.1525</cite>
     <br><span class="label out">So bedwetting in an old man is a surgical emergency</span>
     <b>Nocturnal enuresis in an elderly man is overflow incontinence from high-pressure chronic
     retention</b>, and it may be the only symptom of impending renal failure. B&amp;L lists the
     consequence: back pressure on the upper tract <b>"with the development of bilateral
     hydronephrosis. As a result, upper tract infection and renal impairment may
-    develop."</b><cite class="src bl">B&amp;L 84 &middot; p.1525</cite></dd>
+    develop."</b>​<cite class="src bl">B&amp;L 84 &middot; p.1525</cite></dd>
     <dt>The International Prostate Symptom Score</dt>
     <dd>B&amp;L: <b>"symptom score sheets such as the International Prostate Symptom Score (IPSS)
     assign a score that gives information regarding the severity of symptoms at the outset and
     changes over time and following intervention. The IPSS assessment should include an assessment of
     quality of life, which is a reflection of the degree of 'bother' caused by a patient's
-    symptoms."</b><cite class="src bl">B&amp;L 84 &middot; p.1525</cite> SRB notes simply that
+    symptoms."</b>​<cite class="src bl">B&amp;L 84 &middot; p.1525</cite> SRB notes simply that
     <b>"international prostate symptom score is available
-    now."</b><cite class="src srb">SRB 26 &middot; p.1034</cite>
+    now."</b>​<cite class="src srb">SRB 26 &middot; p.1034</cite>
     <br><span class="label">And the thing to add that is not the score</span>B&amp;L: <b>"in addition
     to the IPSS, a frequency-volume diary completed by the patient before attending the clinic is
     invaluable in revealing fluid intake habits, diurnal variation in outputs and low-volume,
-    frequent voiding."</b><cite class="src bl">B&amp;L 84 &middot; p.1525</cite> A man drinking four
+    frequent voiding."</b>​<cite class="src bl">B&amp;L 84 &middot; p.1525</cite> A man drinking four
     litres of tea does not have an obstructed prostate, and the diary is what tells you
     that.</dd>
     <dt>Ask about complications, because they are indications for surgery</dt>
     <dd>Haematuria; recurrent infection; stones; and retention. SRB's list of consequences is
     <b>haematuria</b>, <b>renal failure</b>, hydroureter and hydronephrosis from back
-    pressure.<cite class="src srb">SRB 26 &middot; pp.1033, 1034</cite> B&amp;L adds the caution on
+    pressure.​<cite class="src srb">SRB 26 &middot; pp.1033, 1034</cite> B&amp;L adds the caution on
     haematuria: <b>"this may be a complication of BPH. Other causes must be excluded by carrying out
     urine culture, cytology, computed tomography urography and
-    cystoscopy."</b><cite class="src bl">B&amp;L 84 &middot; p.1525</cite>
+    cystoscopy."</b>​<cite class="src bl">B&amp;L 84 &middot; p.1525</cite>
     <br><span class="label out">And SRB has a name for the error</span><b>"Incrimination of BPH as the
     source of haematuria before excluding other causes is termed as 'decoy
-    prostate'."</b><cite class="src srb">SRB 26 &middot; p.1033</cite> A memorable term, and it is
+    prostate'."</b>​<cite class="src srb">SRB 26 &middot; p.1033</cite> A memorable term, and it is
     exactly B&amp;L's point. <b>Never attribute haematuria to a big prostate until you have excluded
     a bladder tumour.</b></dd>
   </dl>
@@ -1184,57 +1196,57 @@ body.guide { margin: 0; -webkit-text-size-adjust: 100%; }
     particularly the suprapubic region to know if the bladder is totally empty or not. Even after
     micturition if the bladder is not empty, this finding is important and predicts that the rectal
     examination will not be very reliable in providing necessary informations regarding the
-    prostate."</b><cite class="src das">Das 37 &middot; p.563</cite> B&amp;L gives the mechanism:
+    prostate."</b>​<cite class="src das">Das 37 &middot; p.563</cite> B&amp;L gives the mechanism:
     <b>"if there is a considerable amount of residual urine present, it pushes the prostate
     downwards, making it appear larger than it
-    is."</b><cite class="src bl">B&amp;L 84 &middot; p.1526</cite></span>
+    is."</b>​<cite class="src bl">B&amp;L 84 &middot; p.1526</cite></span>
     <span class="label">So the sequence is</span><b>Watch him void, palpate and percuss the
     suprapubic region, then do the rectal examination.</b> SRB agrees that the rectal examination
-    <b>"should be done when bladder is empty"</b>.<cite class="src srb">SRB 26 &middot; p.1034</cite>
+    <b>"should be done when bladder is empty"</b>.​<cite class="src srb">SRB 26 &middot; p.1034</cite>
     <span class="label">The volume needed to feel a bladder</span>S Das: <b>"at least 150 ml of urine
     must be collected in the bladder to make it palpable above symphysis pubis. The swelling is
     elastic in feel and dull on percussion. Pressure induces a desire for
-    micturition."</b><cite class="src das">Das 37 &middot; p.563</cite> B&amp;L adds the inspection
+    micturition."</b>​<cite class="src das">Das 37 &middot; p.563</cite> B&amp;L adds the inspection
     sign: in chronic retention, a distended bladder is found <b>"on palpation, on percussion and
     sometimes on inspection with loss of the transverse suprapubic skin
-    crease."</b><cite class="src bl">B&amp;L 84 &middot; p.1525</cite>
+    crease."</b>​<cite class="src bl">B&amp;L 84 &middot; p.1525</cite>
   </div>
 
   <div class="step">
     <span class="ask">2. Look for the signs of renal failure</span>
     <span class="why">Because they change the urgency of everything. B&amp;L: <b>"general physical
     examination may demonstrate signs of chronic renal impairment with anaemia, pedal oedema and
-    dehydration."</b><cite class="src bl">B&amp;L 84 &middot; p.1525</cite> SRB: <b>"tenderness in
+    dehydration."</b>​<cite class="src bl">B&amp;L 84 &middot; p.1525</cite> SRB: <b>"tenderness in
     suprapubic region, with palpable enlarged bladder due to chronic retention. Hydronephrotic kidney
-    may be palpable."</b><cite class="src srb">SRB 26 &middot; p.1034</cite></span>
+    may be palpable."</b>​<cite class="src srb">SRB 26 &middot; p.1034</cite></span>
     <span class="label">And what else B&amp;L examines</span><b>"The external urinary meatus should be
     examined to exclude stenosis and the epididymides are palpated for signs of
-    inflammation."</b><cite class="src bl">B&amp;L 84 &middot; p.1525</cite> Meatal stenosis is a
+    inflammation."</b>​<cite class="src bl">B&amp;L 84 &middot; p.1525</cite> Meatal stenosis is a
     cause of a poor stream that is missed because nobody looks.
   </div>
 
   <div class="step">
     <span class="ask">3. Rectal examination: the six things to note</span>
-    <span class="why">S Das's list, and each has a reason:<cite class="src das">Das 37 &middot; p.564</cite>
+    <span class="why">S Das's list, and each has a reason:​<cite class="src das">Das 37 &middot; p.564</cite>
     <br><b>(i) Size</b>, with the warning that the clinical importance is measured by symptoms and
     residual urine, <b>not</b> by size.
     <br><b>(ii) Consistency.</b> <b>"Normally the consistency of the prostate is like a rubber. It
     becomes mushy when congested, becomes indurated in chronic infection with or without calculi and
     becomes stony hard in carcinoma."</b> B&amp;L: in benign enlargement, <b>"the posterior surface
     of the prostate is smooth, convex and typically elastic, but the fibrous element may give the
-    prostate a firm consistency."</b><cite class="src bl">B&amp;L 84 &middot; p.1526</cite>
+    prostate a firm consistency."</b>​<cite class="src bl">B&amp;L 84 &middot; p.1526</cite>
     <br><b>(iii) Surface</b>, smooth or irregular.
     <br><b>(iv) The median groove and the lateral sulci</b>, and whether they are preserved.
     <br><b>(v) Mobility of the rectal mucosa over the prostate</b>, which S Das calls <b>"an
     important point to differentiate benign enlargement from malignant diseases of the
     prostate."</b> B&amp;L: <b>"the rectal mucosa can be made to move over the
-    prostate."</b><cite class="src bl">B&amp;L 84 &middot; p.1526</cite>
+    prostate."</b>​<cite class="src bl">B&amp;L 84 &middot; p.1526</cite>
     <br><b>(vi) Prostatic massage</b>, for asymptomatic prostatitis, and S Das names when
     <b>not</b> to do it: <b>"prostate should not be massaged in acute prostatitis, acute urethritis
     and obvious cancer of prostate."</b></span>
     <span class="label out">The two findings that say cancer</span>S Das, writing about carcinoma:
     <b>"the median sulcus will be obliterated (very important sign) and the rectal mucosa is
-    tethered"</b> to the gland.<cite class="src das">Das 37 &middot; p.589</cite> So the contrast is
+    tethered"</b> to the gland.​<cite class="src das">Das 37 &middot; p.589</cite> So the contrast is
     clean. <b>Benign: smooth, convex, elastic, median groove preserved, mucosa mobile. Malignant:
     hard, nodular, irregular, median groove obliterated, mucosa tethered.</b> Learn it as five paired
     findings.
@@ -1244,19 +1256,19 @@ body.guide { margin: 0; -webkit-text-size-adjust: 100%; }
     <span class="ask">4. Two things the rectal examination cannot tell you</span>
     <span class="why"><b>The median lobe.</b> S Das: <b>"it must be remembered that enlargement of
     median lobe may not be detected by rectal examination. But one can palpate this lobe per rectum
-    with introduction of a urethral bougie."</b><cite class="src das">Das 37 &middot; p.564</cite>
+    with introduction of a urethral bougie."</b>​<cite class="src das">Das 37 &middot; p.564</cite>
     The median lobe grows <i>upwards into the bladder</i>, away from your finger, which is why a man
     can be in retention with a prostate that feels normal.
     <br><b>The top of a very large gland.</b> B&amp;L: <b>"it is not always possible to examine the
     cranial extreme of the very large prostate per rectum. An inability to get to the prostate base
-    implies a volume of at least 50 mL."</b><cite class="src bl">B&amp;L 84 &middot; p.1526</cite>
+    implies a volume of at least 50 mL."</b>​<cite class="src bl">B&amp;L 84 &middot; p.1526</cite>
     That is a usable rule: if you cannot reach the upper border, the gland is at least 50
     mL.</span>
     <span class="label">And what you can feel that students miss</span>S Das: <b>"residual urine in
     the post-prostatic pouch can be felt as a soft swelling above the
-    prostate."</b><cite class="src das">Das 37 &middot; p.563</cite> Also the <b>intravesical lobe
+    prostate."</b>​<cite class="src das">Das 37 &middot; p.563</cite> Also the <b>intravesical lobe
     of the prostate</b> on bimanual examination, and the <b>seminal
-    vesicles</b>.<cite class="src das">Das 37 &middot; p.563</cite>
+    vesicles</b>.​<cite class="src das">Das 37 &middot; p.563</cite>
   </div>
 
   <div class="step">
@@ -1267,16 +1279,16 @@ body.guide { margin: 0; -webkit-text-size-adjust: 100%; }
     spondylosis, Parkinson's disease and other neurological states may mimic prostatic obstruction.
     If these are suspected, then a pressure-flow urodynamic study should be carried out to diagnose
     BOO. Examination of perianal sensation and anal tone is useful in detection of an S2 to S4 cauda
-    equina lesion."</b><cite class="src bl">B&amp;L 84 &middot; p.1526</cite></span>
+    equina lesion."</b>​<cite class="src bl">B&amp;L 84 &middot; p.1526</cite></span>
     <span class="label">Two bedside tests, thirty seconds</span><b>Perianal sensation and anal
     tone.</b> S Das makes the same point from the other end: <b>"rectal examination should be started
     by noting the tone of the external sphincter. Laxity of the sphincter suggests similar change in
-    the urinary sphincter."</b><cite class="src das">Das 37 &middot; p.563</cite> Offering this
+    the urinary sphincter."</b>​<cite class="src das">Das 37 &middot; p.563</cite> Offering this
     unprompted is one of the most reliable marks in the case, because almost nobody does it.
     <span class="label out">SRB's differential, which is the same list</span><b>Stricture urethra;
     bladder tumour; carcinoma prostate; neurological causes of retention like diabetes, tabes,
     disseminated sclerosis, Parkinson's disease; idiopathic detrusor activity; bladder neck stenosis
-    and bladder neck hypertrophy.</b><cite class="src srb">SRB 26 &middot; p.1034</cite>
+    and bladder neck hypertrophy.</b>​<cite class="src srb">SRB 26 &middot; p.1034</cite>
   </div>
 
   <h2><span class="n">5</span>Investigations</h2>
@@ -1286,7 +1298,7 @@ body.guide { margin: 0; -webkit-text-size-adjust: 100%; }
     <dd><b>"Urine analysis by dipstick for blood, leukocyte esterase, glucose and protein; urine
     culture for infection; serum creatinine; urinary flow rate and residual volume
     measurement."</b> And as additional investigations, <b>"PSA if indicated"</b> and
-    <b>"pressure-flow studies"</b>.<cite class="src bl">B&amp;L 84 &middot; p.1525</cite>
+    <b>"pressure-flow studies"</b>.​<cite class="src bl">B&amp;L 84 &middot; p.1525</cite>
     <br><span class="label">Why glucose on a dipstick</span>Because diabetes causes both polyuria
     and a neuropathic bladder, and it is on the differential list. Two of the four dipstick items,
     glucose and leukocyte esterase, are there to find a mimic rather than to confirm
@@ -1294,30 +1306,30 @@ body.guide { margin: 0; -webkit-text-size-adjust: 100%; }
     <dt>Flow rate, and the numbers</dt>
     <dd>SRB: <b>"urine flow rate over 15 mL/sec is normal. 10 to 15 mL is equivocal; under 10 mL is
     low"</b>, with <b>"normal peak urine flow rate is 20 mL/sec. In obstruction, it is less than 10
-    mL/sec."</b><cite class="src srb">SRB 26 &middot; p.1034</cite> B&amp;L: <b>"a typical history
+    mL/sec."</b>​<cite class="src srb">SRB 26 &middot; p.1034</cite> B&amp;L: <b>"a typical history
     and a flow rate under 10 mL/s (for a voided volume of over 200 mL) will be sufficient for most
-    urologists to recommend treatment."</b><cite class="src bl">B&amp;L 84 &middot; p.1526</cite>
+    urologists to recommend treatment."</b>​<cite class="src bl">B&amp;L 84 &middot; p.1526</cite>
     <br><span class="label out">And the conditions on the measurement, which are where marks are</span>
     B&amp;L: <b>"for this to be meaningful, two or three voids should be recorded... the voided
     volume should be in excess of 150 to 200 mL."</b> And the pitfalls: <b>"the machine must be
     accurately calibrated. The patient must void volumes in excess of 150 mL and two or three
     recordings are needed to obtain a representative
-    measurement."</b><cite class="src bl">B&amp;L 84 &middot; p.1526</cite>
+    measurement."</b>​<cite class="src bl">B&amp;L 84 &middot; p.1526</cite>
     <br><span class="label">The three causes of a low flow rate, which is the real question</span>
     B&amp;L: <b>"bladder outflow obstruction; low voided volumes (characteristically in men with
     detrusor instability); men with weak bladder contractions (low pressure-flow voiding), also known
-    as underactive detrusor."</b><cite class="src bl">B&amp;L 84 &middot; p.1526</cite> <b>A low flow
+    as underactive detrusor."</b>​<cite class="src bl">B&amp;L 84 &middot; p.1526</cite> <b>A low flow
     rate is not the same as obstruction.</b> An underactive detrusor gives the same number and gets
     worse after TURP.</dd>
     <dt>Voiding pressure, which SRB gives and B&amp;L does not quantify</dt>
     <dd>SRB: <b>"voiding pressure under 60 cm of water is normal; 60 to 80 is equivocal; over 80 is
-    high."</b><cite class="src srb">SRB 26 &middot; p.1034</cite> Combine the two numbers and you have
+    high."</b>​<cite class="src srb">SRB 26 &middot; p.1034</cite> Combine the two numbers and you have
     the definition of obstruction: <b>high pressure with low flow</b>. Low pressure with low flow is
     an underactive detrusor.</dd>
     <dt>Pressure-flow urodynamics: who actually needs them</dt>
     <dd>This is B&amp;L's list and it is worth knowing, because it is the answer to "would you do
     urodynamics on everyone?" <b>No.</b> Only
-    these:<cite class="src bl">B&amp;L 84 &middot; p.1526</cite>
+    these:​<cite class="src bl">B&amp;L 84 &middot; p.1526</cite>
     <br><b>"Men with suspected neuropathy (Parkinson's disease, dementia, longstanding diabetes,
     previous strokes, multiple sclerosis); men with a dominant history of irritative symptoms and
     men with lifelong urgency and frequency; men with a doubtful history and those with flow rates in
@@ -1330,17 +1342,17 @@ body.guide { margin: 0; -webkit-text-size-adjust: 100%; }
     the flow is under 10, you do not need them.</dd>
     <dt>Ultrasound, and residual urine</dt>
     <dd>SRB: <b>"ultrasound abdomen, look for presence of residual
-    urine."</b><cite class="src srb">SRB 26 &middot; p.1034</cite> B&amp;L: <b>"usually, a flow rate
+    urine."</b>​<cite class="src srb">SRB 26 &middot; p.1034</cite> B&amp;L: <b>"usually, a flow rate
     measurement will be coupled with ultrasound measurement of postvoid residual
-    urine."</b><cite class="src bl">B&amp;L 84 &middot; p.1526</cite></dd>
+    urine."</b>​<cite class="src bl">B&amp;L 84 &middot; p.1526</cite></dd>
     <dt>Upper tract imaging: not routinely, and that is the point</dt>
     <dd>B&amp;L: <b>"most urologists no longer carry out imaging of the upper tract in men with
     straightforward symptoms. Obviously, if infection or haematuria is present, then the upper tract
     should be imaged by means of intravenous urogram, CT urography or ultrasound
-    scan."</b><cite class="src bl">B&amp;L 84 &middot; p.1526</cite> SRB still lists <b>IVU, to see
-    kidney function</b>,<cite class="src srb">SRB 26 &middot; p.1034</cite> and illustrates an IVU
+    scan."</b>​<cite class="src bl">B&amp;L 84 &middot; p.1526</cite> SRB still lists <b>IVU, to see
+    kidney function</b>,​<cite class="src srb">SRB 26 &middot; p.1034</cite> and illustrates an IVU
     showing the enlarged median lobe indenting the
-    bladder.<cite class="src srb">SRB 26 &middot; p.1034</cite>
+    bladder.​<cite class="src srb">SRB 26 &middot; p.1034</cite>
     <br><span class="label">A safe answer covering both</span>"I would not image the upper tract
     routinely in a man with straightforward symptoms and normal renal function, but I would if there
     is haematuria, infection, a raised creatinine or a large residual volume."</dd>
@@ -1349,7 +1361,7 @@ body.guide { margin: 0; -webkit-text-size-adjust: 100%; }
     of the bladder should be done immediately prior to prostatectomy to exclude a urethral stricture,
     a bladder carcinoma and the occasional non-opaque vesical calculus... direct inspection of the
     prostate is not used as an indicator to establish the presence of BOO and the need for
-    surgery."</b><cite class="src bl">B&amp;L 84 &middot; p.1526</cite>
+    surgery."</b>​<cite class="src bl">B&amp;L 84 &middot; p.1526</cite>
     <br><span class="label out">So the key sentence</span><b>Cystoscopy is done to exclude other
     pathology before operating, not to decide whether to operate.</b> How big the prostate looks down
     a telescope does not establish obstruction.</dd>
@@ -1359,25 +1371,25 @@ body.guide { margin: 0; -webkit-text-size-adjust: 100%; }
     treatment option (such as those under 70 years or those with a positive family history who might
     be offered radical treatment) should be offered a PSA measurement. If the PSA range is 4 to 10
     ng/L, a free-to-total PSA ratio of less than 15% should be suspicious of
-    malignancy."</b><cite class="src bl">B&amp;L 84 &middot; p.1526</cite>
+    malignancy."</b>​<cite class="src bl">B&amp;L 84 &middot; p.1526</cite>
     <b class="flag">Read that as ng/mL.</b> The quotation is exact, and the units in it are a
     misprint: the same chapter writes "PSA &gt;10 ng/mL", and ng/L would be a thousandfold error.
     Say <b>ng/mL</b> in the exam. Then
     <b>multiparametric MRI</b>, and if there is a suspicious index lesion, <b>TRUS-guided or
-    transperineal biopsy</b>.<cite class="src bl">B&amp;L 84 &middot; p.1526</cite>
+    transperineal biopsy</b>.​<cite class="src bl">B&amp;L 84 &middot; p.1526</cite>
     <br>SRB's figures, which an Indian paper will use: <b>normal 4 ng/mL; over 10 significant and
     suggestive of carcinoma; over 35 almost diagnostic of advanced carcinoma; 25% of men with PSA 4
     to 10 have carcinoma, and 20% of men with a normal PSA of 1 to 4 will also have
-    carcinoma.</b><cite class="src srb">SRB 26 &middot; pp.1032, 1033</cite> SRB also gives the
+    carcinoma.</b>​<cite class="src srb">SRB 26 &middot; pp.1032, 1033</cite> SRB also gives the
     refinements: <b>PSA density over 0.5 ng/mL/g; PSA velocity over 2 ng/mL/year; PSA doubling time
     under 12 months; percentage free PSA under
-    25.</b><cite class="src srb">SRB 26 &middot; pp.1032, 1033</cite>
+    25.</b>​<cite class="src srb">SRB 26 &middot; pp.1032, 1033</cite>
     <br><span class="label">The sentence to say about PSA in a BPH case</span>SRB: <b>"PSA elevation
     occurs not only in carcinoma but also in prostatic hyperplasia and prostatitis. But the increase
     is much more in carcinoma than in benign
-    conditions."</b><cite class="src srb">SRB 26 &middot; p.1032</cite> And the direction of the free
+    conditions."</b>​<cite class="src srb">SRB 26 &middot; p.1032</cite> And the direction of the free
     fraction: <b>"major, bound form increases in carcinoma. Minor, free form is increased in benign
-    conditions."</b><cite class="src srb">SRB 26 &middot; p.1032</cite> That is why the
+    conditions."</b>​<cite class="src srb">SRB 26 &middot; p.1032</cite> That is why the
     <b>free-to-total ratio</b> discriminates, and why a <b>low</b> free fraction is the worrying
     one, which is exactly B&amp;L's under-15% rule.
     <span class="label out">On acid phosphatase, see the amber box</span>SRB gives it a full section;
@@ -1400,13 +1412,13 @@ body.guide { margin: 0; -webkit-text-size-adjust: 100%; }
       heavy meals alter the level... normal value is 0 to 5 King Armstrong units per 100 ml of
       serum. It is raised significantly in carcinoma prostate with metastases... it does not increase
       in BPH. Slight increase occurs in acute prostatitis, Paget's disease of bone and hepatic
-      cirrhosis."</b><cite class="src srb">SRB 26 &middot; p.1032</cite> It also appears in SRB's own
-      investigation list for BPH.<cite class="src srb">SRB 26 &middot; p.1034</cite></dd>
+      cirrhosis."</b>​<cite class="src srb">SRB 26 &middot; p.1032</cite> It also appears in SRB's own
+      investigation list for BPH.​<cite class="src srb">SRB 26 &middot; p.1034</cite></dd>
       <dt>Bailey &amp; Love 28e</dt>
       <dd>The term is absent from the prostate chapter. Every tumour-marker sentence is about
       <b>PSA</b> and its refinements, the <b>free-to-total ratio</b>, and then
       <b>multiparametric MRI</b> and targeted
-      biopsy.<cite class="src bl">B&amp;L 84 &middot; p.1526</cite></dd>
+      biopsy.​<cite class="src bl">B&amp;L 84 &middot; p.1526</cite></dd>
       <dt>Why it went</dt>
       <dd>PSA superseded it on every count. Acid phosphatase rises only once a prostate cancer has
       <b>metastasised</b>, which SRB itself says, so it cannot detect the disease when detection
@@ -1432,7 +1444,7 @@ body.guide { margin: 0; -webkit-text-size-adjust: 100%; }
   <dl class="findings">
     <dt>B&amp;L's strong indications, with the proportions they account for</dt>
     <dd>This is an unusually useful list because it tells you how often each actually
-    happens:<cite class="src bl">B&amp;L 84 &middot; pp.1526, 1527</cite>
+    happens:​<cite class="src bl">B&amp;L 84 &middot; pp.1526, 1527</cite>
     <br><b>Acute retention</b> in fit men with no other cause such as drugs, constipation or a recent
     operation: <b>25% of prostatectomies</b>.
     <br><b>Chronic retention and renal impairment:</b> <b>"a residual urine of 200 mL or more,
@@ -1447,7 +1459,7 @@ body.guide { margin: 0; -webkit-text-size-adjust: 100%; }
     outflow obstruction is variable and rarely gets worse after 10 years. Severe symptoms not
     responding to drug therapy, a low maximum flow rate (under 10 mL/s) and an increased residual
     volume of urine (100 to 250 mL) are relatively strong indications for operative
-    treatment."</b><cite class="src bl">B&amp;L 84 &middot; p.1527</cite>
+    treatment."</b>​<cite class="src bl">B&amp;L 84 &middot; p.1527</cite>
     <br><span class="label out">Read the middle sentence again</span><b>"The natural progression of
     outflow obstruction is variable and rarely gets worse after 10 years."</b> That is the
     justification for watchful waiting, and it is the sentence that distinguishes a thoughtful answer
@@ -1455,14 +1467,14 @@ body.guide { margin: 0; -webkit-text-size-adjust: 100%; }
     <dt>SRB's indications for surgery</dt>
     <dd><b>"Prostatism (frequency, dysuria, urgency); acute retention of urine; chronic retention of
     urine with residual urine more than 200 mL; complications like hydroureter, hydronephrosis, stone
-    formation, recurrent infection, bladder changes; haematuria."</b><cite class="src srb">SRB 26 &middot; p.1034</cite>
+    formation, recurrent infection, bladder changes; haematuria."</b>​<cite class="src srb">SRB 26 &middot; p.1034</cite>
     Essentially B&amp;L's list, with the 200 mL threshold the same.</dd>
     <dt>And the three questions B&amp;L asks before offering an operation</dt>
     <dd><b>"Have they failed a preliminary trial of medical therapy?"</b> and <b>"is BOO
     present?"</b>, where <b>"the findings of significant symptoms (assessed by symptom scoring) and a
     benign enlarged prostate supplemented by the finding of a low maximum flow rate (under 10 to 12
     mL/s for a good voided volume, over 150 to 200 mL)"</b> will usually
-    suffice.<cite class="src bl">B&amp;L 84 &middot; p.1527</cite></dd>
+    suffice.​<cite class="src bl">B&amp;L 84 &middot; p.1527</cite></dd>
   </dl>
 
   <h2><span class="n">7</span>Treatment</h2>
@@ -1474,61 +1486,61 @@ body.guide { margin: 0; -webkit-text-size-adjust: 100%; }
     merits and side effects of operative treatment is warranted. Waiting for a period of 6 months
     after careful discussion of the diagnosis is indicated. After this, a repeat assessment of
     symptoms and flow rates and an ultrasound scan are helpful; many men with stable symptoms will
-    elect to leave matters be."</b><cite class="src bl">B&amp;L 84 &middot; p.1528</cite>
+    elect to leave matters be."</b>​<cite class="src bl">B&amp;L 84 &middot; p.1528</cite>
     <br>Plus the fluid advice, which B&amp;L puts in its summary box: <b>"watchful waiting in
     conjunction with fluid manipulation (avoid fluid binge and late night intake) and a reduction in
-    caffeinated and alcoholic drinks."</b><cite class="src bl">B&amp;L 84 &middot; p.1527</cite>
+    caffeinated and alcoholic drinks."</b>​<cite class="src bl">B&amp;L 84 &middot; p.1527</cite>
     <br><span class="label">Say the fluid advice</span>It costs nothing, it is in the book, and it
     treats the nocturia that is often the symptom the man actually minds.</dd>
     <dt>Drugs: the two classes, and how they differ</dt>
     <dd><b>Alpha-blockers.</b> B&amp;L: <b>"alpha-adrenergic blocking agents inhibit the contraction
-    of smooth muscle that is found in the prostate."</b><cite class="src bl">B&amp;L 84 &middot; p.1528</cite>
+    of smooth muscle that is found in the prostate."</b>​<cite class="src bl">B&amp;L 84 &middot; p.1528</cite>
     SRB adds the mechanism in bladder terms, <b>"they reduce the bladder neck resistance so as to
     improve the urine flow"</b>, and gives the agents: <b>short acting, prazosin and indoramin;
     long acting, terazosin and doxazosin; selective alpha-1A, tamsulosin 0.2 to 0.4 mg once daily
-    for 12 weeks.</b><cite class="src srb">SRB 26 &middot; p.1036</cite>
+    for 12 weeks.</b>​<cite class="src srb">SRB 26 &middot; p.1036</cite>
     <br><b>5-alpha reductase inhibitors.</b> B&amp;L: they <b>"inhibit the conversion of testosterone
     to 1,5-dihydrotestosterone (DHT), the most active form of androgen. These drugs, when taken for a
     year, result in a 25% reduction in the size of the prostate
-    gland."</b><cite class="src bl">B&amp;L 84 &middot; p.1528</cite> SRB: <b>finasteride 5 mg daily
-    for 6 to 8 months</b>.<cite class="src srb">SRB 26 &middot; p.1036</cite>
+    gland."</b>​<cite class="src bl">B&amp;L 84 &middot; p.1528</cite> SRB: <b>finasteride 5 mg daily
+    for 6 to 8 months</b>.​<cite class="src srb">SRB 26 &middot; p.1036</cite>
     <br><span class="label">The comparison to quote</span>B&amp;L: <b>"both groups of drugs are
     effective; however, alpha-blockers work more quickly and although the 5-alpha reductase
     inhibitors have fewer side effects they need to be taken for at least 6 months and their effect
     is greatest in patients with large (over 40 g)
-    glands."</b><cite class="src bl">B&amp;L 84 &middot; p.1528</cite> So: <b>alpha-blocker for quick
+    glands."</b>​<cite class="src bl">B&amp;L 84 &middot; p.1528</cite> So: <b>alpha-blocker for quick
     symptomatic relief, 5ARI for a big gland and for slowing progression, both together for a gland
-    over 35 g.</b><cite class="src bl">B&amp;L 84 &middot; p.1527</cite>
+    over 35 g.</b>​<cite class="src bl">B&amp;L 84 &middot; p.1527</cite>
     <br><b>A third class.</b> B&amp;L: <b>"another drug class that has improved patients' symptom
     scores but not their maximum flow rate are the phosphodiesterase 5 inhibitors, which reduce
     smooth muscle tone and possibly the inflammation in the prostate gland. These drugs are
     particularly useful if patients have concomitant erectile
-    dysfunction."</b><cite class="src bl">B&amp;L 84 &middot; p.1528</cite>
+    dysfunction."</b>​<cite class="src bl">B&amp;L 84 &middot; p.1528</cite>
     <br><span class="label out">And B&amp;L's honest verdict on drugs, which is worth having ready</span>
     <b>"Drug therapy results in improvements in maximum flow rates by about 2 mL/s more than placebo
     and results in a mild (20%) improvement in symptom scores... TURP, however, results in
     improvements in maximum flow rates from 9 to 18 mL/s and a 75% improvement in symptom scores.
     These drugs are expensive in comparison with their effectiveness, and a significant proportion of
     men who try these drugs will subsequently undergo surgical
-    treatment."</b><cite class="src bl">B&amp;L 84 &middot; p.1528</cite>
+    treatment."</b>​<cite class="src bl">B&amp;L 84 &middot; p.1528</cite>
     <br><span class="label">So the honest framing</span><b>Drugs: +2 mL/s and a 20% symptom
     improvement. TURP: 9 to 18 mL/s and a 75% symptom improvement.</b> Drugs are for the man who
     wants to avoid the side effects of surgery, chiefly retrograde ejaculation, which is why B&amp;L
     introduces them with <b>"in men who are very concerned about the development of sexual
     dysfunction after TURP, the use of drugs may be
-    helpful."</b><cite class="src bl">B&amp;L 84 &middot; p.1528</cite></dd>
+    helpful."</b>​<cite class="src bl">B&amp;L 84 &middot; p.1528</cite></dd>
     <dt>Managing acute retention</dt>
     <dd><b>Catheterise first.</b> SRB: <b>"patient with acute retention of urine requires urethral
     catheterisation. If urethral catheterisation fails, then suprapubic cystostomy is
-    done."</b><cite class="src srb">SRB 26 &middot; p.1034</cite> B&amp;L: <b>"once the bladder has
+    done."</b>​<cite class="src srb">SRB 26 &middot; p.1034</cite> B&amp;L: <b>"once the bladder has
     been drained by means of a catheter, the patient's fitness for treatment is determined. If
     retention was not caused by drugs or constipation, then prostatectomy would usually be the
     correct management. Unfit men or those with dementia may be treated by means of an indwelling
-    urethral or suprapubic catheter."</b><cite class="src bl">B&amp;L 84 &middot; p.1527</cite>
+    urethral or suprapubic catheter."</b>​<cite class="src bl">B&amp;L 84 &middot; p.1527</cite>
     <br><b>Trial without catheter.</b> B&amp;L: <b>"the role of alpha-adrenergic drugs followed by a
     trial of a catheter has been tested and found to be successful in certain groups with a short
     history and a low residual volume of urine, but the recurrence rate becomes cumulatively
-    high."</b><cite class="src bl">B&amp;L 84 &middot; p.1527</cite>
+    high."</b>​<cite class="src bl">B&amp;L 84 &middot; p.1527</cite>
     <br><span class="label out">And how long before the operation, where the books differ</span>See
     the amber box.</dd>
     <dt>Chronic retention, and the two traps in it</dt>
@@ -1537,7 +1549,7 @@ body.guide { margin: 0; -webkit-text-size-adjust: 100%; }
     coexisting infection and with good renal function do not necessarily require catheterisation
     before proceeding to prostatectomy on the next available list. For those who are uraemic, urgent
     catheterisation is mandatory to allow renal function to recover and
-    stabilise."</b><cite class="src bl">B&amp;L 84 &middot; p.1527</cite>
+    stabilise."</b>​<cite class="src bl">B&amp;L 84 &middot; p.1527</cite>
     <br><b>Trap two: post-obstructive diuresis</b>, which is the examined complication.
     B&amp;L: <b>"uraemic patients with chronic retention are often dehydrated at the time of
     admission. Owing to the chronic back pressure on the distal tubules within the kidney, there is
@@ -1545,9 +1557,9 @@ body.guide { margin: 0; -webkit-text-size-adjust: 100%; }
     may be an enormous outflow of salts and water, which is known as postobstructive diuresis. It is
     for this reason that a careful fluid chart, daily measurements of the patient's weight and serial
     estimations of creatinine and electrolytes are
-    essential."</b><cite class="src bl">B&amp;L 84 &middot; p.1527</cite> Intravenous fluid is given
+    essential."</b>​<cite class="src bl">B&amp;L 84 &middot; p.1527</cite> Intravenous fluid is given
     if the patient cannot keep up, and blood when the haemoglobin is under <b>9 g/dL</b> once fluid balance is
-    stable.<cite class="src bl">B&amp;L 84 &middot; p.1527</cite> The page prints "g/L", which is a
+    stable.​<cite class="src bl">B&amp;L 84 &middot; p.1527</cite> The page prints "g/L", which is a
     misprint; see below.
     <details open class="conflict">
       <summary>
@@ -1572,60 +1584,60 @@ body.guide { margin: 0; -webkit-text-size-adjust: 100%; }
     <br><span class="label">And the other thing that happens on catheterising a chronic retention</span>
     B&amp;L: <b>"haematuria often occurs following catheterisation owing to collapse of the distended
     bladder and upper tract, but settles within a couple of
-    days."</b><cite class="src bl">B&amp;L 84 &middot; p.1527</cite> Decompression haematuria. Expect
+    days."</b>​<cite class="src bl">B&amp;L 84 &middot; p.1527</cite> Decompression haematuria. Expect
     it, warn about it, do not panic.</dd>
     <dt>TURP: the operation</dt>
     <dd>B&amp;L: <b>"strips of tissue are cut from the bladder neck down to the level of the
     verumontanum. Cutting is performed by a high-frequency diathermy current, which is applied across
     a loop mounted on the hand-held trigger of the resectoscope... the 'chips' of prostate are then
     removed from the bladder using an Ellik evacuator. Resection proceeds at 1 g per minute in
-    experienced hands."</b><cite class="src bl">B&amp;L 84 &middot; p.1529</cite>
+    experienced hands."</b>​<cite class="src bl">B&amp;L 84 &middot; p.1529</cite>
     <br><b>The time limit, and why bipolar changed it.</b> <b>"The duration of resection for
     monopolar TURP is limited to 1 hour due to the risk of resorption of water if 1% glycine is used
     as an irrigant. The advent of bipolar TURP where normal saline is used as an irrigant permits
-    resection of larger prostates."</b><cite class="src bl">B&amp;L 84 &middot; p.1529</cite>
+    resection of larger prostates."</b>​<cite class="src bl">B&amp;L 84 &middot; p.1529</cite>
     <br><span class="label">Why it happens</span>Monopolar diathermy cannot work in saline, so a
     non-conducting irrigant is used; absorption of it through open venous sinuses causes dilutional
     hyponatraemia and water intoxication. Bipolar TURP uses saline, which is why B&amp;L says it
-    <b>"permits resection of larger prostates"</b>.<cite class="src bl">B&amp;L 84 &middot; p.1529</cite>
+    <b>"permits resection of larger prostates"</b>.​<cite class="src bl">B&amp;L 84 &middot; p.1529</cite>
 
     <br><span class="label">What the syndrome actually is, in B&amp;L's words</span>
     SRB names it <b>TURP syndrome</b> and lists it first among the postoperative
-    complications.<cite class="src srb">SRB 26 &middot; p.1034</cite> B&amp;L sets it out under
+    complications.​<cite class="src srb">SRB 26 &middot; p.1034</cite> B&amp;L sets it out under
     <i>Water intoxication</i>: <b>"absorption of water into the circulation at the time of
     transurethral resection can give rise to congestive cardiac failure, hyponatraemia and
     haemolysis. Accompanying this, there is frequently confusion and other cerebral events often
-    mimicking a stroke."</b><cite class="src bl">B&amp;L 84 &middot; p.1530</cite>
+    mimicking a stroke."</b>​<cite class="src bl">B&amp;L 84 &middot; p.1530</cite>
     <br><span class="label out">The sign that matters under spinal anaesthesia</span>That
     confusion, in an awake patient, is the early warning. An examiner asking how you would
     <i>recognise</i> it is listening for: a resection running long, then restlessness or
     confusion, with the cardiac failure and the sodium to follow.
     <br><span class="label">And the treatment, which B&amp;L gives in one line</span>
-    <b>"The treatment consists of fluid restriction."</b><cite class="src bl">B&amp;L 84 &middot; p.1530</cite>
+    <b>"The treatment consists of fluid restriction."</b>​<cite class="src bl">B&amp;L 84 &middot; p.1530</cite>
     Prevention is the rest of its answer: <b>"the incidence of this condition has been reduced
     since the introduction of isotonic glycine for irrigating during resection, and further still
     with the development of bipolar TURP where saline is used as an
-    irrigant."</b><cite class="src bl">B&amp;L 84 &middot; p.1530</cite>
+    irrigant."</b>​<cite class="src bl">B&amp;L 84 &middot; p.1530</cite>
     <br><b>Antibiotics:</b> <b>"men with indwelling catheters, those with recent urinary infection,
     those with chronic retention or those with prosthetic material or heart valves benefit from
-    prophylactic antibiotics."</b><cite class="src bl">B&amp;L 84 &middot; p.1529</cite>
+    prophylactic antibiotics."</b>​<cite class="src bl">B&amp;L 84 &middot; p.1529</cite>
     <br><b>Afterwards:</b> a <b>three-way self-retaining catheter</b> with irrigation
     <b>"continued until the outflow is pale pink, and the catheter is usually removed on the second
-    or third postoperative day."</b><cite class="src bl">B&amp;L 84 &middot; p.1529</cite> SRB:
+    or third postoperative day."</b>​<cite class="src bl">B&amp;L 84 &middot; p.1529</cite> SRB:
     continuous bladder irrigation through a three-way Foley catheter, <b>"catheter is removed within
-    72 hours"</b>.<cite class="src srb">SRB 26 &middot; p.1034</cite>
+    72 hours"</b>.​<cite class="src srb">SRB 26 &middot; p.1034</cite>
     <br><span class="label out">On which fluid you irrigate with afterwards, see the amber box</span>
     The two books do not say the same thing, and it matters.
     <br><b>And the small-gland exception:</b> B&amp;L, <b>"in men with small prostates or bladder neck
     dyssynergia or stenosis, it is better to divide the bladder neck and prostatic urethra with a
-    Collins knife or laser."</b><cite class="src bl">B&amp;L 84 &middot; p.1529</cite> That is
+    Collins knife or laser."</b>​<cite class="src bl">B&amp;L 84 &middot; p.1529</cite> That is
     transurethral incision of the prostate, which SRB also
-    lists.<cite class="src srb">SRB 26 &middot; p.1035</cite></dd>
+    lists.​<cite class="src srb">SRB 26 &middot; p.1035</cite></dd>
     <dt>Two things to know about how the books handle TURP syndrome</dt>
     <dd>
       <b>1. B&amp;L calls glycine isotonic, and gives two different strengths.</b> Page 1529 warns
       about resorption <b>"if 1% glycine is used"</b>; page 1530 credits the fall in incidence to
-      <b>"the introduction of isotonic glycine"</b>.<cite class="src bl">B&amp;L 84 &middot; pp.1529, 1530</cite>
+      <b>"the introduction of isotonic glycine"</b>.​<cite class="src bl">B&amp;L 84 &middot; pp.1529, 1530</cite>
       The strength in common use is <b>1.5%</b>, and glycine at that strength is <i>hypo-osmolar</i>
       relative to plasma, which is the whole reason absorbing it dilutes the sodium. Quote the
       book's sentences as written, and if pressed say <b>1.5% glycine, non-conducting and
@@ -1644,19 +1656,19 @@ body.guide { margin: 0; -webkit-text-size-adjust: 100%; }
     40 mL and kept in the bladder. Sustained traction is applied by taping the catheter to the
     anterior abdominal wall or thigh for 12 to 24 hours. This causes compression of the prostatic
     tissue and veins and thus stops the
-    bleeding."</b><cite class="src bl">B&amp;L 84 &middot; p.1529</cite>
+    bleeding."</b>​<cite class="src bl">B&amp;L 84 &middot; p.1529</cite>
     <br><b>And if the catheter stops draining:</b> <b>"this may indicate that a clot is blocking the
     eye of the catheter. The bladder should be promptly washed out using a strict aseptic
-    technique."</b><cite class="src bl">B&amp;L 84 &middot; p.1529</cite>
+    technique."</b>​<cite class="src bl">B&amp;L 84 &middot; p.1529</cite>
     <br><b>Secondary haemorrhage:</b> <b>"tends to occur several days after the patient has been
     discharged. All men should be warned about this possibility and given appropriate advice to rest
-    and to have a high fluid intake."</b><cite class="src bl">B&amp;L 84 &middot; p.1529</cite>
+    and to have a high fluid intake."</b>​<cite class="src bl">B&amp;L 84 &middot; p.1529</cite>
     <br><span class="label">Why traction works, in one line</span>The balloon pulled down onto the
     prostatic cavity tamponades the venous plexus in the false capsule. It is pressure, not
     cautery.</dd>
     <dt>Counselling before prostatectomy: the numbers to have ready</dt>
     <dd>B&amp;L's figures, and SRB's, which agree almost
-    exactly:<cite class="src bl">B&amp;L 84 &middot; p.1528</cite><cite class="src srb">SRB 26 &middot; p.1035</cite>
+    exactly:​<cite class="src bl">B&amp;L 84 &middot; p.1528</cite>​<cite class="src srb">SRB 26 &middot; p.1035</cite>
     <br><b>Retrograde ejaculation or anejaculation:</b> B&amp;L <b>65 to 85%</b>; SRB <b>65%</b>.
     <br><b>Erectile dysfunction:</b> B&amp;L <b>5 to 10%</b>, <b>"usually in those whose potency is
     waning"</b>; SRB <b>5%</b>.
@@ -1673,20 +1685,20 @@ body.guide { margin: 0; -webkit-text-size-adjust: 100%; }
     B&amp;L: <b>"ninety per cent of men undergoing elective operation for severe symptoms and
     urodynamically proven BOO do well in terms of symptoms and flow rates. Only about 65% of those
     with mild symptoms or those with weak bladder contraction as the cause of their symptoms do
-    well."</b><cite class="src bl">B&amp;L 84 &middot; p.1528</cite> <b>90% against 65%, purely on
+    well."</b>​<cite class="src bl">B&amp;L 84 &middot; p.1528</cite> <b>90% against 65%, purely on
     whether you proved the obstruction before operating.</b> That is the argument for urodynamics in
     the doubtful case, and it is the best answer to "why not just resect everyone?"
     <br>And for the man with coexisting detrusor overactivity: <b>"patients who have concomitant BOO
     and secondary detrusor overactivity may need an anticholinergic drug for a few months if they
-    have persistent irritative symptoms."</b><cite class="src bl">B&amp;L 84 &middot; p.1528</cite></dd>
+    have persistent irritative symptoms."</b>​<cite class="src bl">B&amp;L 84 &middot; p.1528</cite></dd>
     <dt>SRB's list of complications of TURP</dt>
     <dd><b>"Water intoxication with congestive cardiac failure, TURP syndrome; hyponatraemia;
     haemorrhage; infection; incontinence; perforation of the bladder or prostatic capsule; stricture
     urethra; retrograde ejaculation and impotence;
-    recurrence."</b><cite class="src srb">SRB 26 &middot; p.1034</cite> SRB also lists, as advantages
+    recurrence."</b>​<cite class="src srb">SRB 26 &middot; p.1034</cite> SRB also lists, as advantages
     of TURP, <b>"no suprapubic incision; most common and popular method; done using resectoscope;
     faster recovery and early discharge is possible"</b>, against <b>"recurrence may occur in large
-    prostate; TURP syndrome can develop"</b>.<cite class="src srb">SRB 26 &middot; p.1035</cite></dd>
+    prostate; TURP syndrome can develop"</b>.​<cite class="src srb">SRB 26 &middot; p.1035</cite></dd>
   </dl>
 
   <details open class="conflict">
@@ -1702,10 +1714,10 @@ body.guide { margin: 0; -webkit-text-size-adjust: 100%; }
       <dd>Intra-operatively, <b>"using cystoscope with fluid like glycine irrigating
       continuously"</b>; post-operatively, <b>"after surgery, continuous bladder irrigation using
       normal saline is done using three way Foley's
-      catheter"</b>.<cite class="src srb">SRB 26 &middot; p.1034</cite> But in its own comparison
+      catheter"</b>.​<cite class="src srb">SRB 26 &middot; p.1034</cite> But in its own comparison
       box on the next page, among the features of TURP, SRB lists: <b>"continuous postoperative
       irrigation using glycine solution is needed for 72
-      hours."</b><cite class="src srb">SRB 26 &middot; p.1035</cite> So SRB says saline on one page
+      hours."</b>​<cite class="src srb">SRB 26 &middot; p.1035</cite> So SRB says saline on one page
       and glycine on the next.</dd>
       <dt>Bailey &amp; Love 28e</dt>
       <dd>Unambiguous, and gives both the fluid and the reason for stopping: <b>"following TURP,
@@ -1713,11 +1725,11 @@ body.guide { margin: 0; -webkit-text-size-adjust: 100%; }
       isotonic saline is introduced into the bladder to prevent any further bleeding from forming
       blood clots. Irrigation is continued until the outflow is pale pink, and the catheter is
       usually removed on the second or third postoperative
-      day."</b><cite class="src bl">B&amp;L 84 &middot; p.1529</cite> Glycine appears in B&amp;L only
+      day."</b>​<cite class="src bl">B&amp;L 84 &middot; p.1529</cite> Glycine appears in B&amp;L only
       as the <b>intra-operative</b> irrigant for monopolar resection, and only as the reason the
       resection is limited to an hour: <b>"the duration of resection for monopolar TURP is limited to
       1 hour due to the risk of resorption of water if 1% glycine is used as an
-      irrigant."</b><cite class="src bl">B&amp;L 84 &middot; p.1529</cite></dd>
+      irrigant."</b>​<cite class="src bl">B&amp;L 84 &middot; p.1529</cite></dd>
       <dt>Which is right, and why it is not a matter of taste</dt>
       <dd>B&amp;L is right, and SRB's own text agrees with it on p.1034. The logic is in B&amp;L's
       own sentence. <b>Glycine is used intra-operatively only because monopolar diathermy cannot work
@@ -1729,7 +1741,7 @@ body.guide { margin: 0; -webkit-text-size-adjust: 100%; }
       irrigation exists only to wash clots out, and isotonic saline does that without any metabolic
       risk. The modern version of the same logic is <b>bipolar TURP, which uses normal saline as the
       operating irrigant</b> and therefore <b>"permits resection of larger
-      prostates"</b>.<cite class="src bl">B&amp;L 84 &middot; p.1529</cite></dd>
+      prostates"</b>.​<cite class="src bl">B&amp;L 84 &middot; p.1529</cite></dd>
     </dl>
     <span class="ruling"><b>How to answer:</b> say <b>saline</b>, and give the reason, which also
     answers the TUR syndrome question before it is asked. "After the resection I would irrigate
@@ -1758,18 +1770,18 @@ body.guide { margin: 0; -webkit-text-size-adjust: 100%; }
       <dd><b>"If patient presents with acute retention of urine, initial urethral catheterization is
       done. If not possible then suprapubic trocar cystostomy ideally or formal open SPC is done.
       Once patient's obstructive uropathy is under control, TURP is done after 7 to 14 days after
-      evaluation."</b><cite class="src srb">SRB 26 &middot; p.1035</cite></dd>
+      evaluation."</b>​<cite class="src srb">SRB 26 &middot; p.1035</cite></dd>
       <dt>Bailey &amp; Love 28e</dt>
       <dd>Gives a much longer interval, but note the patient it is talking about: <b>"patients who
       develop renal impairment and/or hydronephrosis after urinary retention will need to keep the
       catheter until definitive surgical treatment is provided, usually not less than 6 weeks
       afterwards to allow renal function
-      recovery."</b><cite class="src bl">B&amp;L 84 &middot; p.1527</cite> For the <b>uncomplicated</b>
+      recovery."</b>​<cite class="src bl">B&amp;L 84 &middot; p.1527</cite> For the <b>uncomplicated</b>
       case B&amp;L gives no interval at all and implies it can be prompt: <b>"if retention was not
       caused by drugs or constipation, then prostatectomy would usually be the correct
-      management"</b>,<cite class="src bl">B&amp;L 84 &middot; p.1527</cite> and men with chronic
+      management"</b>,​<cite class="src bl">B&amp;L 84 &middot; p.1527</cite> and men with chronic
       retention, low residuals and good renal function may proceed <b>"to prostatectomy on the next
-      available list"</b>.<cite class="src bl">B&amp;L 84 &middot; p.1527</cite></dd>
+      available list"</b>.​<cite class="src bl">B&amp;L 84 &middot; p.1527</cite></dd>
       <dt>They are describing different patients</dt>
       <dd>SRB's 7 to 14 days is for the straightforward man in acute retention whose
       <b>"obstructive uropathy is under control"</b>. B&amp;L's 6 weeks is specifically for the man
@@ -1802,7 +1814,7 @@ body.guide { margin: 0; -webkit-text-size-adjust: 100%; }
     <dl>
       <dt>SRB</dt>
       <dd>Lists eleven treatments, with three named open operations among
-      them:<cite class="src srb">SRB 26 &middot; p.1035</cite>
+      them:​<cite class="src srb">SRB 26 &middot; p.1035</cite>
       <br><b>Freyer's suprapubic transvesical prostatectomy:</b> <b>"before TURP, it was a popular
       and was the procedure of choice for enlarged prostate."</b> Complications: <b>"haemorrhage,
       infection, stricture urethra, incontinence, impotence, bladder neck contracture."</b>
@@ -1811,24 +1823,24 @@ body.guide { margin: 0; -webkit-text-size-adjust: 100%; }
       <br><b>Young's perineal prostatectomy</b>, through a perineal approach.
       <br>Then microwave hyperthermia at 45 to 50 degrees, holmium laser, high-energy
       electromagnetic treatment, intraurethral and extraurethral stents, and transurethral balloon
-      dilatation.<cite class="src srb">SRB 26 &middot; p.1035</cite> SRB's separate box of minimally
+      dilatation.​<cite class="src srb">SRB 26 &middot; p.1035</cite> SRB's separate box of minimally
       invasive options adds <b>TUIP, laser ablation, TUMT, TUNA, high intensity ultrasound, water
       induced thermotherapy and balloon
-      dilatation</b>.<cite class="src srb">SRB 26 &middot; p.1035</cite></dd>
+      dilatation</b>.​<cite class="src srb">SRB 26 &middot; p.1035</cite></dd>
       <dt>Bailey &amp; Love 28e</dt>
       <dd>Names the four anatomical approaches, <b>"transurethrally (TURP); retropubically (RPP);
       through the bladder (transvesically; TVP); or from the
-      perineum"</b>,<cite class="src bl">B&amp;L 84 &middot; p.1528</cite> but describes only
+      perineum"</b>,​<cite class="src bl">B&amp;L 84 &middot; p.1528</cite> but describes only
       transurethral surgery in detail, and states the current position in its summary box: <b>"TURP,
       which remains the gold standard; consider HOLEP (holmium laser enucleation of the prostate),
       open or robotic simple prostatectomy for large glands; new minimally invasive treatment options
       that are available to patients include prostate artery embolisation (PAE), water vapour
       prostate treatment (Rez&#363;m), prostatic urethral lift (Urolift) and water jet treatment
-      (Aquablation)."</b><cite class="src bl">B&amp;L 84 &middot; p.1527</cite>
+      (Aquablation)."</b>​<cite class="src bl">B&amp;L 84 &middot; p.1527</cite>
       <br><b>Millin</b> survives in B&amp;L only as a footnote and as an analogy: in HOLEP,
       <b>"the tip of the cystoscope is used, much like the surgeon's finger in Millin's
       prostatectomy, to enucleate the transitional zone
-      adenoma."</b><cite class="src bl">B&amp;L 84 &middot; p.1529</cite> Neither <b>Freyer</b> nor
+      adenoma."</b>​<cite class="src bl">B&amp;L 84 &middot; p.1529</cite> Neither <b>Freyer</b> nor
       <b>Young's perineal prostatectomy</b> appears as an operation for BPH. None of PAE,
       Rez&#363;m, Urolift or Aquablation appears in SRB.</dd>
       <dt>What actually happened</dt>
@@ -1837,7 +1849,7 @@ body.guide { margin: 0; -webkit-text-size-adjust: 100%; }
       it does with a laser exactly what Millin's finger did, enucleating the adenoma in the
       relatively avascular plane between the transitional and peripheral zones, and then morcellating
       it out through the cystoscope rather than through an abdominal
-      incision.<cite class="src bl">B&amp;L 84 &middot; p.1529</cite> So the eponyms describe an
+      incision.​<cite class="src bl">B&amp;L 84 &middot; p.1529</cite> So the eponyms describe an
       operation whose logic is alive even where the incision is not. Open surgery remains for the
       very large gland, and B&amp;L now adds <b>robotic</b> to that option.</dd>
     </dl>
@@ -1871,20 +1883,20 @@ body.guide { margin: 0; -webkit-text-size-adjust: 100%; }
       <dd>Quantifies the indication by gland size and treats it as a drug for <b>progression</b> as
       well as symptoms. <b>"5-alpha reductase is given to prevent progression of symptoms in men with
       large (over 35 to 40 mL) prostates. Combination therapy (alpha-blocker and 5-alpha reductase)
-      is better for the larger gland."</b><cite class="src bl">B&amp;L 84 &middot; p.1527</cite> Its
+      is better for the larger gland."</b>​<cite class="src bl">B&amp;L 84 &middot; p.1527</cite> Its
       summary box: <b>"drug therapy is with alpha-blockers or, in men with a large prostate, a
       5-alpha-reductase inhibitor, or both; combination therapy has a better outcome in glands bigger
-      than 35 g."</b><cite class="src bl">B&amp;L 84 &middot; p.1527</cite> And the effect size:
+      than 35 g."</b>​<cite class="src bl">B&amp;L 84 &middot; p.1527</cite> And the effect size:
       <b>a 25% reduction in prostate size over a year</b>, with <b>"their effect is greatest in
       patients with large (over 40 g) glands"</b> and a need to be taken <b>"for at least 6
-      months"</b>.<cite class="src bl">B&amp;L 84 &middot; p.1528</cite> It gives these drugs
+      months"</b>.​<cite class="src bl">B&amp;L 84 &middot; p.1528</cite> It gives these drugs
       <b>after</b> acute retention precisely to prevent
-      progression.<cite class="src bl">B&amp;L 84 &middot; p.1527</cite></dd>
+      progression.​<cite class="src bl">B&amp;L 84 &middot; p.1527</cite></dd>
       <dt>SRB</dt>
       <dd>No size in millilitres, and a prohibition B&amp;L does not have: <b>"it is effective in
       palpably enlarged prostate. Drug used is finasteride 5 mg daily. Duration of treatment is about
       6 to 8 months. It is contraindicated in obstructive uropathy or carcinoma
-      prostate."</b><cite class="src srb">SRB 26 &middot; p.1036</cite></dd>
+      prostate."</b>​<cite class="src srb">SRB 26 &middot; p.1036</cite></dd>
       <dt>How to read SRB's "contraindicated in obstructive uropathy"</dt>
       <dd>Read literally it is self-contradictory, since bladder outflow obstruction from a large
       prostate is the condition the drug is for, and B&amp;L gives it to exactly those men. The
@@ -1916,7 +1928,7 @@ body.guide { margin: 0; -webkit-text-size-adjust: 100%; }
       <summary>Which zone of the prostate does BPH arise in, and which does carcinoma arise in?</summary>
       <p class="ans">BPH arises in the submucosal glands of the periurethral transition zone;
       carcinoma arises in the peripheral zone, and classically in the posterior
-      lobe.<cite class="src srb">SRB 26 &middot; p.1032</cite><cite class="src bl">B&amp;L 84 &middot; p.1522</cite>
+      lobe.​<cite class="src srb">SRB 26 &middot; p.1032</cite>​<cite class="src bl">B&amp;L 84 &middot; p.1522</cite>
       That is why a cancer is felt first on rectal examination and why a man who has had a
       prostatectomy can still develop prostate cancer, since the resection removes the transition
       zone and leaves the peripheral zone behind.</p>
@@ -1925,21 +1937,21 @@ body.guide { margin: 0; -webkit-text-size-adjust: 100%; }
     <details open>
       <summary>What is the false capsule, and why does it matter?</summary>
       <p class="ans">It is peripheral-zone prostatic tissue compressed and flattened by the
-      expanding adenoma, not a true capsule.<cite class="src bl">B&amp;L 84 &middot; p.1522</cite>
+      expanding adenoma, not a true capsule.​<cite class="src bl">B&amp;L 84 &middot; p.1522</cite>
       It matters because the plane between the adenoma and the false capsule is relatively avascular
       and is the plane in which the adenoma is enucleated, whether by a finger in Millin's operation
-      or by a laser in HOLEP.<cite class="src bl">B&amp;L 84 &middot; p.1529</cite></p>
+      or by a laser in HOLEP.​<cite class="src bl">B&amp;L 84 &middot; p.1529</cite></p>
     </details>
 
     <details open>
       <summary>Does the size of the prostate determine the treatment?</summary>
       <p class="ans">No. S Das: the clinical importance of prostatic hyperplasia is measured by the
       severity of symptoms and the amount of residual urine, not by the size of the
-      gland.<cite class="src das">Das 37 &middot; p.564</cite> Bailey and Love says the same, that
+      gland.​<cite class="src das">Das 37 &middot; p.564</cite> Bailey and Love says the same, that
       the relationship between anatomical enlargement, lower urinary tract symptoms and urodynamic
       obstruction is complex, and lists the combinations: no symptoms and no obstruction; no symptoms
       but urodynamic obstruction; symptoms without obstruction; and symptoms with
-      obstruction.<cite class="src bl">B&amp;L 84 &middot; p.1522</cite> Size matters for one thing
+      obstruction.​<cite class="src bl">B&amp;L 84 &middot; p.1522</cite> Size matters for one thing
       only: choosing the drug and the operation.</p>
     </details>
 
@@ -1947,10 +1959,10 @@ body.guide { margin: 0; -webkit-text-size-adjust: 100%; }
       <summary>Classify the symptoms, and which respond to surgery?</summary>
       <p class="ans">Voiding symptoms: hesitancy, poor flow not improved by straining, intermittency,
       terminal dribbling, incomplete emptying. Storage symptoms: frequency, nocturia, urgency, urge
-      and nocturnal incontinence.<cite class="src srb">SRB 26 &middot; p.1034</cite> Voiding symptoms
+      and nocturnal incontinence.​<cite class="src srb">SRB 26 &middot; p.1034</cite> Voiding symptoms
       with a proven low flow rate respond well to TURP. Men who are unobstructed and have detrusor
       instability do not, and their storage symptoms may be worse
-      afterwards.<cite class="src bl">B&amp;L 84 &middot; p.1528</cite></p>
+      afterwards.​<cite class="src bl">B&amp;L 84 &middot; p.1528</cite></p>
     </details>
 
     <details open>
@@ -1958,7 +1970,7 @@ body.guide { margin: 0; -webkit-text-size-adjust: 100%; }
       <p class="ans">An enlarged median lobe acting as a ball valve on the internal urethral meatus.
       S Das: straining improves the stream in a urethral stricture but retards it when the median
       lobe presses on the internal urethral
-      meatus.<cite class="src das">Das 37 &middot; p.558</cite></p>
+      meatus.​<cite class="src das">Das 37 &middot; p.558</cite></p>
     </details>
 
     <details open>
@@ -1967,7 +1979,7 @@ body.guide { margin: 0; -webkit-text-size-adjust: 100%; }
       retention, which is painless, and which causes bilateral hydronephrosis, upper tract infection
       and renal impairment. Bailey and Love: such men present with overflow incontinence, enuresis
       and renal insufficiency, and these symptoms should alert the doctor to the
-      condition.<cite class="src bl">B&amp;L 84 &middot; p.1525</cite> He needs his abdomen palpated,
+      condition.​<cite class="src bl">B&amp;L 84 &middot; p.1525</cite> He needs his abdomen palpated,
       his creatinine measured and his bladder drained.</p>
     </details>
 
@@ -1975,18 +1987,18 @@ body.guide { margin: 0; -webkit-text-size-adjust: 100%; }
       <summary>What would you do before the rectal examination, and why?</summary>
       <p class="ans">Watch him void if possible, then palpate and percuss the suprapubic region to
       establish whether the bladder is empty. S Das: if the bladder is not empty after micturition,
-      the rectal examination will not be reliable.<cite class="src das">Das 37 &middot; p.563</cite>
+      the rectal examination will not be reliable.​<cite class="src das">Das 37 &middot; p.563</cite>
       Bailey and Love gives the reason: residual urine pushes the prostate downwards and makes it
-      feel larger than it is.<cite class="src bl">B&amp;L 84 &middot; p.1526</cite></p>
+      feel larger than it is.​<cite class="src bl">B&amp;L 84 &middot; p.1526</cite></p>
     </details>
 
     <details open>
       <summary>Benign or malignant on rectal examination?</summary>
       <p class="ans">Benign: smooth, convex, elastic, median groove preserved, lateral sulci
       palpable, and the rectal mucosa moves freely over the
-      gland.<cite class="src bl">B&amp;L 84 &middot; p.1526</cite><cite class="src das">Das 37 &middot; p.564</cite>
+      gland.​<cite class="src bl">B&amp;L 84 &middot; p.1526</cite>​<cite class="src das">Das 37 &middot; p.564</cite>
       Malignant: hard, nodular, irregular, median sulcus obliterated, and the mucosa tethered to the
-      gland.<cite class="src das">Das 37 &middot; p.589</cite> Mobility of the rectal mucosa is the
+      gland.​<cite class="src das">Das 37 &middot; p.589</cite> Mobility of the rectal mucosa is the
       single most useful discriminator.</p>
     </details>
 
@@ -1995,24 +2007,24 @@ body.guide { margin: 0; -webkit-text-size-adjust: 100%; }
       <p class="ans">Yes. The median lobe grows upwards into the bladder, away from the examining
       finger, so S Das notes that enlargement of the median lobe may not be detected on rectal
       examination at all, though it can be felt per rectum with a urethral bougie
-      introduced.<cite class="src das">Das 37 &middot; p.564</cite></p>
+      introduced.​<cite class="src das">Das 37 &middot; p.564</cite></p>
     </details>
 
     <details open>
       <summary>You cannot reach the upper border of the prostate. What does that tell you?</summary>
       <p class="ans">That the gland is at least 50 mL. Bailey and Love: an inability to get to the
       prostate base implies a volume of at least 50
-      mL.<cite class="src bl">B&amp;L 84 &middot; p.1526</cite></p>
+      mL.​<cite class="src bl">B&amp;L 84 &middot; p.1526</cite></p>
     </details>
 
     <details open>
       <summary>What two neurological signs would you check, and why?</summary>
       <p class="ans">Perianal sensation and anal tone, to detect an S2 to S4 cauda equina
-      lesion.<cite class="src bl">B&amp;L 84 &middot; p.1526</cite> Diabetes, tabes dorsalis,
+      lesion.​<cite class="src bl">B&amp;L 84 &middot; p.1526</cite> Diabetes, tabes dorsalis,
       multiple sclerosis, cervical spondylosis and Parkinson's disease all mimic prostatic
       obstruction, and operating on a neuropathic bladder makes the patient worse. S Das adds that
       laxity of the anal sphincter suggests similar change in the urinary
-      sphincter.<cite class="src das">Das 37 &middot; p.563</cite></p>
+      sphincter.​<cite class="src das">Das 37 &middot; p.563</cite></p>
     </details>
 
     <details open>
@@ -2020,24 +2032,24 @@ body.guide { margin: 0; -webkit-text-size-adjust: 100%; }
       <p class="ans">Urine dipstick for blood, leukocyte esterase, glucose and protein; urine culture;
       serum creatinine; and measurement of urinary flow rate and post-void residual volume. PSA if
       indicated and pressure-flow studies are
-      additional.<cite class="src bl">B&amp;L 84 &middot; p.1525</cite></p>
+      additional.​<cite class="src bl">B&amp;L 84 &middot; p.1525</cite></p>
     </details>
 
     <details open>
       <summary>What flow rate indicates obstruction, and what are the pitfalls?</summary>
       <p class="ans">Under 10 mL/s is low, 10 to 15 equivocal, over 15 normal, with a normal peak
-      around 20 mL/s.<cite class="src srb">SRB 26 &middot; p.1034</cite> The pitfalls: the voided
+      around 20 mL/s.​<cite class="src srb">SRB 26 &middot; p.1034</cite> The pitfalls: the voided
       volume must exceed 150 to 200 mL, two or three recordings are needed, and the machine must be
       calibrated. And a low flow rate has three causes, not one: outflow obstruction, a low voided
       volume, and an underactive detrusor with weak bladder
-      contractions.<cite class="src bl">B&amp;L 84 &middot; p.1526</cite></p>
+      contractions.​<cite class="src bl">B&amp;L 84 &middot; p.1526</cite></p>
     </details>
 
     <details open>
       <summary>How do you prove bladder outflow obstruction?</summary>
       <p class="ans">A pressure-flow urodynamic study, which shows high voiding pressure with low
       flow. SRB: voiding pressure under 60 cm of water is normal, 60 to 80 equivocal, over 80
-      high.<cite class="src srb">SRB 26 &middot; p.1034</cite> Low pressure with low flow is an
+      high.​<cite class="src srb">SRB 26 &middot; p.1034</cite> Low pressure with low flow is an
       underactive detrusor, not obstruction.</p>
     </details>
 
@@ -2047,7 +2059,7 @@ body.guide { margin: 0; -webkit-text-size-adjust: 100%; }
       neuropathy; a dominant history of irritative or storage symptoms; near-normal flow rates around
       15 mL/s or above; invalid flow measurements because of low voided volumes; high residual or
       chronic retention; recurrent symptoms after previous BPH surgery; and men under 50 or over
-      80.<cite class="src bl">B&amp;L 84 &middot; p.1526</cite> With a typical history and a flow rate
+      80.​<cite class="src bl">B&amp;L 84 &middot; p.1526</cite> With a typical history and a flow rate
       under 10 they are not needed.</p>
     </details>
 
@@ -2056,17 +2068,17 @@ body.guide { margin: 0; -webkit-text-size-adjust: 100%; }
       <p class="ans">To exclude other pathology immediately before prostatectomy: a urethral
       stricture, a bladder carcinoma and a non-opaque vesical calculus. Bailey and Love is explicit
       that direct inspection of the prostate is <b>not</b> used to establish the presence of
-      obstruction or the need for surgery.<cite class="src bl">B&amp;L 84 &middot; p.1526</cite></p>
+      obstruction or the need for surgery.​<cite class="src bl">B&amp;L 84 &middot; p.1526</cite></p>
     </details>
 
     <details open>
       <summary>Haematuria in a man with a big prostate. What do you do?</summary>
       <p class="ans">Do not blame the prostate. SRB calls that error the "decoy
-      prostate".<cite class="src srb">SRB 26 &middot; p.1033</cite> Other causes must be excluded by
+      prostate".​<cite class="src srb">SRB 26 &middot; p.1033</cite> Other causes must be excluded by
       urine culture, cytology, CT urography and
-      cystoscopy.<cite class="src bl">B&amp;L 84 &middot; p.1525</cite> BPH can bleed, from
+      cystoscopy.​<cite class="src bl">B&amp;L 84 &middot; p.1525</cite> BPH can bleed, from
       congestion of the prostatic venous plexus, which SRB calls vesical
-      piles,<cite class="src srb">SRB 26 &middot; p.1033</cite> but that is a diagnosis of
+      piles,​<cite class="src srb">SRB 26 &middot; p.1033</cite> but that is a diagnosis of
       exclusion.</p>
     </details>
 
@@ -2077,7 +2089,7 @@ body.guide { margin: 0; -webkit-text-size-adjust: 100%; }
       hydronephrosis, about 15%; complications of obstruction, meaning stone, infection or
       diverticulum; recurrent haematuria from a vascular prostate with no other cause; and severe
       symptoms not responding to drugs, with a flow rate under 10 mL/s and a residual of 100 to 250
-      mL, which is about 60%.<cite class="src bl">B&amp;L 84 &middot; pp.1526, 1527</cite> Frequency
+      mL, which is about 60%.​<cite class="src bl">B&amp;L 84 &middot; pp.1526, 1527</cite> Frequency
       alone is not an indication.</p>
     </details>
 
@@ -2086,7 +2098,7 @@ body.guide { margin: 0; -webkit-text-size-adjust: 100%; }
       <p class="ans">Drugs improve the maximum flow rate by about 2 mL/s more than placebo and give
       about a 20% improvement in symptom score. TURP improves the flow rate from about 9 to 18 mL/s
       and gives about a 75% improvement in symptom
-      scores.<cite class="src bl">B&amp;L 84 &middot; p.1528</cite> Drugs are chiefly for the man who
+      scores.​<cite class="src bl">B&amp;L 84 &middot; p.1528</cite> Drugs are chiefly for the man who
       wants to avoid the sexual side effects of surgery, and a significant proportion who try them go
       on to have surgery anyway.</p>
     </details>
@@ -2096,19 +2108,19 @@ body.guide { margin: 0; -webkit-text-size-adjust: 100%; }
       <p class="ans">Water intoxication with dilutional hyponatraemia, from absorption of the
       hypo-osmolar glycine irrigant through open prostatic venous sinuses during monopolar resection;
       it can cause congestive cardiac failure and
-      confusion.<cite class="src srb">SRB 26 &middot; p.1034</cite> It is avoided by limiting
+      confusion.​<cite class="src srb">SRB 26 &middot; p.1034</cite> It is avoided by limiting
       monopolar resection to about an hour, and now largely avoided altogether by bipolar resection,
       which works in normal saline and therefore allows larger glands to be
-      resected.<cite class="src bl">B&amp;L 84 &middot; p.1529</cite></p>
+      resected.​<cite class="src bl">B&amp;L 84 &middot; p.1529</cite></p>
     </details>
 
     <details open>
       <summary>How far do you resect, and why?</summary>
       <p class="ans">From the bladder neck down to the verumontanum and no
-      further.<cite class="src bl">B&amp;L 84 &middot; p.1529</cite><cite class="src srb">SRB 26 &middot; p.1034</cite>
+      further.​<cite class="src bl">B&amp;L 84 &middot; p.1529</cite>​<cite class="src srb">SRB 26 &middot; p.1034</cite>
       The verumontanum is the landmark for the most distal point of resection because the external
       sphincter lies distal to it, and damage to it causes
-      incontinence.<cite class="src bl">B&amp;L 84 &middot; p.1529</cite></p>
+      incontinence.​<cite class="src bl">B&amp;L 84 &middot; p.1529</cite></p>
     </details>
 
     <details open>
@@ -2116,7 +2128,7 @@ body.guide { margin: 0; -webkit-text-size-adjust: 100%; }
       <p class="ans">Catheter traction. The Foley balloon is inflated to 30 to 40 mL, kept in the
       bladder and taped under sustained traction to the anterior abdominal wall or thigh for 12 to 24
       hours, which compresses the prostatic tissue and veins and stops venous
-      bleeding.<cite class="src bl">B&amp;L 84 &middot; p.1529</cite> If the catheter stops draining,
+      bleeding.​<cite class="src bl">B&amp;L 84 &middot; p.1529</cite> If the catheter stops draining,
       suspect a clot blocking the eye and wash the bladder out aseptically.</p>
     </details>
 
@@ -2126,7 +2138,7 @@ body.guide { margin: 0; -webkit-text-size-adjust: 100%; }
       about 5 to 10%, usually where potency is already waning; incontinence in about 1%; that about
       15% need a second operation within eight to ten years; mortality is under 0.5%; severe sepsis
       about 6%; and bleeding needing transfusion of more than two units about
-      3%.<cite class="src bl">B&amp;L 84 &middot; p.1528</cite><cite class="src srb">SRB 26 &middot; p.1035</cite>
+      3%.​<cite class="src bl">B&amp;L 84 &middot; p.1528</cite>​<cite class="src srb">SRB 26 &middot; p.1035</cite>
       And that the results depend on selection: about 90% do well if the obstruction was proven, but
       only about 65% if symptoms were mild or the detrusor was weak.</p>
     </details>
@@ -2139,17 +2151,17 @@ body.guide { margin: 0; -webkit-text-size-adjust: 100%; }
       electrolytes, and intravenous replacement if the patient cannot keep up; blood transfusion if
       the haemoglobin is under <b>9 g/dL</b> once fluid balance is stable. B&amp;L prints this as
       "9 g/L", which is a misprint: 9 g/L would be
-      lethal.<cite class="src bl">B&amp;L 84 &middot; p.1527</cite></p>
+      lethal.​<cite class="src bl">B&amp;L 84 &middot; p.1527</cite></p>
     </details>
 
     <details open>
       <summary>Name the open operations for BPH.</summary>
       <p class="ans">Freyer's suprapubic transvesical prostatectomy, which was the procedure of
       choice before TURP; Millin's retropubic prostatectomy, done without opening the bladder; and
-      Young's perineal prostatectomy.<cite class="src srb">SRB 26 &middot; p.1035</cite> Bailey and
+      Young's perineal prostatectomy.​<cite class="src srb">SRB 26 &middot; p.1035</cite> Bailey and
       Love names the same four anatomical approaches and reserves open, now sometimes robotic, simple
       prostatectomy for very large
-      glands.<cite class="src bl">B&amp;L 84 &middot; pp.1527, 1528</cite></p>
+      glands.​<cite class="src bl">B&amp;L 84 &middot; pp.1527, 1528</cite></p>
     </details>
 
     <details open>
@@ -2159,25 +2171,25 @@ body.guide { margin: 0; -webkit-text-size-adjust: 100%; }
       avascular plane between the peripheral and transitional zones, while the tip of the cystoscope
       enucleates the adenoma much as the surgeon's finger does in Millin's prostatectomy; the adenoma
       is pushed into the bladder, morcellated and
-      extracted.<cite class="src bl">B&amp;L 84 &middot; p.1529</cite></p>
+      extracted.​<cite class="src bl">B&amp;L 84 &middot; p.1529</cite></p>
     </details>
 
     <details open>
       <summary>Which drug would you start, and why that one first?</summary>
       <p class="ans">An alpha-blocker, such as tamsulosin 0.4 mg daily, because it relaxes prostatic
       and bladder neck smooth muscle and works within
-      days.<cite class="src srb">SRB 26 &middot; p.1036</cite><cite class="src bl">B&amp;L 84 &middot; p.1528</cite>
+      days.​<cite class="src srb">SRB 26 &middot; p.1036</cite>​<cite class="src bl">B&amp;L 84 &middot; p.1528</cite>
       A 5-alpha reductase inhibitor, finasteride 5 mg daily, is added for a gland over about 35 to 40
       mL; it reduces prostate volume by about 25% over a year but needs at least six months to work.
       Combination therapy gives the best outcome in glands over 35
-      g.<cite class="src bl">B&amp;L 84 &middot; pp.1527, 1528</cite></p>
+      g.​<cite class="src bl">B&amp;L 84 &middot; pp.1527, 1528</cite></p>
     </details>
 
     <details open>
       <summary>One thing to remember about finasteride and PSA.</summary>
       <p class="ans">It lowers the serum PSA, so take a baseline PSA before starting it and interpret
       later values with that in mind. SRB lists carcinoma of the prostate as a contraindication to
-      the drug for related reasons.<cite class="src srb">SRB 26 &middot; p.1036</cite></p>
+      the drug for related reasons.​<cite class="src srb">SRB 26 &middot; p.1036</cite></p>
     </details>
 
     <details open>
@@ -2186,9 +2198,9 @@ body.guide { margin: 0; -webkit-text-size-adjust: 100%; }
       although the rise is much greater in carcinoma. The bound form rises in carcinoma and the free
       form in benign disease, so the free-to-total ratio discriminates: a ratio under 15% in a PSA of
       <b>4 to 10 ng/mL</b> is suspicious of malignancy. B&amp;L prints "ng/L" on that page, which is a
-      misprint; its own other pages use ng/mL.<cite class="src srb">SRB 26 &middot; p.1032</cite><cite class="src bl">B&amp;L 84 &middot; p.1526</cite>
+      misprint; its own other pages use ng/mL.​<cite class="src srb">SRB 26 &middot; p.1032</cite>​<cite class="src bl">B&amp;L 84 &middot; p.1526</cite>
       PSA density, velocity and doubling time are the other
-      refinements.<cite class="src srb">SRB 26 &middot; pp.1032, 1033</cite></p>
+      refinements.​<cite class="src srb">SRB 26 &middot; pp.1032, 1033</cite></p>
     </details>
     <details open class="conflict">
       <summary>
@@ -2198,7 +2210,7 @@ body.guide { margin: 0; -webkit-text-size-adjust: 100%; }
       <div class="body">
       <p>The free-to-total sentence prints the range as <b>"4&ndash;10 ng/L"</b>. Elsewhere the same
       chapter writes <b>"PSA &gt;10 ng/mL"</b>, and SRB gives the normal value as <b>4
-      ng/mL</b>.<cite class="src srb">SRB 26 &middot; p.1032</cite> The range is
+      ng/mL</b>.​<cite class="src srb">SRB 26 &middot; p.1032</cite> The range is
       <b>4&ndash;10 ng/mL</b>; ng/L would be a thousandfold error.</p>
       <span class="ruling"><b>How to answer:</b> say <b>ng/mL</b>. Every Indian textbook, every lab
       report you will see, and B&amp;L's own other pages use it.</span>

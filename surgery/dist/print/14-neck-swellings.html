@@ -24,6 +24,7 @@
   --ink-soft:    #5a6269;
   --rule:        #ddd8ce;
   --accent:      #005f73;
+  --on-accent:   #fff;
   --accent-soft: #e3eef0;
   --flag:        #8a5a2b;
   --flag-soft:   #f6ece0;
@@ -86,21 +87,21 @@
 
 .guide[data-theme="sepia"] {
   --paper: #f4ecd8; --ink: #433422; --ink-soft: #6f5f4a; --rule: #ddd0b4;
-  --accent: #7a4a1e; --accent-soft: #ece0c8; --flag: #8a5a2b; --flag-soft: #ece0c8;
+  --accent: #7a4a1e; --on-accent: #fff; --accent-soft: #ece0c8; --flag: #8a5a2b; --flag-soft: #ece0c8;
   --cite: #8a7b63; --mark: #f5d98a; --bl: #6a4a7a; --srb: #3f6b4a;
   color-scheme: light;
 }
 
 .guide[data-theme="dark"] {
   --paper: #15181a; --ink: #e8e6e1; --ink-soft: #a3abb2; --rule: #2e3338;
-  --accent: #6fc3d2; --accent-soft: #1b2a2e; --flag: #d9a36a; --flag-soft: #2a2119;
+  --accent: #6fc3d2; --on-accent: #0b1416; --accent-soft: #1b2a2e; --flag: #d9a36a; --flag-soft: #2a2119;
   --cite: #78828a; --mark: #4a4120; --bl: #a893dd; --srb: #6fc3a8;
   color-scheme: dark;
 }
 
 .guide[data-theme="contrast"] {
   --paper: #000000; --ink: #ffffff; --ink-soft: #d8d8d8; --rule: #6a6a6a;
-  --accent: #6fe3ff; --accent-soft: #10242b; --flag: #ffc46b; --flag-soft: #2a2008;
+  --accent: #6fe3ff; --on-accent: #000; --accent-soft: #10242b; --flag: #ffc46b; --flag-soft: #2a2008;
   --cite: #bdbdbd; --mark: #4a4a00; --bl: #d0b8ff; --srb: #7fe8c0;
   color-scheme: dark;
 }
@@ -109,7 +110,7 @@
 @media (prefers-color-scheme: dark) {
   .guide[data-theme="auto"] {
     --paper: #15181a; --ink: #e8e6e1; --ink-soft: #a3abb2; --rule: #2e3338;
-    --accent: #6fc3d2; --accent-soft: #1b2a2e; --flag: #d9a36a; --flag-soft: #2a2119;
+    --accent: #6fc3d2; --on-accent: #0b1416; --accent-soft: #1b2a2e; --flag: #d9a36a; --flag-soft: #2a2119;
     --cite: #78828a; --mark: #4a4120; --bl: #a893dd; --srb: #6fc3a8;
     color-scheme: dark;
   }
@@ -141,6 +142,7 @@ body.guide { margin: 0; -webkit-text-size-adjust: 100%; }
   font-family: var(--face-body);
   font-size: 2.1rem; font-weight: 600; line-height: 1.15;
   letter-spacing: -0.015em; text-wrap: balance; margin: 0 0 0.7rem;
+  overflow-wrap: break-word; hyphens: auto;
 }
 
 .guide .standfirst { font-size: 1.02rem; color: var(--ink-soft); margin: 0 0 1.6rem; }
@@ -311,7 +313,11 @@ body.guide { margin: 0; -webkit-text-size-adjust: 100%; }
 .guide cite.src {
   font-family: var(--face-ui); font-style: normal;
   font-size: 0.66em; font-weight: 600; letter-spacing: 0.02em;
-  color: var(--cite); white-space: nowrap;
+  color: var(--cite);
+  /* The chip stays on one line. build.py puts a zero-width space before each one,
+     which is what lets a chip that will not fit move to the next line whole
+     instead of widening the page past the phone. */
+  white-space: nowrap; max-width: 100%;
   border: 1px solid var(--rule); border-radius: 2px;
   padding: 0.05rem 0.28rem; margin-left: 0.3rem; vertical-align: 0.12em;
 }
@@ -331,7 +337,11 @@ body.guide { margin: 0; -webkit-text-size-adjust: 100%; }
   cursor: pointer; list-style: none; display: flex; gap: 0.55rem; align-items: baseline;
   padding: 0.7rem 0.9rem; font-family: var(--face-ui);
   font-size: 0.82em; line-height: 1.45; color: var(--ink);
+  flex-wrap: wrap;
 }
+/* A flex item defaults to min-width:auto and so refuses to shrink below its own
+   content width; a long source line in the summary then widened the whole page. */
+.guide details.conflict > summary > * { min-width: 0; overflow-wrap: break-word; }
 .guide details.conflict > summary::-webkit-details-marker { display: none; }
 .guide details.conflict > summary::before {
   content: "*"; color: var(--flag); font-size: 1em; font-weight: 700;
@@ -419,7 +429,7 @@ body.guide { margin: 0; -webkit-text-size-adjust: 100%; }
 @media print {
   .guide {
     --paper: #fff; --ink: #000; --ink-soft: #333; --rule: #bbb;
-    --accent: #004c5c; --accent-soft: #eef4f5; --cite: #666;
+    --accent: #004c5c; --on-accent: #fff; --accent-soft: #eef4f5; --cite: #666;
     --measure: none; --fs: 10.5pt; --lh: 1.45;
     --face-body: "Spectral", Georgia, serif;
     --face-ui: "Inter", system-ui, sans-serif;
@@ -785,7 +795,9 @@ body.guide { margin: 0; -webkit-text-size-adjust: 100%; }
   background: none; color: var(--ink, #222);
 }
 .rdr-ne-row .rdr-ok {
-  background: var(--accent, #005f73); border-color: var(--accent, #005f73); color: #fff;
+  background: var(--accent, #005f73); border-color: var(--accent, #005f73);
+  /* not #fff: the dark and high-contrast accents are pale, and white on them is 2:1 */
+  color: var(--on-accent, #fff);
 }
 .rdr-ne-row .rdr-del { color: var(--flag, #8a5a2b); }
 
@@ -1019,10 +1031,10 @@ body.guide { margin: 0; -webkit-text-size-adjust: 100%; }
     <span class="tag">The signs to establish, in B&amp;L's own printed order</span>
     <b>History; physical signs; size; site; shape; surface; consistency; fixation, deep or
     superficial; pulsatility; compressibility; transillumination;
-    bruit.</b><cite class="src bl">B&amp;L 52 &middot; p.805</cite> B&amp;L's opening instruction is
+    bruit.</b>​<cite class="src bl">B&amp;L 52 &middot; p.805</cite> B&amp;L's opening instruction is
     that <b>"the clinical signs of size, site, shape, consistency, fixation to skin or deep
     structures, pulsation, compressibility, transillumination or the presence of a bruit must be
-    established and recorded"</b>.<cite class="src bl">B&amp;L 52 &middot; p.805</cite>
+    established and recorded"</b>.​<cite class="src bl">B&amp;L 52 &middot; p.805</cite>
     <br><br><b>Pulsatility and bruit</b> are on that list for one reason: the carotid body tumour.
     <b>Transillumination</b> is on it for another: the cystic hygroma. Do both on every neck
     swelling and you will not miss either.
@@ -1037,12 +1049,12 @@ body.guide { margin: 0; -webkit-text-size-adjust: 100%; }
     narrows it to a <b>thyroglossal cyst</b>, because the tract runs to the foramen caecum at the
     junction of the anterior two-thirds and posterior third of the tongue and passes in close
     continuity with, and sometimes through, the <b>hyoid</b>
-    cartilage.<cite class="src bl">B&amp;L 55 &middot; p.850</cite><cite class="src das">Das 27 &middot; p.377, p.378</cite>
+    cartilage.​<cite class="src bl">B&amp;L 55 &middot; p.850</cite>​<cite class="src das">Das 27 &middot; p.377, p.378</cite>
     <br><span class="label">So</span>Give the patient water first, then ask for the tongue. Two
     manoeuvres, and the midline differential collapses.</dd>
     <dt>Brilliant transillumination</dt>
     <dd>B&amp;L: <b>"The characteristic that distinguishes it from all other neck swellings is that
-    it is brilliantly transilluminant."</b><cite class="src bl">B&amp;L 52 &middot; p.805</cite>
+    it is brilliantly transilluminant."</b>​<cite class="src bl">B&amp;L 52 &middot; p.805</cite>
     That is the cystic hygroma, and B&amp;L says it distinguishes it from <i>all</i> other neck
     swellings, which is as strong a claim as the book makes about any sign.</dd>
   </dl>
@@ -1055,29 +1067,29 @@ body.guide { margin: 0; -webkit-text-size-adjust: 100%; }
     the lymphatic system during the developmental period in utero"</b>, with <b>lymphatics failing
     to communicate with the venous system and abnormal budding of lymphatics</b>; it contains
     <b>clear lymph with an endothelial lining</b>, and <b>the fluid does not
-    coagulate</b>.<cite class="src srb">SRB 5 &middot; p.424</cite> B&amp;L: the cysts are <b>filled
+    coagulate</b>.​<cite class="src srb">SRB 5 &middot; p.424</cite> B&amp;L: the cysts are <b>filled
     with clear lymph and lined by a single layer of epithelium with a mosaic
-    appearance</b>.<cite class="src bl">B&amp;L 52 &middot; p.805</cite>
-    <br><span class="label">Synonym</span><b>Cavernous lymphangioma.</b><cite class="src srb">SRB 5 &middot; p.424</cite></dd>
+    appearance</b>.​<cite class="src bl">B&amp;L 52 &middot; p.805</cite>
+    <br><span class="label">Synonym</span><b>Cavernous lymphangioma.</b>​<cite class="src srb">SRB 5 &middot; p.424</cite></dd>
     <dt>When it presents, and the obstetric consequence</dt>
     <dd>SRB: <b>present at birth and so may cause obstructed labour</b>; occasionally in early
-    infancy.<cite class="src srb">SRB 5 &middot; p.424</cite> B&amp;L: usually in the <b>neonate or
+    infancy.​<cite class="src srb">SRB 5 &middot; p.424</cite> B&amp;L: usually in the <b>neonate or
     early infancy, occasionally at birth and so large as to obstruct
-    labour</b>.<cite class="src bl">B&amp;L 52 &middot; p.805</cite> Both books make the same point,
+    labour</b>.​<cite class="src bl">B&amp;L 52 &middot; p.805</cite> Both books make the same point,
     so it is clearly examinable.</dd>
     <dt>The signs</dt>
     <dd>SRB: in the <b>posterior triangle</b>; <b>smooth, soft, fluctuant, partially compressible,
     brilliantly transilluminant</b>, and <b>not completely reducible</b>; it <b>increases in size
-    during crying</b>.<cite class="src srb">SRB 5 &middot; p.424</cite> B&amp;L: <b>soft and
+    during crying</b>.​<cite class="src srb">SRB 5 &middot; p.424</cite> B&amp;L: <b>soft and
     partially compressible, visibly increasing in size when the child coughs or
-    cries</b>, and may be <b>bilateral</b>.<cite class="src bl">B&amp;L 52 &middot; p.805</cite>
+    cries</b>, and may be <b>bilateral</b>.​<cite class="src bl">B&amp;L 52 &middot; p.805</cite>
     <br><span class="label">The worry for the family</span>SRB names it: <b>disfigurement of the
     child's face, which is more worrying for the parents</b> than the swelling
-    itself.<cite class="src srb">SRB 5 &middot; p.424</cite></dd>
+    itself.​<cite class="src srb">SRB 5 &middot; p.424</cite></dd>
     <dt>Other sites</dt>
     <dd>B&amp;L: besides the neck it may involve <b>the face, submandibular region, tongue and
     floor of the mouth</b>, and less frequently the <b>cheek, axilla, groin and
-    mediastinum</b>.<cite class="src bl">B&amp;L 52 &middot; p.805</cite> So a cystic hygroma is not
+    mediastinum</b>.​<cite class="src bl">B&amp;L 52 &middot; p.805</cite> So a cystic hygroma is not
     only a neck lesion, and tongue or floor-of-mouth involvement is an airway problem.</dd>
   </dl>
 
@@ -1090,25 +1102,25 @@ body.guide { margin: 0; -webkit-text-size-adjust: 100%; }
     sinus of His, which eventually gets sequestered to form a branchial
     cyst."</b> And a second possibility: <b>epithelial infusion within a lymph node, since a
     branchial cyst contains lymphoid tissue in its
-    wall</b>.<cite class="src srb">SRB 5 &middot; p.419</cite> B&amp;L: from <b>the vestigial
+    wall</b>.​<cite class="src srb">SRB 5 &middot; p.419</cite> B&amp;L: from <b>the vestigial
     remnants of the second branchial cleft, lined by squamous epithelium and containing thick,
-    turbid fluid</b>.<cite class="src bl">B&amp;L 52 &middot; p.805</cite></dd>
+    turbid fluid</b>.​<cite class="src bl">B&amp;L 52 &middot; p.805</cite></dd>
     <dt>Where and when it presents</dt>
     <dd>B&amp;L: <b>in the upper neck in early or middle adulthood</b>, at the <b>junction of the
     upper third and middle third of the sternomastoid at its anterior border</b>; <b>fluctuant,
     may transilluminate, and often soft in its early stages so that it may be difficult to
-    palpate</b>.<cite class="src bl">B&amp;L 52 &middot; p.805</cite></dd>
+    palpate</b>.​<cite class="src bl">B&amp;L 52 &middot; p.805</cite></dd>
     <dt>What the aspirate shows</dt>
     <dd>SRB: the wall <b>shows plenty of lymphoid tissue</b>, it may become infected to form an
     abscess, and <b>FNAC shows cholesterol crystals</b>; <b>MRI allows finer resolution for
-    preoperative planning</b>.<cite class="src srb">SRB 5 &middot; p.420</cite> Cholesterol crystals
+    preoperative planning</b>.​<cite class="src srb">SRB 5 &middot; p.420</cite> Cholesterol crystals
     in the aspirate is the detail to quote.</dd>
     <dt>The operative anatomy, which is the examiner's next question</dt>
     <dd>B&amp;L: treatment is <b>complete excision, best undertaken when the lesion is
     quiescent</b>. <b>"It passes superficial to the hypoglossal and glossopharyngeal nerves, but
     deep to the posterior belly of the digastric. These structures and the spinal accessory nerve
     must be positively identified to avoid
-    damage."</b><cite class="src bl">B&amp;L 52 &middot; p.805</cite> Three nerves to name:
+    damage."</b>​<cite class="src bl">B&amp;L 52 &middot; p.805</cite> Three nerves to name:
     <b>hypoglossal, glossopharyngeal, spinal accessory</b>.</dd>
     <dt>Branchial fistula</dt>
     <dd>B&amp;L: may be <b>unilateral or bilateral</b> and represents a <b>persistent second
@@ -1118,11 +1130,11 @@ body.guide { margin: 0; -webkit-text-size-adjust: 100%; }
     wall</b> it is a <b>sinus rather than a fistula</b>. The tract is <b>lined by ciliated columnar
     epithelium</b>, so there may be <b>recurrent mucopurulent discharge onto the neck</b>, and it
     <b>follows the same path as a branchial cyst and requires complete excision to avoid
-    recurrence</b>.<cite class="src bl">B&amp;L 52 &middot; p.805</cite> SRB adds the acquired
+    recurrence</b>.​<cite class="src bl">B&amp;L 52 &middot; p.805</cite> SRB adds the acquired
     version: <b>rupture of a branchial cyst may cause an acquired branchial fistula at the upper
-    third of sternocleidomastoid</b>.<cite class="src srb">SRB 5 &middot; p.420</cite>
+    third of sternocleidomastoid</b>.​<cite class="src srb">SRB 5 &middot; p.420</cite>
     <br><span class="label">And the discharge tells you</span>Mucus from a neck fistula means
-    branchial.<cite class="src srb">SRB 1 &middot; p.31</cite></dd>
+    branchial.​<cite class="src srb">SRB 1 &middot; p.31</cite></dd>
   </dl>
 
   <details open class="conflict">
@@ -1136,16 +1148,16 @@ body.guide { margin: 0; -webkit-text-size-adjust: 100%; }
       <dd>Gives the differential diagnosis of a branchial cyst as <b>cold abscess, lipoma of the
       neck, lymph cyst and chronic lymphadenitis</b>; the complications are <b>recurrent
       infection</b> and rupture producing an acquired fistula; and the treatment is
-      <b>excision</b>.<cite class="src srb">SRB 5 &middot; p.420</cite> Malignancy does not appear
+      <b>excision</b>.​<cite class="src srb">SRB 5 &middot; p.420</cite> Malignancy does not appear
       in that list.</dd>
       <dt>Bailey &amp; Love 28e</dt>
       <dd>Adds a warning that changes the management: <b>"In patients over 35 years of age, a high
       index of suspicion for a necrotic metastatic lymph node should exist and"</b> malignancy
       <b>"should be excluded before
-      excision"</b>.<cite class="src bl">B&amp;L 52 &middot; p.805</cite> It also notes that
+      excision"</b>.​<cite class="src bl">B&amp;L 52 &middot; p.805</cite> It also notes that
       ultrasound is useful precisely for <b>differentiating solid lesions such as malignant lymph
       nodes from cystic lesions such as a branchial
-      cyst</b>.<cite class="src bl">B&amp;L 52 &middot; p.780</cite></dd>
+      cyst</b>.​<cite class="src bl">B&amp;L 52 &middot; p.780</cite></dd>
     </dl>
     <span class="ruling"><b>Live and clinically important: the same lump means something entirely
     different at 20 and at 50, and age is the discriminator.</b>
@@ -1155,7 +1167,7 @@ body.guide { margin: 0; -webkit-text-size-adjust: 100%; }
     over the age of 35 I would have a high index of suspicion for a necrotic metastatic lymph node
     and would exclude malignancy before excising anything, because a cystic lateral neck node in
     an older adult is classically a metastasis from a papillary thyroid carcinoma or an
-    oropharyngeal primary."</b><cite class="src bl">B&amp;L 52 &middot; p.805</cite><cite class="src srb">SRB 5 &middot; p.420</cite>
+    oropharyngeal primary."</b>​<cite class="src bl">B&amp;L 52 &middot; p.805</cite>​<cite class="src srb">SRB 5 &middot; p.420</cite>
     <br><br>Why it matters so much: excising a metastatic node as though it were a benign cyst
     breaches the capsule, seeds the neck and compromises the definitive operation. So the
     consequence of the error is not a recurrence, it is a worse cancer operation. That is why this
@@ -1168,18 +1180,18 @@ body.guide { margin: 0; -webkit-text-size-adjust: 100%; }
   <div class="pearl">
     <span class="tag">SRB's three prohibitions, in seven words</span>
     <b>"No FNAC, no trucut biopsy, no partial
-    excision."</b><cite class="src srb">SRB 5 &middot; p.429</cite>
+    excision."</b>​<cite class="src srb">SRB 5 &middot; p.429</cite>
     <br><br>Because it is a vascular paraganglioma: needling it bleeds, and partial excision leaves
     disease on the carotid. It is the one neck swelling where the correct answer to "would you
     aspirate it?" is an emphatic no, and it is precisely why <b>pulsatility and bruit</b> are on
     B&amp;L's list of signs to establish in every neck
-    lump.<cite class="src bl">B&amp;L 52 &middot; p.805</cite>
+    lump.​<cite class="src bl">B&amp;L 52 &middot; p.805</cite>
     <br><br>Investigation is imaging, and for paragangliomas SRB names a <b>pentetreotide scan
     using a radiolabelled somatostatin
-    analogue</b>.<cite class="src srb">SRB 5 &middot; p.429</cite> Its differential is <b>carotid
+    analogue</b>.​<cite class="src srb">SRB 5 &middot; p.429</cite> Its differential is <b>carotid
     artery aneurysm, soft tissue sarcoma, lymph node enlargement, and a vagal neurofibroma</b>,
     which presents in the carotid triangle as a <b>vertically placed, oval, hard
-    swelling</b>.<cite class="src srb">SRB 5 &middot; p.429</cite>
+    swelling</b>.​<cite class="src srb">SRB 5 &middot; p.429</cite>
   </div>
 
   <h2><span class="n">6</span>The rest, in a line each</h2>
@@ -1188,36 +1200,36 @@ body.guide { margin: 0; -webkit-text-size-adjust: 100%; }
     <dt>Thyroglossal cyst</dt>
     <dd>Midline, moves on <b>tongue protrusion</b> as well as swallowing, because the tract runs
     from the foramen caecum through or close to the
-    hyoid.<cite class="src das">Das 27 &middot; p.378</cite><cite class="src bl">B&amp;L 55 &middot; p.850</cite>
+    hyoid.​<cite class="src das">Das 27 &middot; p.378</cite>​<cite class="src bl">B&amp;L 55 &middot; p.850</cite>
     Excision must include the body of the hyoid and the tract, or it recurs.</dd>
     <dt>Sternomastoid tumour</dt>
     <dd>In the muscle itself, in an infant, with <b>torticollis</b>; SRB groups them
-    together.<cite class="src srb">SRB 5 &middot; p.414</cite> Not a tumour but a fibrous
+    together.​<cite class="src srb">SRB 5 &middot; p.414</cite> Not a tumour but a fibrous
     contracture.</dd>
     <dt>Cervical rib</dt>
     <dd>Posterior triangle, may be bony hard, and may produce neurovascular symptoms. Test
     <b>Adson's manoeuvre</b>: the radial pulse disappears when the patient takes a deep breath and
     turns the head, tightening the scalenes and <b>unmasking the arterial
-    obstruction</b>.<cite class="src srb">SRB 1 &middot; p.166</cite> SRB notes first rib resection
+    obstruction</b>.​<cite class="src srb">SRB 1 &middot; p.166</cite> SRB notes first rib resection
     can be done thoracoscopically through three
-    ports.<cite class="src srb">SRB 5 &middot; p.419</cite></dd>
+    ports.​<cite class="src srb">SRB 5 &middot; p.419</cite></dd>
     <dt>Pharyngeal pouch and laryngocele</dt>
     <dd>Both lower anterior triangle, both <b>compressible and may gurgle</b>; a laryngocele
     enlarges on <b>Valsalva</b> and a pharyngeal pouch may empty on pressure. Both are on SRB's
-    list of neck swellings.<cite class="src srb">SRB 5 &middot; p.414</cite> A laryngocele's
+    list of neck swellings.​<cite class="src srb">SRB 5 &middot; p.414</cite> A laryngocele's
     operative complications include <b>laryngocutaneous fistula and injury to the superior or
     internal laryngeal nerve</b>, with
-    recurrence.<cite class="src srb">SRB 5 &middot; p.424</cite></dd>
+    recurrence.​<cite class="src srb">SRB 5 &middot; p.424</cite></dd>
     <dt>Cold abscess</dt>
     <dd>Fluctuant, non-tender, no warmth, no redness, from tuberculous nodes or spine. Aspirate
     <b>zig-zag, wide bore, non-dependent</b>; drain through a <b>non-dependent incision and close
-    without a drain</b>.<cite class="src srb">SRB 5 &middot; p.433</cite></dd>
+    without a drain</b>.​<cite class="src srb">SRB 5 &middot; p.433</cite></dd>
     <dt>Ludwig's angina, parapharyngeal and retropharyngeal abscess</dt>
-    <dd>On SRB's list,<cite class="src srb">SRB 5 &middot; p.414</cite> and all three are airway
+    <dd>On SRB's list,​<cite class="src srb">SRB 5 &middot; p.414</cite> and all three are airway
     emergencies rather than short cases. If you meet one, say so first.</dd>
     <dt>Lymph nodes and secondaries</dt>
     <dd>See the cervical lymphadenopathy case. Remember to report the <b>level</b>, because that is
-    where the primary is.<cite class="src srb">SRB 5 &middot; p.435</cite></dd>
+    where the primary is.​<cite class="src srb">SRB 5 &middot; p.435</cite></dd>
   </dl>
 
   <h2><span class="n">7</span>Investigations</h2>
@@ -1226,22 +1238,22 @@ body.guide { margin: 0; -webkit-text-size-adjust: 100%; }
     <dt>Ultrasound first</dt>
     <dd>Because its single best use here is <b>separating solid from cystic</b>, that is a
     malignant node from a branchial cyst, and because it guides the
-    needle.<cite class="src bl">B&amp;L 52 &middot; p.780</cite></dd>
+    needle.​<cite class="src bl">B&amp;L 52 &middot; p.780</cite></dd>
     <dt>Needle sampling, with two exceptions</dt>
     <dd>Ultrasound-guided FNAC or core biopsy is the standard of care, and <b>core biopsy is
     preferred for a node</b> because immunohistochemistry needs
-    tissue.<cite class="src bl">B&amp;L 52 &middot; p.781</cite>
+    tissue.​<cite class="src bl">B&amp;L 52 &middot; p.781</cite>
     <br><span class="label out">Do not needle</span>A <b>carotid body tumour</b> or other
-    paraganglioma.<cite class="src srb">SRB 5 &middot; p.429</cite> And think before needling a
+    paraganglioma.​<cite class="src srb">SRB 5 &middot; p.429</cite> And think before needling a
     cystic swelling in an adult over 35, which may be a metastasis needing proper
-    staging.<cite class="src bl">B&amp;L 52 &middot; p.805</cite></dd>
+    staging.​<cite class="src bl">B&amp;L 52 &middot; p.805</cite></dd>
     <dt>MRI</dt>
     <dd>SRB: for a branchial cyst, <b>MRI allows finer resolution during preoperative
-    planning</b>,<cite class="src srb">SRB 5 &middot; p.420</cite> and for a sinus an <b>MR
-    sinusogram is beneficial</b>.<cite class="src srb">SRB 1 &middot; p.33</cite></dd>
+    planning</b>,​<cite class="src srb">SRB 5 &middot; p.420</cite> and for a sinus an <b>MR
+    sinusogram is beneficial</b>.​<cite class="src srb">SRB 1 &middot; p.33</cite></dd>
     <dt>CT of the thorax</dt>
     <dd>If head and neck malignancy is suspected, <b>to detect distant
-    metastases</b>.<cite class="src bl">B&amp;L 52 &middot; p.780</cite></dd>
+    metastases</b>.​<cite class="src bl">B&amp;L 52 &middot; p.780</cite></dd>
   </dl>
 
   <h2><span class="n">8</span>Rapid-fire viva</h2>
@@ -1251,7 +1263,7 @@ body.guide { margin: 0; -webkit-text-size-adjust: 100%; }
       <summary>What signs must you establish in any neck lump?</summary>
       <p class="ans">Size, site, shape, surface, consistency, fixation to skin or deep structures,
       pulsation, compressibility, transillumination and the presence of a bruit, all established
-      and recorded, alongside the history.<cite class="src bl">B&amp;L 52 &middot; p.805</cite>
+      and recorded, alongside the history.​<cite class="src bl">B&amp;L 52 &middot; p.805</cite>
       Pulsation and bruit are on that list because of the carotid body tumour, and
       transillumination because of the cystic hygroma.</p>
     </details>
@@ -1260,9 +1272,9 @@ body.guide { margin: 0; -webkit-text-size-adjust: 100%; }
       <summary>Which neck swelling is brilliantly transilluminant?</summary>
       <p class="ans">Cystic hygroma, and Bailey and Love says this is the characteristic that
       distinguishes it from all other neck
-      swellings.<cite class="src bl">B&amp;L 52 &middot; p.805</cite> It is also soft, partially
+      swellings.​<cite class="src bl">B&amp;L 52 &middot; p.805</cite> It is also soft, partially
       compressible, not completely reducible, in the posterior triangle, and visibly increases when
-      the child coughs or cries.<cite class="src srb">SRB 5 &middot; p.424</cite></p>
+      the child coughs or cries.​<cite class="src srb">SRB 5 &middot; p.424</cite></p>
     </details>
 
     <details open>
@@ -1271,10 +1283,10 @@ body.guide { margin: 0; -webkit-text-size-adjust: 100%; }
       lymphatic system in utero, with lymphatics failing to communicate with the venous system and
       abnormal budding; it contains clear lymph with an endothelial lining, and the fluid does not
       coagulate. Also called cavernous
-      lymphangioma.<cite class="src srb">SRB 5 &middot; p.424</cite> It is present at birth and may
+      lymphangioma.​<cite class="src srb">SRB 5 &middot; p.424</cite> It is present at birth and may
       be large enough to obstruct labour, and besides the neck it may involve the face,
       submandibular region, tongue and floor of mouth, and less often cheek, axilla, groin and
-      mediastinum.<cite class="src bl">B&amp;L 52 &middot; p.805</cite></p>
+      mediastinum.​<cite class="src bl">B&amp;L 52 &middot; p.805</cite></p>
     </details>
 
     <details open>
@@ -1285,18 +1297,18 @@ body.guide { margin: 0; -webkit-text-size-adjust: 100%; }
       or middle adulthood at the junction of the upper and middle thirds of the sternomastoid at
       its anterior border, and is fluctuant, may transilluminate, and is often soft early so that
       it is difficult to
-      palpate.<cite class="src bl">B&amp;L 52 &middot; p.805</cite><cite class="src srb">SRB 5 &middot; p.419</cite>
-      FNAC classically shows cholesterol crystals.<cite class="src srb">SRB 5 &middot; p.420</cite></p>
+      palpate.​<cite class="src bl">B&amp;L 52 &middot; p.805</cite>​<cite class="src srb">SRB 5 &middot; p.419</cite>
+      FNAC classically shows cholesterol crystals.​<cite class="src srb">SRB 5 &middot; p.420</cite></p>
     </details>
 
     <details open>
       <summary>A 50-year-old with a cystic swelling in the upper lateral neck. Would you excise it?</summary>
       <p class="ans">Not before excluding malignancy. Bailey and Love: in patients over 35 a high
       index of suspicion for a necrotic metastatic lymph node should exist, and malignancy should be
-      excluded before excision.<cite class="src bl">B&amp;L 52 &middot; p.805</cite> A cystic
+      excluded before excision.​<cite class="src bl">B&amp;L 52 &middot; p.805</cite> A cystic
       lateral neck node in an older adult is classically a metastasis from a papillary thyroid
       carcinoma or an oropharyngeal primary. Ultrasound differentiates solid from cystic and guides
-      sampling.<cite class="src bl">B&amp;L 52 &middot; p.780</cite> Excising a metastatic node as
+      sampling.​<cite class="src bl">B&amp;L 52 &middot; p.780</cite> Excising a metastatic node as
       though it were a benign cyst breaches the capsule and compromises the definitive cancer
       operation.</p>
     </details>
@@ -1306,7 +1318,7 @@ body.guide { margin: 0; -webkit-text-size-adjust: 100%; }
       <p class="ans">The cyst passes superficial to the hypoglossal and glossopharyngeal nerves but
       deep to the posterior belly of digastric, and those structures together with the spinal
       accessory nerve must be positively identified to avoid
-      damage.<cite class="src bl">B&amp;L 52 &middot; p.805</cite> Excision is best done when the
+      damage.​<cite class="src bl">B&amp;L 52 &middot; p.805</cite> Excision is best done when the
       lesion is quiescent.</p>
     </details>
 
@@ -1318,16 +1330,16 @@ body.guide { margin: 0; -webkit-text-size-adjust: 100%; }
       pillar. If it opens only onto the lateral pharyngeal wall it is a sinus rather than a
       fistula. The tract is lined by ciliated columnar epithelium, so there is recurrent
       mucopurulent discharge, and it follows the same path as a branchial cyst and needs complete
-      excision to avoid recurrence.<cite class="src bl">B&amp;L 52 &middot; p.805</cite> SRB adds
+      excision to avoid recurrence.​<cite class="src bl">B&amp;L 52 &middot; p.805</cite> SRB adds
       that rupture of a branchial cyst can cause an acquired fistula at the upper third of
-      sternocleidomastoid.<cite class="src srb">SRB 5 &middot; p.420</cite> Mucus discharge from a
-      neck fistula means branchial.<cite class="src srb">SRB 1 &middot; p.31</cite></p>
+      sternocleidomastoid.​<cite class="src srb">SRB 5 &middot; p.420</cite> Mucus discharge from a
+      neck fistula means branchial.​<cite class="src srb">SRB 1 &middot; p.31</cite></p>
     </details>
 
     <details open>
       <summary>A pulsatile neck swelling with a bruit. What is it and what must you not do?</summary>
       <p class="ans">A carotid body tumour, a paraganglioma. SRB's rule: no FNAC, no trucut biopsy,
-      no partial excision,<cite class="src srb">SRB 5 &middot; p.429</cite> because it is vascular
+      no partial excision,​<cite class="src srb">SRB 5 &middot; p.429</cite> because it is vascular
       and partial excision leaves disease on the carotid. Investigate by imaging, with a
       pentetreotide scan using a radiolabelled somatostatin analogue for paragangliomas. The
       differential is carotid aneurysm, soft tissue sarcoma, lymph node enlargement, and a vagal
@@ -1341,16 +1353,16 @@ body.guide { margin: 0; -webkit-text-size-adjust: 100%; }
       ask the patient to protrude the tongue: movement on tongue protrusion means a thyroglossal
       cyst, because the tract runs from the foramen caecum at the junction of the anterior
       two-thirds and posterior third of the tongue, passing in close continuity with and sometimes
-      through the hyoid.<cite class="src das">Das 27 &middot; p.377, p.378</cite><cite class="src bl">B&amp;L 55 &middot; p.850</cite></p>
+      through the hyoid.​<cite class="src das">Das 27 &middot; p.377, p.378</cite>​<cite class="src bl">B&amp;L 55 &middot; p.850</cite></p>
     </details>
 
     <details open>
       <summary>Which neck swellings are compressible?</summary>
       <p class="ans">Cystic hygroma, which is partially compressible and increases on crying or
-      coughing;<cite class="src srb">SRB 5 &middot; p.424</cite><cite class="src bl">B&amp;L 52 &middot; p.805</cite>
+      coughing;​<cite class="src srb">SRB 5 &middot; p.424</cite>​<cite class="src bl">B&amp;L 52 &middot; p.805</cite>
       a laryngocele, which enlarges on Valsalva; and a pharyngeal pouch, which may empty on
       pressure and gurgle. Compressibility is on Bailey and Love's list of signs to establish for
-      exactly this reason.<cite class="src bl">B&amp;L 52 &middot; p.805</cite></p>
+      exactly this reason.​<cite class="src bl">B&amp;L 52 &middot; p.805</cite></p>
     </details>
 
     <details open>
@@ -1358,14 +1370,14 @@ body.guide { margin: 0; -webkit-text-size-adjust: 100%; }
       <p class="ans">A cold abscess, from tuberculous lymph nodes or spine. Aspirate zig-zag with a
       wide-bore needle through a non-dependent area to prevent sinus formation; if formal drainage
       is needed, use a non-dependent incision and close later without placing a
-      drain.<cite class="src srb">SRB 5 &middot; p.433</cite> Examine the spine, and send material
+      drain.​<cite class="src srb">SRB 5 &middot; p.433</cite> Examine the spine, and send material
       for acid-fast bacilli, culture and cytology.</p>
     </details>
 
     <details open>
       <summary>An infant with a neck swelling and a twisted head.</summary>
       <p class="ans">Sternomastoid tumour with torticollis, which SRB groups
-      together.<cite class="src srb">SRB 5 &middot; p.414</cite> It is not a tumour but a fibrous
+      together.​<cite class="src srb">SRB 5 &middot; p.414</cite> It is not a tumour but a fibrous
       contracture within the muscle, and the swelling is within the muscle belly, so it becomes
       less distinct when the muscle is contracted.</p>
     </details>
@@ -1374,10 +1386,10 @@ body.guide { margin: 0; -webkit-text-size-adjust: 100%; }
       <summary>How would you investigate a neck swelling of uncertain nature?</summary>
       <p class="ans">Ultrasound first, because it separates solid from cystic, which is the main
       question, and because it guides the needle; it is also invaluable for salivary
-      pathology.<cite class="src bl">B&amp;L 52 &middot; p.780</cite> Then ultrasound-guided FNAC or
+      pathology.​<cite class="src bl">B&amp;L 52 &middot; p.780</cite> Then ultrasound-guided FNAC or
       core biopsy, preferring core for a node because immunohistochemistry needs
-      tissue.<cite class="src bl">B&amp;L 52 &middot; p.781</cite> MRI for preoperative planning in
-      a branchial cyst.<cite class="src srb">SRB 5 &middot; p.420</cite> CT of the thorax if head
+      tissue.​<cite class="src bl">B&amp;L 52 &middot; p.781</cite> MRI for preoperative planning in
+      a branchial cyst.​<cite class="src srb">SRB 5 &middot; p.420</cite> CT of the thorax if head
       and neck malignancy is suspected. And do not needle a pulsatile swelling.</p>
     </details>
 

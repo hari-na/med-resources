@@ -24,6 +24,7 @@
   --ink-soft:    #5a6269;
   --rule:        #ddd8ce;
   --accent:      #005f73;
+  --on-accent:   #fff;
   --accent-soft: #e3eef0;
   --flag:        #8a5a2b;
   --flag-soft:   #f6ece0;
@@ -86,21 +87,21 @@
 
 .guide[data-theme="sepia"] {
   --paper: #f4ecd8; --ink: #433422; --ink-soft: #6f5f4a; --rule: #ddd0b4;
-  --accent: #7a4a1e; --accent-soft: #ece0c8; --flag: #8a5a2b; --flag-soft: #ece0c8;
+  --accent: #7a4a1e; --on-accent: #fff; --accent-soft: #ece0c8; --flag: #8a5a2b; --flag-soft: #ece0c8;
   --cite: #8a7b63; --mark: #f5d98a; --bl: #6a4a7a; --srb: #3f6b4a;
   color-scheme: light;
 }
 
 .guide[data-theme="dark"] {
   --paper: #15181a; --ink: #e8e6e1; --ink-soft: #a3abb2; --rule: #2e3338;
-  --accent: #6fc3d2; --accent-soft: #1b2a2e; --flag: #d9a36a; --flag-soft: #2a2119;
+  --accent: #6fc3d2; --on-accent: #0b1416; --accent-soft: #1b2a2e; --flag: #d9a36a; --flag-soft: #2a2119;
   --cite: #78828a; --mark: #4a4120; --bl: #a893dd; --srb: #6fc3a8;
   color-scheme: dark;
 }
 
 .guide[data-theme="contrast"] {
   --paper: #000000; --ink: #ffffff; --ink-soft: #d8d8d8; --rule: #6a6a6a;
-  --accent: #6fe3ff; --accent-soft: #10242b; --flag: #ffc46b; --flag-soft: #2a2008;
+  --accent: #6fe3ff; --on-accent: #000; --accent-soft: #10242b; --flag: #ffc46b; --flag-soft: #2a2008;
   --cite: #bdbdbd; --mark: #4a4a00; --bl: #d0b8ff; --srb: #7fe8c0;
   color-scheme: dark;
 }
@@ -109,7 +110,7 @@
 @media (prefers-color-scheme: dark) {
   .guide[data-theme="auto"] {
     --paper: #15181a; --ink: #e8e6e1; --ink-soft: #a3abb2; --rule: #2e3338;
-    --accent: #6fc3d2; --accent-soft: #1b2a2e; --flag: #d9a36a; --flag-soft: #2a2119;
+    --accent: #6fc3d2; --on-accent: #0b1416; --accent-soft: #1b2a2e; --flag: #d9a36a; --flag-soft: #2a2119;
     --cite: #78828a; --mark: #4a4120; --bl: #a893dd; --srb: #6fc3a8;
     color-scheme: dark;
   }
@@ -141,6 +142,7 @@ body.guide { margin: 0; -webkit-text-size-adjust: 100%; }
   font-family: var(--face-body);
   font-size: 2.1rem; font-weight: 600; line-height: 1.15;
   letter-spacing: -0.015em; text-wrap: balance; margin: 0 0 0.7rem;
+  overflow-wrap: break-word; hyphens: auto;
 }
 
 .guide .standfirst { font-size: 1.02rem; color: var(--ink-soft); margin: 0 0 1.6rem; }
@@ -311,7 +313,11 @@ body.guide { margin: 0; -webkit-text-size-adjust: 100%; }
 .guide cite.src {
   font-family: var(--face-ui); font-style: normal;
   font-size: 0.66em; font-weight: 600; letter-spacing: 0.02em;
-  color: var(--cite); white-space: nowrap;
+  color: var(--cite);
+  /* The chip stays on one line. build.py puts a zero-width space before each one,
+     which is what lets a chip that will not fit move to the next line whole
+     instead of widening the page past the phone. */
+  white-space: nowrap; max-width: 100%;
   border: 1px solid var(--rule); border-radius: 2px;
   padding: 0.05rem 0.28rem; margin-left: 0.3rem; vertical-align: 0.12em;
 }
@@ -331,7 +337,11 @@ body.guide { margin: 0; -webkit-text-size-adjust: 100%; }
   cursor: pointer; list-style: none; display: flex; gap: 0.55rem; align-items: baseline;
   padding: 0.7rem 0.9rem; font-family: var(--face-ui);
   font-size: 0.82em; line-height: 1.45; color: var(--ink);
+  flex-wrap: wrap;
 }
+/* A flex item defaults to min-width:auto and so refuses to shrink below its own
+   content width; a long source line in the summary then widened the whole page. */
+.guide details.conflict > summary > * { min-width: 0; overflow-wrap: break-word; }
 .guide details.conflict > summary::-webkit-details-marker { display: none; }
 .guide details.conflict > summary::before {
   content: "*"; color: var(--flag); font-size: 1em; font-weight: 700;
@@ -419,7 +429,7 @@ body.guide { margin: 0; -webkit-text-size-adjust: 100%; }
 @media print {
   .guide {
     --paper: #fff; --ink: #000; --ink-soft: #333; --rule: #bbb;
-    --accent: #004c5c; --accent-soft: #eef4f5; --cite: #666;
+    --accent: #004c5c; --on-accent: #fff; --accent-soft: #eef4f5; --cite: #666;
     --measure: none; --fs: 10.5pt; --lh: 1.45;
     --face-body: "Spectral", Georgia, serif;
     --face-ui: "Inter", system-ui, sans-serif;
@@ -785,7 +795,9 @@ body.guide { margin: 0; -webkit-text-size-adjust: 100%; }
   background: none; color: var(--ink, #222);
 }
 .rdr-ne-row .rdr-ok {
-  background: var(--accent, #005f73); border-color: var(--accent, #005f73); color: #fff;
+  background: var(--accent, #005f73); border-color: var(--accent, #005f73);
+  /* not #fff: the dark and high-contrast accents are pale, and white on them is 2:1 */
+  color: var(--on-accent, #fff);
 }
 .rdr-ne-row .rdr-del { color: var(--flag, #8a5a2b); }
 
@@ -992,38 +1004,38 @@ body.guide { margin: 0; -webkit-text-size-adjust: 100%; }
       <tr><td><b>Pain</b></td>
           <td><b>Painless.</b> S Das: <b>"uncomplicated piles are absolutely painless but when they
           are complicated by secondary infection"</b> they
-          hurt<cite class="src das">Das 36 &middot; p.539</cite></td>
+          hurt​<cite class="src das">Das 36 &middot; p.539</cite></td>
           <td><b>Severe, on defaecation.</b> B&amp;L: <b>"'passing glass' or 'a knife
           cutting'</b>, which <b>"usually resolves only to recur at the next
-          evacuation"</b><cite class="src bl">B&amp;L 80 &middot; p.1428</cite></td>
+          evacuation"</b>​<cite class="src bl">B&amp;L 80 &middot; p.1428</cite></td>
           <td><b>Intermittent.</b> S Das: <b>"in a fistula-in-ano pain is intermittent. When the
           fistula becomes closed the pain appears"</b> and is relieved when the pus
-          discharges<cite class="src das">Das 36 &middot; p.539</cite></td></tr>
+          discharges​<cite class="src das">Das 36 &middot; p.539</cite></td></tr>
       <tr><td><b>Bleeding</b></td>
           <td><b>First symptom.</b> Bright red, <b>"separate from the motion"</b>, on the paper or a
-          <b>splash in the pan</b><cite class="src bl">B&amp;L 80 &middot; p.1430</cite><cite class="src srb">SRB 25 &middot; p.962</cite></td>
+          <b>splash in the pan</b>​<cite class="src bl">B&amp;L 80 &middot; p.1430</cite>​<cite class="src srb">SRB 25 &middot; p.962</cite></td>
           <td>A <b>trace</b> on the paper after
-          wiping<cite class="src bl">B&amp;L 80 &middot; p.1428</cite></td>
+          wiping​<cite class="src bl">B&amp;L 80 &middot; p.1428</cite></td>
           <td>May be blood-stained
-          discharge<cite class="src bl">B&amp;L 80 &middot; p.1436</cite></td></tr>
+          discharge​<cite class="src bl">B&amp;L 80 &middot; p.1436</cite></td></tr>
       <tr><td><b>Discharge</b></td>
-          <td>Mucus, causing pruritus<cite class="src bl">B&amp;L 80 &middot; p.1430</cite></td>
+          <td>Mucus, causing pruritus​<cite class="src bl">B&amp;L 80 &middot; p.1430</cite></td>
           <td>From the ulcer or the sentinel
-          tag<cite class="src bl">B&amp;L 80 &middot; p.1428</cite></td>
+          tag​<cite class="src bl">B&amp;L 80 &middot; p.1428</cite></td>
           <td><b>The defining symptom.</b> <b>"Intermittent purulent discharge... which increases
           until temporary relief occurs when the pus
-          discharges"</b><cite class="src bl">B&amp;L 80 &middot; p.1436</cite></td></tr>
+          discharges"</b>​<cite class="src bl">B&amp;L 80 &middot; p.1436</cite></td></tr>
       <tr><td><b>Past history</b></td>
           <td>Constipation, straining,
-          pregnancy<cite class="src srb">SRB 25 &middot; p.962</cite></td>
+          pregnancy​<cite class="src srb">SRB 25 &middot; p.962</cite></td>
           <td>Hard stool,
-          constipation<cite class="src srb">SRB 25 &middot; p.968</cite></td>
+          constipation​<cite class="src srb">SRB 25 &middot; p.968</cite></td>
           <td><b>An anal abscess.</b> S Das: <b>"a previous history of anal abscess is often
           obtained. This abscess has either burst spontaneously or has been
-          incised"</b><cite class="src das">Das 36 &middot; p.540</cite></td></tr>
+          incised"</b>​<cite class="src das">Das 36 &middot; p.540</cite></td></tr>
       <tr><td><b>Prolapse</b></td>
           <td>Yes, and the degree is defined by
-          it<cite class="src bl">B&amp;L 80 &middot; p.1430</cite></td><td>No</td><td>No</td></tr>
+          it​<cite class="src bl">B&amp;L 80 &middot; p.1430</cite></td><td>No</td><td>No</td></tr>
     </tbody>
   </table>
   </div>
@@ -1032,25 +1044,25 @@ body.guide { margin: 0; -webkit-text-size-adjust: 100%; }
     <dt>And three historical points that apply to all three</dt>
     <dd><b>1. Where is the blood?</b> S Das: <b>"blood in the toilet paper is only seen in case of
     minor bleeding from the anal skin either due to fissure-in-ano or external
-    haemorrhoids."</b><cite class="src das">Das 36 &middot; p.539</cite> Blood mixed <i>with</i>
+    haemorrhoids."</b>​<cite class="src das">Das 36 &middot; p.539</cite> Blood mixed <i>with</i>
     the stool is not anal, and sends you looking higher.
     <br><b>2. In a child, think polyp.</b> S Das: <b>"when a child comes with bleeding per anum, a
     diagnosis of rectal polyp should"</b> be
-    considered.<cite class="src das">Das 36 &middot; p.539</cite>
+    considered.​<cite class="src das">Das 36 &middot; p.539</cite>
     <br><b>3. Ask about prolapse properly.</b> S Das: <b>"enquire whether the prolapse that comes out
     with defaecation is reduced automatically after the act or has to be replaced by pushing it in.
     Enquire also about the length of the protruded mass. If the protrusion is slight, it is a partial
     prolapse. If it is more than two inches in length, it is a complete prolapse or procidentia, i.e.
-    prolapse of all coats of the rectum."</b><cite class="src das">Das 36 &middot; p.540</cite> The
+    prolapse of all coats of the rectum."</b>​<cite class="src das">Das 36 &middot; p.540</cite> The
     same two questions give you the <b>degree</b> of the piles and distinguish piles from a rectal
     prolapse.</dd>
     <dt>The one thing you must exclude before treating any of them</dt>
     <dd>B&amp;L, on haemorrhoids: <b>"exclusion of other causes of rectal bleeding, especially
     colorectal malignancy, is the first
-    priority."</b><cite class="src bl">B&amp;L 80 &middot; p.1431</cite> SRB's causes of bleeding per
+    priority."</b>​<cite class="src bl">B&amp;L 80 &middot; p.1431</cite> SRB's causes of bleeding per
     anum are the list to recite: <b>piles, fissure-in-ano, fistula-in-ano, polyps, ulcerative
     colitis, amoebic colitis, carcinoma rectum, carcinoma colon, diverticulitis, intussusception,
-    vascular anomaly of the colorectum.</b><cite class="src srb">SRB 25 &middot; p.963</cite>
+    vascular anomaly of the colorectum.</b>​<cite class="src srb">SRB 25 &middot; p.963</cite>
     <br><span class="label out">So say this before you say anything about treatment</span>
     <b>"Haemorrhoids in a patient over forty, or with any change in bowel habit or anaemia, require
     colonoscopy. Treating piles that are not the cause of the bleeding is how a carcinoma gets
@@ -1062,7 +1074,7 @@ body.guide { margin: 0; -webkit-text-size-adjust: 100%; }
   <dl class="findings">
     <dt>Position</dt>
     <dd>S Das's five positions, with the indication for
-    each:<cite class="src das">Das 36 &middot; pp.540, 541</cite>
+    each:​<cite class="src das">Das 36 &middot; pp.540, 541</cite>
     <br><b>Left lateral (Sims')</b>, <b>"the most popular position for anorectal
     examination"</b>, with the buttocks projecting over the edge of the table and the hips and knees
     well flexed; <b>"suitable for inspection of the perianal region and proctoscopy."</b>
@@ -1074,48 +1086,48 @@ body.guide { margin: 0; -webkit-text-size-adjust: 100%; }
     the examining finger.
     <br><b>Lithotomy</b>, for bimanual examination and for a high rectal lesion. SRB notes it is the
     position used <b>"for all perineal surgeries like for fissure, piles, fistula, and
-    APR."</b><cite class="src srb">SRB 25 &middot; p.969</cite></dd>
+    APR."</b>​<cite class="src srb">SRB 25 &middot; p.969</cite></dd>
     <dt>The sequence, which S Das puts in italics</dt>
     <dd><b>"It cannot be emphasised too strongly that the anal region must be inspected firstly,
     palpated secondly and digital examination
-    lastly."</b><cite class="src das">Das 36 &middot; p.541</cite>
+    lastly."</b>​<cite class="src das">Das 36 &middot; p.541</cite>
     <br><span class="label">Why the order matters</span>Because a digital examination in an acute
     fissure is intolerable, and doing it first ends the examination. SRB: <b>"P/R examination and
     proctoscopy is not possible in acute fissure-in-ano. General anaesthesia is required for
-    examination."</b><cite class="src srb">SRB 25 &middot; p.968</cite> B&amp;L agrees: <b>"the
+    examination."</b>​<cite class="src srb">SRB 25 &middot; p.968</cite> B&amp;L agrees: <b>"the
     inability to be able to conduct an adequate examination in the clinic should prompt early
-    examination under anaesthesia."</b><cite class="src bl">B&amp;L 80 &middot; p.1428</cite></dd>
+    examination under anaesthesia."</b>​<cite class="src bl">B&amp;L 80 &middot; p.1428</cite></dd>
     <dt>Inspection: what to look for, and S Das's warning</dt>
     <dd><b>"This part of examination should never be omitted. Anal tags (external piles), sentinel
     pile (a feature of chronic fissure), fistula-in-ano, pilonidal sinus, condyloma"</b> and a
-    carcinoma.<cite class="src das">Das 36 &middot; p.541</cite> B&amp;L adds the manoeuvre for a
+    carcinoma.​<cite class="src das">Das 36 &middot; p.541</cite> B&amp;L adds the manoeuvre for a
     fissure: <b>"if the buttocks are gently parted, the presence of an anal fissure can usually be
     detected as an ulcer of variable depth with the skin tag and an anal
-    papilla."</b><cite class="src bl">B&amp;L 80 &middot; p.1427</cite>
+    papilla."</b>​<cite class="src bl">B&amp;L 80 &middot; p.1427</cite>
     <br><span class="label">And how to make second-degree piles visible</span>B&amp;L: <b>"third-degree
     internal haemorrhoids become visible when the patient strains. This can be reproduced by
     withdrawal of a small swab inserted into the anal
-    canal."</b><cite class="src bl">B&amp;L 80 &middot; p.1430</cite></dd>
+    canal."</b>​<cite class="src bl">B&amp;L 80 &middot; p.1430</cite></dd>
     <dt>What digital examination can and cannot find</dt>
     <dd>S Das: <b>"uncomplicated internal piles cannot be felt with the finger. They are diagnosed by
     proctoscope. Only chronically inflamed and thrombosed piles can be felt by digital
-    examination."</b><cite class="src das">Das 36 &middot; p.544</cite> SRB says the same: <b>"on P/R
+    examination."</b>​<cite class="src das">Das 36 &middot; p.544</cite> SRB says the same: <b>"on P/R
     examination, only thrombosed piles can be
-    felt."</b><cite class="src srb">SRB 25 &middot; p.962</cite>
+    felt."</b>​<cite class="src srb">SRB 25 &middot; p.962</cite>
     <br><span class="label out">So never say "I felt the piles"</span>Piles are soft, compressible
     vascular cushions. A finger occludes them. If you can feel them, they are thrombosed, or they are
     not piles. <b>Proctoscopy makes the diagnosis</b>, and S Das notes that <b>about 10 cm from the
     anus can be explored by digital
-    examination</b>.<cite class="src das">Das 36 &middot; p.541</cite>
+    examination</b>.​<cite class="src das">Das 36 &middot; p.541</cite>
     <br>In a chronic fissure you <i>can</i> feel it: SRB, <b>"ulcer is felt with button like
     depression, induration and often sentinel
-    pile."</b><cite class="src srb">SRB 25 &middot; p.968</cite></dd>
+    pile."</b>​<cite class="src srb">SRB 25 &middot; p.968</cite></dd>
     <dt>Proctoscopy: what to record</dt>
     <dd>SRB's checklist, which doubles as a model answer for "what did you see?":
     <b>"the numbers, degrees and size; the surface and appearance of piles; features, chronicity of
     the prolapse; one should look for other rectal lesion such as external tags, anal papillae and
     fissure, proctitis"</b>, and <b>"presence of other discharge like blood, pus,
-    mucous."</b><cite class="src srb">SRB 25 &middot; pp.962, 963</cite></dd>
+    mucous."</b>​<cite class="src srb">SRB 25 &middot; pp.962, 963</cite></dd>
   </dl>
 
   <h2><span class="n">3</span>Haemorrhoids</h2>
@@ -1123,40 +1135,40 @@ body.guide { margin: 0; -webkit-text-size-adjust: 100%; }
   <dl class="findings">
     <dt>What they actually are, which has changed from what students are often taught</dt>
     <dd>B&amp;L: <b>"haemorrhoids are symptomatic enlargements of the internal haemorrhoidal venous
-    plexus."</b><cite class="src bl">B&amp;L 80 &middot; p.1430</cite> SRB puts the modern concept
+    plexus."</b>​<cite class="src bl">B&amp;L 80 &middot; p.1430</cite> SRB puts the modern concept
     first: <b>"it is downward sliding of anal cushions abnormally due to straining or other
     causes."</b> And defines the cushions: <b>"anal cushions (Thomson, 1975) are aggregation of blood
     vessels (arterioles, venules), smooth muscles and elastic connective tissue in the submucosa that
     normally reside in left lateral, right posterolateral and right anterolateral anal
-    canal."</b><cite class="src srb">SRB 25 &middot; p.961</cite>
+    canal."</b>​<cite class="src srb">SRB 25 &middot; p.961</cite>
     <br><span class="label">The sentence worth memorising</span>B&amp;L: <b>"the internal
     haemorrhoidal plexus constitutes the submucosal component of the anal cushions that are important
-    in sealing the anal canal."</b><cite class="src bl">B&amp;L 80 &middot; p.1430</cite>
+    in sealing the anal canal."</b>​<cite class="src bl">B&amp;L 80 &middot; p.1430</cite>
     <b>Haemorrhoids are not varicose veins; they are normal structures that have slid down.</b> That
     is why you do not excise all of them, and why continence can suffer if you do.
     <br>SRB adds <b>"present concept is weakening of Park's ligament which is the lower end of the
     external sphincter"</b>, and the older <b>sliding lining
-    theory</b>.<cite class="src srb">SRB 25 &middot; pp.961, 962</cite></dd>
+    theory</b>.​<cite class="src srb">SRB 25 &middot; pp.961, 962</cite></dd>
     <dt>Why the blood is bright red, which is a favourite question</dt>
     <dd>B&amp;L explains it anatomically: there are <b>"direct arteriovenous communications with the
     submucosal venous dilatations. These communications have been shown both histologically and
     radiologically, and the oxygen tension of the blood contained within the venous dilatations is
     more arterial than venous. This explains the bright red colour of
-    haemorrhoid"</b> bleeding.<cite class="src bl">B&amp;L 80 &middot; p.1419</cite> SRB's term for
+    haemorrhoid"</b> bleeding.​<cite class="src bl">B&amp;L 80 &middot; p.1419</cite> SRB's term for
     the same thing is <b>"anal corpus cavernosum, by
-    Stelzner"</b>.<cite class="src srb">SRB 25 &middot; p.962</cite>
+    Stelzner"</b>.​<cite class="src srb">SRB 25 &middot; p.962</cite>
     <br><span class="label">So the answer is not "venous blood looks red in air"</span><b>The blood in
     the anal cushions is arterialised through direct arteriovenous communications.</b> SRB adds the
     extreme case: <b>"an arterial pile is haemangiomatous condition of superior rectal artery
     entering the pedicle of internal haemorrhoid which will bleed
-    profusely."</b><cite class="src srb">SRB 25 &middot; p.962</cite></dd>
+    profusely."</b>​<cite class="src srb">SRB 25 &middot; p.962</cite></dd>
     <dt>The positions, and why those positions</dt>
     <dd>B&amp;L: <b>"internal haemorrhoids characteristically lie in the 3, 7 and 11 o'clock positions
     (with the patient in the lithotomy position). Secondary haemorrhoids may develop between the
-    primary positions."</b><cite class="src bl">B&amp;L 80 &middot; p.1430</cite> SRB gives the
+    primary positions."</b>​<cite class="src bl">B&amp;L 80 &middot; p.1430</cite> SRB gives the
     reason: <b>"located at 3, 7, 11 o'clock positions, related to the branches of the superior
     haemorrhoidal vessel which divides on the right side into two; left side it continues as
-    one."</b><cite class="src srb">SRB 25 &middot; p.961</cite>
+    one."</b>​<cite class="src srb">SRB 25 &middot; p.961</cite>
     <br><span class="label">Say the vascular reason, not just the clock face</span><b>Two branches on
     the right, one on the left.</b> So <b>right anterior (11), right posterior (7), left lateral
     (3)</b>. Always state the position of the patient, because the clock numbers are meaningless
@@ -1164,13 +1176,13 @@ body.guide { margin: 0; -webkit-text-size-adjust: 100%; }
     <dt>Internal, external and interno-external</dt>
     <dd>SRB: <b>internal</b>, above the dentate line, covered with mucous membrane; <b>external</b>,
     below the dentate line, covered with skin;
-    <b>interno-external</b>.<cite class="src srb">SRB 25 &middot; p.961</cite> B&amp;L: external
+    <b>interno-external</b>.​<cite class="src srb">SRB 25 &middot; p.961</cite> B&amp;L: external
     haemorrhoids <b>"relate to venous channels of the inferior haemorrhoidal plexus deep in the skin
     surrounding the anal verge and are frequently confused with anal skin tags that are not true
-    haemorrhoids."</b><cite class="src bl">B&amp;L 80 &middot; p.1430</cite> And it calls the
+    haemorrhoids."</b>​<cite class="src bl">B&amp;L 80 &middot; p.1430</cite> And it calls the
     combined form <b>"'mixed' haemorrhoids, which may be best considered as external extensions of
     internal haemorrhoids that arise through repeated congestion and
-    oedema."</b><cite class="src bl">B&amp;L 80 &middot; p.1430</cite>
+    oedema."</b>​<cite class="src bl">B&amp;L 80 &middot; p.1430</cite>
     <br><span class="label out">The distinction that matters at the dentate line</span><b>Above it,
     insensate visceral innervation; below it, somatic.</b> That is why internal piles are painless and
     why a band or an injection placed below the dentate line causes severe pain, which is the next
@@ -1178,51 +1190,51 @@ body.guide { margin: 0; -webkit-text-size-adjust: 100%; }
     <dt>The four degrees, on which both books agree</dt>
     <dd><b>First:</b> bleed only, no prolapse. <b>Second:</b> prolapse but reduce spontaneously.
     <b>Third:</b> prolapse and have to be manually reduced. <b>Fourth:</b> permanently
-    prolapsed.<cite class="src bl">B&amp;L 80 &middot; p.1430</cite><cite class="src srb">SRB 25 &middot; p.961</cite>
+    prolapsed.​<cite class="src bl">B&amp;L 80 &middot; p.1430</cite>​<cite class="src srb">SRB 25 &middot; p.961</cite>
     <br><span class="label">Why the degree is the whole answer on treatment</span>Because each degree
     maps to a treatment: <b>first and second to injection or banding, third and fourth to
     operation.</b> B&amp;L's indications for haemorrhoidectomy are exactly that: <b>"third- and
     fourth-degree haemorrhoids; second-degree haemorrhoids that have not been cured by non-operative
     treatments; 'mixed' haemorrhoids when the external haemorrhoid is well defined; bleeding causing
-    anaemia."</b><cite class="src bl">B&amp;L 80 &middot; p.1431</cite></dd>
+    anaemia."</b>​<cite class="src bl">B&amp;L 80 &middot; p.1431</cite></dd>
     <dt>Complications</dt>
     <dd>B&amp;L's four: <b>strangulation and thrombosis; ulceration; gangrene; portal
-    pyaemia.</b><cite class="src bl">B&amp;L 80 &middot; p.1430</cite>
+    pyaemia.</b>​<cite class="src bl">B&amp;L 80 &middot; p.1430</cite>
     <br><span class="label">How to manage a strangulated, thrombosed pile</span>B&amp;L gives both
     options and favours the conservative one: <b>"urgent haemorrhoidectomy may expedite symptom
     resolution, but great care is needed to avoid later anal stenosis. Many surgeons adopt a
     conservative approach, ensuring adequate pain relief, bed rest, cold saline compresses and
     laxatives. Resolution usually occurs in 3 to 4 days. Systemic antibiotics are usually given to
-    reduce the risk of portal pyaemia."</b><cite class="src bl">B&amp;L 80 &middot; p.1430</cite>
+    reduce the risk of portal pyaemia."</b>​<cite class="src bl">B&amp;L 80 &middot; p.1430</cite>
     <br><span class="label out">Say the reason for the antibiotics</span><b>Portal pyaemia</b>, because
     the superior rectal veins drain to the portal system. That is the same anatomy that makes portal
     hypertension a rare cause of piles, which SRB
-    lists.<cite class="src srb">SRB 25 &middot; p.962</cite>
+    lists.​<cite class="src srb">SRB 25 &middot; p.962</cite>
     <br><b>Severe haemorrhage:</b> B&amp;L, <b>"usually associated with a bleeding diathesis or
     anticoagulation. If such causes are excluded, a local compress containing adrenaline solution will
     usually suffice with blood transfusion if
-    necessary."</b><cite class="src bl">B&amp;L 80 &middot; p.1431</cite></dd>
+    necessary."</b>​<cite class="src bl">B&amp;L 80 &middot; p.1431</cite></dd>
     <dt>Conservative treatment</dt>
     <dd>Both books: improve bowel and defaecatory habits, stool softeners and bulking agents, and a
     defaecatory position that minimises
-    straining.<cite class="src bl">B&amp;L 80 &middot; p.1431</cite> SRB specifies: <b>fibre 35 g a
+    straining.​<cite class="src bl">B&amp;L 80 &middot; p.1431</cite> SRB specifies: <b>fibre 35 g a
     day</b>, plenty of water, <b>ispaghula husk, sterculia or methylcellulose</b>, lactulose, and
     <b>sitz baths</b>, defined as sitting in warm water with the anal region submerged <b>"for 20
-    minutes, 2 to 3 times a day"</b>.<cite class="src srb">SRB 25 &middot; p.963</cite> SRB also
+    minutes, 2 to 3 times a day"</b>.​<cite class="src srb">SRB 25 &middot; p.963</cite> SRB also
     suggests the <b>squatting position may reduce the incidence of
-    piles</b>.<cite class="src srb">SRB 25 &middot; p.963</cite>
+    piles</b>.​<cite class="src srb">SRB 25 &middot; p.963</cite>
     <br>B&amp;L adds <b>"suppositories of phlebotonics (plant-based flavonoid extracts) and synthetic
     compounds (calcium dobesilate) may reduce capillary permeability and increase lymphatic
-    drainage."</b><cite class="src bl">B&amp;L 80 &middot; p.1431</cite></dd>
+    drainage."</b>​<cite class="src bl">B&amp;L 80 &middot; p.1431</cite></dd>
     <dt>Injection sclerotherapy: the technique and the three errors</dt>
     <dd><b>Agent and site:</b> <b>5% phenol in arachis or almond oil</b>, <b>3 to 5 mL</b> injected
     <b>"into the apex of the pedicle and not into the haemorrhoid
-    itself"</b>.<cite class="src bl">B&amp;L 80 &middot; p.1431</cite> SRB names the instrument, the
+    itself"</b>.​<cite class="src bl">B&amp;L 80 &middot; p.1431</cite> SRB names the instrument, the
     <b>Gabriel syringe</b>, and explains why oil: <b>"almond or vegetable oil acts as a vehicle which
-    holds phenol for long period of action."</b><cite class="src srb">SRB 25 &middot; p.964</cite>
+    holds phenol for long period of action."</b>​<cite class="src srb">SRB 25 &middot; p.964</cite>
     <br><b>Mechanism:</b> <b>"the aim is to cause fibrosis that obliterates the vascular channels and
     a scar that supports prolapsing anorectal
-    mucosa."</b><cite class="src bl">B&amp;L 80 &middot; p.1431</cite>
+    mucosa."</b>​<cite class="src bl">B&amp;L 80 &middot; p.1431</cite>
     <br><span class="label out">The three errors, and each has its own consequence</span>
     <b>1. Too painful means too low.</b> B&amp;L: <b>"pain upon injection means that the needle is in
     the wrong place and should be withdrawn."</b>
@@ -1230,38 +1242,38 @@ body.guide { margin: 0; -webkit-text-size-adjust: 100%; }
     white; this leads to superficial ulceration but rarely serious septic sequelae."</b>
     <br><b>3. Too deep</b> is the dangerous one: <b>"injections placed too deeply can have serious
     consequences, including prostatitis and pelvic
-    sepsis."</b><cite class="src bl">B&amp;L 80 &middot; p.1431</cite> SRB's list of deep-injection
+    sepsis."</b>​<cite class="src bl">B&amp;L 80 &middot; p.1431</cite> SRB's list of deep-injection
     complications is <b>"pelvic abscess, prostatitis, impotence, rectovaginal
     fistula"</b>, and it adds <b>hypochondriac pain from entry of the drug into the portal
-    system</b>.<cite class="src srb">SRB 25 &middot; p.964</cite>
+    system</b>.​<cite class="src srb">SRB 25 &middot; p.964</cite>
     <br><b>Review at 8 weeks</b> and repeat if
-    necessary.<cite class="src bl">B&amp;L 80 &middot; p.1431</cite> SRB says repeat after 6 weeks
+    necessary.​<cite class="src bl">B&amp;L 80 &middot; p.1431</cite> SRB says repeat after 6 weeks
     and gives a <b>95% cure rate in first-degree
-    piles</b>.<cite class="src srb">SRB 25 &middot; p.964</cite></dd>
+    piles</b>.​<cite class="src srb">SRB 25 &middot; p.964</cite></dd>
     <dt>Rubber band ligation</dt>
     <dd><b>Barron's bander</b>, <b>"used to slip tight elastic bands onto the base of the pedicle of
     each haemorrhoid."</b> The rule: <b>"it is essential that the band is applied above the dentate
     line as below can cause intense pain. The bands cause ischaemic necrosis of the piles, which
     slough off within 10 days; this may be associated with bleeding, about which the patient must be
     warned. The resulting fibrosis supports the remaining anal
-    cushions."</b><cite class="src bl">B&amp;L 80 &middot; p.1431</cite>
+    cushions."</b>​<cite class="src bl">B&amp;L 80 &middot; p.1431</cite>
     <br>SRB's detail: band <b>2 cm above the dentate line</b>, <b>two bands per pile mass "to take
     care of breakage"</b>, tissue sloughs in 1 to 2 weeks, done without anaesthesia as an outpatient,
-    and <b>suction banding</b> is now used.<cite class="src srb">SRB 25 &middot; p.964</cite>
+    and <b>suction banding</b> is now used.​<cite class="src srb">SRB 25 &middot; p.964</cite>
     <br><span class="label out">How many at one sitting, and how soon to repeat</span>The books
     differ. See the amber box.
     <br><b>Contraindications</b>, SRB: <b>fissure, fistula or
-    proctitis</b>.<cite class="src srb">SRB 25 &middot; p.964</cite></dd>
+    proctitis</b>.​<cite class="src srb">SRB 25 &middot; p.964</cite></dd>
     <dt>The operations</dt>
     <dd><b>Open, Milligan-Morgan</b>, <b>"most commonly used in the UK"</b>: ligation and excision
     with the anal mucosa and skin <b>left open to heal by secondary intention</b>.
     <b>Closed, Ferguson</b>, <b>"the popular technique in the USA"</b>: the wound is
-    sutured.<cite class="src bl">B&amp;L 80 &middot; p.1432</cite>
+    sutured.​<cite class="src bl">B&amp;L 80 &middot; p.1432</cite>
     <br><span class="label">The single most important step, and the reason</span><b>Leave
     mucocutaneous bridges between the excised piles.</b> B&amp;L says it twice: <b>"taking care to
     leave mucocutaneous bridges"</b>, and when injecting adrenaline, <b>"to reduce bleeding and aid
     preservation of the skin bridges left following
-    excision."</b><cite class="src bl">B&amp;L 80 &middot; p.1432</cite> Excise all the way round and
+    excision."</b>​<cite class="src bl">B&amp;L 80 &middot; p.1432</cite> Excise all the way round and
     you get an <b>anal stenosis</b>. That is why the operation removes three pedicles, not a ring of
     anal canal.
     <br><b>Technique:</b> <b>dilute adrenaline 1:300 000</b> into the anoderm; artery forceps on the
@@ -1269,22 +1281,22 @@ body.guide { margin: 0; -webkit-text-size-adjust: 100%; }
     through the skin with scissors or cutting diathermy; dissection up the canal <b>"with the internal
     sphincter visible and separate from the dissected pile"</b>; a <b>transfixion ligature</b> on the
     pedicle, the pile excised <b>well distal to the ligature</b>, and the <b>ligature cut
-    long</b>.<cite class="src bl">B&amp;L 80 &middot; p.1432</cite>
+    long</b>.​<cite class="src bl">B&amp;L 80 &middot; p.1432</cite>
     <br><b>Stapled haemorrhoidopexy (Longo)</b>, and <b>transanal haemorrhoidal ligation
     (HAL)</b>, which is Doppler-guided ligation of the feeding vessels with or without suture
     mucopexy, used for second- and third-degree piles. B&amp;L cites the trial: <b>"the HubBLe trial,
     which compared HAL with rubber band ligation, found that the recurrence rate following HAL was
     significantly lower, but HAL was less cost-effective. The complication rate and postoperative pain
     scores are better after HAL than with conventional
-    surgery."</b><cite class="src bl">B&amp;L 80 &middot; p.1433</cite> SRB's name for the same thing
+    surgery."</b>​<cite class="src bl">B&amp;L 80 &middot; p.1433</cite> SRB's name for the same thing
     is <b>Doppler-guided haemorrhoidal artery ligation
-    (DGHAL)</b>.<cite class="src srb">SRB 25 &middot; p.963</cite>
+    (DGHAL)</b>.​<cite class="src srb">SRB 25 &middot; p.963</cite>
     <br><span class="label out">On stapled haemorrhoidopexy, see the amber box</span>The two books
     disagree about whether it works as well.
     <br><b>Post-operative care:</b> B&amp;L, <b>"two warm baths each day"</b>, a bulk laxative twice
     daily, analgesia, and <b>"a 5-day course of oral metronidazole may reduce pain"</b>; review at 3
     to 4 weeks with a rectal examination to look for
-    stenosis.<cite class="src bl">B&amp;L 80 &middot; p.1433</cite></dd>
+    stenosis.​<cite class="src bl">B&amp;L 80 &middot; p.1433</cite></dd>
   </dl>
 
   <details class="conflict">
@@ -1303,28 +1315,28 @@ body.guide { margin: 0; -webkit-text-size-adjust: 100%; }
       manual stretching of the anal canal sphincter is tried. This prevents congestion of anal
       cushions and relaxes the anal sphincter, as a result of which the prolapsed piles gets
       reduced, Lord's dilatation (8 fingers). Once oedema subsides, in 1 to 2 weeks, formal procedure
-      is done."</b><cite class="src srb">SRB 25 &middot; p.963</cite> It lists <b>"anal stretching,
+      is done."</b>​<cite class="src srb">SRB 25 &middot; p.963</cite> It lists <b>"anal stretching,
       Recamier, Lord's"</b> among the <i>surgical</i> options for
-      haemorrhoids.<cite class="src srb">SRB 25 &middot; p.963</cite> For an acute fissure:
+      haemorrhoids.​<cite class="src srb">SRB 25 &middot; p.963</cite> For an acute fissure:
       <b>"stretching of the anal sphincter (Recamier, 1829) using two fingers of each hand (4
       fingers) under anaesthesia is also an alternative one. It is better than Lord's dilatation as
       complications are less"</b>, and <b>"Lord's dilatation is done under GA to relax the sphincter.
       It is the manual dilatation (Lord, 1969) of the anus under general anaesthesia with relaxation
       using four fingers of each hand (8 fingers) to cause vigorous stretching of the anal canal to
       break the circular constricting band in the wall of the
-      anorectum."</b><cite class="src srb">SRB 25 &middot; p.968</cite> Its stated complications of
+      anorectum."</b>​<cite class="src srb">SRB 25 &middot; p.968</cite> Its stated complications of
       a 3 to 4 finger dilatation are <b>"incontinence, rectal, usually temporary"</b> and
-      <b>infection</b>.<cite class="src srb">SRB 25 &middot; p.963</cite></dd>
+      <b>infection</b>.​<cite class="src srb">SRB 25 &middot; p.963</cite></dd>
       <dt>Bailey &amp; Love 28e</dt>
       <dd>One sentence, under <i>Operative measures</i> for anal fissure, and it is a verdict:
       <b>"anal sphincter dilatation has been used to reduce sphincter tone; however, this potentially
       disrupts the anal sphincters at multiple sites with an associated risk of incontinence such
-      that it is rarely indicated."</b><cite class="src bl">B&amp;L 80 &middot; p.1428</cite> It does
+      that it is rarely indicated."</b>​<cite class="src bl">B&amp;L 80 &middot; p.1428</cite> It does
       not appear at all among the treatments for haemorrhoids; B&amp;L's summary box for haemorrhoid
       treatment lists only <b>advice, injection, banding, HAL or stapled haemorrhoidopexy, and
-      haemorrhoidectomy</b>.<cite class="src bl">B&amp;L 80 &middot; p.1433</cite> B&amp;L also lists
+      haemorrhoidectomy</b>.​<cite class="src bl">B&amp;L 80 &middot; p.1433</cite> B&amp;L also lists
       <b>dilatation</b> among the causes of faecal
-      incontinence.<cite class="src bl">B&amp;L 80 &middot; p.1424</cite></dd>
+      incontinence.​<cite class="src bl">B&amp;L 80 &middot; p.1424</cite></dd>
       <dt>Which is right, and the specific point of dispute</dt>
       <dd>B&amp;L is right, and the disagreement is narrow and identifiable. Both books agree
       dilatation lowers sphincter tone and that it causes incontinence; they disagree on whether the
@@ -1369,11 +1381,11 @@ body.guide { margin: 0; -webkit-text-size-adjust: 100%; }
       and sub-mucosa 4 cm above the dentate line using circular haemorrhoidal stapler passed per
       anally... Advantages are, it is less painful; less blood loss; faster recovery; short hospital
       stay and equally efficacious. It is done only for prolapsed
-      piles."</b><cite class="src srb">SRB 25 &middot; p.966</cite> Its listed disadvantages are
+      piles."</b>​<cite class="src srb">SRB 25 &middot; p.966</cite> Its listed disadvantages are
       technical rather than outcome-related: <b>"need for experience in advanced surgical skill;
       costlier; may cause a full-thickness excision of the rectal wall; may injure the anal
       sphincter. Improper purse string can cause incomplete doughnut leading to severe
-      haemorrhage."</b><cite class="src srb">SRB 25 &middot; p.966</cite></dd>
+      haemorrhage."</b>​<cite class="src srb">SRB 25 &middot; p.966</cite></dd>
       <dt>Bailey &amp; Love 28e</dt>
       <dd>Agrees on the benefits and then states the cost: <b>"the procedure is less painful than
       conventional haemorrhoidectomy and is associated with quicker recovery. However, recurrence
@@ -1383,10 +1395,10 @@ body.guide { margin: 0; -webkit-text-size-adjust: 100%; }
       tenesmus (related to mucosal stimulation by the staples) may require reoperation and staple
       removal. Counselling and shared decision making is important such that the patient can weigh
       the short-term benefits against higher recurrence
-      rates."</b><cite class="src bl">B&amp;L 80 &middot; p.1433</cite> It adds the two technical
+      rates."</b>​<cite class="src bl">B&amp;L 80 &middot; p.1433</cite> It adds the two technical
       imperatives: <b>"great care must be taken to ensure the staple line is above the dentate line
       and that the posterior vaginal wall is not accidently
-      included."</b><cite class="src bl">B&amp;L 80 &middot; p.1433</cite></dd>
+      included."</b>​<cite class="src bl">B&amp;L 80 &middot; p.1433</cite></dd>
       <dt>Where the difference comes from</dt>
       <dd>Not the short-term data, on which both agree: less pain, quicker recovery. The difference
       is that B&amp;L reports the <b>long-term</b> randomised evidence, which showed higher
@@ -1423,20 +1435,20 @@ body.guide { margin: 0; -webkit-text-size-adjust: 100%; }
       <dt>Bailey &amp; Love 28e</dt>
       <dd><b>"All three primary haemorrhoids may be treated at one session, and the process may be
       repeated after several weeks."</b> The band must be <b>"above the dentate
-      line"</b>.<cite class="src bl">B&amp;L 80 &middot; p.1431</cite> B&amp;L also sets banding
+      line"</b>.​<cite class="src bl">B&amp;L 80 &middot; p.1431</cite> B&amp;L also sets banding
       above injection: <b>"for this reason, haemorrhoidal injection has largely been superseded by
-      rubber band ligation."</b><cite class="src bl">B&amp;L 80 &middot; p.1431</cite></dd>
+      rubber band ligation."</b>​<cite class="src bl">B&amp;L 80 &middot; p.1431</cite></dd>
       <dt>SRB</dt>
       <dd><b>"At one time only two piles can be banded. Repeat banding can be done only after 3
       weeks. Band should be placed 2 cm above the dentate line. Usually 2 bands are used for pile
-      mass to take care of breakage."</b><cite class="src srb">SRB 25 &middot; p.964</cite> SRB
+      mass to take care of breakage."</b>​<cite class="src srb">SRB 25 &middot; p.964</cite> SRB
       restricts banding to <b>second-degree piles</b>, or <b>"1st and early 2nd degree"</b> in its
-      figure legend,<cite class="src srb">SRB 25 &middot; p.964</cite> whereas B&amp;L uses injection
+      figure legend,​<cite class="src srb">SRB 25 &middot; p.964</cite> whereas B&amp;L uses injection
       or banding for <b>first- or second-degree</b> piles not improved by conservative
-      measures.<cite class="src bl">B&amp;L 80 &middot; p.1431</cite> And SRB is less enthusiastic
+      measures.​<cite class="src bl">B&amp;L 80 &middot; p.1431</cite> And SRB is less enthusiastic
       about sclerotherapy on different grounds: <b>"sclerotherapy has not gained popularity, oily
       solution is difficult to handle and inject"</b>, though it still quotes a <b>95% cure rate in
-      first-degree piles</b>.<cite class="src srb">SRB 25 &middot; p.964</cite></dd>
+      first-degree piles</b>.​<cite class="src srb">SRB 25 &middot; p.964</cite></dd>
       <dt>Why the numbers differ</dt>
       <dd>The caution about banding more than one pile at a sitting is about <b>pain and vasovagal
       reaction</b>, not about efficacy; banding three pedicles at once gives a larger ischaemic area
@@ -1467,7 +1479,7 @@ body.guide { margin: 0; -webkit-text-size-adjust: 100%; }
     <dt>Definition</dt>
     <dd>B&amp;L: <b>"an anal fissure (synonym: fissure-in-ano) is a longitudinal ulcer in the anoderm
     of the distal anal canal, which extends from the anal verge proximally towards, but not beyond,
-    the dentate line."</b><cite class="src bl">B&amp;L 80 &middot; p.1427</cite> Every word earns its
+    the dentate line."</b>​<cite class="src bl">B&amp;L 80 &middot; p.1427</cite> Every word earns its
     place: <b>longitudinal</b>, in the <b>anoderm</b>, <b>distal</b>, and it stops <b>at the dentate
     line</b>.</dd>
     <dt>Why posterior, and why anterior in women</dt>
@@ -1476,31 +1488,31 @@ body.guide { margin: 0; -webkit-text-size-adjust: 100%; }
     understood. The location in the posterior midline may relate to the shearing forces acting at
     that site at defecation, combined with a less elastic anoderm endowed with an increased density of
     longitudinal muscle extensions in that region of the anal
-    circumference."</b><cite class="src bl">B&amp;L 80 &middot; p.1427</cite> SRB gives the simpler
+    circumference."</b>​<cite class="src bl">B&amp;L 80 &middot; p.1427</cite> SRB gives the simpler
     mechanical version: <b>"because of the curvature of the sacrum and rectum, hard faecal matter
     while passing down causes a tear in the anal valve leading to posterior anal
-    fissure."</b><cite class="src srb">SRB 25 &middot; p.968</cite>
+    fissure."</b>​<cite class="src srb">SRB 25 &middot; p.968</cite>
     <br><b>Anterior fissure:</b> B&amp;L, <b>"more common in women and may arise following vaginal
-    delivery."</b><cite class="src bl">B&amp;L 80 &middot; p.1427</cite> SRB: <b>"anterior anal
+    delivery."</b>​<cite class="src bl">B&amp;L 80 &middot; p.1427</cite> SRB: <b>"anterior anal
     fissure is common in females due to lack of support to pelvic
-    floor."</b><cite class="src srb">SRB 25 &middot; p.968</cite>
+    floor."</b>​<cite class="src srb">SRB 25 &middot; p.968</cite>
     <br><span class="label out">And why the position of the fissure matters clinically</span>
     B&amp;L: <b>"a fissure that is not midline or one with atypical features should raise the
-    suspicion of a specific aetiology."</b><cite class="src bl">B&amp;L 80 &middot; p.1428</cite>
+    suspicion of a specific aetiology."</b>​<cite class="src bl">B&amp;L 80 &middot; p.1428</cite>
     <b>A lateral fissure is not a fissure until proven otherwise.</b> It means Crohn's disease,
     tuberculosis, a sexually transmitted or HIV-related ulcer (B&amp;L names <b>syphilis, Chlamydia,
     chancroid, lymphogranuloma venereum, herpes simplex, cytomegalovirus, Kaposi's sarcoma, B-cell
     lymphoma</b>) or a squamous carcinoma, and it needs examination under anaesthesia with
-    <b>biopsy and culture</b>.<cite class="src bl">B&amp;L 80 &middot; p.1428</cite> SRB adds that
+    <b>biopsy and culture</b>.​<cite class="src bl">B&amp;L 80 &middot; p.1428</cite> SRB adds that
     <b>"multiple fissures are seen in inflammatory bowel disease, homosexuals and venereal
-    diseases."</b><cite class="src srb">SRB 25 &middot; p.968</cite></dd>
+    diseases."</b>​<cite class="src srb">SRB 25 &middot; p.968</cite></dd>
     <dt>The vicious cycle, which is the mechanism to recite</dt>
     <dd>B&amp;L: <b>"affected patients frequently present with internal anal sphincter hypertonia,
     which, in turn, enhances the traumatic effect of the hard stool and perpetuates relative tissue
     ischaemia with a decrease in blood supply to the anal mucosa. After the initial tear, a vicious
     cycle of non-healing and repeated trauma leads to the development of chronic deep fissures. Local
     pain increases sphincter hypertonia, which worsens hard stool and local tissue
-    ischaemia."</b><cite class="src bl">B&amp;L 80 &middot; p.1428</cite>
+    ischaemia."</b>​<cite class="src bl">B&amp;L 80 &middot; p.1428</cite>
     <br><span class="label">Four links, and every treatment attacks one of them</span>
     <b>Hard stool &rarr; tear &rarr; pain &rarr; sphincter spasm &rarr; ischaemia &rarr;
     non-healing.</b> Stool softeners break the first link, local anaesthetic and warm baths the
@@ -1508,27 +1520,27 @@ body.guide { margin: 0; -webkit-text-size-adjust: 100%; }
     the treatments explain themselves.</dd>
     <dt>Acute and chronic</dt>
     <dd><b>Acute:</b> SRB, <b>"a deep tear in the lower anal skin with severe sphincter spasm without
-    oedema or inflammation."</b><cite class="src srb">SRB 25 &middot; p.968</cite>
+    oedema or inflammation."</b>​<cite class="src srb">SRB 25 &middot; p.968</cite>
     <br><b>Chronic:</b> the triad to describe. B&amp;L: <b>"chronic fissures are characterised by a
     hypertrophied anal papilla internally and a sentinel tag externally (both consequent on repeated
     healing and breakdown), between which lies an indurated anal ulcer that exposes fibres of the
-    internal sphincter."</b><cite class="src bl">B&amp;L 80 &middot; p.1428</cite> SRB's version:
+    internal sphincter."</b>​<cite class="src bl">B&amp;L 80 &middot; p.1428</cite> SRB's version:
     inflamed indurated margins with scar tissue, a <b>sentinel pile</b> below which <b>"acts like a
     guard"</b>, and a hypertrophied anal papilla
-    above.<cite class="src srb">SRB 25 &middot; p.968</cite>
+    above.​<cite class="src srb">SRB 25 &middot; p.968</cite>
     <br><span class="label">The three things to name in a chronic fissure</span><b>Sentinel tag
     below, indurated ulcer with visible internal sphincter fibres in between, hypertrophied papilla
     above.</b> Seeing the white fibres of the internal sphincter in the floor is what makes it
     <i>chronic</i>.
     <br><span class="label out">And the paradox worth stating</span>SRB twice: <b>"pain is severe in
     nature in acute type, whereas less severe in chronic"</b>, and <b>"chronic fissure is less
-    painful than acute one."</b><cite class="src srb">SRB 25 &middot; p.968</cite></dd>
+    painful than acute one."</b>​<cite class="src srb">SRB 25 &middot; p.968</cite></dd>
     <dt>Complications of a chronic fissure</dt>
     <dd>SRB: <b>"it can cause repeated infection, fibrosis, abscess formation, fistula
-    formation."</b><cite class="src srb">SRB 25 &middot; p.968</cite> B&amp;L names the particular
+    formation."</b>​<cite class="src srb">SRB 25 &middot; p.968</cite> B&amp;L names the particular
     fistula: discharge may come <b>"from an associated intersphincteric fistula, which has arisen
     through infection penetrating via the fissure
-    base."</b><cite class="src bl">B&amp;L 80 &middot; p.1428</cite> So a fissure can become a
+    base."</b>​<cite class="src bl">B&amp;L 80 &middot; p.1428</cite> So a fissure can become a
     fistula, which is why these three conditions belong in one case.</dd>
     <dt>Treatment: conservative first, and it works</dt>
     <dd>B&amp;L: <b>"after confirmation of the diagnosis and exclusion of secondary causes of anal
@@ -1536,12 +1548,12 @@ body.guide { margin: 0; -webkit-text-size-adjust: 100%; }
     majority of chronic fissures. Emphasis must be placed on normalisation of bowel habits. The
     addition of fibre to the diet to bulk up the stool, stool softeners and adequate water intake are
     simple and helpful measures. Warm baths and topical local anaesthetic agents relieve
-    pain."</b><cite class="src bl">B&amp;L 80 &middot; p.1428</cite> SRB's list is the same:
+    pain."</b>​<cite class="src bl">B&amp;L 80 &middot; p.1428</cite> SRB's list is the same:
     <b>6 to 8 glasses of fluid, fibre-rich diet, psyllium husk or bran, lactulose, 5% lignocaine, sitz
-    baths</b>.<cite class="src srb">SRB 25 &middot; p.968</cite>
+    baths</b>.​<cite class="src srb">SRB 25 &middot; p.968</cite>
     <br>B&amp;L adds one more for the right patient: <b>"patients with normal bowel function and
     excessive straining at defecation might benefit from anorectal biofeedback to correct
-    it."</b><cite class="src bl">B&amp;L 80 &middot; p.1428</cite></dd>
+    it."</b>​<cite class="src bl">B&amp;L 80 &middot; p.1428</cite></dd>
     <dt>Chemical sphincterotomy, with the doses</dt>
     <dd>B&amp;L: <b>"the mainstay of current conservative management is the topical application of
     pharmacological agents that relax the internal sphincter... glyceryl trinitrate (GTN) (0.2%
@@ -1552,59 +1564,59 @@ body.guide { margin: 0; -webkit-text-size-adjust: 100%; }
     incontinence occurs in up to 10% of patients. The cure rate is approximately 50%, although GTN
     can be associated with headaches, which limits its acceptability to patients. Diltiazem and
     botulinum toxin have similar efficacy with fewer side
-    effects."</b><cite class="src bl">B&amp;L 80 &middot; p.1428</cite>
+    effects."</b>​<cite class="src bl">B&amp;L 80 &middot; p.1428</cite>
     <br>SRB agrees, and gives a specific botulinum dose: <b>"botulinum toxin 25 units injected into
     the internal sphincter. It causes temporary denervation of the internal sphincter; reducing its
     tone, improving the blood supply and control of ischaemia. It causes temporary incontinence for
     flatus (10%)."</b> And on GTN: <b>"topical nitroglycerine 0.2% is also used to relax the
-    sphincter. It causes severe headache."</b><cite class="src srb">SRB 25 &middot; p.969</cite> SRB
+    sphincter. It causes severe headache."</b>​<cite class="src srb">SRB 25 &middot; p.969</cite> SRB
     also lists <b>2% diltiazem, L-arginine</b> and <b>2% nifedipine
-    ointment</b>.<cite class="src srb">SRB 25 &middot; pp.968, 969</cite>
+    ointment</b>.​<cite class="src srb">SRB 25 &middot; pp.968, 969</cite>
     <br><span class="label">Prefer diltiazem, and say why</span><b>Same efficacy, no headache.</b>
     Both books say it. GTN's headache is the reason patients stop using it, which is why the cure rate
     in practice is lower than the pharmacology promises.</dd>
     <dt>Lateral internal sphincterotomy: the operation and its price</dt>
     <dd><b>Where:</b> <b>"the internal sphincter is divided away from the fissure itself, usually
-    either in the right or the left lateral positions."</b><cite class="src bl">B&amp;L 80 &middot; p.1428</cite>
+    either in the right or the left lateral positions."</b>​<cite class="src bl">B&amp;L 80 &middot; p.1428</cite>
     SRB: the same, <b>"either in right or left lateral positions"</b>, with <b>open or closed methods
     (Notaras)</b>, and <b>"sphincterotomy is done below the dentate
     line"</b>, dividing the <b>lower third or half of the internal
-    sphincter</b>.<cite class="src srb">SRB 25 &middot; p.969</cite>
+    sphincter</b>.​<cite class="src srb">SRB 25 &middot; p.969</cite>
     <br><b>Closed method:</b> a small longitudinal incision at the intersphincteric groove, planes
     developed, and precise division of the internal sphincter <b>"to the level of the apex of the
     fissure"</b>; or a number 11 blade advanced parallel to the sphincter and then rotated so the
     sharp edge faces it. <b>Pressure is applied for a few minutes to prevent a
-    haematoma.</b><cite class="src bl">B&amp;L 80 &middot; p.1428</cite>
+    haematoma.</b>​<cite class="src bl">B&amp;L 80 &middot; p.1428</cite>
     <br><b>Open method:</b> the anoderm over the distal internal sphincter is divided longitudinally,
     the sphincter divided, and the wound closed with absorbable
-    sutures.<cite class="src bl">B&amp;L 80 &middot; p.1428</cite>
+    sutures.​<cite class="src bl">B&amp;L 80 &middot; p.1428</cite>
     <br><b>The fissure itself needs nothing:</b> <b>"although the fissure needs no specific attention,
     problematic papillae and external tags can be
-    excised."</b><cite class="src bl">B&amp;L 80 &middot; p.1428</cite> That is the whole logic of the
+    excised."</b>​<cite class="src bl">B&amp;L 80 &middot; p.1428</cite> That is the whole logic of the
     operation: <b>you treat the sphincter, not the ulcer.</b>
     <br><span class="label out">The numbers to quote, and they are the reason conservative treatment
     comes first</span>B&amp;L: <b>"healing rates are in the range of 85%, but there is also a
     significant risk of altered continence (9% flatus incontinence, 6% soiling, under 1% solid stool
-    incontinence)."</b><cite class="src bl">B&amp;L 80 &middot; p.1429</cite> Early complications:
+    incontinence)."</b>​<cite class="src bl">B&amp;L 80 &middot; p.1429</cite> Early complications:
     <b>haemorrhage, haematoma, bruising, perianal abscess and
-    fistula</b>.<cite class="src bl">B&amp;L 80 &middot; p.1429</cite> SRB's list is the
-    same.<cite class="src srb">SRB 25 &middot; p.969</cite> And B&amp;L concedes: <b>"the optimal
+    fistula</b>.​<cite class="src bl">B&amp;L 80 &middot; p.1429</cite> SRB's list is the
+    same.​<cite class="src srb">SRB 25 &middot; p.969</cite> And B&amp;L concedes: <b>"the optimal
     amount of sphincter to be divided is a matter of debate, and additional factors have to be
     considered such as patient age, sex, previous vaginal delivery and operations on the anal
-    canal."</b><cite class="src bl">B&amp;L 80 &middot; p.1428</cite></dd>
+    canal."</b>​<cite class="src bl">B&amp;L 80 &middot; p.1428</cite></dd>
     <dt>Fissurectomy and the advancement flap, for the patient you must not sphincterotomise</dt>
     <dd><b>Fissurectomy:</b> <b>"surgical excision of a fissure involves excising of the fibrotic
     edge, curettage of the base and excision of the sentinel tag and/or anal papilla. Fissurectomy is
     an alternative to lateral internal sphincterotomy and is used if there are contraindications to
     lateral internal sphincterotomy. It is frequently combined with an advancement flap
-    anoplasty."</b><cite class="src bl">B&amp;L 80 &middot; p.1429</cite> Note what it does
+    anoplasty."</b>​<cite class="src bl">B&amp;L 80 &middot; p.1429</cite> Note what it does
     <b>not</b> include: a sphincterotomy.
     <br><b>Anal advancement flap:</b> <b>"should be considered in those with an increased risk of
     altered continence following lateral internal sphincterotomy, especially in postpartum women and
     those with normal or low resting anal pressures."</b> An <b>inverted house-shaped flap</b> of
     perianal skin is mobilised on its blood supply and advanced without tension to cover the
-    fissure.<cite class="src bl">B&amp;L 80 &middot; p.1429</cite> SRB agrees: <b>"anal advancement
-    flap is more effective especially in females."</b><cite class="src srb">SRB 25 &middot; p.969</cite>
+    fissure.​<cite class="src bl">B&amp;L 80 &middot; p.1429</cite> SRB agrees: <b>"anal advancement
+    flap is more effective especially in females."</b>​<cite class="src srb">SRB 25 &middot; p.969</cite>
     <br><span class="label">The patient this is for, in one sentence</span><b>A postpartum woman with
     a normal or low resting anal pressure.</b> She has nothing to spare: her sphincter is already
     damaged and her resting pressure is not high, so the fissure is not from hypertonia and dividing
@@ -1617,13 +1629,13 @@ body.guide { margin: 0; -webkit-text-size-adjust: 100%; }
     normal structures."</b> They elongate in the presence of a fissure, and a red oedematous papilla
     with purulent discharge from its crypt is <b>cryptitis</b>, <b>"cured by laying open the mouth of
     the infected anal gland and excising the
-    papilla."</b><cite class="src bl">B&amp;L 80 &middot; p.1429</cite>
+    papilla."</b>​<cite class="src bl">B&amp;L 80 &middot; p.1429</cite>
     <br><b>Proctalgia fugax.</b> <b>"Attacks of severe pain arising in the rectum, recurring at
     irregular intervals and apparently unrelated to organic disease. The pain is described as
     cramp-like, often occurring at night, lasting minutes and disappearing spontaneously. It seems to
     occur more commonly in patients suffering from anxiety or undue
-    stress."</b><cite class="src bl">B&amp;L 80 &middot; p.1429</cite> SRB lists it among the
-    differential diagnoses of a fissure.<cite class="src srb">SRB 25 &middot; p.968</cite></dd>
+    stress."</b>​<cite class="src bl">B&amp;L 80 &middot; p.1429</cite> SRB lists it among the
+    differential diagnoses of a fissure.​<cite class="src srb">SRB 25 &middot; p.968</cite></dd>
   </dl>
 
   <details class="conflict">
@@ -1640,20 +1652,20 @@ body.guide { margin: 0; -webkit-text-size-adjust: 100%; }
       <dd>Lists it first for chronic fissure: <b>"dorsal fissurectomy with sphincterotomy is done
       under anaesthesia. Specimen should be sent for biopsy to rule out carcinoma, tuberculosis,
       etc. Here transverse fibres of internal sphincter is divided in the floor of the
-      fissure."</b><cite class="src srb">SRB 25 &middot; pp.968, 969</cite> It then gives lateral
+      fissure."</b>​<cite class="src srb">SRB 25 &middot; pp.968, 969</cite> It then gives lateral
       anal sphincterotomy as a second option which <b>"also gives a good
-      result"</b>.<cite class="src srb">SRB 25 &middot; p.969</cite></dd>
+      result"</b>.​<cite class="src srb">SRB 25 &middot; p.969</cite></dd>
       <dt>Bailey &amp; Love 28e</dt>
       <dd>Has both components, but never in the same place. Its <b>fissurectomy</b> is excision of
       the fibrotic edge, curettage of the base and excision of the tag and papilla, with <b>no
       sphincter division at all</b>, used <b>"if there are contraindications to lateral internal
       sphincterotomy"</b> and <b>"frequently combined with an advancement flap
-      anoplasty"</b>.<cite class="src bl">B&amp;L 80 &middot; p.1429</cite> Its
+      anoplasty"</b>.​<cite class="src bl">B&amp;L 80 &middot; p.1429</cite> Its
       <b>sphincterotomy</b> is defined by being <b>somewhere else</b>: <b>"the internal sphincter is
       divided away from the fissure itself, usually either in the right or the left lateral
       positions"</b>, and <b>"although the fissure needs no specific
       attention"</b>, tags and papillae may be
-      excised.<cite class="src bl">B&amp;L 80 &middot; p.1428</cite> A posterior midline
+      excised.​<cite class="src bl">B&amp;L 80 &middot; p.1428</cite> A posterior midline
       sphincterotomy appears nowhere.</dd>
       <dt>Why the position of the cut is the whole argument</dt>
       <dd>Dividing the internal sphincter in the <b>posterior midline</b>, in the floor of the
@@ -1693,7 +1705,7 @@ body.guide { margin: 0; -webkit-text-size-adjust: 100%; }
     least resistance, may spread caudally to present as a perianal abscess, laterally across the
     external sphincter to form an ischiorectal abscess or, rarely, superiorly above the anorectal
     junction to form a supralevator intermuscular or pararectal"</b>
-    abscess.<cite class="src bl">B&amp;L 80 &middot; p.1435</cite>
+    abscess.​<cite class="src bl">B&amp;L 80 &middot; p.1435</cite>
     That single sentence gives you the classification and the anatomy of spread together, which is
     why it is worth learning verbatim.
   </p>
@@ -1702,17 +1714,17 @@ body.guide { margin: 0; -webkit-text-size-adjust: 100%; }
     <dt>The treatment, in one line</dt>
     <dd>B&amp;L: <b>"management of acute anorectal sepsis is primarily surgical, including careful
     examination under anaesthesia, sigmoidoscopy and proctoscopy, and adequate drainage of the
-    pus."</b><cite class="src bl">B&amp;L 80 &middot; p.1436</cite>
+    pus."</b>​<cite class="src bl">B&amp;L 80 &middot; p.1436</cite>
     <br><span class="label">Where you drain</span>For perianal and ischiorectal sepsis, which
     B&amp;L puts at <b>60% and 30%</b> of cases, drainage is <b>through the perineal
-    skin</b>.<cite class="src bl">B&amp;L 80 &middot; p.1436</cite> SRB gives the same incision for
-    the ischiorectal abscess: <b>cruciate</b>.<cite class="src srb">SRB 25 &middot; p.970</cite></dd>
+    skin</b>.​<cite class="src bl">B&amp;L 80 &middot; p.1436</cite> SRB gives the same incision for
+    the ischiorectal abscess: <b>cruciate</b>.​<cite class="src srb">SRB 25 &middot; p.970</cite></dd>
 
     <dt>How much skin to take, which B&amp;L has changed its mind about</dt>
     <dd><b>"Traditionally this has been through a cruciate incision over the most fluctuant point,
     with excision of the skin edges to deroof the abscess; however, although drainage must be
     ensured, skin preservation is important and wide excision of otherwise healthy tissue should be
-    avoided."</b><cite class="src bl">B&amp;L 80 &middot; p.1436</cite>
+    avoided."</b>​<cite class="src bl">B&amp;L 80 &middot; p.1436</cite>
     <br><span class="label">Say both halves</span>Name the cruciate incision, then add that current
     teaching is to preserve skin rather than excise widely. That is the book's own sentence, so it
     cannot be argued with.</dd>
@@ -1720,12 +1732,12 @@ body.guide { margin: 0; -webkit-text-size-adjust: 100%; }
     <dt>The two things B&amp;L tells you not to do</dt>
     <dd>These are the marks in this section, and they are stated as prohibitions:
     <br><b>1.</b> <b>"Injudicious probing in the acute stage is, however, potentially dangerous and
-    may lead to a much more difficult situation."</b><cite class="src bl">B&amp;L 80 &middot; p.1436</cite>
+    may lead to a much more difficult situation."</b>​<cite class="src bl">B&amp;L 80 &middot; p.1436</cite>
     <br><b>2.</b> <b>"Unless by highly experienced hands, immediate fistulotomy should not be
-    performed."</b><cite class="src bl">B&amp;L 80 &middot; p.1436</cite>
+    performed."</b>​<cite class="src bl">B&amp;L 80 &middot; p.1436</cite>
     <br><span class="label out">What you may do instead</span><b>"A gentle search may be made for an
     underlying fistula if the surgeon is experienced; if obvious, a loose draining seton may be
-    passed."</b><cite class="src bl">B&amp;L 80 &middot; p.1436</cite> Note <i>loose</i>, and note
+    passed."</b>​<cite class="src bl">B&amp;L 80 &middot; p.1436</cite> Note <i>loose</i>, and note
     <i>draining</i>: this is not the cutting seton of the elective fistula operation below, and the
     distinction is worth making out loud.</dd>
 
@@ -1733,14 +1745,14 @@ body.guide { margin: 0; -webkit-text-size-adjust: 100%; }
     <dd>SRB's warning is the one that prevents a missed diagnosis: it <b>"presents with tender,
     indurated, brawny swelling in the skin over the ischiorectal fossa with high fever. Swelling is
     not well-localised and fluctuation is absent in ischiorectal
-    abscess."</b><cite class="src srb">SRB 25 &middot; p.970</cite>
+    abscess."</b>​<cite class="src srb">SRB 25 &middot; p.970</cite>
     <br><span class="label">So waiting for fluctuation is the error</span>A deep abscess in a large
     fatty space will not fluctuate before it has done harm. Fever and brawny induration are enough
     to take the patient to theatre.</dd>
 
     <dt>And what the abscess may be telling you</dt>
     <dd>B&amp;L ends its summary with the list to consider underneath: <b>"fistula-in-ano, Crohn's
-    disease, diabetes, immunosuppression."</b><cite class="src bl">B&amp;L 80 &middot; p.1436</cite>
+    disease, diabetes, immunosuppression."</b>​<cite class="src bl">B&amp;L 80 &middot; p.1436</cite>
     <br><span class="label">Worth one sentence in the viva</span>A recurrent or atypical perianal
     abscess is a reason to look for Crohn's disease and to check the blood sugar, not simply to
     drain it again.</dd>
@@ -1748,7 +1760,7 @@ body.guide { margin: 0; -webkit-text-size-adjust: 100%; }
     <dt>Packing</dt>
     <dd>B&amp;L is candid that this is habit rather than evidence: <b>"despite lack of evidence, the
     practice of packing the abscess cavity is
-    commonplace."</b><cite class="src bl">B&amp;L 80 &middot; p.1436</cite> If you are asked, say
+    commonplace."</b>​<cite class="src bl">B&amp;L 80 &middot; p.1436</cite> If you are asked, say
     that it is common practice and that the book notes the evidence does not support it.</dd>
   </dl>
 
@@ -1760,122 +1772,122 @@ body.guide { margin: 0; -webkit-text-size-adjust: 100%; }
     from the anorectal lumen (the internal opening) to an external opening on the skin of the
     perineum or buttock (or rarely, in women, to the vagina). The majority are idiopathic or
     cryptoglandular and are lined by granulation
-    tissue."</b><cite class="src bl">B&amp;L 80 &middot; p.1436</cite>
+    tissue."</b>​<cite class="src bl">B&amp;L 80 &middot; p.1436</cite>
     <br>SRB gives the figure: <b>"95% of anorectal abscesses are due to infection of anal glands in
     relation to crypts, cryptoglandular
-    disease."</b><cite class="src srb">SRB 25 &middot; p.969</cite> It names the glands: <b>the
-    cryptoglands of Morgagni</b>.<cite class="src srb">SRB 25 &middot; p.972</cite>
+    disease."</b>​<cite class="src srb">SRB 25 &middot; p.969</cite> It names the glands: <b>the
+    cryptoglands of Morgagni</b>.​<cite class="src srb">SRB 25 &middot; p.972</cite>
     <br><span class="label">Say the word cryptoglandular, and what it means</span>An <b>anal gland
     in the intersphincteric space</b> becomes infected through its crypt at the dentate line; the
     abscess tracks out to the skin; the resulting track is the fistula. <b>That is why the internal
     opening is at the dentate line, and why curetting the infected gland is part of the
     operation.</b> SRB: <b>"proper curetting of the infected anal gland area is
-    essential."</b><cite class="src srb">SRB 25 &middot; p.975</cite></dd>
+    essential."</b>​<cite class="src srb">SRB 25 &middot; p.975</cite></dd>
     <dt>The other causes, which are the ones that make the fistula complex</dt>
     <dd>B&amp;L: <b>Crohn's disease, tuberculosis, lymphogranuloma venereum, actinomycosis, rectal
     duplication, foreign body and malignancy</b>, which <b>"may also very rarely arise within a
-    longstanding fistula."</b><cite class="src bl">B&amp;L 80 &middot; p.1436</cite> SRB adds
+    longstanding fistula."</b>​<cite class="src bl">B&amp;L 80 &middot; p.1436</cite> SRB adds
     <b>ulcerative colitis, hidradenitis suppurativa and
-    trauma</b>,<cite class="src srb">SRB 25 &middot; p.972</cite> and explains the Crohn's
+    trauma</b>,​<cite class="src srb">SRB 25 &middot; p.972</cite> and explains the Crohn's
     association anatomically: <b>"plenty of lymphoid aggregates surround the anal glands, which
     explain the high incidence of anal fistula in Crohn's
-    disease."</b><cite class="src srb">SRB 25 &middot; p.972</cite>
+    disease."</b>​<cite class="src srb">SRB 25 &middot; p.972</cite>
     <br><span class="label out">And how a tuberculous fistula differs on examination</span>SRB:
     <b>"tuberculous fistulas do not have induration, will have pale granulation tissue with watery
-    discharge and they are most often multiple."</b><cite class="src srb">SRB 25 &middot; p.974</cite>
+    discharge and they are most often multiple."</b>​<cite class="src srb">SRB 25 &middot; p.974</cite>
     <b>Multiple openings with no induration and watery discharge</b> should send you looking for
     tuberculosis, Crohn's, ulcerative colitis, lymphogranuloma venereum, hidradenitis or
     actinomycosis, which is SRB's own list for multiple
-    openings.<cite class="src srb">SRB 25 &middot; p.972</cite></dd>
+    openings.​<cite class="src srb">SRB 25 &middot; p.972</cite></dd>
     <dt>Presentation</dt>
     <dd>B&amp;L: <b>"patients usually complain of intermittent purulent discharge (which may be
     bloody) and discomfort, which increases until temporary relief occurs when the pus discharges.
     There is often a history of anorectal
-    sepsis."</b><cite class="src bl">B&amp;L 80 &middot; p.1436</cite>
+    sepsis."</b>​<cite class="src bl">B&amp;L 80 &middot; p.1436</cite>
     <br><span class="label">One question that localises the internal opening without any instrument</span>
     B&amp;L: <b>"the passage of flatus or faeces through the external opening is suggestive of a
     rectal rather than an anal internal
-    opening."</b><cite class="src bl">B&amp;L 80 &middot; p.1436</cite>
+    opening."</b>​<cite class="src bl">B&amp;L 80 &middot; p.1436</cite>
     <br>SRB's figures: prevalence <b>0.01%</b>, commoner in <b>young adult males, 2 to 1</b>, with
     <b>seropurulent discharge in 65%</b>; and the natural history, <b>"often it may heal
     superficially but pus may collect beneath forming an abscess which again discharges through same
-    or new opening."</b><cite class="src srb">SRB 25 &middot; p.973</cite></dd>
+    or new opening."</b>​<cite class="src srb">SRB 25 &middot; p.973</cite></dd>
     <dt>Classification: Park's, which is the one that decides management</dt>
     <dd>B&amp;L: <b>"the most widely used classification of anal fistulae (Parks') is based on anal
     gland sepsis in the intersphincteric space (the internal opening is at the dentate line); this
     results in a primary track whose relation to the external sphincter defines the type of fistula,
-    which influences management."</b><cite class="src bl">B&amp;L 80 &middot; p.1436</cite>
+    which influences management."</b>​<cite class="src bl">B&amp;L 80 &middot; p.1436</cite>
     <br><b>Intersphincteric:</b> does not cross the external sphincter; <b>"most commonly they run
     directly from the internal to the external openings across the distal internal sphincter"</b>, and
     may extend proximally in the intersphincteric
-    plane.<cite class="src bl">B&amp;L 80 &middot; pp.1436, 1437</cite>
+    plane.​<cite class="src bl">B&amp;L 80 &middot; pp.1436, 1437</cite>
     <br><b>Trans-sphincteric:</b> <b>"a primary track that crosses both internal and external
     sphincters (the latter at a variable level) and that then passes through the ischiorectal fossa to
     reach the skin of the buttock."</b> Secondary tracks may reach the roof of the ischiorectal fossa
     or rarely through the levator into the pelvis, and <b>"circumferential (horseshoe) spread of
-    sepsis may occur."</b><cite class="src bl">B&amp;L 80 &middot; p.1437</cite>
+    sepsis may occur."</b>​<cite class="src bl">B&amp;L 80 &middot; p.1437</cite>
     <br><b>Suprasphincteric:</b> <b>"run up to a level above the puborectalis and then curl downwards
     through the levators and ischioanal fossa to reach the skin. They are often caused by excessive
     probing of an abscess cavity or fistula tract during examination under
-    anaesthesia."</b><cite class="src bl">B&amp;L 80 &middot; p.1437</cite>
+    anaesthesia."</b>​<cite class="src bl">B&amp;L 80 &middot; p.1437</cite>
     <br><b>Extrasphincteric:</b> <b>"run without specific relation to the sphincters and usually
-    result from pelvic disease or trauma."</b><cite class="src bl">B&amp;L 80 &middot; p.1437</cite>
+    result from pelvic disease or trauma."</b>​<cite class="src bl">B&amp;L 80 &middot; p.1437</cite>
     <br><span class="label out">Note what B&amp;L says causes a suprasphincteric fistula</span>
     <b>Excessive probing.</b> It is iatrogenic. Which is why SRB insists that <b>"probing is done
     under general anaesthesia gently with care without creating
-    extensions"</b>,<cite class="src srb">SRB 25 &middot; p.973</cite> and why probing in the ward is
+    extensions"</b>,​<cite class="src srb">SRB 25 &middot; p.973</cite> and why probing in the ward is
     not acceptable.
     <br><span class="label">On the percentages, see the amber box</span>The two books give different
     figures for how common each type is.</dd>
     <dt>And the two older classifications SRB expects by name</dt>
     <dd><b>Standard (Milligan-Morgan 1934, Goligher 1975):</b> <b>subcutaneous</b> (commonest),
     <b>low anal</b> (common), <b>submucous</b>, <b>high anal</b>,
-    <b>pelvirectal</b>.<cite class="src srb">SRB 25 &middot; p.972</cite>
+    <b>pelvirectal</b>.​<cite class="src srb">SRB 25 &middot; p.972</cite>
     <br><b>High and low:</b> <b>"low level fistulas, these open into the anal canal below the internal
     ring. High level fistulas, these open into the anal canal at or above the internal
-    ring."</b><cite class="src srb">SRB 25 &middot; p.972</cite> This is the division SRB organises
+    ring."</b>​<cite class="src srb">SRB 25 &middot; p.972</cite> This is the division SRB organises
     its treatment around, and it is the practical one: <b>low fistulas can be laid open, high ones
     cannot.</b></dd>
     <dt>Simple and complex, which is the division that decides whether you refer</dt>
     <dd>B&amp;L uses the <b>American Gastroenterology Association</b> classification, <b>"which
     condenses the Parks' classification into simple and complex fistula"</b> and is <b>"helpful in the
     decision to operate on clinical findings, investigate further or refer for specialist
-    opinion."</b><cite class="src bl">B&amp;L 80 &middot; p.1436</cite>
+    opinion."</b>​<cite class="src bl">B&amp;L 80 &middot; p.1436</cite>
     <br><b>Simple:</b> low, meaning superficial or low inter- or low trans-sphincteric, with a
     <b>single external opening</b>.
     <br><b>Complex:</b> high inter- or trans-sphincteric; extra- or suprasphincteric; presence of an
     abscess or collection; ano-vaginal fistula; anal
-    stricture.<cite class="src bl">B&amp;L 80 &middot; p.1436</cite>
+    stricture.​<cite class="src bl">B&amp;L 80 &middot; p.1436</cite>
     <br>SRB's definition of complex is worth having too, because it adds the patient factors:
     <b>"the track crosses over 50% of the external sphincter, anterior in females, multiple tracks,
     recurrent, or the patient has preexisting incontinence, local irradiation, or Crohn's
-    disease."</b><cite class="src srb">SRB 25 &middot; p.972</cite>
+    disease."</b>​<cite class="src srb">SRB 25 &middot; p.972</cite>
     <br><span class="label">Why "anterior in females" is on that list</span>Because the anterior
     sphincter is short in a woman and may already be damaged by childbirth, so there is far less
     muscle to spare. The same reasoning as the advancement flap in fissure.</dd>
     <dt>Clinical assessment: the five things to establish</dt>
     <dd>B&amp;L: <b>"the site of the internal opening; the site of the external opening(s); the course
     of the primary track; the presence of secondary extensions; and the presence of other conditions
-    complicating the fistula."</b><cite class="src bl">B&amp;L 80 &middot; p.1437</cite>
+    complicating the fistula."</b>​<cite class="src bl">B&amp;L 80 &middot; p.1437</cite>
     <br><b>What induration tells you:</b> <b>"palpable induration between the external opening and
     the anal margin suggests a relatively superficial track, whereas supralevator induration suggests
     a primary track above the levators or high in the roof of the ischiorectal fossa, or a high
     secondary extension. Intersphincteric fistulae usually have an external opening close to the anal
-    verge."</b><cite class="src bl">B&amp;L 80 &middot; p.1437</cite>
+    verge."</b>​<cite class="src bl">B&amp;L 80 &middot; p.1437</cite>
     <br><b>Finding the internal opening:</b> it <b>"may be felt as a point of induration or seen as
     an enlarged papilla. Dilute hydrogen peroxide, instilled via the external opening, can demonstrate
     the site of the internal opening; gentle use of probes and a finger in the anorectum usually
     delineates primary and secondary tracks and their relations to the
-    sphincters."</b><cite class="src bl">B&amp;L 80 &middot; p.1437</cite> SRB uses <b>methylene blue
-    on the table</b> for the same purpose.<cite class="src srb">SRB 25 &middot; p.975</cite></dd>
+    sphincters."</b>​<cite class="src bl">B&amp;L 80 &middot; p.1437</cite> SRB uses <b>methylene blue
+    on the table</b> for the same purpose.​<cite class="src srb">SRB 25 &middot; p.975</cite></dd>
     <dt>Investigations</dt>
     <dd><b>MRI is the gold standard.</b> B&amp;L: <b>"MRI is the 'gold standard' for fistula imaging.
     Short tau inversion recovery (STIR) sequencing (a fat-suppression technique) to highlight the
     presence of pus and granulation tissue without the need for contrast medium has been
     revolutionary. The great advantage of MRI is its ability to demonstrate secondary extensions,
     which may be missed at surgery and cause
-    persistence."</b><cite class="src bl">B&amp;L 80 &middot; p.1438</cite> SRB agrees: <b>"MRI or MRI
-    fistulogram ideal."</b><cite class="src srb">SRB 25 &middot; p.974</cite>
+    persistence."</b>​<cite class="src bl">B&amp;L 80 &middot; p.1438</cite> SRB agrees: <b>"MRI or MRI
+    fistulogram ideal."</b>​<cite class="src srb">SRB 25 &middot; p.974</cite>
     <br><span class="label">Say why MRI and not fistulography</span><b>Because the thing that makes a
     fistula recur is a secondary extension you did not find.</b> A fistulogram shows the track you
     already know about; MRI shows the one you do not.
@@ -1883,15 +1895,15 @@ body.guide { margin: 0; -webkit-text-size-adjust: 100%; }
     through the external opening, is more accurate than clinical examination and is useful to
     determine whether a fistula is simple or
     complex"</b>, and it assesses <b>sphincter
-    integrity</b>.<cite class="src bl">B&amp;L 80 &middot; p.1438</cite>
+    integrity</b>.​<cite class="src bl">B&amp;L 80 &middot; p.1438</cite>
     <br><b>Fistulography and CT</b> are <b>"useful if an extrasphincteric fistula is
-    suspected."</b><cite class="src bl">B&amp;L 80 &middot; p.1438</cite>
+    suspected."</b>​<cite class="src bl">B&amp;L 80 &middot; p.1438</cite>
     <br><b>And for the cause:</b> SRB, chest radiograph, ESR, biopsy, discharge study, and
     <b>colonoscopy "often when ulcerative colitis or Crohn's is
-    suspected"</b>.<cite class="src srb">SRB 25 &middot; p.974</cite>
+    suspected"</b>.​<cite class="src srb">SRB 25 &middot; p.974</cite>
     <br><span class="label out">SRB's warning about probing in the ward</span><b>"Probing in the ward
     and fistulogram in the ward before surgery using Lipiodol is not advisable as it may cause
-    recrudescence of inflammation."</b><cite class="src srb">SRB 25 &middot; p.973</cite></dd>
+    recrudescence of inflammation."</b>​<cite class="src srb">SRB 25 &middot; p.973</cite></dd>
     <dt>The principle of fistula surgery, which is one sentence and one number</dt>
     <dd>B&amp;L: <b>"the aim of surgery is to keep the patient continent and comfortable and whenever
     possible to eradicate the fistula."</b> And: <b>"division of any component of the sphincter
@@ -1899,25 +1911,25 @@ body.guide { margin: 0; -webkit-text-size-adjust: 100%; }
     fistulotomy is the amount of muscle left behind rather than that divided. In the presence of a
     normal bowel habit, continence is usually maintained as long as a minimum length of external
     sphincter is retained (2 cm as a rule but less in some
-    cases)."</b><cite class="src bl">B&amp;L 80 &middot; p.1439</cite>
+    cases)."</b>​<cite class="src bl">B&amp;L 80 &middot; p.1439</cite>
     <br><span class="label">That is the answer to almost any fistula question</span><b>Continence
     first, cure second, and 2 cm of external sphincter is the number.</b> Note the order of the aims:
     <i>continent</i> comes before <i>comfortable</i>, and both come before eradicating the fistula.
     B&amp;L also notes that <b>"patients with minimal symptoms may be managed
-    expectantly."</b><cite class="src bl">B&amp;L 80 &middot; p.1439</cite></dd>
+    expectantly."</b>​<cite class="src bl">B&amp;L 80 &middot; p.1439</cite></dd>
     <dt>The operations for a low fistula</dt>
     <dd><b>Fistulotomy</b>, laying the track open to heal by secondary intention, which B&amp;L notes
     <b>"has been practised for centuries and was beautifully described by John of
-    Arderne"</b>.<cite class="src bl">B&amp;L 80 &middot; p.1438</cite> SRB: <b>"it is done in low
+    Arderne"</b>.​<cite class="src bl">B&amp;L 80 &middot; p.1438</cite> SRB: <b>"it is done in low
     anal fistula. It is technically easier. After passing the probe through the entire fistulous
     track, incision is made over the probe to cut and lay open the fistulous track. It is allowed to
     granulate and heal from the floor or surface. Technique is safer, easier and can be done on
-    outpatient basis."</b><cite class="src srb">SRB 25 &middot; p.975</cite>
+    outpatient basis."</b>​<cite class="src srb">SRB 25 &middot; p.975</cite>
     <br><b>Fistulectomy</b>, excising the track. SRB: probe through to the internal opening, the
     fistula opened along the probe, then <b>"fibrous track along with unhealthy granulation tissue and
     additional external openings are excised. Specimen is always sent for histopathology."</b> And:
     <b>"fistulectomy for low level fistulas do not cause rectal
-    incontinence."</b><cite class="src srb">SRB 25 &middot; pp.974, 975</cite>
+    incontinence."</b>​<cite class="src srb">SRB 25 &middot; pp.974, 975</cite>
     <br><span class="label">Fistulotomy or fistulectomy?</span><b>Lay open rather than excise where
     you can.</b> Fistulotomy removes less tissue, heals faster and risks less sphincter; fistulectomy
     gives you a specimen for histology, which matters where tuberculosis, Crohn's or malignancy is
@@ -1926,33 +1938,33 @@ body.guide { margin: 0; -webkit-text-size-adjust: 100%; }
     <dd><b>Seton.</b> B&amp;L notes the etymology and the history: <b>"the use of a seton (from the
     Latin seta, meaning a bristle) to drain fistula tracts and gradually deliver the tract to the
     surface has a long history, most famously used by Charles Felix to treat French King Louis
-    XIV."</b><cite class="src bl">B&amp;L 80 &middot; p.1439</cite> SRB gives the mechanism and the
+    XIV."</b>​<cite class="src bl">B&amp;L 80 &middot; p.1439</cite> SRB gives the mechanism and the
     duration: the muscle superficial to the track is encircled and the seton <b>"tied securely and
     left in situ to create ischaemic necrosis, dividing the muscle slowly without allowing it to
     spring apart avoiding gutter deformity... it will well-preserve the sphincter function and
     pressure."</b> It <b>"can be kept for 3 months"</b> and replaced <b>"by rail road technique
     without anaesthesia"</b>; it is <b>"staged
-    fistulotomy"</b>.<cite class="src srb">SRB 25 &middot; p.975</cite>
+    fistulotomy"</b>.​<cite class="src srb">SRB 25 &middot; p.975</cite>
     <br><span class="label out">Why a seton works, in one line</span><b>It divides the muscle slowly
     so the cut ends scar together instead of springing apart.</b> That is the same gutter-deformity
     argument as the lateral sphincterotomy, and it is why a seton preserves continence where a single
     cut would not.
     <br><b>Advancement flap</b>, a mucosal flap procedure, used
-    occasionally.<cite class="src srb">SRB 25 &middot; p.975</cite>
+    occasionally.​<cite class="src srb">SRB 25 &middot; p.975</cite>
     <br><b>Fibrin glue:</b> <b>"a multicomponent system containing mainly human plasma fibrinogen and
     thrombin. Once prepared it is injected into the fistula track which hardens in few minutes and
     fills the entire track. Success rate is 70%."</b> SRB also notes glue results are <b>"not
-    good"</b> in its own earlier sentence.<cite class="src srb">SRB 25 &middot; p.975</cite>
+    good"</b> in its own earlier sentence.​<cite class="src srb">SRB 25 &middot; p.975</cite>
     <br><b>Anal fistula plug:</b> <b>"Surgisis anal fistula plug (porcine small intestine submucosa)
     is used with 85% success rate in simple fistula. It contains naturally derived extracellular
     matrix which acts as scaffolding, ingrowth of tissue,
-    remodeling."</b><cite class="src srb">SRB 25 &middot; p.975</cite>
+    remodeling."</b>​<cite class="src srb">SRB 25 &middot; p.975</cite>
     <br><b>LIFT</b>, ligation of the intersphincteric fistula track: <b>"intersphincteric space is
     reached through a transverse incision. Fistula running across is identified and ligated using
     vicryl on either side. Part is excised; outer part is curetted through external
-    opening."</b><cite class="src srb">SRB 25 &middot; p.975</cite>
+    opening."</b>​<cite class="src srb">SRB 25 &middot; p.975</cite>
     <br><b>VAAFT</b>, video-assisted anal fistula treatment, and the <b>nitinol over-the-scope fistula
-    clip</b>.<cite class="src srb">SRB 25 &middot; p.975</cite>
+    clip</b>.​<cite class="src srb">SRB 25 &middot; p.975</cite>
     <br><span class="label">What unites all of them</span>Every one is an attempt to <b>close the
     internal opening and obliterate the track without dividing muscle</b>. Say that and the list
     stops being a list.</dd>
@@ -1961,11 +1973,11 @@ body.guide { margin: 0; -webkit-text-size-adjust: 100%; }
     and <b>"incontinence may follow after lay opening of these fistulas."</b> Treatment <b>"requires
     staged procedure, initial colostomy is done followed by definitive procedure. This prevents sepsis
     and promotes faster healing"</b>, with the colostomy closed
-    later.<cite class="src srb">SRB 25 &middot; p.975</cite> B&amp;L's position is that most fistulae
+    later.​<cite class="src srb">SRB 25 &middot; p.975</cite> B&amp;L's position is that most fistulae
     are simple but <b>"a significant minority are complex and warrant specialist
     referral"</b>, and it is candid about why the literature is unhelpful: <b>"comparisons between
     techniques are difficult because of the heterogeneity of patient groups, the variability in
-    clas"</b>sification.<cite class="src bl">B&amp;L 80 &middot; p.1439</cite></dd>
+    clas"</b>sification.​<cite class="src bl">B&amp;L 80 &middot; p.1439</cite></dd>
   </dl>
 
   <details class="conflict">
@@ -1983,12 +1995,12 @@ body.guide { margin: 0; -webkit-text-size-adjust: 100%; }
       opening in relation to the anterior half of the anus is of direct type. Fistulas with external
       openings in relation to posterior half of the anus, has a curved track may be of horse-shoe
       type, opens in the midline posteriorly and may present with multiple external opening all
-      connected to a single internal opening."</b><cite class="src srb">SRB 25 &middot; p.973</cite></dd>
+      connected to a single internal opening."</b>​<cite class="src srb">SRB 25 &middot; p.973</cite></dd>
       <dt>Bailey &amp; Love 28e</dt>
       <dd>Gives it, and then qualifies it in the same breath: <b>"Goodsall's rule, used to indicate
       the likely position of the internal opening according to the position of the external
       opening(s), is helpful; however, the majority of internal openings are midline in both the
-      anterior and posterior planes."</b><cite class="src bl">B&amp;L 80 &middot; p.1437</cite></dd>
+      anterior and posterior planes."</b>​<cite class="src bl">B&amp;L 80 &middot; p.1437</cite></dd>
       <dt>What B&amp;L's qualification actually says</dt>
       <dd>It is subtle and worth unpacking, because it is not a rejection. Goodsall's rule predicts
       that an <b>anterior</b> external opening connects by a <b>straight radial track</b> to an
@@ -1999,11 +2011,11 @@ body.guide { margin: 0; -webkit-text-size-adjust: 100%; }
       straight radial line can take you to the wrong place. Note that SRB's own text, two sentences
       later, agrees with the part B&amp;L keeps: <b>"P/R examination shows indurated internal opening
       usually in the midline posteriorly"</b> and <b>"most of the fistulas are on posterior half of
-      anus."</b><cite class="src srb">SRB 25 &middot; p.973</cite> So the books differ in emphasis
+      anus."</b>​<cite class="src srb">SRB 25 &middot; p.973</cite> So the books differ in emphasis
       rather than in observation, and the practical consequence is that you confirm the internal
       opening rather than predicting it: <b>hydrogen peroxide or methylene blue through the external
       opening, gentle probing under anaesthesia, and MRI where there is
-      doubt.</b><cite class="src bl">B&amp;L 80 &middot; p.1437</cite><cite class="src srb">SRB 25 &middot; p.975</cite></dd>
+      doubt.</b>​<cite class="src bl">B&amp;L 80 &middot; p.1437</cite>​<cite class="src srb">SRB 25 &middot; p.975</cite></dd>
     </dl>
     <span class="ruling"><b>How to answer:</b> state the rule, use it, and say what you would do to
     confirm it. "Goodsall's rule: an external opening in the anterior half of the anus usually
@@ -2030,12 +2042,12 @@ body.guide { margin: 0; -webkit-text-size-adjust: 100%; }
     <dl>
       <dt>SRB</dt>
       <dd><b>Intersphincteric, commonest, 70%; transphincteric 25%; supralevator or suprasphincteric
-      4%; extrasphincteric 1%.</b><cite class="src srb">SRB 25 &middot; p.972</cite></dd>
+      4%; extrasphincteric 1%.</b>​<cite class="src srb">SRB 25 &middot; p.972</cite></dd>
       <dt>Bailey &amp; Love 28e</dt>
       <dd><b>Intersphincteric 45%; trans-sphincteric 40%; suprasphincteric 10%; extrasphincteric
-      5%.</b><cite class="src bl">B&amp;L 80 &middot; pp.1436, 1437</cite> It frames the same fact
+      5%.</b>​<cite class="src bl">B&amp;L 80 &middot; pp.1436, 1437</cite> It frames the same fact
       qualitatively first: <b>"the vast majority of fistulae are intersphincteric or
-      trans-sphincteric."</b><cite class="src bl">B&amp;L 80 &middot; p.1436</cite></dd>
+      trans-sphincteric."</b>​<cite class="src bl">B&amp;L 80 &middot; p.1436</cite></dd>
       <dt>Why they differ, and what both agree on</dt>
       <dd>These are referral-pattern figures, not biology. A specialist unit that receives recurrent
       and complex fistulae, which is where B&amp;L's data come from, will see proportionally more
@@ -2045,7 +2057,7 @@ body.guide { margin: 0; -webkit-text-size-adjust: 100%; }
       <b>intersphincteric is commonest, trans-sphincteric next, and the two together account for the
       great majority; supra- and extrasphincteric fistulae are rare and are the ones that need
       specialist management.</b> B&amp;L adds that suprasphincteric fistulae are often <b>iatrogenic,
-      from excessive probing</b>,<cite class="src bl">B&amp;L 80 &middot; p.1437</cite> which is
+      from excessive probing</b>,​<cite class="src bl">B&amp;L 80 &middot; p.1437</cite> which is
       itself a reason the rarer types appear more often in a tertiary series.</dd>
     </dl>
     <span class="ruling"><b>How to answer:</b> give Park's four types in order of frequency and
@@ -2068,7 +2080,7 @@ body.guide { margin: 0; -webkit-text-size-adjust: 100%; }
       <p class="ans">Symptomatic enlargement and downward displacement of the anal cushions, which
       are normal aggregations of arterioles, venules, smooth muscle and elastic connective tissue in
       the submucosa that help seal the anal
-      canal.<cite class="src bl">B&amp;L 80 &middot; p.1430</cite><cite class="src srb">SRB 25 &middot; p.961</cite>
+      canal.​<cite class="src bl">B&amp;L 80 &middot; p.1430</cite>​<cite class="src srb">SRB 25 &middot; p.961</cite>
       They are not varicose veins, which is why you do not excise all of them.</p>
     </details>
 
@@ -2076,54 +2088,54 @@ body.guide { margin: 0; -webkit-text-size-adjust: 100%; }
       <summary>Why is the bleeding bright red?</summary>
       <p class="ans">Because there are direct arteriovenous communications with the submucosal venous
       dilatations, so the oxygen tension of blood in the anal cushions is more arterial than
-      venous.<cite class="src bl">B&amp;L 80 &middot; p.1419</cite></p>
+      venous.​<cite class="src bl">B&amp;L 80 &middot; p.1419</cite></p>
     </details>
 
     <details>
       <summary>Why 3, 7 and 11 o'clock?</summary>
       <p class="ans">Because the superior haemorrhoidal vessel divides into two branches on the right
       and continues as one on the left, giving right anterior, right posterior and left lateral
-      cushions.<cite class="src srb">SRB 25 &middot; p.961</cite> Always state the position of the
+      cushions.​<cite class="src srb">SRB 25 &middot; p.961</cite> Always state the position of the
       patient, which is lithotomy, because the clock numbers are meaningless without
-      it.<cite class="src bl">B&amp;L 80 &middot; p.1430</cite></p>
+      it.​<cite class="src bl">B&amp;L 80 &middot; p.1430</cite></p>
     </details>
 
     <details>
       <summary>Grade these haemorrhoids.</summary>
       <p class="ans">First degree: bleed only, no prolapse. Second: prolapse and reduce
       spontaneously. Third: prolapse and need manual reduction. Fourth: permanently
-      prolapsed.<cite class="src bl">B&amp;L 80 &middot; p.1430</cite><cite class="src srb">SRB 25 &middot; p.961</cite></p>
+      prolapsed.​<cite class="src bl">B&amp;L 80 &middot; p.1430</cite>​<cite class="src srb">SRB 25 &middot; p.961</cite></p>
     </details>
 
     <details>
       <summary>Can you feel internal piles on digital examination?</summary>
       <p class="ans">No. Uncomplicated internal piles cannot be felt with a finger; only chronically
       inflamed or thrombosed piles can. They are diagnosed on
-      proctoscopy.<cite class="src das">Das 36 &middot; p.544</cite><cite class="src srb">SRB 25 &middot; p.962</cite></p>
+      proctoscopy.​<cite class="src das">Das 36 &middot; p.544</cite>​<cite class="src srb">SRB 25 &middot; p.962</cite></p>
     </details>
 
     <details>
       <summary>A 55-year-old man with bright rectal bleeding and piles on proctoscopy. What else?</summary>
       <p class="ans">Colonoscopy. Exclusion of other causes of rectal bleeding, especially colorectal
       malignancy, is the first priority, and the presence of piles does not prove they are the source
-      of the bleeding.<cite class="src bl">B&amp;L 80 &middot; p.1431</cite></p>
+      of the bleeding.​<cite class="src bl">B&amp;L 80 &middot; p.1431</cite></p>
     </details>
 
     <details>
       <summary>Where do you inject a sclerosant, and what goes wrong if you miss?</summary>
       <p class="ans">3 to 5 mL of 5% phenol in almond or arachis oil into the submucosal plane at the
       apex of the pedicle, above the anorectal ring, not into the haemorrhoid
-      itself.<cite class="src bl">B&amp;L 80 &middot; p.1431</cite> Pain on injection means the
+      itself.​<cite class="src bl">B&amp;L 80 &middot; p.1431</cite> Pain on injection means the
       needle is too low and should be withdrawn. Too superficial gives rapid white bulging of the
       mucosa and superficial ulceration. Too deep can cause prostatitis, pelvic sepsis, impotence or
-      a rectovaginal fistula.<cite class="src bl">B&amp;L 80 &middot; p.1431</cite><cite class="src srb">SRB 25 &middot; p.964</cite></p>
+      a rectovaginal fistula.​<cite class="src bl">B&amp;L 80 &middot; p.1431</cite>​<cite class="src srb">SRB 25 &middot; p.964</cite></p>
     </details>
 
     <details>
       <summary>Where must a band be placed, and why?</summary>
       <p class="ans">Above the dentate line, about 2 cm above it, on the base of the pedicle. Below
       the dentate line the mucosa has somatic innervation and a band there causes intense
-      pain.<cite class="src bl">B&amp;L 80 &middot; p.1431</cite><cite class="src srb">SRB 25 &middot; p.964</cite>
+      pain.​<cite class="src bl">B&amp;L 80 &middot; p.1431</cite>​<cite class="src srb">SRB 25 &middot; p.964</cite>
       Warn the patient about bleeding when the pile sloughs at one to two weeks.</p>
     </details>
 
@@ -2131,7 +2143,7 @@ body.guide { margin: 0; -webkit-text-size-adjust: 100%; }
       <summary>Which operation, and what must you not do during it?</summary>
       <p class="ans">Open haemorrhoidectomy, the Milligan-Morgan operation, with the wounds left to
       heal by secondary intention; or the closed Ferguson technique with the wounds
-      sutured.<cite class="src bl">B&amp;L 80 &middot; p.1432</cite> What you must not do is excise
+      sutured.​<cite class="src bl">B&amp;L 80 &middot; p.1432</cite> What you must not do is excise
       circumferentially: mucocutaneous bridges must be left between the excised pedicles, or the
       patient gets an anal stenosis.</p>
     </details>
@@ -2142,21 +2154,21 @@ body.guide { margin: 0; -webkit-text-size-adjust: 100%; }
       compresses and laxatives, with resolution usually in three to four days, plus systemic
       antibiotics to reduce the risk of portal pyaemia. Urgent haemorrhoidectomy may speed symptom
       resolution but risks later anal
-      stenosis.<cite class="src bl">B&amp;L 80 &middot; p.1430</cite></p>
+      stenosis.​<cite class="src bl">B&amp;L 80 &middot; p.1430</cite></p>
     </details>
 
     <details>
       <summary>Why antibiotics in thrombosed piles?</summary>
       <p class="ans">Portal pyaemia. The superior rectal veins drain into the portal system, which is
       also why portal hypertension is a rare cause of
-      haemorrhoids.<cite class="src bl">B&amp;L 80 &middot; p.1430</cite><cite class="src srb">SRB 25 &middot; p.962</cite></p>
+      haemorrhoids.​<cite class="src bl">B&amp;L 80 &middot; p.1430</cite>​<cite class="src srb">SRB 25 &middot; p.962</cite></p>
     </details>
 
     <details>
       <summary>Define an anal fissure.</summary>
       <p class="ans">A longitudinal ulcer in the anoderm of the distal anal canal, extending from the
       anal verge proximally towards but not beyond the dentate
-      line.<cite class="src bl">B&amp;L 80 &middot; p.1427</cite></p>
+      line.​<cite class="src bl">B&amp;L 80 &middot; p.1427</cite></p>
     </details>
 
     <details>
@@ -2164,7 +2176,7 @@ body.guide { margin: 0; -webkit-text-size-adjust: 100%; }
       <p class="ans">A sentinel tag externally, a hypertrophied anal papilla internally, and between
       them an indurated ulcer whose floor exposes the fibres of the internal sphincter. The tag and
       the papilla are both consequences of repeated healing and
-      breakdown.<cite class="src bl">B&amp;L 80 &middot; p.1428</cite><cite class="src srb">SRB 25 &middot; p.968</cite></p>
+      breakdown.​<cite class="src bl">B&amp;L 80 &middot; p.1428</cite>​<cite class="src srb">SRB 25 &middot; p.968</cite></p>
     </details>
 
     <details>
@@ -2172,7 +2184,7 @@ body.guide { margin: 0; -webkit-text-size-adjust: 100%; }
       <p class="ans">Hard stool tears the anoderm; the tear causes pain; pain causes internal
       sphincter hypertonia; hypertonia reduces blood supply to the anal mucosa, causing relative
       ischaemia; ischaemia prevents healing, and the repeated trauma deepens the
-      fissure.<cite class="src bl">B&amp;L 80 &middot; p.1428</cite> Every treatment breaks one link
+      fissure.​<cite class="src bl">B&amp;L 80 &middot; p.1428</cite> Every treatment breaks one link
       in that chain.</p>
     </details>
 
@@ -2182,7 +2194,7 @@ body.guide { margin: 0; -webkit-text-size-adjust: 100%; }
       features, should raise the suspicion of a specific aetiology, and needs examination under
       anaesthesia with biopsy and culture to exclude Crohn's disease, tuberculosis, syphilis,
       Chlamydia, chancroid, lymphogranuloma venereum, herpes, cytomegalovirus, Kaposi's sarcoma,
-      lymphoma or a squamous carcinoma.<cite class="src bl">B&amp;L 80 &middot; p.1428</cite></p>
+      lymphoma or a squamous carcinoma.​<cite class="src bl">B&amp;L 80 &middot; p.1428</cite></p>
     </details>
 
     <details>
@@ -2193,7 +2205,7 @@ body.guide { margin: 0; -webkit-text-size-adjust: 100%; }
       sphincter, which SRB gives as 25 units. Cure rate around 50%. GTN causes headache, which limits
       compliance; diltiazem and botulinum have similar efficacy with fewer side effects. Botulinum
       causes temporary incontinence in up to
-      10%.<cite class="src bl">B&amp;L 80 &middot; p.1428</cite><cite class="src srb">SRB 25 &middot; p.969</cite></p>
+      10%.​<cite class="src bl">B&amp;L 80 &middot; p.1428</cite>​<cite class="src srb">SRB 25 &middot; p.969</cite></p>
     </details>
 
     <details>
@@ -2202,7 +2214,7 @@ body.guide { margin: 0; -webkit-text-size-adjust: 100%; }
       keyhole deformity, a gutter through which mucus and liquid stool leak. A lateral division
       achieves the same reduction in sphincter tone in healthy tissue that closes properly, and the
       fissure then heals on its own, which is why Bailey and Love says the fissure itself needs no
-      specific attention.<cite class="src bl">B&amp;L 80 &middot; p.1428</cite></p>
+      specific attention.​<cite class="src bl">B&amp;L 80 &middot; p.1428</cite></p>
     </details>
 
     <details>
@@ -2210,7 +2222,7 @@ body.guide { margin: 0; -webkit-text-size-adjust: 100%; }
       <p class="ans">Healing around 85%, but altered continence in a significant minority: about 9%
       flatus incontinence, 6% soiling, under 1% incontinence to solid stool. Early complications are
       haemorrhage, haematoma, bruising, perianal abscess and
-      fistula.<cite class="src bl">B&amp;L 80 &middot; p.1429</cite></p>
+      fistula.​<cite class="src bl">B&amp;L 80 &middot; p.1429</cite></p>
     </details>
 
     <details>
@@ -2220,7 +2232,7 @@ body.guide { margin: 0; -webkit-text-size-adjust: 100%; }
       fissure is not from hypertonia. Bailey and Love recommends a fissurectomy with an anal
       advancement flap in exactly this patient: an inverted house-shaped flap of perianal skin
       mobilised on its blood supply and advanced without tension to cover the
-      fissure.<cite class="src bl">B&amp;L 80 &middot; p.1429</cite></p>
+      fissure.​<cite class="src bl">B&amp;L 80 &middot; p.1429</cite></p>
     </details>
 
     <details>
@@ -2228,10 +2240,10 @@ body.guide { margin: 0; -webkit-text-size-adjust: 100%; }
       <p class="ans">No. It is now rarely indicated, because an uncontrolled stretch disrupts the anal
       sphincters at multiple sites with a real risk of incontinence, and Bailey and Love lists anal
       dilatation among the causes of faecal
-      incontinence.<cite class="src bl">B&amp;L 80 &middot; pp.1424, 1428</cite> SRB still describes
+      incontinence.​<cite class="src bl">B&amp;L 80 &middot; pp.1424, 1428</cite> SRB still describes
       it, manual dilatation under general anaesthesia using four fingers of each hand, Lord 1969, and
       Recamier's two-fingers-each-hand stretch from
-      1829.<cite class="src srb">SRB 25 &middot; p.968</cite> The controlled alternatives are
+      1829.​<cite class="src srb">SRB 25 &middot; p.968</cite> The controlled alternatives are
       chemical sphincterotomy and, if that fails, a lateral internal sphincterotomy.</p>
     </details>
 
@@ -2241,25 +2253,25 @@ body.guide { margin: 0; -webkit-text-size-adjust: 100%; }
       to an external opening on the perineal or buttock skin, or rarely the vagina. Most are
       idiopathic or cryptoglandular, arising from infection of an anal gland in the intersphincteric
       space through its crypt at the dentate
-      line.<cite class="src bl">B&amp;L 80 &middot; p.1436</cite><cite class="src srb">SRB 25 &middot; pp.969, 972</cite></p>
+      line.​<cite class="src bl">B&amp;L 80 &middot; p.1436</cite>​<cite class="src srb">SRB 25 &middot; pp.969, 972</cite></p>
     </details>
 
     <details>
       <summary>Why is the internal opening at the dentate line?</summary>
       <p class="ans">Because the fistula begins in an anal gland, whose duct opens into a crypt at the
       dentate line. That is also why curetting the infected gland is an essential part of the
-      operation.<cite class="src srb">SRB 25 &middot; pp.972, 975</cite></p>
+      operation.​<cite class="src srb">SRB 25 &middot; pp.972, 975</cite></p>
     </details>
 
     <details>
       <summary>Classify anal fistulae.</summary>
       <p class="ans">Park's classification, by the relation of the primary track to the external
       sphincter: intersphincteric, trans-sphincteric, suprasphincteric and
-      extrasphincteric.<cite class="src bl">B&amp;L 80 &middot; p.1436</cite> The first two account
+      extrasphincteric.​<cite class="src bl">B&amp;L 80 &middot; p.1436</cite> The first two account
       for the great majority. SRB also gives the standard classification, subcutaneous, submucous,
       low anal, high anal and pelvirectal, and the practical division into low level, opening below
       the internal ring, and high level, at or above
-      it.<cite class="src srb">SRB 25 &middot; p.972</cite></p>
+      it.​<cite class="src srb">SRB 25 &middot; p.972</cite></p>
     </details>
 
     <details>
@@ -2271,7 +2283,7 @@ body.guide { margin: 0; -webkit-text-size-adjust: 100%; }
       the majority of internal openings are midline in both the anterior and posterior planes, so
       confirm the internal opening with hydrogen peroxide or methylene blue, gentle probing under
       anaesthesia, and MRI if in
-      doubt.<cite class="src bl">B&amp;L 80 &middot; p.1437</cite><cite class="src srb">SRB 25 &middot; p.973</cite></p>
+      doubt.​<cite class="src bl">B&amp;L 80 &middot; p.1437</cite>​<cite class="src srb">SRB 25 &middot; p.973</cite></p>
     </details>
 
     <details>
@@ -2281,7 +2293,7 @@ body.guide { margin: 0; -webkit-text-size-adjust: 100%; }
       which are missed at surgery and cause persistence. Endoanal ultrasound, especially with hydrogen
       peroxide, assesses sphincter integrity and whether the fistula is simple or complex.
       Fistulography and CT are for a suspected extrasphincteric
-      fistula.<cite class="src bl">B&amp;L 80 &middot; p.1438</cite></p>
+      fistula.​<cite class="src bl">B&amp;L 80 &middot; p.1438</cite></p>
     </details>
 
     <details>
@@ -2290,7 +2302,7 @@ body.guide { margin: 0; -webkit-text-size-adjust: 100%; }
       eradicate the fistula, in that order. The determinant of function after fistulotomy is the
       amount of muscle left behind rather than the amount divided, and in a patient with normal bowel
       habit continence is usually maintained as long as about 2 cm of external sphincter is
-      retained.<cite class="src bl">B&amp;L 80 &middot; p.1439</cite></p>
+      retained.​<cite class="src bl">B&amp;L 80 &middot; p.1439</cite></p>
     </details>
 
     <details>
@@ -2299,7 +2311,7 @@ body.guide { margin: 0; -webkit-text-size-adjust: 100%; }
       slow ischaemic necrosis, dividing the muscle gradually so the cut ends scar together instead of
       springing apart, avoiding a gutter deformity and preserving sphincter function. It is a staged
       fistulotomy, can be kept for about three months, and can be replaced by a railroad technique
-      without anaesthesia.<cite class="src srb">SRB 25 &middot; p.975</cite></p>
+      without anaesthesia.​<cite class="src srb">SRB 25 &middot; p.975</cite></p>
     </details>
 
     <details>
@@ -2308,7 +2320,7 @@ body.guide { margin: 0; -webkit-text-size-adjust: 100%; }
       success; the Surgisis anal fistula plug of porcine small intestinal submucosa, around 85% in
       simple fistulae; LIFT, ligation of the intersphincteric fistula track; VAAFT, video-assisted
       anal fistula treatment; and an over-the-scope nitinol fistula
-      clip.<cite class="src srb">SRB 25 &middot; p.975</cite> All of them aim to close the internal
+      clip.​<cite class="src srb">SRB 25 &middot; p.975</cite> All of them aim to close the internal
       opening and obliterate the track without dividing muscle.</p>
     </details>
 
@@ -2316,17 +2328,17 @@ body.guide { margin: 0; -webkit-text-size-adjust: 100%; }
       <summary>Multiple fistula openings with watery discharge and no induration. What do you suspect?</summary>
       <p class="ans">Tuberculosis. SRB: tuberculous fistulae lack induration, have pale granulation
       tissue and watery discharge, and are most often
-      multiple.<cite class="src srb">SRB 25 &middot; p.974</cite> Also consider Crohn's disease,
+      multiple.​<cite class="src srb">SRB 25 &middot; p.974</cite> Also consider Crohn's disease,
       ulcerative colitis, lymphogranuloma venereum, hidradenitis suppurativa, actinomycosis and
       malignancy, so biopsy before definitive
-      treatment.<cite class="src srb">SRB 25 &middot; pp.972, 974</cite></p>
+      treatment.​<cite class="src srb">SRB 25 &middot; pp.972, 974</cite></p>
     </details>
 
     <details>
       <summary>What causes a suprasphincteric fistula?</summary>
       <p class="ans">Often the surgeon. Bailey and Love: they are often caused by excessive probing of
       an abscess cavity or fistula tract during examination under
-      anaesthesia.<cite class="src bl">B&amp;L 80 &middot; p.1437</cite> Which is why probing is done
+      anaesthesia.​<cite class="src bl">B&amp;L 80 &middot; p.1437</cite> Which is why probing is done
       gently, under anaesthesia, and never in the ward.</p>
     </details>
 
@@ -2334,7 +2346,7 @@ body.guide { margin: 0; -webkit-text-size-adjust: 100%; }
       <summary>Why might a fistula recur after apparently adequate surgery?</summary>
       <p class="ans">A missed secondary extension. That is Bailey and Love's stated reason for
       preferring MRI, whose great advantage is demonstrating extensions that are missed at surgery and
-      cause persistence.<cite class="src bl">B&amp;L 80 &middot; p.1438</cite> Other reasons are an
+      cause persistence.​<cite class="src bl">B&amp;L 80 &middot; p.1438</cite> Other reasons are an
       unrecognised specific cause such as Crohn's or tuberculosis, and failure to curette the infected
       anal gland.</p>
     </details>

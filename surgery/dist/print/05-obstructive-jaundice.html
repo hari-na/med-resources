@@ -24,6 +24,7 @@
   --ink-soft:    #5a6269;
   --rule:        #ddd8ce;
   --accent:      #005f73;
+  --on-accent:   #fff;
   --accent-soft: #e3eef0;
   --flag:        #8a5a2b;
   --flag-soft:   #f6ece0;
@@ -86,21 +87,21 @@
 
 .guide[data-theme="sepia"] {
   --paper: #f4ecd8; --ink: #433422; --ink-soft: #6f5f4a; --rule: #ddd0b4;
-  --accent: #7a4a1e; --accent-soft: #ece0c8; --flag: #8a5a2b; --flag-soft: #ece0c8;
+  --accent: #7a4a1e; --on-accent: #fff; --accent-soft: #ece0c8; --flag: #8a5a2b; --flag-soft: #ece0c8;
   --cite: #8a7b63; --mark: #f5d98a; --bl: #6a4a7a; --srb: #3f6b4a;
   color-scheme: light;
 }
 
 .guide[data-theme="dark"] {
   --paper: #15181a; --ink: #e8e6e1; --ink-soft: #a3abb2; --rule: #2e3338;
-  --accent: #6fc3d2; --accent-soft: #1b2a2e; --flag: #d9a36a; --flag-soft: #2a2119;
+  --accent: #6fc3d2; --on-accent: #0b1416; --accent-soft: #1b2a2e; --flag: #d9a36a; --flag-soft: #2a2119;
   --cite: #78828a; --mark: #4a4120; --bl: #a893dd; --srb: #6fc3a8;
   color-scheme: dark;
 }
 
 .guide[data-theme="contrast"] {
   --paper: #000000; --ink: #ffffff; --ink-soft: #d8d8d8; --rule: #6a6a6a;
-  --accent: #6fe3ff; --accent-soft: #10242b; --flag: #ffc46b; --flag-soft: #2a2008;
+  --accent: #6fe3ff; --on-accent: #000; --accent-soft: #10242b; --flag: #ffc46b; --flag-soft: #2a2008;
   --cite: #bdbdbd; --mark: #4a4a00; --bl: #d0b8ff; --srb: #7fe8c0;
   color-scheme: dark;
 }
@@ -109,7 +110,7 @@
 @media (prefers-color-scheme: dark) {
   .guide[data-theme="auto"] {
     --paper: #15181a; --ink: #e8e6e1; --ink-soft: #a3abb2; --rule: #2e3338;
-    --accent: #6fc3d2; --accent-soft: #1b2a2e; --flag: #d9a36a; --flag-soft: #2a2119;
+    --accent: #6fc3d2; --on-accent: #0b1416; --accent-soft: #1b2a2e; --flag: #d9a36a; --flag-soft: #2a2119;
     --cite: #78828a; --mark: #4a4120; --bl: #a893dd; --srb: #6fc3a8;
     color-scheme: dark;
   }
@@ -141,6 +142,7 @@ body.guide { margin: 0; -webkit-text-size-adjust: 100%; }
   font-family: var(--face-body);
   font-size: 2.1rem; font-weight: 600; line-height: 1.15;
   letter-spacing: -0.015em; text-wrap: balance; margin: 0 0 0.7rem;
+  overflow-wrap: break-word; hyphens: auto;
 }
 
 .guide .standfirst { font-size: 1.02rem; color: var(--ink-soft); margin: 0 0 1.6rem; }
@@ -311,7 +313,11 @@ body.guide { margin: 0; -webkit-text-size-adjust: 100%; }
 .guide cite.src {
   font-family: var(--face-ui); font-style: normal;
   font-size: 0.66em; font-weight: 600; letter-spacing: 0.02em;
-  color: var(--cite); white-space: nowrap;
+  color: var(--cite);
+  /* The chip stays on one line. build.py puts a zero-width space before each one,
+     which is what lets a chip that will not fit move to the next line whole
+     instead of widening the page past the phone. */
+  white-space: nowrap; max-width: 100%;
   border: 1px solid var(--rule); border-radius: 2px;
   padding: 0.05rem 0.28rem; margin-left: 0.3rem; vertical-align: 0.12em;
 }
@@ -331,7 +337,11 @@ body.guide { margin: 0; -webkit-text-size-adjust: 100%; }
   cursor: pointer; list-style: none; display: flex; gap: 0.55rem; align-items: baseline;
   padding: 0.7rem 0.9rem; font-family: var(--face-ui);
   font-size: 0.82em; line-height: 1.45; color: var(--ink);
+  flex-wrap: wrap;
 }
+/* A flex item defaults to min-width:auto and so refuses to shrink below its own
+   content width; a long source line in the summary then widened the whole page. */
+.guide details.conflict > summary > * { min-width: 0; overflow-wrap: break-word; }
 .guide details.conflict > summary::-webkit-details-marker { display: none; }
 .guide details.conflict > summary::before {
   content: "*"; color: var(--flag); font-size: 1em; font-weight: 700;
@@ -419,7 +429,7 @@ body.guide { margin: 0; -webkit-text-size-adjust: 100%; }
 @media print {
   .guide {
     --paper: #fff; --ink: #000; --ink-soft: #333; --rule: #bbb;
-    --accent: #004c5c; --accent-soft: #eef4f5; --cite: #666;
+    --accent: #004c5c; --on-accent: #fff; --accent-soft: #eef4f5; --cite: #666;
     --measure: none; --fs: 10.5pt; --lh: 1.45;
     --face-body: "Spectral", Georgia, serif;
     --face-ui: "Inter", system-ui, sans-serif;
@@ -785,7 +795,9 @@ body.guide { margin: 0; -webkit-text-size-adjust: 100%; }
   background: none; color: var(--ink, #222);
 }
 .rdr-ne-row .rdr-ok {
-  background: var(--accent, #005f73); border-color: var(--accent, #005f73); color: #fff;
+  background: var(--accent, #005f73); border-color: var(--accent, #005f73);
+  /* not #fff: the dark and high-contrast accents are pale, and white on them is 2:1 */
+  color: var(--on-accent, #fff);
 }
 .rdr-ne-row .rdr-del { color: var(--flag, #8a5a2b); }
 
@@ -991,17 +1003,17 @@ body.guide { margin: 0; -webkit-text-size-adjust: 100%; }
     <dt>Definition, in the words to use</dt>
     <dd>SRB: jaundice developing <b>due to biliary obstruction, partial or complete or
     intermittent</b>, causing a <b>conjugated
-    hyperbilirubinaemia</b>.<cite class="src srb">SRB 12 &middot; p.646</cite> It is often called
+    hyperbilirubinaemia</b>.​<cite class="src srb">SRB 12 &middot; p.646</cite> It is often called
     <b>surgical jaundice</b>, and occurs from <b>intrahepatic or extrahepatic biliary outflow
     obstruction</b>, leading to <b>cholestasis</b>, which means impaired bile flow and impaired
-    bile formation.<cite class="src srb">SRB 12 &middot; p.647</cite></dd>
+    bile formation.​<cite class="src srb">SRB 12 &middot; p.647</cite></dd>
     <dt>The numbers to quote</dt>
     <dd>Normal serum bilirubin <b>0.2 to 0.8 mg%</b>. <b>Scleral icterus becomes visible when
-    serum bilirubin exceeds 2.5 mg%.</b><cite class="src srb">SRB 12 &middot; p.646</cite> And
+    serum bilirubin exceeds 2.5 mg%.</b>​<cite class="src srb">SRB 12 &middot; p.646</cite> And
     the ceiling, which almost nobody knows: <b>in obstructive jaundice the serum bilirubin will
     not go beyond about 40 mg%</b>, because at that point the raised intrabiliary pressure,
     normally 12 to 22 cm of water, reaches about 25 cm and blocks further
-    secretion.<cite class="src srb">SRB 14 &middot; p.699</cite></dd>
+    secretion.​<cite class="src srb">SRB 14 &middot; p.699</cite></dd>
     <dt>The two questions the case is really asking</dt>
     <dd><b>Is this obstruction?</b> and <b>is it stone or tumour?</b> The answer to the second
     decides everything: a stone is removed endoscopically and the gallbladder taken out; a tumour
@@ -1011,7 +1023,7 @@ body.guide { margin: 0; -webkit-text-size-adjust: 100%; }
   <div class="pearl">
     <span class="tag">The mechanism, and why it explains every complication</span>
     SRB's chain, which is the clearest account in the three
-    books.<cite class="src srb">SRB 12 &middot; p.647</cite>
+    books.​<cite class="src srb">SRB 12 &middot; p.647</cite>
     <br><br>Bile acid secretion into the gut is impaired &rarr; <b>defective absorption of fat and
     the fat-soluble vitamins</b> &rarr; poor synthesis of prothrombin and impaired conversion of
     prothrombin to thrombin &rarr; <b>widened PT and raised INR</b>. The vitamin K-dependent
@@ -1021,18 +1033,18 @@ body.guide { margin: 0; -webkit-text-size-adjust: 100%; }
     skin; <b>D</b>, osteomalacia; <b>E</b>, peripheral neuropathy, cerebellar ataxia and posterior
     column dysfunction; <b>K</b>, bleeding. A trap worth knowing:
     <b>cholestyramine and colestipol, given for the itching, bind bile salts and can make these
-    deficiencies worse</b>.<cite class="src srb">SRB 12 &middot; p.647</cite>
+    deficiencies worse</b>.​<cite class="src srb">SRB 12 &middot; p.647</cite>
   </div>
 
   <dl class="findings">
     <dt>Why the stools are pale and the urine dark</dt>
     <dd>SRB: <b>the lack of bilirubin in the intestinal tract is responsible for the pale stools</b>
-    in biliary obstruction.<cite class="src srb">SRB 12 &middot; p.647</cite> Conjugated bilirubin
+    in biliary obstruction.​<cite class="src srb">SRB 12 &middot; p.647</cite> Conjugated bilirubin
     is water soluble, so it spills into the urine instead.</dd>
     <dt>Why the patient itches, which is honestly uncertain</dt>
     <dd>SRB is candid: <b>"the cause of itching associated with biliary obstruction is not clear;
     may be related to the accumulation of bile acids in the skin; or may be related to the release
-    of endogenous opioids"</b>.<cite class="src srb">SRB 12 &middot; p.647</cite> Saying that the
+    of endogenous opioids"</b>.​<cite class="src srb">SRB 12 &middot; p.647</cite> Saying that the
     mechanism is unsettled, and naming both hypotheses, is a better answer than confidently
     asserting bile salts.</dd>
     <dt>What unrelieved obstruction does to the liver</dt>
@@ -1040,12 +1052,12 @@ body.guide { margin: 0; -webkit-text-size-adjust: 100%; }
     dilated intrahepatic biliary radicles. Once intraductal pressure rises, bile secretion falls
     and <b>"white bile"</b> forms in the common duct. <b>Severe biliary obstruction causes cell
     damage usually within 1 month and, if unrelieved, may lead to secondary biliary
-    cirrhosis.</b><cite class="src srb">SRB 12 &middot; p.647</cite> That one-month figure is the
+    cirrhosis.</b>​<cite class="src srb">SRB 12 &middot; p.647</cite> That one-month figure is the
     answer to "how urgently must this be relieved?"</dd>
     <dt>And the systemic consequences to name</dt>
     <dd><b>Altered coagulation profile; hepatorenal syndrome and renal failure; sepsis</b>; plus
     steatorrhoea with bulky fatty faeces, and retention of bile salts and pigments in blood and
-    body fluids.<cite class="src srb">SRB 12 &middot; p.647</cite></dd>
+    body fluids.​<cite class="src srb">SRB 12 &middot; p.647</cite></dd>
   </dl>
 
   <!-- ===================== 2. CAUSES ===================== -->
@@ -1082,18 +1094,18 @@ body.guide { margin: 0; -webkit-text-size-adjust: 100%; }
     <b>Intrahepatic</b> cholestasis occurs at the level of the hepatocyte or the biliary
     canalicular membrane: viral hepatitis, drug-induced cholestasis such as <b>thiazides and
     chlorpromazine</b>, and biliary
-    cirrhosis.<cite class="src srb">SRB 12 &middot; p.647</cite>
+    cirrhosis.​<cite class="src srb">SRB 12 &middot; p.647</cite>
     <br><span class="label">Luminal, mural, extrinsic</span>Say it in that order for any
     obstruction anywhere and you will never leave a cause out.</dd>
     <dt>Which cause is commonest</dt>
     <dd>SRB: benign conditions, of which <b>biliary tree stones are the most common
-    cause</b>.<cite class="src srb">SRB 12 &middot; p.647</cite> But see the Courvoisier
+    cause</b>.​<cite class="src srb">SRB 12 &middot; p.647</cite> But see the Courvoisier
     disagreement below for how to use that at the bedside.</dd>
     <dt>And why conjugated bilirubin predominates even in liver disease</dt>
     <dd>In hepatocellular disease all three steps of bilirubin metabolism are affected, uptake,
     conjugation and excretion, but <b>excretion is the rate-limiting step and is impaired to the
     greatest extent, so conjugated bilirubin still predominates in the
-    serum</b>.<cite class="src srb">SRB 12 &middot; p.647</cite> This is why a conjugated
+    serum</b>.​<cite class="src srb">SRB 12 &middot; p.647</cite> This is why a conjugated
     hyperbilirubinaemia does not by itself prove the obstruction is surgical.</dd>
   </dl>
 
@@ -1113,11 +1125,11 @@ body.guide { margin: 0; -webkit-text-size-adjust: 100%; }
       post-radiotherapy, chronic pancreatitis, cystic fibrosis.
       <b>Type 4, segmental obstruction</b>: traumatic, sclerosing cholangitis,
       cholangiocarcinoma, intrahepatic biliary stones, that is
-      hepatolithiasis.<cite class="src srb">SRB 12 &middot; p.648</cite></dd>
+      hepatolithiasis.​<cite class="src srb">SRB 12 &middot; p.648</cite></dd>
       <dt>Bailey &amp; Love 28e</dt>
       <dd>Carries no equivalent classification of biliary obstruction. The only Benjamin in its
       biliary chapter is John <b>Benjamin</b> Murphy's middle name, in the eponym
-      footnotes.<cite class="src bl">B&amp;L 71 &middot; p.1235</cite></dd>
+      footnotes.​<cite class="src bl">B&amp;L 71 &middot; p.1235</cite></dd>
     </dl>
     <span class="ruling"><b>Not a disagreement, an asymmetry, and the practical point is to know
     which book it comes from before you cite it.</b> Benjamin's classification is an Indian
@@ -1142,7 +1154,7 @@ body.guide { margin: 0; -webkit-text-size-adjust: 100%; }
       <b>Progressive, unremitting, deepening jaundice</b> is the pattern of a <b>neoplasm</b>,
       Benjamin type 1. <b>Fluctuating or intermittent</b> jaundice is the pattern of a
       <b>stone</b> or a <b>periampullary tumour</b>, Benjamin type
-      2.<cite class="src srb">SRB 12 &middot; p.648</cite>
+      2.​<cite class="src srb">SRB 12 &middot; p.648</cite>
       <br><span class="label">Why a periampullary tumour fluctuates</span>Because it sloughs and
       bleeds, so the obstruction is relieved intermittently. A patient with waxing and waning
       jaundice and anaemia has a periampullary carcinoma until proved otherwise.
@@ -1156,18 +1168,18 @@ body.guide { margin: 0; -webkit-text-size-adjust: 100%; }
       presentation of carcinoma of the head of the pancreas. B&amp;L: jaundice <b>"draws attention
       to ampullary and pancreatic head tumours. It is characteristically painless jaundice but may
       be associated with nausea and epigastric discomfort."</b> Pruritus and dark urine accompany
-      it.<cite class="src bl">B&amp;L 72 &middot; p.1282</cite>
+      it.​<cite class="src bl">B&amp;L 72 &middot; p.1282</cite>
       <br><span class="label out">Rules in something worse</span><b>Back pain is a worrying
       symptom, raising the possibility of retroperitoneal
-      infiltration.</b><cite class="src bl">B&amp;L 72 &middot; p.1283</cite> S Das describes the
+      infiltration.</b>​<cite class="src bl">B&amp;L 72 &middot; p.1283</cite> S Das describes the
       same pain for the body and tail: <b>it passes through to the back, is aggravated on lying
       down and relieved on sitting up, so the patient spends the night sitting with his arms
-      folded across his chest</b>.<cite class="src das">Das 34 &middot; p.511</cite> That posture
+      folded across his chest</b>.​<cite class="src das">Das 34 &middot; p.511</cite> That posture
       is a sign you can see from the door.
       <br><span class="label">Rules in</span>Pain <b>with</b> jaundice, colicky, in the right
       hypochondrium, points to a <b>stone</b>, and if it followed a cholecystectomy, SRB's rule:
       <b>"If recurrence of biliary colic after cholecystectomy occurs, one should think of possible
-      choledocholithiasis."</b><cite class="src srb">SRB 12 &middot; p.647</cite>
+      choledocholithiasis."</b>​<cite class="src srb">SRB 12 &middot; p.647</cite>
     </span>
   </div>
 
@@ -1176,16 +1188,16 @@ body.guide { margin: 0; -webkit-text-size-adjust: 100%; }
     <span class="why">
       <span class="label">Rules in</span><b>Cholangitis</b>, and this converts the case into an
       emergency. B&amp;L: symptomatic patients with cholangitis have <b>bouts of pain, jaundice and
-      fever, Charcot's triad</b>.<cite class="src bl">B&amp;L 71 &middot; p.1253</cite>
+      fever, Charcot's triad</b>.​<cite class="src bl">B&amp;L 71 &middot; p.1253</cite>
       <br><span class="label">Mechanism, worth reciting</span>SRB's chain: <b>bile flow stasis
       &rarr; colonisation and multiplication of organisms &rarr; increased intraductal pressure
       &rarr; reflux of biliary contents &rarr; bacteraemia, septicaemia, septic
-      shock</b>.<cite class="src srb">SRB 12 &middot; p.647</cite> Normally <b>bile is
+      shock</b>.​<cite class="src srb">SRB 12 &middot; p.647</cite> Normally <b>bile is
       sterile</b>; symptomatic gallstone disease shows positive cultures, commonest <b>E. coli and
-      Klebsiella</b>.<cite class="src srb">SRB 12 &middot; p.625</cite>
+      Klebsiella</b>.​<cite class="src srb">SRB 12 &middot; p.625</cite>
       <br><span class="label">And where it most often happens</span>SRB: acute cholangitis is
       <b>most commonly seen in stricture, most often at the level of the
-      CBD</b>.<cite class="src srb">SRB 12 &middot; p.647</cite>
+      CBD</b>.​<cite class="src srb">SRB 12 &middot; p.647</cite>
     </span>
   </div>
 
@@ -1195,7 +1207,7 @@ body.guide { margin: 0; -webkit-text-size-adjust: 100%; }
       <span class="label">Rules in</span><b>Pale stools and dark urine</b> confirm cholestasis.
       Add <b>steatorrhoea</b>: SRB lists <b>more fatty stool</b> among the clinical features, from
       absence of bile impairing fat
-      absorption.<cite class="src srb">SRB 12 &middot; p.647, p.648</cite>
+      absorption.​<cite class="src srb">SRB 12 &middot; p.647, p.648</cite>
       <br><span class="label">Distinguishes</span>Stools that are <b>intermittently</b> pale fit
       an intermittent obstruction. Stools that are <b>persistently</b> clay-coloured fit a
       complete, that is neoplastic, obstruction.
@@ -1208,18 +1220,18 @@ body.guide { margin: 0; -webkit-text-size-adjust: 100%; }
     <span class="ask">Do you itch? Where worst? Any bleeding, bruising or bleeding gums?</span>
     <span class="why">
       <span class="label">Rules in</span>SRB: <b>pruritus, more on the back and
-      forearms</b>.<cite class="src srb">SRB 12 &middot; p.648</cite> It is often what brings the
+      forearms</b>.​<cite class="src srb">SRB 12 &middot; p.648</cite> It is often what brings the
       patient in, and B&amp;L treats <b>distressing pruritus</b> in a deeply jaundiced patient as
-      an indication to stent before surgery.<cite class="src bl">B&amp;L 72 &middot; p.1283</cite>
+      an indication to stent before surgery.​<cite class="src bl">B&amp;L 72 &middot; p.1283</cite>
       <br><span class="label">Rules in</span><b>Bleeding tendency</b> from vitamin K
       malabsorption, which is the thing that will kill him on the operating table if you miss it.
       Persistent cholestasis also deposits cholesterol in skin as <b>cutaneous
       xanthomatosis</b>, occasionally in bones and peripheral
-      nerves.<cite class="src srb">SRB 12 &middot; p.647</cite>
+      nerves.​<cite class="src srb">SRB 12 &middot; p.647</cite>
       <br><span class="label">So</span>Check and correct the <b>prothrombin time</b> before any
       intervention. B&amp;L: <b>"The prothrombin time should be checked, and clotting abnormalities
       should be corrected with vitamin K or fresh-frozen plasma prior to
-      ERCP."</b><cite class="src bl">B&amp;L 72 &middot; p.1283</cite> Before ERCP, not just before
+      ERCP."</b>​<cite class="src bl">B&amp;L 72 &middot; p.1283</cite> Before ERCP, not just before
       surgery.
     </span>
   </div>
@@ -1229,7 +1241,7 @@ body.guide { margin: 0; -webkit-text-size-adjust: 100%; }
     <span class="why">
       <span class="label">Rules in</span>Malignancy. On examination B&amp;L expects <b>jaundice,
       weight loss, a palpable liver and a palpable
-      gallbladder</b>.<cite class="src bl">B&amp;L 72 &middot; p.1283</cite>
+      gallbladder</b>.​<cite class="src bl">B&amp;L 72 &middot; p.1283</cite>
       <br><span class="label out">But</span>Weight loss also occurs with chronic pancreatitis and
       with prolonged cholestasis and steatorrhoea, so it is suggestive, not diagnostic. The
       combination that matters is <b>painless progressive jaundice plus weight loss plus a palpable
@@ -1243,13 +1255,13 @@ body.guide { margin: 0; -webkit-text-size-adjust: 100%; }
       <span class="label">Why</span>To separate surgical from medical jaundice before you commit to
       the surgical pathway. Intrahepatic cholestasis from <b>viral hepatitis</b> or drugs such as
       <b>thiazides and chlorpromazine</b> produces the same conjugated picture and must not be
-      operated on.<cite class="src srb">SRB 12 &middot; p.647</cite>
+      operated on.​<cite class="src srb">SRB 12 &middot; p.647</cite>
       <br><span class="label">Rules in</span>A post-cholecystectomy patient with jaundice has an
       <b>iatrogenic stricture</b> or a <b>retained stone</b> until proved otherwise; SRB lists
       iatrogenic CBD ligation as Benjamin type 1 and post-surgical stricture as type
-      3.<cite class="src srb">SRB 12 &middot; p.648</cite> And B&amp;L lists a
+      3.​<cite class="src srb">SRB 12 &middot; p.648</cite> And B&amp;L lists a
       <b>biliary-enteric anastomosis</b> among the risk factors for
-      cholangiocarcinoma.<cite class="src bl">B&amp;L 71 &middot; p.1256</cite>
+      cholangiocarcinoma.​<cite class="src bl">B&amp;L 71 &middot; p.1256</cite>
     </span>
   </div>
 
@@ -1258,15 +1270,15 @@ body.guide { margin: 0; -webkit-text-size-adjust: 100%; }
     <span class="why">
       <span class="label">Rules in</span>Causes the British text barely covers and an Indian
       examiner expects. SRB's luminal causes include <b>ascariasis, Clonorchis sinensis and
-      schistosomiasis</b>,<cite class="src srb">SRB 12 &middot; p.647</cite> and its figure of the
+      schistosomiasis</b>,​<cite class="src srb">SRB 12 &middot; p.647</cite> and its figure of the
       causes of obstructive jaundice shows a <b>roundworm in the common bile
-      duct</b>.<cite class="src srb">SRB 12 &middot; p.647</cite>
+      duct</b>.​<cite class="src srb">SRB 12 &middot; p.647</cite>
       <br><span class="label">And the malignant sequel</span>B&amp;L's risk factors for
       cholangiocarcinoma include the <b>parasitic infections Opisthorchis viverrini and
       C. sinensis</b>, and <b>Oriental cholangiohepatitis</b> among the chronic inflammatory
-      conditions.<cite class="src bl">B&amp;L 71 &middot; p.1256</cite> S Das lists Oriental
+      conditions.​<cite class="src bl">B&amp;L 71 &middot; p.1256</cite> S Das lists Oriental
       cholangiohepatitis as an exception to Courvoisier's
-      law.<cite class="src das">Das 34 &middot; p.491</cite> So the same disease appears in all
+      law.​<cite class="src das">Das 34 &middot; p.491</cite> So the same disease appears in all
       three books, under three headings.
     </span>
   </div>
@@ -1285,7 +1297,7 @@ body.guide { margin: 0; -webkit-text-size-adjust: 100%; }
       <dt>What Courvoisier wrote in 1890, quoted by SRB</dt>
       <dd>"...the gallbladder is rarely observed; the organ has already undergone contraction;
       <b>with obstruction from other causes, dilatation is to be
-      expected</b>."<cite class="src srb">SRB 12 &middot; p.631</cite> Note what this is: an
+      expected</b>."​<cite class="src srb">SRB 12 &middot; p.631</cite> Note what this is: an
       observation about <b>stone versus not-stone</b>, framed around the <b>state of the
       gallbladder wall</b>. It says nothing about cancer.</dd>
       <dt>SRB's statement of the law, and its exceptions</dt>
@@ -1297,32 +1309,32 @@ body.guide { margin: 0; -webkit-text-size-adjust: 100%; }
       dull, moving with respiration and with horizontal mobility</b>.
       <b>Exceptions: double impacted stone, one in the CBD and one in the cystic duct, with
       mucocele; a large stone in Hartmann's pouch; empyema of the gallbladder with a CBD
-      stone.</b><cite class="src srb">SRB 12 &middot; p.646</cite></dd>
+      stone.</b>​<cite class="src srb">SRB 12 &middot; p.646</cite></dd>
       <dt>S Das's statement, and a different exception list</dt>
       <dd>In jaundice due to a calculus in the common bile duct the gallbladder is <b>usually not
       distended owing to previous inflammatory fibrosis</b>, whereas in obstruction due to growth,
       such as carcinoma of the head of the pancreas, <b>the gallbladder becomes distended in an
       attempt to reduce the pressure in the biliary
-      system</b>.<cite class="src das">Das 34 &middot; p.492</cite>
+      system</b>.​<cite class="src das">Das 34 &middot; p.492</cite>
       <b>Exceptions: (i) double impaction of stones, one in the cystic duct and one in the CBD;
       (ii) Oriental cholangiohepatitis; (iii) a pancreatic calculus obstructing the ampulla of
       Vater; (iv) mucocele of the gallbladder due to a stone in the cystic
-      duct.</b><cite class="src das">Das 34 &middot; p.491</cite> Only the double impaction
+      duct.</b>​<cite class="src das">Das 34 &middot; p.491</cite> Only the double impaction
       appears on both lists.</dd>
       <dt>Bailey &amp; Love 28e, chapter 71</dt>
       <dd>States the law in the negative form: <b>"a palpable gallbladder in the presence of
       jaundice is unlikely to be due to gallstones (Courvoisier) and usually results from a distal
       common duct obstruction secondary to periampullary
-      malignancy"</b>.<cite class="src bl">B&amp;L 71 &middot; p.1244</cite> It gives <b>no
+      malignancy"</b>.​<cite class="src bl">B&amp;L 71 &middot; p.1244</cite> It gives <b>no
       exceptions at all</b>, and its eponym footnote adds a historical correction: Courvoisier
       <b>"made his observation in 1890. No mention was made of either gallbladder tenderness or
-      malignancy."</b><cite class="src bl">B&amp;L 71 &middot; p.1244</cite></dd>
+      malignancy."</b>​<cite class="src bl">B&amp;L 71 &middot; p.1244</cite></dd>
       <dt>Bailey &amp; Love 28e, chapter 72, which says the opposite about the history</dt>
       <dd><b>"Courvoisier first drew attention to the association of an enlarged gallbladder and a
       pancreatic tumour in 1890, when he noted that, when the common duct is obstructed by a stone,
       distension of the gallbladder (which is likely to be chronically inflamed) is rare; when the
       duct is obstructed in some other way, such as a neoplasm, distension of the normal
-      gallbladder is common."</b><cite class="src bl">B&amp;L 72 &middot; p.1283</cite> So chapter
+      gallbladder is common."</b>​<cite class="src bl">B&amp;L 72 &middot; p.1283</cite> So chapter
       71 says he made no mention of malignancy and chapter 72 says he first drew attention to the
       association with a pancreatic tumour and quotes him using the word neoplasm.</dd>
     </dl>
@@ -1340,7 +1352,7 @@ body.guide { margin: 0; -webkit-text-size-adjust: 100%; }
     genuinely differ. If you must memorise one combined list: <b>double impaction with mucocele;
     a large stone in Hartmann's pouch; empyema of the gallbladder with a CBD stone; Oriental
     cholangiohepatitis; and a pancreatic calculus obstructing the
-    ampulla</b>.<cite class="src srb">SRB 12 &middot; p.646</cite><cite class="src das">Das 34 &middot; p.491</cite>
+    ampulla</b>.​<cite class="src srb">SRB 12 &middot; p.646</cite>​<cite class="src das">Das 34 &middot; p.491</cite>
     <br><br><b>On the history</b>, if an examiner says Courvoisier never mentioned malignancy, he
     is quoting Bailey &amp; Love chapter 71; if another says Courvoisier first described the
     association with pancreatic tumour, he is quoting chapter 72 of the same book. Both are in
@@ -1356,21 +1368,21 @@ body.guide { margin: 0; -webkit-text-size-adjust: 100%; }
     <dt>Depth and character of the jaundice</dt>
     <dd>Look in daylight. <b>Scleral icterus appears above 2.5 mg%</b>; a deep greenish-yellow
     tinge suggests long-standing obstruction rather than
-    haemolysis.<cite class="src srb">SRB 12 &middot; p.646</cite></dd>
+    haemolysis.​<cite class="src srb">SRB 12 &middot; p.646</cite></dd>
     <dt>Scratch marks</dt>
     <dd>Over the <b>back and forearms</b>, where SRB says the pruritus is
-    worst.<cite class="src srb">SRB 12 &middot; p.648</cite> Free evidence of chronicity, and a
+    worst.​<cite class="src srb">SRB 12 &middot; p.648</cite> Free evidence of chronicity, and a
     sign you can report before touching the abdomen.</dd>
     <dt>Bruising, petechiae, bleeding gums</dt>
     <dd>The clinical face of the prolonged prothrombin time.</dd>
     <dt>Xanthomas</dt>
     <dd>Cutaneous cholesterol deposits in persistent
-    cholestasis.<cite class="src srb">SRB 12 &middot; p.647</cite></dd>
+    cholestasis.​<cite class="src srb">SRB 12 &middot; p.647</cite></dd>
     <dt>Nutritional state, and hydration</dt>
     <dd>SRB makes dehydration a specific preoperative concern: <b>"Dehydration is common in
     obstructive jaundice"</b>, and the liver's <b>glycogen reserve will be inadequate</b> and needs
     replenishing with preoperative glucose, orally or
-    intravenously.<cite class="src srb">SRB 14 &middot; p.698</cite></dd>
+    intravenously.​<cite class="src srb">SRB 14 &middot; p.698</cite></dd>
     <dt>Signs of chronic liver disease, to exclude a medical cause</dt>
     <dd>Spider naevi, palmar erythema, gynaecomastia, testicular atrophy, caput medusae,
     splenomegaly, asterixis. Their presence shifts you towards hepatocellular disease or
@@ -1384,35 +1396,35 @@ body.guide { margin: 0; -webkit-text-size-adjust: 100%; }
     <dd>Feel specifically for it, below the right costal margin lateral to the rectus edge. SRB's
     description of the malignant gallbladder is the one to reproduce: <b>non-tender, globular,
     smooth, soft, dull, moving with respiration, with horizontal
-    mobility</b>.<cite class="src srb">SRB 12 &middot; p.646</cite>
+    mobility</b>.​<cite class="src srb">SRB 12 &middot; p.646</cite>
     <br><span class="label">And the distinction from everything else</span><b>Horizontal mobility
     and movement with respiration</b> are what separate a distended gallbladder from a renal or a
     hepatic mass.</dd>
     <dt>2. The liver</dt>
     <dd>Enlarged and smooth in obstruction, from hydrohepatosis and bile
-    stasis.<cite class="src srb">SRB 12 &middot; p.647</cite> <b>Hard and nodular</b> means
+    stasis.​<cite class="src srb">SRB 12 &middot; p.647</cite> <b>Hard and nodular</b> means
     secondaries. S Das, on carcinoma head of pancreas: <b>"the liver may be
-    enlarged"</b>.<cite class="src das">Das 34 &middot; p.511</cite></dd>
+    enlarged"</b>.​<cite class="src das">Das 34 &middot; p.511</cite></dd>
     <dt>3. A mass, and the honest caveat about it</dt>
     <dd>S Das, on carcinoma of the head of the pancreas: <b>"The tumour is seldom
-    palpable."</b><cite class="src das">Das 34 &middot; p.511</cite> So the absence of a palpable
+    palpable."</b>​<cite class="src das">Das 34 &middot; p.511</cite> So the absence of a palpable
     mass tells you nothing, and candidates who report "no mass, therefore benign" are making an
     error the book warns against.</dd>
     <dt>4. Ascites</dt>
     <dd>S Das: in carcinoma of the head of the pancreas, <b>ascites may be present only in the
-    late cases</b>.<cite class="src das">Das 34 &middot; p.511</cite> Elicit shifting dullness
+    late cases</b>.​<cite class="src das">Das 34 &middot; p.511</cite> Elicit shifting dullness
     starting in the midline and percussing to the flank, keeping the finger in place while the
     patient turns, and waiting a minute for the fluid to
-    move.<cite class="src das">Das 34 &middot; p.489</cite></dd>
+    move.​<cite class="src das">Das 34 &middot; p.489</cite></dd>
     <dt>5. The signs of incurability, which B&amp;L tells you to seek deliberately</dt>
     <dd><b>"Other signs of intra-abdominal malignancy should be looked for with care, such as a
     palpable mass, ascites, supraclavicular nodes and tumour deposits in the pelvis; when present,
-    they indicate a grim prognosis."</b><cite class="src bl">B&amp;L 72 &middot; p.1283</cite> So
+    they indicate a grim prognosis."</b>​<cite class="src bl">B&amp;L 72 &middot; p.1283</cite> So
     palpate the left supraclavicular fossa and do a rectal examination. Both are free and both
     change the plan from resection to palliation.</dd>
     <dt>6. Migrating thrombophlebitis</dt>
     <dd>S Das: <b>thrombophlebitis migrans may be an indication of the presence of pancreatic
-    carcinoma</b>.<cite class="src das">Das 34 &middot; p.511</cite> The same Trousseau's sign that
+    carcinoma</b>.​<cite class="src das">Das 34 &middot; p.511</cite> The same Trousseau's sign that
     appears in gastric cancer, and in fact Trousseau's own case proved to be pancreatic at
     post-mortem.</dd>
   </dl>
@@ -1427,17 +1439,17 @@ body.guide { margin: 0; -webkit-text-size-adjust: 100%; }
       <dt>Bailey &amp; Love 28e</dt>
       <dd>Gives <b>Charcot's triad</b>: symptomatic patients with cholangitis have <b>bouts of
       pain, jaundice and fever</b>. Signs are <b>febrile and icteric, with tenderness elicitable in
-      the epigastrium</b>.<cite class="src bl">B&amp;L 71 &middot; p.1253</cite>
+      the epigastrium</b>.​<cite class="src bl">B&amp;L 71 &middot; p.1253</cite>
       <b>Reynolds' pentad does not appear anywhere in the chapter.</b> Where it does use a formal
       severity framework for biliary sepsis it is the <b>Tokyo Consensus Guidelines</b>, which it
       prints as diagnostic criteria for acute
-      cholecystitis.<cite class="src bl">B&amp;L 71 &middot; p.1244</cite></dd>
+      cholecystitis.​<cite class="src bl">B&amp;L 71 &middot; p.1244</cite></dd>
       <dt>SRB</dt>
       <dd>Carries both. It lists <b>Charcot's triad and Reynolds' pentad as presentations of
-      cholangitis</b>,<cite class="src srb">SRB 12 &middot; p.648</cite> and defines the pentad as
+      cholangitis</b>,​<cite class="src srb">SRB 12 &middot; p.648</cite> and defines the pentad as
       belonging to <b>acute obstructive cholangitis, that is suppurative cholangitis, which it puts
       at 5%</b>, on a chain of obstruction &rarr; stasis &rarr; jaundice, pain, infection,
-      bacteraemia and fever.<cite class="src srb">SRB 12 &middot; p.643</cite></dd>
+      bacteraemia and fever.​<cite class="src srb">SRB 12 &middot; p.643</cite></dd>
     </dl>
     <span class="ruling"><b>Live asymmetry, and the Indian eponym is the more useful one at the
     bedside, so lead with it and know where it comes from.</b> Answer: <b>"Charcot's triad is pain,
@@ -1447,7 +1459,7 @@ body.guide { margin: 0; -webkit-text-size-adjust: 100%; }
     is an indication for <b>urgent decompression</b> rather than for more imaging. Attribute the
     pentad to SRB, since Bailey &amp; Love does not carry it, and if asked for a grading system
     from the British literature, the one in B&amp;L 28e is the <b>Tokyo Consensus
-    Guidelines</b>.<cite class="src bl">B&amp;L 71 &middot; p.1244</cite></span>
+    Guidelines</b>.​<cite class="src bl">B&amp;L 71 &middot; p.1244</cite></span>
     </div>
   </details>
 
@@ -1461,7 +1473,7 @@ body.guide { margin: 0; -webkit-text-size-adjust: 100%; }
     Ultrasonography will determine if the bile duct is dilated. If it is, and there is a genuine
     suspicion of a tumour in the head of the pancreas, the preferred test is a contrast-enhanced CT
     scan. In the majority of instances, this should establish if there is a tumour in the pancreas
-    and if it is resectable."</b><cite class="src bl">B&amp;L 72 &middot; p.1283</cite>
+    and if it is resectable."</b>​<cite class="src bl">B&amp;L 72 &middot; p.1283</cite>
     <br><br>Bloods, then ultrasound, then cross-sectional imaging. Say it in that order and you
     have given the whole algorithm in three sentences.
   </div>
@@ -1473,25 +1485,25 @@ body.guide { margin: 0; -webkit-text-size-adjust: 100%; }
     <dd>A <b>conjugated</b> hyperbilirubinaemia with a disproportionately raised <b>alkaline
     phosphatase</b> and <b>gamma-GT</b> is the cholestatic pattern; B&amp;L lists exactly
     <b>elevated bilirubin, ALP and GGT</b> as the biochemical findings in
-    cholangiocarcinoma.<cite class="src bl">B&amp;L 71 &middot; p.1256</cite> SRB's threshold:
+    cholangiocarcinoma.​<cite class="src bl">B&amp;L 71 &middot; p.1256</cite> SRB's threshold:
     <b>direct bilirubin above a defined fraction of the total</b> marks it as
-    conjugated.<cite class="src srb">SRB 12 &middot; p.646</cite></dd>
+    conjugated.​<cite class="src srb">SRB 12 &middot; p.646</cite></dd>
     <dt>Prothrombin time and INR: the test that must not wait</dt>
     <dd>Because vitamin K malabsorption prolongs it and <b>it must be corrected before ERCP as well
     as before surgery</b>, with <b>vitamin K or fresh-frozen
-    plasma</b>.<cite class="src bl">B&amp;L 72 &middot; p.1283</cite> SRB names the dependent
+    plasma</b>.​<cite class="src bl">B&amp;L 72 &middot; p.1283</cite> SRB names the dependent
     factors, <b>II, VII, IX and X</b>, and notes PT reflects the <b>extrinsic</b>
-    pathway.<cite class="src srb">SRB 12 &middot; p.647</cite></dd>
+    pathway.​<cite class="src srb">SRB 12 &middot; p.647</cite></dd>
     <dt>Renal function</dt>
     <dd>Because <b>hepatorenal syndrome and renal failure</b> are listed consequences of
-    obstructive jaundice,<cite class="src srb">SRB 12 &middot; p.647</cite> and because
+    obstructive jaundice,​<cite class="src srb">SRB 12 &middot; p.647</cite> and because
     dehydration is common and must be corrected before
-    operating.<cite class="src srb">SRB 14 &middot; p.698</cite></dd>
+    operating.​<cite class="src srb">SRB 14 &middot; p.698</cite></dd>
     <dt>Urinary urobilinogen, which only one book teaches</dt>
     <dd>SRB: bilirubin secreted in bile is converted by gut bacteria to <b>urobilinogen</b>, most
     of which is reabsorbed and recirculated with a fraction excreted in urine, so <b>"absence of
     urobilinogen in the urine signifies obstructive
-    jaundice"</b>.<cite class="src srb">SRB 12 &middot; p.624, p.625</cite>
+    jaundice"</b>.​<cite class="src srb">SRB 12 &middot; p.624, p.625</cite>
     <b>Neither Bailey &amp; Love ch.71 nor S Das ch.34 mentions urobilinogen at all.</b> It is a
     sound test of <b>complete</b> obstruction and a reasonable thing to offer, but attribute it to
     SRB and remember that in a partial or intermittent obstruction urobilinogen will still be
@@ -1499,7 +1511,7 @@ body.guide { margin: 0; -webkit-text-size-adjust: 100%; }
     <dt>CA19-9, with its limits stated</dt>
     <dd>B&amp;L: <b>"not highly specific or sensitive, but a baseline level should be established;
     if it is initially raised, it can be useful later in identifying
-    recurrence"</b>.<cite class="src bl">B&amp;L 72 &middot; p.1283</cite> So it is a follow-up
+    recurrence"</b>.​<cite class="src bl">B&amp;L 72 &middot; p.1283</cite> So it is a follow-up
     marker, not a diagnostic test, and saying that is better than reciting a cut-off.</dd>
   </dl>
 
@@ -1509,20 +1521,20 @@ body.guide { margin: 0; -webkit-text-size-adjust: 100%; }
     <dt>1. Ultrasound: first, always</dt>
     <dd>B&amp;L: in a patient with obstructive jaundice ultrasound can identify <b>intra- and
     extrahepatic biliary dilatation, the level of the obstruction</b>, and stones within the
-    extrahepatic biliary tree.<cite class="src bl">B&amp;L 71 &middot; p.1235</cite> It answers
+    extrahepatic biliary tree.​<cite class="src bl">B&amp;L 71 &middot; p.1235</cite> It answers
     the first question, is this obstruction, and begins to answer the second, where.</dd>
     <dt>2. MRCP: the non-invasive map</dt>
     <dd><b>"A non-invasive modality that provides excellent images of the gallbladder and"</b> the
     ducts, with results <b>comparable to those obtained at ERCP or percutaneous transhepatic
-    cholangiography</b>.<cite class="src bl">B&amp;L 71 &middot; p.1236</cite> B&amp;L's own
+    cholangiography</b>.​<cite class="src bl">B&amp;L 71 &middot; p.1236</cite> B&amp;L's own
     summary of what each modality adds: <b>USG for stones and biliary dilatation; MRCP for anatomy
     and stones; CT for anatomy and for liver, biliary and pancreatic
-    cancer</b>.<cite class="src bl">B&amp;L 71 &middot; p.1238</cite></dd>
+    cancer</b>.​<cite class="src bl">B&amp;L 71 &middot; p.1238</cite></dd>
     <dt>3. Contrast-enhanced CT: for the tumour and for resectability</dt>
     <dd>The preferred test once ultrasound shows a dilated duct and a pancreatic head tumour is
-    suspected.<cite class="src bl">B&amp;L 72 &middot; p.1283</cite> SRB's equivalent: <b>spiral
+    suspected.​<cite class="src bl">B&amp;L 72 &middot; p.1283</cite> SRB's equivalent: <b>spiral
     or three-dimensional CT is ideal, to detect operability, portal vein invasion, size and
-    extent</b>.<cite class="src srb">SRB 14 &middot; p.699</cite></dd>
+    extent</b>.​<cite class="src srb">SRB 14 &middot; p.699</cite></dd>
     <dt>4. Endoscopic ultrasound, for the four situations it is better at</dt>
     <dd>When <b>CT fails to demonstrate a tumour</b>; when a <b>tissue diagnosis is needed before
     surgery</b>, for instance to distinguish inflammation from neoplasia in a mass arising on
@@ -1530,23 +1542,23 @@ body.guide { margin: 0; -webkit-text-size-adjust: 100%; }
     cystic tumours from pseudocysts</b>. And the reason to prefer its biopsy route:
     <b>transduodenal or transgastric fine-needle or Trucut biopsy under endoscopic ultrasound
     guidance avoids spillage of tumour cells into the peritoneal
-    cavity</b>.<cite class="src bl">B&amp;L 72 &middot; p.1283</cite></dd>
+    cavity</b>.​<cite class="src bl">B&amp;L 72 &middot; p.1283</cite></dd>
     <dt>5. The double duct sign</dt>
     <dd>Concurrent narrowing of <b>both</b> the bile duct and the main pancreatic duct, which is
     the cholangiographic signature of a tumour at the head of the
-    pancreas.<cite class="src bl">B&amp;L 72 &middot; p.1265</cite></dd>
+    pancreas.​<cite class="src bl">B&amp;L 72 &middot; p.1265</cite></dd>
     <dt>6. Percutaneous transhepatic cholangiography</dt>
     <dd>B&amp;L: its main indication is <b>to drain intrahepatic ducts when strictures cannot be
     accessed at ERCP</b>, undertaken <b>after confirming normal coagulation parameters</b> and
-    under antibiotic cover.<cite class="src bl">B&amp;L 71 &middot; p.1238</cite> SRB agrees: done
+    under antibiotic cover.​<cite class="src bl">B&amp;L 71 &middot; p.1238</cite> SRB agrees: done
     in <b>severe obstructive jaundice under cover of antibiotics and after controlling any
-    bleeding tendency</b>.<cite class="src srb">SRB 12 &middot; p.625</cite></dd>
+    bleeding tendency</b>.​<cite class="src srb">SRB 12 &middot; p.625</cite></dd>
     <dt>7. Staging the rest of the patient</dt>
     <dd>CT chest and <b>FDG-PET are routinely used to complete the staging</b>. And
     <b>diagnostic laparoscopy before an attempted resection can spare a proportion of patients an
     unnecessary laparotomy by identifying small peritoneal and liver metastases</b>, and can be
     combined with laparoscopic
-    ultrasonography.<cite class="src bl">B&amp;L 72 &middot; p.1283</cite></dd>
+    ultrasonography.​<cite class="src bl">B&amp;L 72 &middot; p.1283</cite></dd>
   </dl>
 
   <details open class="conflict">
@@ -1559,16 +1571,16 @@ body.guide { margin: 0; -webkit-text-size-adjust: 100%; }
       <dt>Bailey &amp; Love 28e</dt>
       <dd>Unambiguous: <b>"This technique is now used only as a therapeutic modality in patients
       with obstructive jaundice; USG and MRCP have taken over the diagnostic
-      aspect."</b><cite class="src bl">B&amp;L 71 &middot; p.1237</cite> Its indications for ERCP
+      aspect."</b>​<cite class="src bl">B&amp;L 71 &middot; p.1237</cite> Its indications for ERCP
       in a jaundiced patient are therapeutic or problem-solving: <b>if there is any suggestion of
       cholangitis, if there is diagnostic doubt, or if there is likely to be a delay between
       diagnosis and surgery in a deeply jaundiced patient with distressing
-      pruritus</b>.<cite class="src bl">B&amp;L 72 &middot; p.1283</cite></dd>
+      pruritus</b>.​<cite class="src bl">B&amp;L 72 &middot; p.1283</cite></dd>
       <dt>SRB</dt>
       <dd>Retains ERCP within the investigative armoury of biliary disease and describes its
       diagnostic and interventional uses together, including sphincterotomy, stone extraction with
       a Dormia basket, stenting and stricture
-      dilatation.<cite class="src srb">SRB 12 &middot; p.623</cite><cite class="src srb">SRB 14 &middot; p.690</cite></dd>
+      dilatation.​<cite class="src srb">SRB 12 &middot; p.623</cite>​<cite class="src srb">SRB 14 &middot; p.690</cite></dd>
     </dl>
     <span class="ruling"><b>Both are right about their own context, and the resolution is a rule
     about sequence rather than a choice of test.</b> Answer: <b>"I would not use ERCP to make the
@@ -1576,7 +1588,7 @@ body.guide { margin: 0; -webkit-text-size-adjust: 100%; }
     tumour and its resectability. I would use ERCP when I intend to do something at the same
     sitting: extract a stone, brush or biopsy a stricture, or stent a duct, and specifically if
     there is cholangitis, diagnostic doubt after non-invasive imaging, or distressing pruritus with
-    a delay before surgery."</b><cite class="src bl">B&amp;L 71 &middot; p.1237</cite><cite class="src bl">B&amp;L 72 &middot; p.1283</cite>
+    a delay before surgery."</b>​<cite class="src bl">B&amp;L 71 &middot; p.1237</cite>​<cite class="src bl">B&amp;L 72 &middot; p.1283</cite>
     Then add the safety point, which is the mark: <b>correct the prothrombin time before ERCP, not
     just before the operation</b>, and give antibiotic cover. The reason ERCP has retreated to a
     therapeutic role is that it carries the risks of pancreatitis, bleeding, perforation and
@@ -1594,22 +1606,22 @@ body.guide { margin: 0; -webkit-text-size-adjust: 100%; }
   <dl class="findings">
     <dt>Correct the coagulopathy</dt>
     <dd><b>Vitamin K or fresh-frozen plasma</b>, guided by the prothrombin time, <b>before any
-    intervention including ERCP</b>.<cite class="src bl">B&amp;L 72 &middot; p.1283</cite></dd>
+    intervention including ERCP</b>.​<cite class="src bl">B&amp;L 72 &middot; p.1283</cite></dd>
     <dt>Rehydrate, and protect the kidneys</dt>
     <dd>SRB: <b>adequate hydration is important in preventing postoperative dehydration, which is
     common in obstructive jaundice</b>; and the inadequate hepatic glycogen reserve should be
-    replenished with preoperative glucose.<cite class="src srb">SRB 14 &middot; p.698</cite></dd>
+    replenished with preoperative glucose.​<cite class="src srb">SRB 14 &middot; p.698</cite></dd>
     <dt>Antibiotics, and nutrition</dt>
     <dd>SRB: antibiotics from the day before surgery, <b>cephalosporins or aminoglycosides</b>;
     <b>total parenteral nutrition often required preoperatively and continued
     postoperatively</b>; pulmonary function assessment and respiratory physiotherapy. And a
     specific negative: <b>"Preoperative albumin therapy is usually not
-    done."</b><cite class="src srb">SRB 14 &middot; p.699</cite></dd>
+    done."</b>​<cite class="src srb">SRB 14 &middot; p.699</cite></dd>
     <dt>Treat cholangitis as an emergency</dt>
     <dd>Antibiotics and <b>drainage</b>, endoscopic or percutaneous. B&amp;L's general principle
     for biliary obstruction with infection: <b>cholangitis or jaundice are treated with appropriate
     antibiotic therapy and endoscopic or interventional
-    drainage</b>.<cite class="src bl">B&amp;L 71 &middot; p.1242</cite> Reynolds' pentad means the
+    drainage</b>.​<cite class="src bl">B&amp;L 71 &middot; p.1242</cite> Reynolds' pentad means the
     duct is drained now, not investigated further.</dd>
   </dl>
 
@@ -1627,12 +1639,12 @@ body.guide { margin: 0; -webkit-text-size-adjust: 100%; }
       diagnostic doubt, or a delay before surgery in a deeply jaundiced patient with distressing
       pruritus</b>. And a technical rider: if a stent is placed in a patient who may undergo
       resection, <b>use a plastic stent or a covered metal stent, because these can be easily
-      removed during surgery</b>.<cite class="src bl">B&amp;L 72 &middot; p.1283</cite></dd>
+      removed during surgery</b>.​<cite class="src bl">B&amp;L 72 &middot; p.1283</cite></dd>
       <dt>Bailey &amp; Love 28e, for hilar tumours requiring liver resection</dt>
       <dd>The opposite advice, with a threshold: <b>patients undergoing anticipated major liver
       resection need preoperative biliary drainage, as hyperbilirubinaemia with a bilirubin above
       6 mg/dL may impair hepatic
-      regeneration</b>.<cite class="src bl">B&amp;L 71 &middot; p.1256</cite></dd>
+      regeneration</b>.​<cite class="src bl">B&amp;L 71 &middot; p.1256</cite></dd>
     </dl>
     <span class="ruling"><b>These are not in conflict once you notice they concern different
     operations, and saying so is the whole answer.</b> Answer: <b>"For a resectable pancreatic head
@@ -1642,7 +1654,7 @@ body.guide { margin: 0; -webkit-text-size-adjust: 100%; }
     plastic or covered metal stent so it can be removed at operation. The exception is a hilar
     tumour needing a major liver resection, where biliary drainage is needed beforehand because a
     bilirubin above 6 mg per decilitre impairs hepatic
-    regeneration."</b><cite class="src bl">B&amp;L 72 &middot; p.1283</cite><cite class="src bl">B&amp;L 71 &middot; p.1256</cite>
+    regeneration."</b>​<cite class="src bl">B&amp;L 72 &middot; p.1283</cite>​<cite class="src bl">B&amp;L 71 &middot; p.1256</cite>
     <br><br>The underlying principle to state if pressed: <b>drain the biliary tree before surgery
     when the liver has to do something difficult afterwards, such as regenerate, or when the
     patient cannot safely wait; otherwise go straight to resection.</b></span>
@@ -1654,14 +1666,14 @@ body.guide { margin: 0; -webkit-text-size-adjust: 100%; }
   <dl class="findings">
     <dt>Endoscopic clearance, then cholecystectomy</dt>
     <dd>ERCP with <b>sphincterotomy and stone extraction</b>, using a <b>Dormia basket</b>, and
-    <b>stenting if there is a stricture</b>.<cite class="src srb">SRB 14 &middot; p.690</cite> In
+    <b>stenting if there is a stricture</b>.​<cite class="src srb">SRB 14 &middot; p.690</cite> In
     gallstone pancreatitis SRB favours <b>early endoscopic intervention within 48 hours</b>, and
     then <b>laparoscopic cholecystectomy within 2 weeks of the acute attack, during the same
-    admission</b>.<cite class="src srb">SRB 14 &middot; p.681</cite></dd>
+    admission</b>.​<cite class="src srb">SRB 14 &middot; p.681</cite></dd>
     <dt>And the complication to know by name</dt>
     <dd><b>Sump syndrome</b>, after a choledochoduodenostomy for CBD stones: debris collects in the
     blind distal segment of duct below the
-    anastomosis.<cite class="src srb">SRB 12 &middot; p.646</cite></dd>
+    anastomosis.​<cite class="src srb">SRB 12 &middot; p.646</cite></dd>
   </dl>
 
   <h3>If the cause is carcinoma of the head of the pancreas</h3>
@@ -1670,20 +1682,20 @@ body.guide { margin: 0; -webkit-text-size-adjust: 100%; }
     <dt>How many can be resected, which is the first thing to say</dt>
     <dd>B&amp;L: <b>"At presentation, more than 85% of patients with ductal adenocarcinoma are
     unsuitable for resection because of advanced
-    disease."</b><cite class="src bl">B&amp;L 72 &middot; p.1284</cite> SRB's numbers agree and
+    disease."</b>​<cite class="src bl">B&amp;L 72 &middot; p.1284</cite> SRB's numbers agree and
     break it down: <b>only 10 to 15% of pancreatic head carcinomas are operable; 40 to 50% are
     locally advanced; another 40 to 50% have distant spread to liver or
-    lungs</b>.<cite class="src srb">SRB 14 &middot; p.699</cite></dd>
+    lungs</b>.​<cite class="src srb">SRB 14 &middot; p.699</cite></dd>
     <dt>What does and does not contraindicate resection</dt>
     <dd><b>Clear contraindications</b>: hepatic or peritoneal metastases; lymph node metastases
     <b>distant from the pancreatic head</b>; encasement of the <b>superior mesenteric, hepatic or
     coeliac artery</b>; and <b>complete encasement and occlusion of the portal or superior
     mesenteric vein</b>, as well as <b>any degree of arterial
-    involvement</b>.<cite class="src bl">B&amp;L 72 &middot; p.1283</cite>
+    involvement</b>.​<cite class="src bl">B&amp;L 72 &middot; p.1283</cite>
     <br><span class="label out">Not contraindications</span><b>Tumour size; continuous invasion of
     the duodenum, stomach or colon; lymph node metastases within the operative field; and a tumour
     that abuts or minimally invades the portal or superior mesenteric vein</b>, since part of the
-    vein can be resected.<cite class="src bl">B&amp;L 72 &middot; p.1283</cite> Knowing the second
+    vein can be resected.​<cite class="src bl">B&amp;L 72 &middot; p.1283</cite> Knowing the second
     list is what separates a candidate who has read the chapter from one who has read a summary.</dd>
     <dt>The four categories, and the treatment of each</dt>
     <dd><b>Resectable</b>: surgery followed by adjuvant chemotherapy; some centres suggest
@@ -1692,13 +1704,13 @@ body.guide { margin: 0; -webkit-text-size-adjust: 100%; }
     neoadjuvant chemotherapy with or without chemoradiotherapy, then resection if downstaged, then
     adjuvant therapy. <b>Locally advanced and unresectable</b>: systemic chemotherapy, with surgery
     possible later in a small downstaged cohort. <b>Metastatic</b>: systemic
-    chemotherapy.<cite class="src bl">B&amp;L 72 &middot; p.1284</cite></dd>
+    chemotherapy.​<cite class="src bl">B&amp;L 72 &middot; p.1284</cite></dd>
     <dt>Whipple, and what the modern operation actually is</dt>
     <dd><b>"The original pancreatoduodenectomy as proposed by Whipple included resection of the
     gastric antrum."</b> Preserving the antrum and pylorus gives <b>a more physiological outcome
     with no difference in survival or recurrence rates</b>, so <b>"the Whipple procedure is now
     reserved for situations in which the entire duodenum has to be"</b>
-    removed.<cite class="src bl">B&amp;L 72 &middot; p.1284</cite> In other words the standard
+    removed.​<cite class="src bl">B&amp;L 72 &middot; p.1284</cite> In other words the standard
     operation today is the <b>pylorus-preserving</b> pancreatoduodenectomy, and calling it a
     Whipple is loose usage.</dd>
     <dt>Histological confirmation: desirable, not essential</dt>
@@ -1706,12 +1718,12 @@ body.guide { margin: 0; -webkit-text-size-adjust: 100%; }
     the imaging clearly demonstrates a resectable tumour. The lack of a tissue diagnosis should not
     delay appropriate surgical therapy."</b> But <b>in patients judged unresectable, a tissue
     diagnosis should be obtained before starting palliative
-    therapy</b>.<cite class="src bl">B&amp;L 72 &middot; p.1283</cite> And
+    therapy</b>.​<cite class="src bl">B&amp;L 72 &middot; p.1283</cite> And
     <b>percutaneous transperitoneal biopsy of a potentially resectable pancreatic tumour should be
     avoided as far as possible</b>, because of seeding.</dd>
     <dt>And a decision rule about age</dt>
     <dd><b>"Biological rather than chronological age should be the
-    consideration."</b><cite class="src bl">B&amp;L 72 &middot; p.1284</cite> Worth quoting when
+    consideration."</b>​<cite class="src bl">B&amp;L 72 &middot; p.1284</cite> Worth quoting when
     asked whether a 78-year-old should have a pancreatoduodenectomy.</dd>
   </dl>
 
@@ -1724,21 +1736,21 @@ body.guide { margin: 0; -webkit-text-size-adjust: 100%; }
     <i>Clonorchis sinensis</i>. <b>Congenital</b>: choledochal cysts, Caroli's disease.
     <b>Chemical</b>: Thorotrast, vinyl chloride, dioxin, asbestos. <b>Post-surgical</b>: a
     biliary-enteric anastomosis. And <b>non-alcoholic fatty liver
-    disease</b>.<cite class="src bl">B&amp;L 71 &middot; p.1256</cite></dd>
+    disease</b>.​<cite class="src bl">B&amp;L 71 &middot; p.1256</cite></dd>
     <dt>Where the gallbladder is palpable, and where it is not</dt>
     <dd>B&amp;L: in cholangiocarcinoma <b>the gallbladder is palpable if the obstruction is in the
-    distal CBD, Courvoisier's sign</b>.<cite class="src bl">B&amp;L 71 &middot; p.1256</cite> A
+    distal CBD, Courvoisier's sign</b>.​<cite class="src bl">B&amp;L 71 &middot; p.1256</cite> A
     hilar tumour, a Klatskin tumour, obstructs <b>above</b> the cystic duct, so the gallbladder is
     collapsed and Courvoisier's sign is <b>negative</b>. <b>That is the one circumstance in which a
     negative Courvoisier localises the lesion for you</b>, and it is worth volunteering.</dd>
     <dt>Choledochal cyst, since it is both a cause and a risk factor</dt>
     <dd>SRB: females 4:1, common in Japan, presenting in infants, children and adults, with
     <b>obstructive jaundice in 80%</b>, pain in the right hypochondrium, cholangitis, and a
-    mass.<cite class="src srb">SRB 12 &middot; p.629</cite> B&amp;L: most patients present
+    mass.​<cite class="src srb">SRB 12 &middot; p.629</cite> B&amp;L: most patients present
     <b>before the age of</b> adulthood, with abdominal pain, cholangitis or end-stage liver
     disease, and after surgery <b>bacterial cholangitis occurs in 40% of patients</b>, repeated
     attacks leading to hepatic fibrosis, so <b>timely referral for surgery is
-    critical</b>.<cite class="src bl">B&amp;L 71 &middot; p.1241</cite></dd>
+    critical</b>.​<cite class="src bl">B&amp;L 71 &middot; p.1241</cite></dd>
   </dl>
 
   <h3>Palliation</h3>
@@ -1747,16 +1759,16 @@ body.guide { margin: 0; -webkit-text-size-adjust: 100%; }
     <dt>The aim, stated plainly</dt>
     <dd>In locally advanced or metastatic disease <b>"the primary objective should be to relieve
     symptoms, improve quality of life and extend survival, rather than achieve a
-    cure"</b>.<cite class="src bl">B&amp;L 72 &middot; p.1284</cite></dd>
+    cure"</b>.​<cite class="src bl">B&amp;L 72 &middot; p.1284</cite></dd>
     <dt>Relieve the jaundice</dt>
     <dd>Endoscopic stenting is the usual route, and B&amp;L notes that ERCP <b>relieves the
     jaundice and can also provide brush cytology or a biopsy specimen to confirm the
-    diagnosis</b>.<cite class="src bl">B&amp;L 72 &middot; p.1283</cite> Percutaneous drainage when
+    diagnosis</b>.​<cite class="src bl">B&amp;L 72 &middot; p.1283</cite> Percutaneous drainage when
     the stricture cannot be reached
-    endoscopically.<cite class="src bl">B&amp;L 71 &middot; p.1238</cite></dd>
+    endoscopically.​<cite class="src bl">B&amp;L 71 &middot; p.1238</cite></dd>
     <dt>And relieve the itch</dt>
     <dd><b>Cholestyramine or colestipol</b>, remembering they worsen fat-soluble vitamin
-    deficiency,<cite class="src srb">SRB 12 &middot; p.647</cite> so give vitamin K alongside.</dd>
+    deficiency,​<cite class="src srb">SRB 12 &middot; p.647</cite> so give vitamin K alongside.</dd>
   </dl>
 
   <!-- ===================== 7. VIVA ===================== -->
@@ -1770,9 +1782,9 @@ body.guide { margin: 0; -webkit-text-size-adjust: 100%; }
       intermittent, causing a conjugated hyperbilirubinaemia; also called surgical jaundice, and it
       may be intrahepatic or extrahepatic. Normal serum bilirubin is 0.2 to 0.8 mg%, and scleral
       icterus becomes visible above 2.5
-      mg%.<cite class="src srb">SRB 12 &middot; p.646, p.647</cite> SRB adds that in obstruction
+      mg%.​<cite class="src srb">SRB 12 &middot; p.646, p.647</cite> SRB adds that in obstruction
       the bilirubin will not exceed about 40 mg%, because the rising intrabiliary pressure itself
-      blocks further secretion.<cite class="src srb">SRB 14 &middot; p.699</cite></p>
+      blocks further secretion.​<cite class="src srb">SRB 14 &middot; p.699</cite></p>
     </details>
 
     <details open>
@@ -1781,13 +1793,13 @@ body.guide { margin: 0; -webkit-text-size-adjust: 100%; }
       to a stone, because a stone-bearing gallbladder is chronically inflamed, fibrotic and cannot
       distend; so the obstruction is usually below the cystic duct in a previously normal
       gallbladder, most often a periampullary or pancreatic head
-      carcinoma.<cite class="src srb">SRB 12 &middot; p.646</cite><cite class="src das">Das 34 &middot; p.492</cite><cite class="src bl">B&amp;L 71 &middot; p.1244</cite>
+      carcinoma.​<cite class="src srb">SRB 12 &middot; p.646</cite>​<cite class="src das">Das 34 &middot; p.492</cite>​<cite class="src bl">B&amp;L 71 &middot; p.1244</cite>
       The exception both Indian books agree on is double impaction, a stone in the cystic duct and
       another in the CBD, giving a mucocele with jaundice. SRB adds a large stone in Hartmann's
       pouch and empyema of the gallbladder with a CBD
-      stone;<cite class="src srb">SRB 12 &middot; p.646</cite> S Das adds Oriental
+      stone;​<cite class="src srb">SRB 12 &middot; p.646</cite> S Das adds Oriental
       cholangiohepatitis and a pancreatic calculus obstructing the ampulla of
-      Vater.<cite class="src das">Das 34 &middot; p.491</cite> Bailey and Love gives no
+      Vater.​<cite class="src das">Das 34 &middot; p.491</cite> Bailey and Love gives no
       exceptions.</p>
     </details>
 
@@ -1795,13 +1807,13 @@ body.guide { margin: 0; -webkit-text-size-adjust: 100%; }
       <summary>Did Courvoisier mention cancer?</summary>
       <p class="ans">Bailey and Love 28e answers this twice and differently. Chapter 71's eponym
       footnote says he made his observation in 1890 and that no mention was made of either
-      gallbladder tenderness or malignancy.<cite class="src bl">B&amp;L 71 &middot; p.1244</cite>
+      gallbladder tenderness or malignancy.​<cite class="src bl">B&amp;L 71 &middot; p.1244</cite>
       Chapter 72 says he first drew attention to the association of an enlarged gallbladder with a
       pancreatic tumour in 1890, and quotes him saying that when the duct is obstructed in some
       other way, such as a neoplasm, distension of the normal gallbladder is
-      common.<cite class="src bl">B&amp;L 72 &middot; p.1283</cite> SRB prints the original words,
+      common.​<cite class="src bl">B&amp;L 72 &middot; p.1283</cite> SRB prints the original words,
       which contrast stone with obstruction from other causes and do not name
-      cancer.<cite class="src srb">SRB 12 &middot; p.631</cite> The safe answer is that his
+      cancer.​<cite class="src srb">SRB 12 &middot; p.631</cite> The safe answer is that his
       observation contrasted stone with non-stone obstruction, and the association with malignancy
       is the inference the profession drew.</p>
     </details>
@@ -1811,7 +1823,7 @@ body.guide { margin: 0; -webkit-text-size-adjust: 100%; }
       <p class="ans">No. The gallbladder is palpable only if the obstruction is in the distal
       common bile duct, that is below the cystic duct; a hilar or Klatskin tumour obstructs above
       it, so the gallbladder is collapsed and the sign is
-      negative.<cite class="src bl">B&amp;L 71 &middot; p.1256</cite> It is the one situation where
+      negative.​<cite class="src bl">B&amp;L 71 &middot; p.1256</cite> It is the one situation where
       a negative Courvoisier actively helps you localise the lesion.</p>
     </details>
 
@@ -1820,19 +1832,19 @@ body.guide { margin: 0; -webkit-text-size-adjust: 100%; }
       <p class="ans">Absence of bile in the gut impairs absorption of fat and therefore of vitamin
       K, so synthesis of the vitamin K-dependent factors II, VII, IX and X falls and the
       prothrombin time and INR rise; PT reflects the extrinsic
-      pathway.<cite class="src srb">SRB 12 &middot; p.647</cite> Check the prothrombin time and
+      pathway.​<cite class="src srb">SRB 12 &middot; p.647</cite> Check the prothrombin time and
       correct it with vitamin K or fresh-frozen plasma, and do so before ERCP as well as before
-      surgery.<cite class="src bl">B&amp;L 72 &middot; p.1283</cite> Note that cholestyramine given
+      surgery.​<cite class="src bl">B&amp;L 72 &middot; p.1283</cite> Note that cholestyramine given
       for pruritus binds bile salts and can worsen the deficiency.</p>
     </details>
 
     <details open>
       <summary>Charcot's triad and Reynolds' pentad?</summary>
       <p class="ans">Charcot's triad is pain, jaundice and fever, and it makes the diagnosis of
-      cholangitis.<cite class="src bl">B&amp;L 71 &middot; p.1253</cite> Reynolds' pentad adds
+      cholangitis.​<cite class="src bl">B&amp;L 71 &middot; p.1253</cite> Reynolds' pentad adds
       hypotension and altered mental state, and it marks acute obstructive or suppurative
       cholangitis, which SRB puts at about 5%; it is an indication for urgent biliary drainage, not
-      for more imaging.<cite class="src srb">SRB 12 &middot; p.643, p.648</cite> Note that
+      for more imaging.​<cite class="src srb">SRB 12 &middot; p.643, p.648</cite> Note that
       Reynolds' pentad does not appear in Bailey and Love 28e's biliary chapter at all, so
       attribute it to SRB.</p>
     </details>
@@ -1842,9 +1854,9 @@ body.guide { margin: 0; -webkit-text-size-adjust: 100%; }
       <p class="ans">Obstruction causes bile stasis; stasis allows colonisation and multiplication
       of organisms, bile normally being sterile; intraductal pressure rises; biliary contents
       reflux into the circulation; and bacteraemia, septicaemia and septic shock
-      follow.<cite class="src srb">SRB 12 &middot; p.647</cite> The commonest organisms in
+      follow.​<cite class="src srb">SRB 12 &middot; p.647</cite> The commonest organisms in
       symptomatic gallstone disease are E. coli and
-      Klebsiella.<cite class="src srb">SRB 12 &middot; p.625</cite> It is most often seen with a
+      Klebsiella.​<cite class="src srb">SRB 12 &middot; p.625</cite> It is most often seen with a
       stricture, usually at the level of the CBD. The therapeutic consequence is that antibiotics
       alone are insufficient: the pressure has to come off the duct.</p>
     </details>
@@ -1855,11 +1867,11 @@ body.guide { margin: 0; -webkit-text-size-adjust: 100%; }
       ascending and sclerosing cholangitis; obstructive, CBD stones, stricture and parasitic
       infestation; neoplastic, carcinoma of the head or periampullary pancreas,
       cholangiocarcinoma, Klatskin tumour; and extrinsic compression by nodes or
-      tumour.<cite class="src srb">SRB 12 &middot; p.647</cite> Or anatomically, which is better in
+      tumour.​<cite class="src srb">SRB 12 &middot; p.647</cite> Or anatomically, which is better in
       a viva: extrahepatic causes are luminal, including stones and ascariasis or clonorchiasis;
       mural, including growth, stricture and sclerosing cholangitis; or external compression. And
       intrahepatic cholestasis from hepatocellular disease or
-      drugs.<cite class="src srb">SRB 12 &middot; p.647</cite></p>
+      drugs.​<cite class="src srb">SRB 12 &middot; p.647</cite></p>
     </details>
 
     <details open>
@@ -1870,7 +1882,7 @@ body.guide { margin: 0; -webkit-text-size-adjust: 100%; }
       diverticula. Type 3, chronic incomplete: stricture, congenital, traumatic,
       post-radiotherapy, chronic pancreatitis, cystic fibrosis. Type 4, segmental: traumatic,
       sclerosing cholangitis, cholangiocarcinoma,
-      hepatolithiasis.<cite class="src srb">SRB 12 &middot; p.648</cite> It is SRB's, not Bailey
+      hepatolithiasis.​<cite class="src srb">SRB 12 &middot; p.648</cite> It is SRB's, not Bailey
       and Love's. Its practical use is that it tells you to ask whether the jaundice has ever
       remitted: intermittent jaundice means a stone or a periampullary tumour, not a pancreatic
       head cancer.</p>
@@ -1883,17 +1895,17 @@ body.guide { margin: 0; -webkit-text-size-adjust: 100%; }
       with results comparable to ERCP or PTC. CT adds the tumour and its resectability, and liver
       and pancreatic disease. Endoscopic ultrasound is for when CT shows no tumour, when tissue is
       needed, when vascular invasion must be confirmed, or to separate a cystic tumour from a
-      pseudocyst.<cite class="src bl">B&amp;L 71 &middot; p.1235, p.1236, p.1238</cite><cite class="src bl">B&amp;L 72 &middot; p.1283</cite></p>
+      pseudocyst.​<cite class="src bl">B&amp;L 71 &middot; p.1235, p.1236, p.1238</cite>​<cite class="src bl">B&amp;L 72 &middot; p.1283</cite></p>
     </details>
 
     <details open>
       <summary>Would you do an ERCP to diagnose this?</summary>
       <p class="ans">No. Bailey and Love 28e says ERCP is now used only as a therapeutic modality
       in obstructive jaundice, ultrasound and MRCP having taken over the diagnostic
-      aspect.<cite class="src bl">B&amp;L 71 &middot; p.1237</cite> I would use it when I intend to
+      aspect.​<cite class="src bl">B&amp;L 71 &middot; p.1237</cite> I would use it when I intend to
       intervene at the same sitting, and specifically for cholangitis, diagnostic doubt after
       non-invasive imaging, or a deeply jaundiced patient with distressing pruritus facing a delay
-      before surgery.<cite class="src bl">B&amp;L 72 &middot; p.1283</cite> It also provides brush
+      before surgery.​<cite class="src bl">B&amp;L 72 &middot; p.1283</cite> It also provides brush
       cytology or biopsy. Correct the prothrombin time and give antibiotics first.</p>
     </details>
 
@@ -1901,14 +1913,14 @@ body.guide { margin: 0; -webkit-text-size-adjust: 100%; }
       <summary>What is the double duct sign?</summary>
       <p class="ans">Concurrent narrowing of both the common bile duct and the main pancreatic
       duct, which is the cholangiographic signature of a tumour at the head of the
-      pancreas.<cite class="src bl">B&amp;L 72 &middot; p.1265</cite></p>
+      pancreas.​<cite class="src bl">B&amp;L 72 &middot; p.1265</cite></p>
     </details>
 
     <details open>
       <summary>Is absence of urinary urobilinogen a useful test?</summary>
       <p class="ans">It signifies obstructive jaundice, because bilirubin is not reaching the gut
       to be converted by bacteria into urobilinogen, so none is reabsorbed and none is
-      excreted.<cite class="src srb">SRB 12 &middot; p.624, p.625</cite> Two caveats: it is only
+      excreted.​<cite class="src srb">SRB 12 &middot; p.624, p.625</cite> Two caveats: it is only
       valid in complete obstruction, since in a partial or intermittent obstruction urobilinogen
       will still appear; and it is SRB's teaching, appearing in neither Bailey and Love's biliary
       chapter nor S Das's chapter, so attribute it.</p>
@@ -1918,7 +1930,7 @@ body.guide { margin: 0; -webkit-text-size-adjust: 100%; }
       <summary>How long can you leave an obstructed biliary tree?</summary>
       <p class="ans">Not long. SRB: severe biliary obstruction causes cell damage usually within
       one month and, if unrelieved, may lead to secondary biliary
-      cirrhosis.<cite class="src srb">SRB 12 &middot; p.647</cite> Add the other consequences:
+      cirrhosis.​<cite class="src srb">SRB 12 &middot; p.647</cite> Add the other consequences:
       cholangitis, altered coagulation, hepatorenal syndrome and renal failure, and sepsis. So
       relief of obstruction is not an elective matter even when the cause is benign.</p>
     </details>
@@ -1926,9 +1938,9 @@ body.guide { margin: 0; -webkit-text-size-adjust: 100%; }
     <details open>
       <summary>What proportion of pancreatic head cancers can be resected?</summary>
       <p class="ans">Few. More than 85% are unsuitable for resection at presentation because of
-      advanced disease.<cite class="src bl">B&amp;L 72 &middot; p.1284</cite> SRB's breakdown
+      advanced disease.​<cite class="src bl">B&amp;L 72 &middot; p.1284</cite> SRB's breakdown
       agrees: only 10 to 15% operable, 40 to 50% locally advanced, and 40 to 50% with distant
-      spread to liver or lungs.<cite class="src srb">SRB 14 &middot; p.699</cite></p>
+      spread to liver or lungs.​<cite class="src srb">SRB 14 &middot; p.699</cite></p>
     </details>
 
     <details open>
@@ -1939,7 +1951,7 @@ body.guide { margin: 0; -webkit-text-size-adjust: 100%; }
       degree of arterial involvement. Not contraindications: tumour size; continuous invasion of
       duodenum, stomach or colon; nodal metastases within the operative field; and a tumour that
       abuts or minimally invades the portal or superior mesenteric vein, since part of the vein can
-      be resected.<cite class="src bl">B&amp;L 72 &middot; p.1283</cite></p>
+      be resected.​<cite class="src bl">B&amp;L 72 &middot; p.1283</cite></p>
     </details>
 
     <details open>
@@ -1948,10 +1960,10 @@ body.guide { margin: 0; -webkit-text-size-adjust: 100%; }
       incidence of infective complications after surgery. I would stent for cholangitis, for
       diagnostic doubt, or if there is a delay before surgery in a deeply jaundiced patient with
       distressing pruritus, and would use a plastic or covered metal stent so it can be removed at
-      operation.<cite class="src bl">B&amp;L 72 &middot; p.1283</cite> The exception is a hilar
+      operation.​<cite class="src bl">B&amp;L 72 &middot; p.1283</cite> The exception is a hilar
       tumour requiring major liver resection, where preoperative drainage is needed because a
       bilirubin above 6 mg/dL impairs hepatic
-      regeneration.<cite class="src bl">B&amp;L 71 &middot; p.1256</cite></p>
+      regeneration.​<cite class="src bl">B&amp;L 71 &middot; p.1256</cite></p>
     </details>
 
     <details open>
@@ -1961,7 +1973,7 @@ body.guide { margin: 0; -webkit-text-size-adjust: 100%; }
       Percutaneous transperitoneal biopsy of a potentially resectable tumour should be avoided
       because of seeding; EUS-guided transduodenal or transgastric biopsy avoids spillage into the
       peritoneal cavity. But in unresectable disease, obtain tissue before starting palliative
-      therapy.<cite class="src bl">B&amp;L 72 &middot; p.1283</cite></p>
+      therapy.​<cite class="src bl">B&amp;L 72 &middot; p.1283</cite></p>
     </details>
 
     <details open>
@@ -1970,7 +1982,7 @@ body.guide { margin: 0; -webkit-text-size-adjust: 100%; }
       the gastric antrum; preserving the antrum and pylorus gives a more physiological outcome with
       no difference in survival or recurrence, so the pylorus-preserving operation is standard and
       the classical Whipple is reserved for cases where the entire duodenum must be
-      removed.<cite class="src bl">B&amp;L 72 &middot; p.1284</cite></p>
+      removed.​<cite class="src bl">B&amp;L 72 &middot; p.1284</cite></p>
     </details>
 
     <details open>
@@ -1980,7 +1992,7 @@ body.guide { margin: 0; -webkit-text-size-adjust: 100%; }
       usually from venous occlusion or arterial abutment: neoadjuvant chemotherapy with or without
       chemoradiotherapy, then resection if downstaged, then adjuvant therapy. Locally advanced and
       unresectable: systemic chemotherapy, with surgery possible in a small downstaged cohort.
-      Metastatic: systemic chemotherapy.<cite class="src bl">B&amp;L 72 &middot; p.1284</cite>
+      Metastatic: systemic chemotherapy.​<cite class="src bl">B&amp;L 72 &middot; p.1284</cite>
       Every patient should ideally be discussed in a multidisciplinary forum, and biological rather
       than chronological age should decide fitness.</p>
     </details>
@@ -1990,9 +2002,9 @@ body.guide { margin: 0; -webkit-text-size-adjust: 100%; }
       <p class="ans">Pancreatic pain. S Das: the peculiar feature of pancreatic pain is that it
       passes through to the back, is aggravated on lying down and lessened on sitting up, so the
       patient often spends the night sitting with his arms folded across his
-      chest.<cite class="src das">Das 34 &middot; p.511</cite> Bailey and Love's equivalent warning
+      chest.​<cite class="src das">Das 34 &middot; p.511</cite> Bailey and Love's equivalent warning
       is that back pain raises the possibility of retroperitoneal
-      infiltration.<cite class="src bl">B&amp;L 72 &middot; p.1283</cite> It suggests the body and
+      infiltration.​<cite class="src bl">B&amp;L 72 &middot; p.1283</cite> It suggests the body and
       tail, or a locally advanced head tumour, and it is a bad prognostic sign either way.</p>
     </details>
 
@@ -2000,11 +2012,11 @@ body.guide { margin: 0; -webkit-text-size-adjust: 100%; }
       <summary>Which signs on examination would tell you not to operate for cure?</summary>
       <p class="ans">A palpable mass, ascites, supraclavicular nodes and tumour deposits in the
       pelvis: Bailey and Love says these should be looked for with care and, when present, indicate
-      a grim prognosis.<cite class="src bl">B&amp;L 72 &middot; p.1283</cite> So palpate the left
+      a grim prognosis.​<cite class="src bl">B&amp;L 72 &middot; p.1283</cite> So palpate the left
       supraclavicular fossa and perform a rectal examination, both of which are free and both of
       which can change the plan from resection to palliation. Remember that a non-palpable tumour
       proves nothing: S Das says the tumour itself is seldom
-      palpable.<cite class="src das">Das 34 &middot; p.511</cite></p>
+      palpable.​<cite class="src das">Das 34 &middot; p.511</cite></p>
     </details>
 
     <details open>
@@ -2013,7 +2025,7 @@ body.guide { margin: 0; -webkit-text-size-adjust: 100%; }
       cholangiohepatitis, hepatitis C. Parasitic infections: Opisthorchis viverrini and Clonorchis
       sinensis. Congenital: choledochal cysts and Caroli's disease. Chemical agents: Thorotrast,
       vinyl chloride, dioxin, asbestos. Post-surgical: a biliary-enteric anastomosis. And
-      non-alcoholic fatty liver disease.<cite class="src bl">B&amp;L 71 &middot; p.1256</cite>
+      non-alcoholic fatty liver disease.​<cite class="src bl">B&amp;L 71 &middot; p.1256</cite>
       Note how many of them are the same parasitic and inflammatory diseases that appear as causes
       of obstruction in SRB's list.</p>
     </details>
@@ -2022,7 +2034,7 @@ body.guide { margin: 0; -webkit-text-size-adjust: 100%; }
       <summary>Why does the patient itch, and what do you give?</summary>
       <p class="ans">Honestly, the mechanism is not settled. SRB says the cause is not clear and
       may be accumulation of bile acids in the skin or release of endogenous
-      opioids.<cite class="src srb">SRB 12 &middot; p.647</cite> Treatment is relief of the
+      opioids.​<cite class="src srb">SRB 12 &middot; p.647</cite> Treatment is relief of the
       obstruction, and meanwhile cholestyramine or colestipol, remembering that both bind bile
       salts and can worsen fat-soluble vitamin deficiency, so give vitamin K alongside.</p>
     </details>
@@ -2030,12 +2042,12 @@ body.guide { margin: 0; -webkit-text-size-adjust: 100%; }
     <details open>
       <summary>How would you prepare this patient for surgery?</summary>
       <p class="ans">Correct the prothrombin time with vitamin K or fresh-frozen
-      plasma.<cite class="src bl">B&amp;L 72 &middot; p.1283</cite> Rehydrate, since dehydration is
+      plasma.​<cite class="src bl">B&amp;L 72 &middot; p.1283</cite> Rehydrate, since dehydration is
       common in obstructive jaundice, and replenish hepatic glycogen with preoperative glucose.
       Antibiotics from the day before, cephalosporins or aminoglycosides. Total parenteral
       nutrition if needed, continued postoperatively. Pulmonary function assessment and respiratory
       physiotherapy. SRB notes specifically that preoperative albumin therapy is usually not
-      done.<cite class="src srb">SRB 14 &middot; p.698, p.699</cite> And relieve the obstruction
+      done.​<cite class="src srb">SRB 14 &middot; p.698, p.699</cite> And relieve the obstruction
       first only if there is cholangitis, diagnostic doubt, a delay with distressing pruritus, or a
       planned major liver resection.</p>
     </details>
@@ -2044,17 +2056,17 @@ body.guide { margin: 0; -webkit-text-size-adjust: 100%; }
       <summary>What is sump syndrome?</summary>
       <p class="ans">A late complication of choledochoduodenostomy for CBD stones: debris and food
       collect in the blind distal segment of duct below the anastomosis, the sump, causing
-      recurrent cholangitis.<cite class="src srb">SRB 12 &middot; p.646</cite></p>
+      recurrent cholangitis.​<cite class="src srb">SRB 12 &middot; p.646</cite></p>
     </details>
 
     <details open>
       <summary>A child or young adult with jaundice, right hypochondrial pain and a mass. Diagnosis?</summary>
       <p class="ans">Choledochal cyst. SRB: female to male 4:1, common in Japan, presenting in
       infants, children and adults, with obstructive jaundice in 80%, pain in the right
-      hypochondrium, cholangitis and a mass.<cite class="src srb">SRB 12 &middot; p.629</cite>
+      hypochondrium, cholangitis and a mass.​<cite class="src srb">SRB 12 &middot; p.629</cite>
       Bailey and Love adds that after surgery bacterial cholangitis occurs in 40%, repeated attacks
       lead to hepatic fibrosis, and timely referral for surgery is therefore
-      critical.<cite class="src bl">B&amp;L 71 &middot; p.1241</cite> It is also a risk factor for
+      critical.​<cite class="src bl">B&amp;L 71 &middot; p.1241</cite> It is also a risk factor for
       cholangiocarcinoma, which is why it is excised rather than merely drained.</p>
     </details>
 

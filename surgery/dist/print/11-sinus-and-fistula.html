@@ -24,6 +24,7 @@
   --ink-soft:    #5a6269;
   --rule:        #ddd8ce;
   --accent:      #005f73;
+  --on-accent:   #fff;
   --accent-soft: #e3eef0;
   --flag:        #8a5a2b;
   --flag-soft:   #f6ece0;
@@ -86,21 +87,21 @@
 
 .guide[data-theme="sepia"] {
   --paper: #f4ecd8; --ink: #433422; --ink-soft: #6f5f4a; --rule: #ddd0b4;
-  --accent: #7a4a1e; --accent-soft: #ece0c8; --flag: #8a5a2b; --flag-soft: #ece0c8;
+  --accent: #7a4a1e; --on-accent: #fff; --accent-soft: #ece0c8; --flag: #8a5a2b; --flag-soft: #ece0c8;
   --cite: #8a7b63; --mark: #f5d98a; --bl: #6a4a7a; --srb: #3f6b4a;
   color-scheme: light;
 }
 
 .guide[data-theme="dark"] {
   --paper: #15181a; --ink: #e8e6e1; --ink-soft: #a3abb2; --rule: #2e3338;
-  --accent: #6fc3d2; --accent-soft: #1b2a2e; --flag: #d9a36a; --flag-soft: #2a2119;
+  --accent: #6fc3d2; --on-accent: #0b1416; --accent-soft: #1b2a2e; --flag: #d9a36a; --flag-soft: #2a2119;
   --cite: #78828a; --mark: #4a4120; --bl: #a893dd; --srb: #6fc3a8;
   color-scheme: dark;
 }
 
 .guide[data-theme="contrast"] {
   --paper: #000000; --ink: #ffffff; --ink-soft: #d8d8d8; --rule: #6a6a6a;
-  --accent: #6fe3ff; --accent-soft: #10242b; --flag: #ffc46b; --flag-soft: #2a2008;
+  --accent: #6fe3ff; --on-accent: #000; --accent-soft: #10242b; --flag: #ffc46b; --flag-soft: #2a2008;
   --cite: #bdbdbd; --mark: #4a4a00; --bl: #d0b8ff; --srb: #7fe8c0;
   color-scheme: dark;
 }
@@ -109,7 +110,7 @@
 @media (prefers-color-scheme: dark) {
   .guide[data-theme="auto"] {
     --paper: #15181a; --ink: #e8e6e1; --ink-soft: #a3abb2; --rule: #2e3338;
-    --accent: #6fc3d2; --accent-soft: #1b2a2e; --flag: #d9a36a; --flag-soft: #2a2119;
+    --accent: #6fc3d2; --on-accent: #0b1416; --accent-soft: #1b2a2e; --flag: #d9a36a; --flag-soft: #2a2119;
     --cite: #78828a; --mark: #4a4120; --bl: #a893dd; --srb: #6fc3a8;
     color-scheme: dark;
   }
@@ -141,6 +142,7 @@ body.guide { margin: 0; -webkit-text-size-adjust: 100%; }
   font-family: var(--face-body);
   font-size: 2.1rem; font-weight: 600; line-height: 1.15;
   letter-spacing: -0.015em; text-wrap: balance; margin: 0 0 0.7rem;
+  overflow-wrap: break-word; hyphens: auto;
 }
 
 .guide .standfirst { font-size: 1.02rem; color: var(--ink-soft); margin: 0 0 1.6rem; }
@@ -311,7 +313,11 @@ body.guide { margin: 0; -webkit-text-size-adjust: 100%; }
 .guide cite.src {
   font-family: var(--face-ui); font-style: normal;
   font-size: 0.66em; font-weight: 600; letter-spacing: 0.02em;
-  color: var(--cite); white-space: nowrap;
+  color: var(--cite);
+  /* The chip stays on one line. build.py puts a zero-width space before each one,
+     which is what lets a chip that will not fit move to the next line whole
+     instead of widening the page past the phone. */
+  white-space: nowrap; max-width: 100%;
   border: 1px solid var(--rule); border-radius: 2px;
   padding: 0.05rem 0.28rem; margin-left: 0.3rem; vertical-align: 0.12em;
 }
@@ -331,7 +337,11 @@ body.guide { margin: 0; -webkit-text-size-adjust: 100%; }
   cursor: pointer; list-style: none; display: flex; gap: 0.55rem; align-items: baseline;
   padding: 0.7rem 0.9rem; font-family: var(--face-ui);
   font-size: 0.82em; line-height: 1.45; color: var(--ink);
+  flex-wrap: wrap;
 }
+/* A flex item defaults to min-width:auto and so refuses to shrink below its own
+   content width; a long source line in the summary then widened the whole page. */
+.guide details.conflict > summary > * { min-width: 0; overflow-wrap: break-word; }
 .guide details.conflict > summary::-webkit-details-marker { display: none; }
 .guide details.conflict > summary::before {
   content: "*"; color: var(--flag); font-size: 1em; font-weight: 700;
@@ -419,7 +429,7 @@ body.guide { margin: 0; -webkit-text-size-adjust: 100%; }
 @media print {
   .guide {
     --paper: #fff; --ink: #000; --ink-soft: #333; --rule: #bbb;
-    --accent: #004c5c; --accent-soft: #eef4f5; --cite: #666;
+    --accent: #004c5c; --on-accent: #fff; --accent-soft: #eef4f5; --cite: #666;
     --measure: none; --fs: 10.5pt; --lh: 1.45;
     --face-body: "Spectral", Georgia, serif;
     --face-ui: "Inter", system-ui, sans-serif;
@@ -785,7 +795,9 @@ body.guide { margin: 0; -webkit-text-size-adjust: 100%; }
   background: none; color: var(--ink, #222);
 }
 .rdr-ne-row .rdr-ok {
-  background: var(--accent, #005f73); border-color: var(--accent, #005f73); color: #fff;
+  background: var(--accent, #005f73); border-color: var(--accent, #005f73);
+  /* not #fff: the dark and high-contrast accents are pale, and white on them is 2:1 */
+  color: var(--on-accent, #fff);
 }
 .rdr-ne-row .rdr-del { color: var(--flag, #8a5a2b); }
 
@@ -988,17 +1000,17 @@ body.guide { margin: 0; -webkit-text-size-adjust: 100%; }
     <dd>S Das: <b>"A sinus is a blind track leading from the surface down to the tissues. There may
     be a cavity in the tissue which is connected to the surface through a sinus. The sinus is lined
     by granulation tissue which may be
-    epithelialized."</b><cite class="src das">Das 5 &middot; p.76</cite>
+    epithelialized."</b>​<cite class="src das">Das 5 &middot; p.76</cite>
     SRB: <b>"It is a blind track lined by granulation tissue leading from an epithelial surface
     into the surrounding tissues."</b> And the etymology, which examiners like:
     <b>sinus means "hollow" or "a bay", from the
-    Latin</b>.<cite class="src srb">SRB 1 &middot; p.30</cite>
+    Latin</b>.​<cite class="src srb">SRB 1 &middot; p.30</cite>
     <br><span class="label">The operative word</span><b>Blind.</b> A sinus has one opening.</dd>
     <dt>Fistula</dt>
     <dd>S Das: <b>"It is a communication"</b> between two surfaces.
     SRB: <b>"It is an abnormal communication between the lumen of one viscus to another or the body
     surface or between the vessels."</b> Etymology: <b>fistula means "flute" or "a pipe or
-    tube"</b>.<cite class="src srb">SRB 1 &middot; p.30</cite><cite class="src das">Das 5 &middot; p.76</cite>
+    tube"</b>.​<cite class="src srb">SRB 1 &middot; p.30</cite>​<cite class="src das">Das 5 &middot; p.76</cite>
     <br><span class="label">The operative word</span><b>Two openings</b>, or one opening and one
     internal communication.</dd>
     <dt>And Bailey &amp; Love, which does carry both definitions</dt>
@@ -1006,10 +1018,10 @@ body.guide { margin: 0; -webkit-text-size-adjust: 100%; }
     subcutaneous tissue</b>, immediately after ulcers, which is where to look for them.
     <br><b>Sinus:</b> <b>"A sinus is a blind-ending tract connecting a cavity lined with
     granulation tissue (often an abscess cavity) to an epithelial
-    surface."</b><cite class="src bl">B&amp;L 45 &middot; p.663</cite>
+    surface."</b>​<cite class="src bl">B&amp;L 45 &middot; p.663</cite>
     <br><b>Fistula:</b> <b>"A fistula is an abnormal communication between two epithelium-lined
     surfaces. This communication or tract is usually lined by granulation tissue, but may become
-    epithelialised in chronic cases."</b><cite class="src bl">B&amp;L 45 &middot; p.663</cite>
+    epithelialised in chronic cases."</b>​<cite class="src bl">B&amp;L 45 &middot; p.663</cite>
     <br><span class="label">Read the wording closely</span>Both differences from the Indian books
     are set out in the amber boxes below, because both are the sort of thing an examiner picks
     at.</dd>
@@ -1029,21 +1041,21 @@ body.guide { margin: 0; -webkit-text-size-adjust: 100%; }
       surface</b>. S Das: <b>"A sinus is a blind track leading from the surface down to the
       tissues. There may be a cavity in the tissue which is connected to the surface through a
       sinus. The sinus is lined by granulation tissue which may be
-      epithelialized."</b><cite class="src das">Das 5 &middot; p.76</cite> SRB: <b>"It is a blind
+      epithelialized."</b>​<cite class="src das">Das 5 &middot; p.76</cite> SRB: <b>"It is a blind
       track lined by granulation tissue leading from an epithelial surface into the surrounding
-      tissues."</b><cite class="src srb">SRB 1 &middot; p.30</cite></dd>
+      tissues."</b>​<cite class="src srb">SRB 1 &middot; p.30</cite></dd>
       <dt>Bailey &amp; Love</dt>
       <dd>Puts the granulation lining in <b>the cavity</b> and runs the track <b>outwards to the
       surface</b>: a blind-ending tract <b>"connecting a cavity lined with granulation tissue
       (often an abscess cavity) to an epithelial
-      surface"</b>.<cite class="src bl">B&amp;L 45 &middot; p.663</cite> Grammatically, "lined
+      surface"</b>.​<cite class="src bl">B&amp;L 45 &middot; p.663</cite> Grammatically, "lined
       with granulation tissue" attaches to the cavity, not to the tract.</dd>
       <dt>Does it matter? Yes, in one place</dt>
       <dd>It is the same lesion described from the two ends, so for naming the thing it makes no
       difference. It matters for <b>why a sinus persists</b>. B&amp;L's wording points at the
       cavity as the engine: an undrained abscess cavity keeps discharging through a blind tract,
       and B&amp;L lists <b>"inadequate surgical drainage of a cavity"</b> among the causes of an
-      acquired sinus.<cite class="src bl">B&amp;L 45 &middot; p.663</cite> The Indian books'
+      acquired sinus.​<cite class="src bl">B&amp;L 45 &middot; p.663</cite> The Indian books'
       wording points at the track, and at its epithelialisation, as what has to be excised. Both
       are true, and a complete answer uses both: drain the cavity <i>and</i> excise the track.</dd>
     </dl>
@@ -1070,7 +1082,7 @@ body.guide { margin: 0; -webkit-text-size-adjust: 100%; }
       <dd>The definition restricts fistulae to epithelium: <b>"A fistula is an abnormal
       communication between two epithelium-lined surfaces."</b> Four lines later the examples
       include <b>arteriovenous</b> among acquired
-      fistulae.<cite class="src bl">B&amp;L 45 &middot; p.663</cite> A blood vessel is lined by
+      fistulae.​<cite class="src bl">B&amp;L 45 &middot; p.663</cite> A blood vessel is lined by
       <b>endothelium</b>, which is not epithelium, so an arteriovenous fistula fails B&amp;L's own
       definition while appearing in B&amp;L's own list. The same objection applies to a
       tracheo-oesophageal fistula only in part, since both of those surfaces genuinely are
@@ -1078,7 +1090,7 @@ body.guide { margin: 0; -webkit-text-size-adjust: 100%; }
       <dt>What SRB says</dt>
       <dd>SRB writes the definition so that vessels are included from the start: <b>"It is an
       abnormal communication between the lumen of one viscus to another or the body surface or
-      between the vessels."</b><cite class="src srb">SRB 1 &middot; p.30</cite> That extra clause,
+      between the vessels."</b>​<cite class="src srb">SRB 1 &middot; p.30</cite> That extra clause,
       <i>or between the vessels</i>, is doing real work, and it is why SRB's definition survives
       its own examples.</dd>
       <dt>Why B&amp;L's wording is still the one you will see</dt>
@@ -1128,7 +1140,7 @@ body.guide { margin: 0; -webkit-text-size-adjust: 100%; }
   <div class="pearl">
     <span class="tag">The discharge tells you the source, and this table is pure marks</span>
     SRB's list, which is the single most useful thing in this
-    case.<cite class="src srb">SRB 1 &middot; p.31</cite>
+    case.​<cite class="src srb">SRB 1 &middot; p.31</cite>
     <br><br><b>Purulent</b>: bacterial infection.
     <br><b>Gaseous</b>: tuberculous.
     <br><b>Sulphur granules</b>: actinomycosis.
@@ -1145,7 +1157,7 @@ body.guide { margin: 0; -webkit-text-size-adjust: 100%; }
 
   <div class="pearl">
     <span class="tag">Causes of persistence, and both books give almost the same list</span>
-    SRB's version, as a printed box:<cite class="src srb">SRB 1 &middot; p.31</cite>
+    SRB's version, as a printed box:​<cite class="src srb">SRB 1 &middot; p.31</cite>
     <br><br><b>1.</b> A <b>foreign body or necrotic tissue</b> underneath, for example a suture or
     a <b>sequestrum</b>.
     <br><b>2.</b> <b>Insufficient or non-dependent drainage.</b>
@@ -1157,9 +1169,9 @@ body.guide { margin: 0; -webkit-text-size-adjust: 100%; }
     <br><b>7.</b> <b>Specific infections</b>: tuberculosis, actinomycosis.
     <br><br>S Das's list is the same, and adds the mechanism for one of them: the walls may be held
     apart, <b>"preventing their collapse, as occurs in chronic
-    empyema"</b>.<cite class="src das">Das 5 &middot; p.76</cite> And his blunt observation about
+    empyema"</b>.​<cite class="src das">Das 5 &middot; p.76</cite> And his blunt observation about
     fistulae: <b>"once a true fistula has been formed, it seldom shows any"</b> tendency to
-    close.<cite class="src das">Das 5 &middot; p.76</cite>
+    close.​<cite class="src das">Das 5 &middot; p.76</cite>
     <br><br>Learn these seven. Every one of them is a thing you can do something about, which is
     why they are the answer to "how will you treat it?"
   </div>
@@ -1170,34 +1182,34 @@ body.guide { margin: 0; -webkit-text-size-adjust: 100%; }
     <dt>The opening</dt>
     <dd>Number, site, and whether the edge is everted, indurated or healthy. A single opening means
     a sinus; two or more raise a fistula. SRB illustrates a pilonidal sinus with <b>primary and
-    secondary</b> openings.<cite class="src srb">SRB 1 &middot; p.31</cite></dd>
+    secondary</b> openings.​<cite class="src srb">SRB 1 &middot; p.31</cite></dd>
     <dt>The discharge</dt>
     <dd>Express it and look at it, against the table above. Culture it, and in India send it for
     <b>acid-fast bacilli and cytology</b> as well, which is SRB's routine in a median mental
     sinus: <b>discharge study for culture and sensitivity, cytology, and
-    AFB</b>.<cite class="src srb">SRB 1 &middot; p.32</cite></dd>
+    AFB</b>.​<cite class="src srb">SRB 1 &middot; p.32</cite></dd>
     <dt>The surrounding skin</dt>
     <dd>Scarring, pigmentation, excoriation. SRB notes that in a postoperative gastrointestinal
     fistula the <b>skin excoriation can be controlled by zinc oxide cream applied
-    locally</b>,<cite class="src srb">SRB 1 &middot; p.31</cite> which is the kind of practical
+    locally</b>,​<cite class="src srb">SRB 1 &middot; p.31</cite> which is the kind of practical
     detail that marks out a candidate who has been on a ward.</dd>
     <dt>The track</dt>
     <dd>Palpate along it for induration and for a cord. Gently probe only if it is safe to do so,
     and remember S Das's use of the probe in a tuberculous ulcer: a probe insinuating easily under
-    an undermined edge is diagnostic.<cite class="src das">Das 4 &middot; p.63</cite> Note the
+    an undermined edge is diagnostic.​<cite class="src das">Das 4 &middot; p.63</cite> Note the
     direction: in a preauricular sinus the track runs <b>backwards and slightly upwards towards the
-    helix and usually ends blindly</b>.<cite class="src srb">SRB 1 &middot; p.33</cite></dd>
+    helix and usually ends blindly</b>.​<cite class="src srb">SRB 1 &middot; p.33</cite></dd>
     <dt>The underlying structure</dt>
     <dd>Bone, joint, bowel, or lymph nodes. SRB illustrates a <b>typical sinus in the thigh due to
     osteomyelitis of the greater
-    trochanter</b>,<cite class="src srb">SRB 1 &middot; p.30</cite> and a <b>sinus in the neck due
+    trochanter</b>,​<cite class="src srb">SRB 1 &middot; p.30</cite> and a <b>sinus in the neck due
     to tuberculosis of lymph nodes with a cold abscess
-    underneath</b>.<cite class="src srb">SRB 1 &middot; p.31</cite> Those two sentences name the two
+    underneath</b>.​<cite class="src srb">SRB 1 &middot; p.31</cite> Those two sentences name the two
     commonest causes of a chronic sinus in Indian practice.</dd>
     <dt>Exuberant granulation at the opening</dt>
     <dd><b>Proud flesh.</b> SRB: granulation tissue sprouting out of the sinus opening, <b>commonly
     associated with a retained foreign
-    body</b>.<cite class="src srb">SRB 1 &middot; p.19</cite> So it is a sign, not just an
+    body</b>.​<cite class="src srb">SRB 1 &middot; p.19</cite> So it is a sign, not just an
     appearance.</dd>
   </dl>
 
@@ -1213,7 +1225,7 @@ body.guide { margin: 0; -webkit-text-size-adjust: 100%; }
     sinusogram</b> beneficial. Treatment: <b>excision under general anaesthesia with removal of the
     entire track</b>, and <b>"if the track is not removed properly recurrence will occur"</b>;
     <b>methylene blue is injected into the track</b> first and the track excised through an
-    elliptical incision.<cite class="src srb">SRB 1 &middot; p.33</cite></dd>
+    elliptical incision.​<cite class="src srb">SRB 1 &middot; p.33</cite></dd>
     <dt>Median mental sinus</dt>
     <dd>A chronic acquired infective condition in which <b>infection of the root or roots of one or
     both lower incisor teeth</b> forms a root abscess that <b>tracks down between the two halves of
@@ -1222,26 +1234,26 @@ body.guide { margin: 0; -webkit-text-size-adjust: 100%; }
     <br><span class="label">The trap</span>SRB: <b>"It is often mistaken for an infected sebaceous
     cyst."</b> Differential diagnosis: <b>infected sebaceous cyst, tuberculous sinus,
     osteomyelitis</b>, and <b>osteomyelitis of the mandible is the possible
-    complication</b>.<cite class="src srb">SRB 1 &middot; p.32</cite>
+    complication</b>.​<cite class="src srb">SRB 1 &middot; p.32</cite>
     <br><span class="label">The investigation that settles it</span><b>"Dental X-ray is diagnostic.
     Plain X-ray mandible may not reveal the disease."</b> Treatment: antibiotics after a discharge
     study, then <b>lay open and excise the sinus track with extraction of the offending incisor
-    tooth or teeth</b>.<cite class="src srb">SRB 1 &middot; p.32</cite>
+    tooth or teeth</b>.​<cite class="src srb">SRB 1 &middot; p.32</cite>
     <br><span class="label">And the point of the case</span>You cannot cure it without removing the
     tooth, because the tooth is the foreign body. It is cause-of-persistence number one in
     action.</dd>
     <dt>Sequestrum, since it is the commonest foreign body</dt>
     <dd>SRB: <b>"Sequestrum is dead bone in situ."</b> And it has characteristic appearances by
     cause: <b>pyogenic; tubercular, which is feathery; Salmonella, which is granular; and
-    syphilitic</b>.<cite class="src srb">SRB 1 &middot; p.32</cite> Treatment is
-    <b>sequestrectomy and saucerisation</b>.<cite class="src srb">SRB 1 &middot; p.33</cite></dd>
+    syphilitic</b>.​<cite class="src srb">SRB 1 &middot; p.32</cite> Treatment is
+    <b>sequestrectomy and saucerisation</b>.​<cite class="src srb">SRB 1 &middot; p.33</cite></dd>
     <dt>Pilonidal sinus</dt>
-    <dd>Has <b>primary and secondary</b> openings.<cite class="src srb">SRB 1 &middot; p.31</cite>
+    <dd>Has <b>primary and secondary</b> openings.​<cite class="src srb">SRB 1 &middot; p.31</cite>
     Note its company: SRB lists pilonidal sinus as associated with <b>hidradenitis suppurativa</b>,
     along with <b>acne and Crohn's disease</b>, where <b>smoking is the important aetiological
     factor</b> and the other associations are <b>obesity, poor hygiene, polycystic ovarian disease,
     diabetes mellitus and steroid therapy</b>, with a genetic association at <b>chromosome
-    15q24q25</b>.<cite class="src srb">SRB 1 &middot; p.44</cite></dd>
+    15q24q25</b>.​<cite class="src srb">SRB 1 &middot; p.44</cite></dd>
   </dl>
 
   <h2><span class="n">6</span>Investigations and treatment</h2>
@@ -1249,34 +1261,34 @@ body.guide { margin: 0; -webkit-text-size-adjust: 100%; }
   <dl class="findings">
     <dt>Discharge study</dt>
     <dd>Culture and sensitivity, cytology, and <b>acid-fast
-    bacilli</b>.<cite class="src srb">SRB 1 &middot; p.32</cite></dd>
+    bacilli</b>.​<cite class="src srb">SRB 1 &middot; p.32</cite></dd>
     <dt>Sinusogram or fistulogram</dt>
     <dd>Contrast injected into the track to show its extent, any cavity, and any communication.
     SRB names the <b>MR sinusogram</b> as beneficial in a preauricular
-    sinus.<cite class="src srb">SRB 1 &middot; p.33</cite></dd>
+    sinus.​<cite class="src srb">SRB 1 &middot; p.33</cite></dd>
     <dt>Imaging of the underlying bone or viscus</dt>
     <dd>Plain radiograph for a sequestrum, and <b>dental radiograph</b> for a median mental sinus,
     where a plain mandible film may miss it
-    entirely.<cite class="src srb">SRB 1 &middot; p.32</cite> CT or MRI where the track is deep or
+    entirely.​<cite class="src srb">SRB 1 &middot; p.32</cite> CT or MRI where the track is deep or
     the anatomy complex.</dd>
     <dt>Biopsy of the track</dt>
     <dd>For tuberculosis, actinomycosis and malignancy. B&amp;L states it as a rule rather than an
     option: <b>"Biopsies should always be taken from the wall of a sinus to exclude malignancy or
-    specific infection."</b><cite class="src bl">B&amp;L 45 &middot; p.663</cite> Say <i>always</i>
+    specific infection."</b>​<cite class="src bl">B&amp;L 45 &middot; p.663</cite> Say <i>always</i>
     if asked, and give the reason: a long-standing sinus can harbour a squamous carcinoma in its
     wall, and no imaging will tell you. SRB's general approach in a chronic sinus
     with cold abscess: <b>send material for histology, and give antibiotics, antitubercular drugs,
-    rest and adequate drainage</b>.<cite class="src srb">SRB 1 &middot; p.32</cite></dd>
+    rest and adequate drainage</b>.​<cite class="src srb">SRB 1 &middot; p.32</cite></dd>
     <dt>Treatment, in principle</dt>
     <dd>B&amp;L reduces it to one sentence for each: <b>"Treatment of a sinus is directed at
     removing the underlying cause"</b> and <b>"management of a fistula is directed at the
-    underlying aetiology"</b>.<cite class="src bl">B&amp;L 45 &middot; p.663</cite> In full:
+    underlying aetiology"</b>.​<cite class="src bl">B&amp;L 45 &middot; p.663</cite> In full:
     <b>remove the cause of persistence, then excise the track.</b> That means: take out the
     foreign body or sequestrum; relieve the distal obstruction; provide dependent drainage; rest
     the part; treat the specific infection; and excise the epithelialised or densely fibrosed
-    track.<cite class="src srb">SRB 1 &middot; p.31</cite> <b>Excise the whole track or it
+    track.​<cite class="src srb">SRB 1 &middot; p.31</cite> <b>Excise the whole track or it
     recurs</b>, which SRB states of the preauricular sinus and which is true of all of
-    them.<cite class="src srb">SRB 1 &middot; p.33</cite></dd>
+    them.​<cite class="src srb">SRB 1 &middot; p.33</cite></dd>
   </dl>
 
   <h2><span class="n">7</span>Rapid-fire viva</h2>
@@ -1289,7 +1301,7 @@ body.guide { margin: 0; -webkit-text-size-adjust: 100%; }
       cavity connected to the surface through it. A fistula is an abnormal communication between
       the lumen of one viscus and another, or the body surface, or between vessels; it has two
       openings or one opening and an internal
-      communication.<cite class="src das">Das 5 &middot; p.76</cite><cite class="src srb">SRB 1 &middot; p.30</cite>
+      communication.​<cite class="src das">Das 5 &middot; p.76</cite>​<cite class="src srb">SRB 1 &middot; p.30</cite>
       Sinus means hollow or a bay; fistula means a flute or pipe.</p>
     </details>
 
@@ -1300,9 +1312,9 @@ body.guide { margin: 0; -webkit-text-size-adjust: 100%; }
       obstruction in the lumen, as with a distal obstruction in a faecal or biliary fistula; lack
       of rest and persistent infection; epithelialisation or endothelialisation of the wall; dense
       fibrosis preventing contraction; and specific infections such as tuberculosis and
-      actinomycosis.<cite class="src srb">SRB 1 &middot; p.31</cite> S Das adds the mechanism where
+      actinomycosis.​<cite class="src srb">SRB 1 &middot; p.31</cite> S Das adds the mechanism where
       the walls are held apart and cannot collapse, as in chronic
-      empyema.<cite class="src das">Das 5 &middot; p.76</cite></p>
+      empyema.​<cite class="src das">Das 5 &middot; p.76</cite></p>
     </details>
 
     <details open>
@@ -1310,7 +1322,7 @@ body.guide { margin: 0; -webkit-text-size-adjust: 100%; }
       <p class="ans">Purulent means bacterial infection; gaseous means tuberculous; sulphur
       granules mean actinomycosis; mucus means a branchial fistula; saliva means a parotid fistula;
       faeces a faecal fistula; bile a biliary or duodenal fistula; and bony spicules
-      osteomyelitis.<cite class="src srb">SRB 1 &middot; p.31</cite> So inspect and express the
+      osteomyelitis.​<cite class="src srb">SRB 1 &middot; p.31</cite> So inspect and express the
       discharge before you probe anything.</p>
     </details>
 
@@ -1322,7 +1334,7 @@ body.guide { margin: 0; -webkit-text-size-adjust: 100%; }
       mistaken for an infected sebaceous cyst. A dental radiograph is diagnostic, and a plain
       mandible film may not reveal it. Treatment is antibiotics after a discharge study, then laying
       open and excising the track with extraction of the offending tooth; osteomyelitis of the
-      mandible is the possible complication.<cite class="src srb">SRB 1 &middot; p.32</cite> The
+      mandible is the possible complication.​<cite class="src srb">SRB 1 &middot; p.32</cite> The
       principle is that you cannot cure it without removing the tooth, because the tooth is the
       foreign body.</p>
     </details>
@@ -1336,31 +1348,31 @@ body.guide { margin: 0; -webkit-text-size-adjust: 100%; }
       ideally MR, and a discharge study. Treat by excision under general anaesthesia with removal
       of the entire track, using methylene blue injected into the track first and an elliptical
       incision; incomplete removal means
-      recurrence.<cite class="src srb">SRB 1 &middot; p.33</cite></p>
+      recurrence.​<cite class="src srb">SRB 1 &middot; p.33</cite></p>
     </details>
 
     <details open>
       <summary>What is a sequestrum, and how do the varieties differ?</summary>
       <p class="ans">Dead bone in situ. Pyogenic, tubercular which is feathery, Salmonella which is
-      granular, and syphilitic.<cite class="src srb">SRB 1 &middot; p.32</cite> It is the commonest
+      granular, and syphilitic.​<cite class="src srb">SRB 1 &middot; p.32</cite> It is the commonest
       foreign body keeping a sinus open, and it is treated by sequestrectomy and
-      saucerisation.<cite class="src srb">SRB 1 &middot; p.33</cite></p>
+      saucerisation.​<cite class="src srb">SRB 1 &middot; p.33</cite></p>
     </details>
 
     <details open>
       <summary>There is exuberant granulation tissue at the sinus opening. What does that suggest?</summary>
       <p class="ans">Proud flesh, which is commonly associated with a retained foreign body in the
       sinus cavity, so look for one. It should be scooped out with a Volkmann's scoop before any
-      grafting.<cite class="src srb">SRB 1 &middot; p.19</cite></p>
+      grafting.​<cite class="src srb">SRB 1 &middot; p.19</cite></p>
     </details>
 
     <details open>
       <summary>A chronic sinus in the neck. What are you thinking?</summary>
       <p class="ans">Tuberculous lymphadenitis with a cold abscess underneath, which SRB
-      illustrates exactly so.<cite class="src srb">SRB 1 &middot; p.31</cite> Send the discharge for
+      illustrates exactly so.​<cite class="src srb">SRB 1 &middot; p.31</cite> Send the discharge for
       culture, cytology and acid-fast bacilli, take material for histology, and treat with
       antitubercular drugs, antibiotics, rest and adequate
-      drainage.<cite class="src srb">SRB 1 &middot; p.32</cite> The differential includes a
+      drainage.​<cite class="src srb">SRB 1 &middot; p.32</cite> The differential includes a
       branchial fistula, which discharges mucus, and actinomycosis, which discharges sulphur
       granules.</p>
     </details>
@@ -1369,16 +1381,16 @@ body.guide { margin: 0; -webkit-text-size-adjust: 100%; }
       <summary>A sinus in the thigh with bony spicules in the discharge.</summary>
       <p class="ans">Chronic osteomyelitis with a sequestrum; SRB's illustration is a sinus in the
       thigh from osteomyelitis of the greater
-      trochanter.<cite class="src srb">SRB 1 &middot; p.30</cite> S Das notes the history: a sinus
+      trochanter.​<cite class="src srb">SRB 1 &middot; p.30</cite> S Das notes the history: a sinus
       due to osteomyelitis follows an episode of high
-      fever.<cite class="src das">Das 5 &middot; p.76</cite> Radiograph the bone, remove the
+      fever.​<cite class="src das">Das 5 &middot; p.76</cite> Radiograph the bone, remove the
       sequestrum, and saucerise.</p>
     </details>
 
     <details open>
       <summary>Why does a true fistula rarely close on its own?</summary>
       <p class="ans">S Das's observation is that once a true fistula has formed it seldom shows any
-      tendency to close.<cite class="src das">Das 5 &middot; p.76</cite> The reasons are the causes
+      tendency to close.​<cite class="src das">Das 5 &middot; p.76</cite> The reasons are the causes
       of persistence: the track becomes lined with epithelium or endothelium, there is often distal
       obstruction keeping flow through it, and the flow itself prevents rest. So treatment addresses
       the obstruction and then the track.</p>
@@ -1387,18 +1399,18 @@ body.guide { margin: 0; -webkit-text-size-adjust: 100%; }
     <details open>
       <summary>How would you protect the skin around a gastrointestinal fistula?</summary>
       <p class="ans">Zinc oxide cream applied locally controls the skin
-      excoriation.<cite class="src srb">SRB 1 &middot; p.31</cite> And address the cause of
+      excoriation.​<cite class="src srb">SRB 1 &middot; p.31</cite> And address the cause of
       persistence: distal obstruction, inadequate drainage, and the nutritional state.</p>
     </details>
 
     <details open>
       <summary>What is pilonidal sinus associated with?</summary>
       <p class="ans">It has primary and secondary
-      openings,<cite class="src srb">SRB 1 &middot; p.31</cite> and SRB lists it alongside acne and
+      openings,​<cite class="src srb">SRB 1 &middot; p.31</cite> and SRB lists it alongside acne and
       Crohn's disease in association with hidradenitis suppurativa, for which smoking is the
       important aetiological factor, with obesity, poor hygiene, polycystic ovarian disease,
       diabetes and steroid therapy as other associations and a genetic link at chromosome
-      15q24q25.<cite class="src srb">SRB 1 &middot; p.44</cite></p>
+      15q24q25.​<cite class="src srb">SRB 1 &middot; p.44</cite></p>
     </details>
 
   </div>

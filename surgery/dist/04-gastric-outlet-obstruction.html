@@ -24,6 +24,7 @@
   --ink-soft:    #5a6269;
   --rule:        #ddd8ce;
   --accent:      #005f73;
+  --on-accent:   #fff;
   --accent-soft: #e3eef0;
   --flag:        #8a5a2b;
   --flag-soft:   #f6ece0;
@@ -86,21 +87,21 @@
 
 .guide[data-theme="sepia"] {
   --paper: #f4ecd8; --ink: #433422; --ink-soft: #6f5f4a; --rule: #ddd0b4;
-  --accent: #7a4a1e; --accent-soft: #ece0c8; --flag: #8a5a2b; --flag-soft: #ece0c8;
+  --accent: #7a4a1e; --on-accent: #fff; --accent-soft: #ece0c8; --flag: #8a5a2b; --flag-soft: #ece0c8;
   --cite: #8a7b63; --mark: #f5d98a; --bl: #6a4a7a; --srb: #3f6b4a;
   color-scheme: light;
 }
 
 .guide[data-theme="dark"] {
   --paper: #15181a; --ink: #e8e6e1; --ink-soft: #a3abb2; --rule: #2e3338;
-  --accent: #6fc3d2; --accent-soft: #1b2a2e; --flag: #d9a36a; --flag-soft: #2a2119;
+  --accent: #6fc3d2; --on-accent: #0b1416; --accent-soft: #1b2a2e; --flag: #d9a36a; --flag-soft: #2a2119;
   --cite: #78828a; --mark: #4a4120; --bl: #a893dd; --srb: #6fc3a8;
   color-scheme: dark;
 }
 
 .guide[data-theme="contrast"] {
   --paper: #000000; --ink: #ffffff; --ink-soft: #d8d8d8; --rule: #6a6a6a;
-  --accent: #6fe3ff; --accent-soft: #10242b; --flag: #ffc46b; --flag-soft: #2a2008;
+  --accent: #6fe3ff; --on-accent: #000; --accent-soft: #10242b; --flag: #ffc46b; --flag-soft: #2a2008;
   --cite: #bdbdbd; --mark: #4a4a00; --bl: #d0b8ff; --srb: #7fe8c0;
   color-scheme: dark;
 }
@@ -109,7 +110,7 @@
 @media (prefers-color-scheme: dark) {
   .guide[data-theme="auto"] {
     --paper: #15181a; --ink: #e8e6e1; --ink-soft: #a3abb2; --rule: #2e3338;
-    --accent: #6fc3d2; --accent-soft: #1b2a2e; --flag: #d9a36a; --flag-soft: #2a2119;
+    --accent: #6fc3d2; --on-accent: #0b1416; --accent-soft: #1b2a2e; --flag: #d9a36a; --flag-soft: #2a2119;
     --cite: #78828a; --mark: #4a4120; --bl: #a893dd; --srb: #6fc3a8;
     color-scheme: dark;
   }
@@ -141,6 +142,7 @@ body.guide { margin: 0; -webkit-text-size-adjust: 100%; }
   font-family: var(--face-body);
   font-size: 2.1rem; font-weight: 600; line-height: 1.15;
   letter-spacing: -0.015em; text-wrap: balance; margin: 0 0 0.7rem;
+  overflow-wrap: break-word; hyphens: auto;
 }
 
 .guide .standfirst { font-size: 1.02rem; color: var(--ink-soft); margin: 0 0 1.6rem; }
@@ -311,7 +313,11 @@ body.guide { margin: 0; -webkit-text-size-adjust: 100%; }
 .guide cite.src {
   font-family: var(--face-ui); font-style: normal;
   font-size: 0.66em; font-weight: 600; letter-spacing: 0.02em;
-  color: var(--cite); white-space: nowrap;
+  color: var(--cite);
+  /* The chip stays on one line. build.py puts a zero-width space before each one,
+     which is what lets a chip that will not fit move to the next line whole
+     instead of widening the page past the phone. */
+  white-space: nowrap; max-width: 100%;
   border: 1px solid var(--rule); border-radius: 2px;
   padding: 0.05rem 0.28rem; margin-left: 0.3rem; vertical-align: 0.12em;
 }
@@ -331,7 +337,11 @@ body.guide { margin: 0; -webkit-text-size-adjust: 100%; }
   cursor: pointer; list-style: none; display: flex; gap: 0.55rem; align-items: baseline;
   padding: 0.7rem 0.9rem; font-family: var(--face-ui);
   font-size: 0.82em; line-height: 1.45; color: var(--ink);
+  flex-wrap: wrap;
 }
+/* A flex item defaults to min-width:auto and so refuses to shrink below its own
+   content width; a long source line in the summary then widened the whole page. */
+.guide details.conflict > summary > * { min-width: 0; overflow-wrap: break-word; }
 .guide details.conflict > summary::-webkit-details-marker { display: none; }
 .guide details.conflict > summary::before {
   content: "*"; color: var(--flag); font-size: 1em; font-weight: 700;
@@ -419,7 +429,7 @@ body.guide { margin: 0; -webkit-text-size-adjust: 100%; }
 @media print {
   .guide {
     --paper: #fff; --ink: #000; --ink-soft: #333; --rule: #bbb;
-    --accent: #004c5c; --accent-soft: #eef4f5; --cite: #666;
+    --accent: #004c5c; --on-accent: #fff; --accent-soft: #eef4f5; --cite: #666;
     --measure: none; --fs: 10.5pt; --lh: 1.45;
     --face-body: "Spectral", Georgia, serif;
     --face-ui: "Inter", system-ui, sans-serif;
@@ -785,7 +795,9 @@ body.guide { margin: 0; -webkit-text-size-adjust: 100%; }
   background: none; color: var(--ink, #222);
 }
 .rdr-ne-row .rdr-ok {
-  background: var(--accent, #005f73); border-color: var(--accent, #005f73); color: #fff;
+  background: var(--accent, #005f73); border-color: var(--accent, #005f73);
+  /* not #fff: the dark and high-contrast accents are pale, and white on them is 2:1 */
+  color: var(--on-accent, #fff);
 }
 .rdr-ne-row .rdr-del { color: var(--flag, #8a5a2b); }
 
@@ -991,27 +1003,27 @@ body.guide { margin: 0; -webkit-text-size-adjust: 100%; }
     <dt>The two causes, and the order you should hold them in</dt>
     <dd>B&amp;L: <b>"The two common causes of gastric outlet obstruction are gastric cancer and
     pyloric stenosis secondary to peptic
-    ulceration."</b><cite class="src bl">B&amp;L 67 &middot; p.1168</cite> Note which it names
+    ulceration."</b>​<cite class="src bl">B&amp;L 67 &middot; p.1168</cite> Note which it names
     first, and see the disagreement below.</dd>
     <dt>SRB's fuller differential, which is the list to reproduce</dt>
     <dd><b>Congenital</b> &middot; <b>chronic duodenal ulcer, fibrosed or cicatrised</b> &middot;
     <b>carcinoma pylorus</b> &middot; <b>adult pyloric stenosis</b>, which is treated by
     pyloroplasty and <b>not</b> by pyloromyotomy &middot; <b>pyloric mucosal diaphragm</b>, which
     must be excised surgically or
-    endoscopically.<cite class="src srb">SRB 20 &middot; p.819</cite></dd>
+    endoscopically.​<cite class="src srb">SRB 20 &middot; p.819</cite></dd>
     <dt>The mechanism in benign disease</dt>
     <dd>A chronic duodenal ulcer, after many years, undergoes <b>scarring and cicatrisation</b>
     causing total obstruction of the pylorus and <b>enormous dilatation of the
-    stomach</b>.<cite class="src srb">SRB 20 &middot; p.818</cite> B&amp;L puts the same thing
+    stomach</b>.​<cite class="src srb">SRB 20 &middot; p.818</cite> B&amp;L puts the same thing
     histologically: the ulcer penetrates the muscle coat, leading to fibrosis, and <b>the
     resulting scarring may cause a deformity such as pyloric
-    stenosis</b>.<cite class="src bl">B&amp;L 67 &middot; p.1157</cite> S Das: cicatrisation of a
-    duodenal or <b>juxta-pyloric</b> ulcer.<cite class="src das">Das 34 &middot; p.508</cite></dd>
+    stenosis</b>.​<cite class="src bl">B&amp;L 67 &middot; p.1157</cite> S Das: cicatrisation of a
+    duodenal or <b>juxta-pyloric</b> ulcer.​<cite class="src das">Das 34 &middot; p.508</cite></dd>
     <dt>The triad that makes the diagnosis at the bedside</dt>
     <dd>SRB states it as a set: <b>visible gastric peristalsis positive, auscultopercussion test
-    positive, succussion splash positive</b>.<cite class="src srb">SRB 20 &middot; p.840</cite>
+    positive, succussion splash positive</b>.​<cite class="src srb">SRB 20 &middot; p.840</cite>
     And its mnemonic for the three: <b>"stomach we see, stomach we feel, stomach we
-    hear"</b>.<cite class="src srb">SRB 20 &middot; p.818</cite></dd>
+    hear"</b>.​<cite class="src srb">SRB 20 &middot; p.818</cite></dd>
   </dl>
 
   <details class="conflict">
@@ -1024,23 +1036,23 @@ body.guide { margin: 0; -webkit-text-size-adjust: 100%; }
       <dt>S Das</dt>
       <dd>Defines the entity itself as benign: <b>"Pyloric stenosis. This is due to cicatrisation
       of a duodenal or a juxta-pyloric
-      ulcer."</b><cite class="src das">Das 34 &middot; p.508</cite> Carcinoma of the stomach is
+      ulcer."</b>​<cite class="src das">Das 34 &middot; p.508</cite> Carcinoma of the stomach is
       described separately, as an obstructive type of gastric
-      cancer.<cite class="src das">Das 34 &middot; p.508</cite></dd>
+      cancer.​<cite class="src das">Das 34 &middot; p.508</cite></dd>
       <dt>SRB</dt>
       <dd>Gives "Pyloric Stenosis due to Chronic Duodenal Ulcer" its own chapter heading and its
       own clinical features, investigations and
-      treatment,<cite class="src srb">SRB 20 &middot; p.818, p.819, p.820</cite> and lists carcinoma
+      treatment,​<cite class="src srb">SRB 20 &middot; p.818, p.819, p.820</cite> and lists carcinoma
       pylorus as the <b>differential diagnosis</b>, distinguished because there <b>a mass may be
       palpable</b>, whereas in benign pyloric stenosis <b>"mass is never
-      palpable"</b>.<cite class="src srb">SRB 20 &middot; p.819</cite></dd>
+      palpable"</b>.​<cite class="src srb">SRB 20 &middot; p.819</cite></dd>
       <dt>Bailey &amp; Love 28e</dt>
       <dd>Reverses the presumption outright: <b>"With the decreasing incidence of peptic ulceration
       gastric outlet obstruction should be considered malignant until proven
-      otherwise."</b><cite class="src bl">B&amp;L 67 &middot; p.1168</cite> And it makes the
+      otherwise."</b>​<cite class="src bl">B&amp;L 67 &middot; p.1168</cite> And it makes the
       consequence an instruction rather than a suggestion: <b>"Endoscopic biopsy is essential to
       exclude malignancy"</b>, and <b>"biopsy of the area around the pylorus is
-      essential"</b>.<cite class="src bl">B&amp;L 67 &middot; p.1169</cite></dd>
+      essential"</b>.​<cite class="src bl">B&amp;L 67 &middot; p.1169</cite></dd>
     </dl>
     <span class="ruling"><b>This is the most important disagreement in the case, and the two
     positions are both right about different populations.</b> B&amp;L's premise is a falling
@@ -1055,7 +1067,7 @@ body.guide { margin: 0; -webkit-text-size-adjust: 100%; }
     cancer costs the patient far more than an unnecessary biopsy."</b> That answer takes a position,
     cites why, and is safe. The one finding that should shift you strongly towards cancer before
     the biopsy is a <b>palpable mass</b>, which SRB says is never present in benign
-    stenosis.<cite class="src srb">SRB 20 &middot; p.819</cite></span>
+    stenosis.​<cite class="src srb">SRB 20 &middot; p.819</cite></span>
     </div>
   </details>
 
@@ -1066,7 +1078,7 @@ body.guide { margin: 0; -webkit-text-size-adjust: 100%; }
   <div class="pearl">
     <span class="tag">The metabolic cascade, which is the heart of this case</span>
     Learn it as a chain of consequences, because that is how it will be
-    asked.<cite class="src bl">B&amp;L 67 &middot; p.1169</cite>
+    asked.​<cite class="src bl">B&amp;L 67 &middot; p.1169</cite>
     <br><br><b>1.</b> Vomiting hydrochloric acid produces a <b>hypochloraemic alkalosis</b>.
     <br><b>2.</b> <b>Initially the sodium and potassium may be relatively normal.</b> At this
     stage the urine has a <b>low chloride and high bicarbonate</b> content, reflecting the primary
@@ -1081,7 +1093,7 @@ body.guide { margin: 0; -webkit-text-size-adjust: 100%; }
     words: in alkalosis <i>without</i> hyponatraemia the kidney excretes bicarbonate along with
     sodium, but here, <b>because the body must conserve sodium, bicarbonate is excreted with
     hydrogen ion instead, so the urine turns
-    acid</b>.<cite class="src srb">SRB 20 &middot; p.820</cite> That sentence is the cleanest
+    acid</b>.​<cite class="src srb">SRB 20 &middot; p.820</cite> That sentence is the cleanest
     explanation of paradoxical aciduria in any of the three books: quote it.
   </div>
 
@@ -1095,16 +1107,16 @@ body.guide { margin: 0; -webkit-text-size-adjust: 100%; }
       <dt>SRB</dt>
       <dd>Lists them together, under the heading "Electrolyte Changes in Pyloric Stenosis":
       <b>hyponatraemia, hypokalaemia, hypomagnesaemia, hypochloraemia, metabolic alkalosis,
-      paradoxical aciduria</b>,<cite class="src srb">SRB 20 &middot; p.820</cite> and elsewhere
+      paradoxical aciduria</b>,​<cite class="src srb">SRB 20 &middot; p.820</cite> and elsewhere
       a six-part version adding hypocalcaemia: <b>hypochloraemic, hyponatraemic, hypokalaemic,
       hypocalcaemic, hypomagnesaemic
-      alkalosis</b>.<cite class="src srb">SRB 20 &middot; p.818</cite></dd>
+      alkalosis</b>.​<cite class="src srb">SRB 20 &middot; p.818</cite></dd>
       <dt>Bailey &amp; Love 28e</dt>
       <dd>Insists on the order. The primary abnormality is <b>hypochloraemic alkalosis</b> alone;
       <b>"initially the sodium and potassium may be relatively normal; however, as dehydration
       progresses, more profound metabolic abnormalities arise"</b>, and the hyponatraemia and then
       the hypokalaemia are <b>consequences of the renal response to
-      dehydration</b>.<cite class="src bl">B&amp;L 67 &middot; p.1169</cite></dd>
+      dehydration</b>.​<cite class="src bl">B&amp;L 67 &middot; p.1169</cite></dd>
     </dl>
     <span class="ruling"><b>Not a contradiction but a difference in resolution, and the graded
     answer is the better one because it tells the examiner you know which abnormality causes
@@ -1123,13 +1135,13 @@ body.guide { margin: 0; -webkit-text-size-adjust: 100%; }
     Because the stomach is not making as much acid to lose. B&amp;L: in cancer <b>"the metabolic
     consequences may be somewhat different from those of benign pyloric stenosis because of the
     relative hypochlorhydria found in patients with gastric
-    cancer"</b>,<cite class="src bl">B&amp;L 67 &middot; p.1168</cite> and the alkalosis is
+    cancer"</b>,​<cite class="src bl">B&amp;L 67 &middot; p.1168</cite> and the alkalosis is
     <b>"usually less pronounced than when duodenal ulceration leads to
-    obstruction"</b>.<cite class="src bl">B&amp;L 67 &middot; p.1170</cite> Its summary box goes
+    obstruction"</b>.​<cite class="src bl">B&amp;L 67 &middot; p.1170</cite> Its summary box goes
     further: <b>the hypochloraemic alkalosis "is usually only seen with peptic ulcer
-    disease"</b>.<cite class="src bl">B&amp;L 67 &middot; p.1169</cite> SRB agrees in the same
+    disease"</b>.​<cite class="src bl">B&amp;L 67 &middot; p.1169</cite> SRB agrees in the same
     terms: metabolic changes are not severe in carcinoma pylorus because there is often
-    <b>hypochlorhydria or achlorhydria</b>.<cite class="src srb">SRB 20 &middot; p.820</cite>
+    <b>hypochlorhydria or achlorhydria</b>.​<cite class="src srb">SRB 20 &middot; p.820</cite>
     <br><br><b>So a florid hypochloraemic alkalosis points to a benign cause, and its absence does
     not reassure you: it points towards cancer.</b> That inversion is the mark.
   </div>
@@ -1141,27 +1153,27 @@ body.guide { margin: 0; -webkit-text-size-adjust: 100%; }
     <dd>Epidemiology points to a role for <i>H. pylori</i>, principally in carcinoma of the
     <b>body and distal stomach</b> rather than the proximal stomach. But <b>"there is insufficient
     evidence to support eradication programmes in asymptomatic
-    patients"</b>.<cite class="src bl">B&amp;L 67 &middot; p.1170</cite> Know both halves: the
+    patients"</b>.​<cite class="src bl">B&amp;L 67 &middot; p.1170</cite> Know both halves: the
     association is real, the population screening conclusion does not follow.</dd>
     <dt>Previous ulcer surgery</dt>
     <dd>Patients who have had peptic ulcer surgery, <b>particularly drainage procedures such as
     Billroth II or Pólya gastrectomy, gastroenterostomy or pyloroplasty</b>, are at
     <b>approximately four times the average risk</b>, thought to be from <b>bile reflux and
-    intestinal metaplasia</b>.<cite class="src bl">B&amp;L 67 &middot; p.1170</cite> This is the
+    intestinal metaplasia</b>.​<cite class="src bl">B&amp;L 67 &middot; p.1170</cite> This is the
     one risk factor the surgeon creates, so it is worth volunteering when you are asked to justify
     an operation.</dd>
     <dt>Pernicious anaemia, gastric atrophy, adenomatous polyps</dt>
-    <dd>All increase risk.<cite class="src bl">B&amp;L 67 &middot; p.1170</cite> On polyps, the
+    <dd>All increase risk.​<cite class="src bl">B&amp;L 67 &middot; p.1170</cite> On polyps, the
     rule is: <b>metaplastic polyps are the commonest type, associated with H. pylori and regress
     after eradication; fundic gland polyps are associated with PPI use and with familial
     adenomatous polyposis; neither has proven malignant potential, but true adenomas do and should
     be removed</b>. <b>Biopsy is essential</b> in all of them, because a polyp may actually be an
-    early gastric cancer.<cite class="src bl">B&amp;L 67 &middot; p.1169</cite></dd>
+    early gastric cancer.​<cite class="src bl">B&amp;L 67 &middot; p.1169</cite></dd>
     <dt>Diet, smoking and environment</dt>
     <dd><b>Excessive salt intake, deficiency of antioxidants, exposure to N-nitroso compounds</b>;
     cigarette smoking; dust ingestion in industrial processes. The evidence that diet matters is
     the <b>decline in gastric cancer among Japanese families living in the
-    USA</b>.<cite class="src bl">B&amp;L 67 &middot; p.1170</cite></dd>
+    USA</b>.​<cite class="src bl">B&amp;L 67 &middot; p.1170</cite></dd>
     <dt>And the split that changes the whole picture</dt>
     <dd>Distal and body cancer is falling at about <b>1% per year</b> in the West and is commonest
     in <b>low socioeconomic groups</b>; <b>proximal</b> gastric cancer, particularly at the
@@ -1169,7 +1181,7 @@ body.guide { margin: 0; -webkit-text-size-adjust: 100%; }
     is <b>not</b> associated with <i>H. pylori</i>, and is associated with <b>obesity</b>. <b>Its
     aetiology remains an enigma.</b> This shift <b>has not been observed in
     Japan</b>, where distal cancer still
-    predominates.<cite class="src bl">B&amp;L 67 &middot; p.1170</cite></dd>
+    predominates.​<cite class="src bl">B&amp;L 67 &middot; p.1170</cite></dd>
   </dl>
 
   <!-- ===================== 3. HISTORY ===================== -->
@@ -1184,12 +1196,12 @@ body.guide { margin: 0; -webkit-text-size-adjust: 100%; }
       <span class="label">Distinguishes</span>S Das localises both ulcers precisely. <b>Duodenal
       ulcer</b>: on the <b>transpyloric plane about 1½ inches to the right of the midline</b>, the
       <b>duodenal point</b>, which is about a hand's breadth below the xiphisternal
-      joint.<cite class="src das">Das 34 &middot; p.483, p.507</cite> <b>Gastric ulcer</b>: deep
+      joint.​<cite class="src das">Das 34 &middot; p.483, p.507</cite> <b>Gastric ulcer</b>: deep
       tenderness <b>in the mid-epigastric region</b>, elicitable <b>"with remarkable
-      constancy"</b>.<cite class="src das">Das 34 &middot; p.507</cite>
+      constancy"</b>.​<cite class="src das">Das 34 &middot; p.507</cite>
       <br><span class="label">Why it matters here</span>Benign gastric outlet obstruction requires
       <b>a long history of peptic ulcer
-      disease</b>,<cite class="src bl">B&amp;L 67 &middot; p.1168</cite> so establishing years of
+      disease</b>,​<cite class="src bl">B&amp;L 67 &middot; p.1168</cite> so establishing years of
       typical ulcer pain is what makes the benign diagnosis plausible. Its absence pushes you
       towards cancer.
     </span>
@@ -1201,17 +1213,17 @@ body.guide { margin: 0; -webkit-text-size-adjust: 100%; }
       <span class="label">Distinguishes</span><b>Duodenal ulcer</b>: pain appears <b>2½ to 4 hours
       after a meal, when the stomach becomes empty</b>, so it is <b>"hunger pain"</b>, typically
       <b>in the early morning or late afternoon</b>, and <b>relieved by taking
-      food</b>.<cite class="src das">Das 34 &middot; p.507</cite> <b>Gastric ulcer</b>: pain
+      food</b>.​<cite class="src das">Das 34 &middot; p.507</cite> <b>Gastric ulcer</b>: pain
       <b>immediately after food</b>, with <b>"clock-like" regularity</b>, relieved when the
       stomach empties, or by alkali, or by vomiting which is <b>often
-      self-induced</b>.<cite class="src das">Das 34 &middot; p.507</cite>
+      self-induced</b>.​<cite class="src das">Das 34 &middot; p.507</cite>
       <br><span class="label">So</span>The food relation separates the two ulcers, and S Das adds
       the body-habitus consequence: the duodenal ulcer patient has an <b>exceptionally good
       appetite and eats frequently to relieve pain, so most are well built</b>, whereas the gastric
       ulcer patient <b>restricts food for fear of pain and is often thin</b>, though <b>appetite
-      remains good</b>.<cite class="src das">Das 34 &middot; p.507</cite>
+      remains good</b>.​<cite class="src das">Das 34 &middot; p.507</cite>
       <br><span class="label">And the heavier the meal</span><b>"The heavier the meal, the longer
-      is the interval but the worse is the pain."</b><cite class="src das">Das 34 &middot; p.507</cite>
+      is the interval but the worse is the pain."</b>​<cite class="src das">Das 34 &middot; p.507</cite>
     </span>
   </div>
 
@@ -1220,19 +1232,19 @@ body.guide { margin: 0; -webkit-text-size-adjust: 100%; }
     <span class="why">
       <span class="label">Rules in</span><b>Loss of periodicity.</b> In peptic ulcer there is
       <b>definite periodicity lasting several weeks followed by an interval of freedom</b>, with
-      attacks in <b>spring and autumn</b>.<cite class="src das">Das 34 &middot; p.482, p.507</cite>
+      attacks in <b>spring and autumn</b>.​<cite class="src das">Das 34 &middot; p.482, p.507</cite>
       SRB lists <b>loss of periodicity</b> as a clinical feature of pyloric
-      stenosis.<cite class="src srb">SRB 20 &middot; p.818</cite> S Das's version in the history is
+      stenosis.​<cite class="src srb">SRB 20 &middot; p.818</cite> S Das's version in the history is
       <b>"certain loss of its periodicity with enhancement of pain and fullness towards
-      evening"</b>.<cite class="src das">Das 34 &middot; p.508</cite>
+      evening"</b>.​<cite class="src das">Das 34 &middot; p.508</cite>
       <br><span class="label out">And the other thing loss of periodicity means</span>S Das's
       warning about gastric ulcer: <b>"if [the patient] loses his periodicity of pain one may
       suspect superimposition of carcinoma or penetration into the pancreas or pyloric
-      obstruction"</b>.<cite class="src das">Das 34 &middot; p.483</cite> Three possibilities from
+      obstruction"</b>.​<cite class="src das">Das 34 &middot; p.483</cite> Three possibilities from
       one answer, and you should name all three.
       <br><span class="label out">Rules out</span>In appendicular dyspepsia and gallbladder disease
       this <b>definite</b> periodicity is <b>not</b> found; instead a mild pain continues even in
-      the quiet periods.<cite class="src das">Das 34 &middot; p.482</cite>
+      the quiet periods.​<cite class="src das">Das 34 &middot; p.482</cite>
     </span>
   </div>
 
@@ -1243,22 +1255,22 @@ body.guide { margin: 0; -webkit-text-size-adjust: 100%; }
     <span class="why">
       <span class="label">Rules in</span>All three books converge. B&amp;L: <b>"The vomitus is
       characteristically of undigested food and is totally lacking in
-      bile."</b><cite class="src bl">B&amp;L 67 &middot; p.1168</cite> SRB: <b>large quantity, foul
+      bile."</b>​<cite class="src bl">B&amp;L 67 &middot; p.1168</cite> SRB: <b>large quantity, foul
       smelling and frothy, containing food consumed on the previous day, partially digested or
-      undigested</b>.<cite class="src srb">SRB 20 &middot; p.818</cite> S Das: large in amount,
+      undigested</b>.​<cite class="src srb">SRB 20 &middot; p.818</cite> S Das: large in amount,
       <b>characteristically in the evening</b>, often <b>foul and frothy</b>, containing undigested
-      food <b>eaten even 2 or 3 days earlier</b>.<cite class="src das">Das 34 &middot; p.508</cite>
+      food <b>eaten even 2 or 3 days earlier</b>.​<cite class="src das">Das 34 &middot; p.508</cite>
       <br><span class="label">The three features to name</span><b>Large volume; no bile; and old
       food.</b> The absence of bile localises the obstruction <b>at or proximal to the pylorus</b>,
       which is the whole point of asking.
       <br><span class="label out">Contrast</span>In <b>superior mesenteric artery syndrome</b>, the
       cast syndrome, the vomiting is <b>bilious</b>, with upper abdominal fullness, visible
       peristalsis and dehydration, and SRB lists pyloric stenosis with gastric outlet obstruction
-      as its differential.<cite class="src srb">SRB 20 &middot; p.832</cite> Bile in the vomit
+      as its differential.​<cite class="src srb">SRB 20 &middot; p.832</cite> Bile in the vomit
       moves the obstruction distal to the second part of the duodenum.
       <br><span class="label">And one more character</span>S Das: <b>"coffee ground" vomiting</b>
       indicates slow haemorrhage into the
-      stomach.<cite class="src das">Das 34 &middot; p.483</cite>
+      stomach.​<cite class="src das">Das 34 &middot; p.483</cite>
     </span>
   </div>
 
@@ -1266,11 +1278,11 @@ body.guide { margin: 0; -webkit-text-size-adjust: 100%; }
     <span class="ask">Does vomiting relieve the pain?</span>
     <span class="why">
       <span class="label">Rules in</span>S Das: <b>"Vomiting always relieves pain of peptic
-      ulcer."</b><cite class="src das">Das 34 &middot; p.483</cite>
+      ulcer."</b>​<cite class="src das">Das 34 &middot; p.483</cite>
       <br><span class="label out">Rules in something worse</span>In carcinoma of the stomach the
       late symptom is <b>vomiting which gives no relief to the pain</b>, with <b>constant
       epigastric pain neither caused by nor relieved by
-      food</b>.<cite class="src das">Das 34 &middot; p.508</cite> So "does it help?" is a
+      food</b>.​<cite class="src das">Das 34 &middot; p.508</cite> So "does it help?" is a
       one-question screen for malignancy, and almost nobody asks it.
     </span>
   </div>
@@ -1280,19 +1292,19 @@ body.guide { margin: 0; -webkit-text-size-adjust: 100%; }
     <span class="why">
       <span class="label">Why</span><b>Weight loss is a feature</b> of benign gastric outlet
       obstruction too, and the patient <b>appears unwell and
-      dehydrated</b>,<cite class="src bl">B&amp;L 67 &middot; p.1168</cite> so weight loss alone
+      dehydrated</b>,​<cite class="src bl">B&amp;L 67 &middot; p.1168</cite> so weight loss alone
       does not mean cancer. SRB lists <b>loss of appetite and
-      weight</b>.<cite class="src srb">SRB 20 &middot; p.818</cite>
+      weight</b>.​<cite class="src srb">SRB 20 &middot; p.818</cite>
       <br><span class="label">Distinguishes</span>What does discriminate is the <b>sequence</b>. In
       benign disease there are years of typical ulcer pain and then obstruction and then weight
       loss. In cancer, <b>early satiety, bloating, distension and vomiting</b> arrive on a
       <b>short history</b>, with <b>profound</b> weight
-      loss,<cite class="src bl">B&amp;L 67 &middot; p.1170</cite> and S Das notes of the insidious
+      loss,​<cite class="src bl">B&amp;L 67 &middot; p.1170</cite> and S Das notes of the insidious
       type that <b>"the history is usually
-      short"</b>.<cite class="src das">Das 34 &middot; p.508</cite>
+      short"</b>.​<cite class="src das">Das 34 &middot; p.508</cite>
       <br><span class="label out">Careful about age</span>S Das: carcinoma of the stomach is a
       disease of the elderly, <b>"but if suspected in the young, should not be turned down on the
-      point of age only"</b>.<cite class="src das">Das 34 &middot; p.508</cite>
+      point of age only"</b>.​<cite class="src das">Das 34 &middot; p.508</cite>
     </span>
   </div>
 
@@ -1305,10 +1317,10 @@ body.guide { margin: 0; -webkit-text-size-adjust: 100%; }
       accompany chronic gastric ulcer in <b>about a quarter</b> of cases, and in duodenal ulcer
       they are <b>more frequent</b> than in gastric ulcer, with a <b>5% chance of massive
       haemorrhage and a 2% chance of
-      perforation</b>.<cite class="src das">Das 34 &middot; p.507</cite> B&amp;L on cancer: <b>the
+      perforation</b>.​<cite class="src das">Das 34 &middot; p.507</cite> B&amp;L on cancer: <b>the
       tumour frequently bleeds, resulting in iron deficiency
-      anaemia</b>.<cite class="src bl">B&amp;L 67 &middot; p.1170</cite> SRB gives haematemesis in
-      <b>15%</b> of gastric cancers.<cite class="src srb">SRB 20 &middot; p.841</cite>
+      anaemia</b>.​<cite class="src bl">B&amp;L 67 &middot; p.1170</cite> SRB gives haematemesis in
+      <b>15%</b> of gastric cancers.​<cite class="src srb">SRB 20 &middot; p.841</cite>
       <br><span class="label">So</span>Anaemia in a patient with gastric outlet obstruction is
       expected either way, but <b>iron deficiency anaemia with a short history and no ulcer
       history</b> is a cancer story.
@@ -1320,19 +1332,19 @@ body.guide { margin: 0; -webkit-text-size-adjust: 100%; }
     <span class="why">
       <span class="label">Rules in</span>Metastatic disease, and each has a name.
       <b>Troisier's sign</b>: tumour appearing in the <b>left supraclavicular</b> node, Virchow's
-      node.<cite class="src bl">B&amp;L 67 &middot; p.1171</cite><cite class="src srb">SRB 20 &middot; p.839</cite>
+      node.​<cite class="src bl">B&amp;L 67 &middot; p.1171</cite>​<cite class="src srb">SRB 20 &middot; p.839</cite>
       <b>Ascites</b> from transcoelomic spread. <b>Trousseau's sign</b>: <b>migrating
       thrombophlebitis</b> and deep venous thrombosis, a non-metastatic effect of malignancy
       arising from the tumour's effect on thrombotic and haemostatic
-      mechanisms.<cite class="src bl">B&amp;L 67 &middot; p.1170</cite><cite class="src srb">SRB 20 &middot; p.841</cite>
+      mechanisms.​<cite class="src bl">B&amp;L 67 &middot; p.1170</cite>​<cite class="src srb">SRB 20 &middot; p.841</cite>
       <br><span class="label">The footnote worth knowing</span>Trousseau described the sign in
       himself and suspected he had gastric cancer; at post-mortem it proved to be <b>pancreatic</b>
-      cancer.<cite class="src bl">B&amp;L 67 &middot; p.1170</cite> SRB also lists migrating
+      cancer.​<cite class="src bl">B&amp;L 67 &middot; p.1170</cite> SRB also lists migrating
       thrombophlebitis in carcinoma of the
-      pancreas.<cite class="src srb">SRB 20 &middot; p.841</cite>
+      pancreas.​<cite class="src srb">SRB 20 &middot; p.841</cite>
       <br><span class="label">And the nodal point that surprises people</span>B&amp;L: <b>"Unlike
       malignancies such as breast cancer, nodal involvement does not" </b>carry the same
-      implication.<cite class="src bl">B&amp;L 67 &middot; p.1171</cite> Gastric cancer nodal
+      implication.​<cite class="src bl">B&amp;L 67 &middot; p.1171</cite> Gastric cancer nodal
       spread may be extensive and still resectable, which is why D2 lymphadenectomy exists.
     </span>
   </div>
@@ -1342,19 +1354,19 @@ body.guide { margin: 0; -webkit-text-size-adjust: 100%; }
     <span class="why">
       <span class="label">Rules in</span>Two separate things. First, <b>cancer risk</b>: previous
       drainage surgery raises it <b>fourfold</b> through bile reflux and intestinal
-      metaplasia.<cite class="src bl">B&amp;L 67 &middot; p.1170</cite> Second,
+      metaplasia.​<cite class="src bl">B&amp;L 67 &middot; p.1170</cite> Second,
       <b>gastro-jejunal ulcer</b>, which S Das describes in detail: it follows a Pólya
       gastrectomy or a gastro-jejunal anastomosis, the incidence being <b>very high when
       gastro-jejunostomy is not combined with vagotomy</b>, recurring in about <b>3% after Pólya
       gastrectomy and 5% after vagotomy and gastro-jejunostomy</b>, usually <b>within 2 years</b>,
       with pain <b>within half an hour of food radiating from above and left of the umbilicus to
-      the left iliac fossa</b>.<cite class="src das">Das 34 &middot; p.508</cite>
+      the left iliac fossa</b>.​<cite class="src das">Das 34 &middot; p.508</cite>
       <br><span class="label out">And its dreadful end point</span><b>Gastro-jejunocolic
       fistula</b>: anastomotic ulcer symptoms disappear and are replaced by <b>severe diarrhoea,
       eructation of foul gas, and vomiting of fragments of formed faeces</b>, from fouling of the
       jejunum by colonic contents. And the examinable technical point: <b>it is better diagnosed by
       a barium enema, since in more than half of patients the barium meal fails to reveal the
-      fistula</b>.<cite class="src das">Das 34 &middot; p.508</cite>
+      fistula</b>.​<cite class="src das">Das 34 &middot; p.508</cite>
     </span>
   </div>
 
@@ -1365,11 +1377,11 @@ body.guide { margin: 0; -webkit-text-size-adjust: 100%; }
   <div class="pearl">
     <span class="tag">Look for the three signs in the order SRB names them</span>
     <b>Stomach we see, stomach we feel, stomach we
-    hear.</b><cite class="src srb">SRB 20 &middot; p.818</cite> Visible gastric peristalsis;
+    hear.</b>​<cite class="src srb">SRB 20 &middot; p.818</cite> Visible gastric peristalsis;
     the dilated stomach outlined by auscultopercussion; and the succussion splash. Then B&amp;L's
     much shorter version, which is all it offers: <b>"On examination the distended stomach may be
     visible and a succussion splash may be
-    audible."</b><cite class="src bl">B&amp;L 67 &middot; p.1168</cite>
+    audible."</b>​<cite class="src bl">B&amp;L 67 &middot; p.1168</cite>
   </div>
 
   <h3>General examination first</h3>
@@ -1377,23 +1389,23 @@ body.guide { margin: 0; -webkit-text-size-adjust: 100%; }
   <dl class="findings">
     <dt>Dehydration</dt>
     <dd>B&amp;L: the patient <b>appears unwell and
-    dehydrated</b>.<cite class="src bl">B&amp;L 67 &middot; p.1168</cite> Assess it properly,
+    dehydrated</b>.​<cite class="src bl">B&amp;L 67 &middot; p.1168</cite> Assess it properly,
     because the fluid deficit is what you will be treating first.</dd>
     <dt>Confusion, irritability, convulsions</dt>
     <dd>SRB lists <b>confused status because of alkalosis and electrolyte
-    changes</b>,<cite class="src srb">SRB 20 &middot; p.818</cite> and in its account of the
+    changes</b>,​<cite class="src srb">SRB 20 &middot; p.818</cite> and in its account of the
     metabolic syndrome: <b>irritability, confused status, dehydration, often convulsions, and
     features of alkalosis such as rapid Cheyne-Stokes breathing and
-    tetany</b>.<cite class="src srb">SRB 20 &middot; p.820</cite> A confused patient with
+    tetany</b>.​<cite class="src srb">SRB 20 &middot; p.820</cite> A confused patient with
     vomiting is not septic until proved otherwise: check the calcium and the gases.</dd>
     <dt>Signs of tetany</dt>
     <dd>Look for them actively. Alkalosis lowers ionised calcium and <b>tetany can
-    occur</b>,<cite class="src bl">B&amp;L 67 &middot; p.1169</cite> which SRB calls <b>gastric
-    tetany</b>.<cite class="src srb">SRB 20 &middot; p.820</cite></dd>
+    occur</b>,​<cite class="src bl">B&amp;L 67 &middot; p.1169</cite> which SRB calls <b>gastric
+    tetany</b>.​<cite class="src srb">SRB 20 &middot; p.820</cite></dd>
     <dt>Anaemia and cachexia</dt>
     <dd>SRB lists both among the features of gastric
-    cancer,<cite class="src srb">SRB 20 &middot; p.841</cite> and iron deficiency anaemia follows
-    from a tumour that bleeds.<cite class="src bl">B&amp;L 67 &middot; p.1170</cite></dd>
+    cancer,​<cite class="src srb">SRB 20 &middot; p.841</cite> and iron deficiency anaemia follows
+    from a tumour that bleeds.​<cite class="src bl">B&amp;L 67 &middot; p.1170</cite></dd>
   </dl>
 
   <h3>Inspection of the abdomen</h3>
@@ -1403,17 +1415,17 @@ body.guide { margin: 0; -webkit-text-size-adjust: 100%; }
     <span class="why">
       <span class="label">Rules in</span><b>Visible gastric peristalsis.</b> S Das is explicit
       about its value: <b>"visible peristalsis passing from left to right is
-      pathognomonic"</b>.<cite class="src das">Das 34 &middot; p.508</cite> And he tells you when
+      pathognomonic"</b>.​<cite class="src das">Das 34 &middot; p.508</cite> And he tells you when
       to go looking: <b>"If there is any history suggesting pyloric stenosis, one should look for
-      visible peristalsis."</b><cite class="src das">Das 34 &middot; p.489</cite>
+      visible peristalsis."</b>​<cite class="src das">Das 34 &middot; p.489</cite>
       <br><span class="label">How to provoke it</span>SRB: <b>visible gastric peristalsis may be
       elicited by asking the patient to drink a cup of
-      water</b>.<cite class="src srb">SRB 20 &middot; p.818</cite> Say that you would do this, and
+      water</b>.​<cite class="src srb">SRB 20 &middot; p.818</cite> Say that you would do this, and
       then actually wait: peristalsis comes in waves and candidates look for three seconds and
       report it absent.
       <br><span class="label">Direction matters</span><b>Left to right</b>, following the line of
       the stomach towards the obstructed
-      pylorus.<cite class="src das">Das 34 &middot; p.508</cite>
+      pylorus.​<cite class="src das">Das 34 &middot; p.508</cite>
     </span>
   </div>
 
@@ -1426,21 +1438,21 @@ body.guide { margin: 0; -webkit-text-size-adjust: 100%; }
     <dl>
       <dt>S Das</dt>
       <dd><b>"On examination, visible peristalsis passing from left to right is
-      pathognomonic."</b><cite class="src das">Das 34 &middot; p.508</cite> It is also one of the
+      pathognomonic."</b>​<cite class="src das">Das 34 &middot; p.508</cite> It is also one of the
       two things he instructs you to look for whenever the history suggests pyloric
-      stenosis.<cite class="src das">Das 34 &middot; p.489</cite></dd>
+      stenosis.​<cite class="src das">Das 34 &middot; p.489</cite></dd>
       <dt>SRB</dt>
       <dd>Lists <b>visible gastric peristalsis</b> as a clinical feature, gives the manoeuvre to
       bring it out, and makes it the first of the three signs in its
-      triad.<cite class="src srb">SRB 20 &middot; p.818, p.840</cite></dd>
+      triad.​<cite class="src srb">SRB 20 &middot; p.818, p.840</cite></dd>
       <dt>Bailey &amp; Love 28e</dt>
       <dd><b>The word "peristalsis" does not occur anywhere in chapter 67.</b> Its entire physical
       examination of gastric outlet obstruction is one sentence: the distended stomach may be
       visible and a succussion splash may be
-      audible.<cite class="src bl">B&amp;L 67 &middot; p.1168</cite> Elsewhere it says of peptic
+      audible.​<cite class="src bl">B&amp;L 67 &middot; p.1168</cite> Elsewhere it says of peptic
       ulcer disease generally that examination <b>"may reveal epigastric tenderness but, except in
       gastric outlet obstruction, there is unlikely to be much else to
-      find"</b>.<cite class="src bl">B&amp;L 67 &middot; p.1159</cite></dd>
+      find"</b>.​<cite class="src bl">B&amp;L 67 &middot; p.1159</cite></dd>
     </dl>
     <span class="ruling"><b>Not a disagreement about the sign, but about whose job it is: B&amp;L
     has largely handed the bedside to endoscopy, and the clinical signs in this case live in the
@@ -1460,7 +1472,7 @@ body.guide { margin: 0; -webkit-text-size-adjust: 100%; }
     <dt>Feel for a mass, and let the answer change your diagnosis</dt>
     <dd>SRB: in pyloric stenosis due to chronic duodenal ulcer, <b>"mass is never
     palpable"</b>; in carcinoma pylorus, <b>"here mass may be
-    palpable"</b>.<cite class="src srb">SRB 20 &middot; p.819</cite> This is the single most
+    palpable"</b>.​<cite class="src srb">SRB 20 &middot; p.819</cite> This is the single most
     useful discriminating sign at the bedside, and it is the reason to palpate carefully with the
     stomach emptied.</dd>
     <dt>The auscultopercussion test, described properly</dt>
@@ -1468,17 +1480,17 @@ body.guide { margin: 0; -webkit-text-size-adjust: 100%; }
     downwards</b> at several points away from the epigastrium, towards the left, with a finger, and
     <b>join the points</b> at which the sound changes. <b>Normally the greater curvature lies above
     the level of the umbilicus</b>, midway between umbilicus and epigastrium. <b>In gastric outlet
-    obstruction it lies below the umbilicus.</b><cite class="src srb">SRB 20 &middot; p.818</cite>
+    obstruction it lies below the umbilicus.</b>​<cite class="src srb">SRB 20 &middot; p.818</cite>
     On barium, SRB's equivalent threshold is more extreme: the greater curvature <b>below the level
-    of the iliac crest</b>.<cite class="src srb">SRB 20 &middot; p.819</cite></dd>
+    of the iliac crest</b>.​<cite class="src srb">SRB 20 &middot; p.819</cite></dd>
     <dt>Examine for ascites and for secondaries</dt>
     <dd>SRB's list for advanced gastric cancer: a <b>liver</b> with secondaries, <b>hard and
     nodular in 50%, with umbilication</b>; <b>ascites</b>; <b>Troisier's sign</b>; <b>rectovesical
     secondaries, the Blumer shelf, on rectal examination</b>; and <b>Trousseau's
-    sign</b>.<cite class="src srb">SRB 20 &middot; p.841</cite> B&amp;L adds the two named
+    sign</b>.​<cite class="src srb">SRB 20 &middot; p.841</cite> B&amp;L adds the two named
     transcoelomic deposits: the ovaries as the sole site of spread, <b>Krukenberg's tumours</b>,
     and spread to the umbilicus, <b>Sister Joseph's
-    nodule</b>.<cite class="src bl">B&amp;L 67 &middot; p.1174</cite>
+    nodule</b>.​<cite class="src bl">B&amp;L 67 &middot; p.1174</cite>
     <br><span class="label">So do a rectal examination</span>Because the <b>rectovesical shelf</b>
     is free information and candidates skip it.</dd>
   </dl>
@@ -1490,14 +1502,14 @@ body.guide { margin: 0; -webkit-text-size-adjust: 100%; }
     <span class="why">
       <span class="label">Rules in</span>A splash of fluid in a stomach that should be empty, so
       the stomach is not emptying. All three books carry the
-      sign.<cite class="src das">Das 34 &middot; p.508</cite><cite class="src srb">SRB 20 &middot; p.818</cite><cite class="src bl">B&amp;L 67 &middot; p.1168</cite>
+      sign.​<cite class="src das">Das 34 &middot; p.508</cite>​<cite class="src srb">SRB 20 &middot; p.818</cite>​<cite class="src bl">B&amp;L 67 &middot; p.1168</cite>
       <br><span class="label">The precondition is the whole test</span>The stomach must have been
       empty for some hours, or you are splashing the breakfast of a normal person. SRB: shake the
       patient <b>adequately</b>, with a stethoscope over the epigastric
-      region.<cite class="src srb">SRB 20 &middot; p.818</cite>
+      region.​<cite class="src srb">SRB 20 &middot; p.818</cite>
       <br><span class="label out">And it is not specific to obstruction</span>SRB lists a positive
       succussion splash in <b>acute gastric dilatation</b>
-      too.<cite class="src srb">SRB 20 &middot; p.833</cite> A dilated stomach splashes whatever
+      too.​<cite class="src srb">SRB 20 &middot; p.833</cite> A dilated stomach splashes whatever
       the reason it is dilated.
     </span>
   </div>
@@ -1512,15 +1524,15 @@ body.guide { margin: 0; -webkit-text-size-adjust: 100%; }
       <dt>SRB, in the pyloric stenosis section</dt>
       <dd>"Positive succussion splash <b>which is done with 4 hours empty stomach</b>, by placing
       a stethoscope over the epigastric region and shaking the patient
-      adequately."<cite class="src srb">SRB 20 &middot; p.818</cite></dd>
+      adequately."​<cite class="src srb">SRB 20 &middot; p.818</cite></dd>
       <dt>SRB, in the gastric cancer section</dt>
       <dd>Features of gastric outlet obstruction are VGP positive, auscultopercussion positive, and
       "+ve succussion splash <b>(to be checked with 4-6 hours empty
-      stomach)</b>".<cite class="src srb">SRB 20 &middot; p.840</cite></dd>
+      stomach)</b>".​<cite class="src srb">SRB 20 &middot; p.840</cite></dd>
       <dt>S Das and Bailey &amp; Love</dt>
       <dd>Neither states a time. S Das says only that the splash <b>"is often
-      heard"</b>,<cite class="src das">Das 34 &middot; p.508</cite> and B&amp;L only that it
-      <b>"may be audible"</b>.<cite class="src bl">B&amp;L 67 &middot; p.1168</cite> So there is
+      heard"</b>,​<cite class="src das">Das 34 &middot; p.508</cite> and B&amp;L only that it
+      <b>"may be audible"</b>.​<cite class="src bl">B&amp;L 67 &middot; p.1168</cite> So there is
       no third opinion to appeal to.</dd>
     </dl>
     <span class="ruling"><b>One book giving two numbers is a gift, because you cannot be wrong if
@@ -1545,10 +1557,10 @@ body.guide { margin: 0; -webkit-text-size-adjust: 100%; }
       <b>"A large nasogastric tube may not be sufficiently large to deal with the contents of the
       stomach, and it may be necessary to pass an orogastric tube and lavage the stomach until it
       is completely emptied. This allows investigation with endoscopy and contrast
-      radiology."</b><cite class="src bl">B&amp;L 67 &middot; p.1169</cite> SRB names a tube for
+      radiology."</b>​<cite class="src bl">B&amp;L 67 &middot; p.1169</cite> SRB names a tube for
       it, <b>Ewald's</b>, and gives the second benefit: a stomach wash with normal saline also
       <b>reduces the oedema of the stomach wall and improves gastric
-      [emptying]</b>.<cite class="src srb">SRB 20 &middot; p.819</cite>
+      [emptying]</b>.​<cite class="src srb">SRB 20 &middot; p.819</cite>
       <br><span class="label">So</span>You cannot scope a stomach full of three-day-old food, and
       saying this first shows you have thought about the actual patient rather than the list.
     </span>
@@ -1561,35 +1573,35 @@ body.guide { margin: 0; -webkit-text-size-adjust: 100%; }
     <dd>Because the metabolic abnormality is what will kill him, and because correcting it is the
     first treatment. SRB's list is exactly this: <b>serum electrolytes; arterial blood gas
     analysis; serum calcium level
-    estimation</b>.<cite class="src srb">SRB 20 &middot; p.820</cite> Add magnesium, which SRB
+    estimation</b>.​<cite class="src srb">SRB 20 &middot; p.820</cite> Add magnesium, which SRB
     lists among the deficits and the replacements.</dd>
     <dt>2. ECG</dt>
-    <dd>SRB: <b>to check for hypokalaemia</b>.<cite class="src srb">SRB 20 &middot; p.819</cite>
+    <dd>SRB: <b>to check for hypokalaemia</b>.​<cite class="src srb">SRB 20 &middot; p.819</cite>
     And it is needed again during potassium replacement, which SRB says must be given <b>slowly
-    under ECG monitoring</b>.<cite class="src srb">SRB 20 &middot; p.820</cite></dd>
+    under ECG monitoring</b>.​<cite class="src srb">SRB 20 &middot; p.820</cite></dd>
     <dt>3. Upper gastrointestinal endoscopy with biopsy: the decisive test</dt>
     <dd>SRB: gastroscopy <b>to rule out carcinoma stomach and to visualise the stenosed
-    area</b>.<cite class="src srb">SRB 20 &middot; p.819</cite> B&amp;L is stronger: <b>"Endoscopic
+    area</b>.​<cite class="src srb">SRB 20 &middot; p.819</cite> B&amp;L is stronger: <b>"Endoscopic
     biopsy is essential to exclude malignancy"</b>, and <b>"biopsy of the area around the pylorus
-    is essential"</b>.<cite class="src bl">B&amp;L 67 &middot; p.1169</cite> Say the word
+    is essential"</b>.​<cite class="src bl">B&amp;L 67 &middot; p.1169</cite> Say the word
     <b>essential</b>, because that is the word the book uses.
     <br><span class="label out">And biopsy everything that looks like a polyp</span>Gastric polyps
     matter because they <b>may actually represent early gastric cancer</b>, so <b>biopsy is
-    essential</b> there too.<cite class="src bl">B&amp;L 67 &middot; p.1169</cite></dd>
+    essential</b> there too.​<cite class="src bl">B&amp;L 67 &middot; p.1169</cite></dd>
     <dt>4. Barium meal, if endoscopy is unavailable</dt>
     <dd>SRB's four findings: <b>absence of the duodenal cap</b>; a <b>dilated stomach with the
     greater curvature below the level of the iliac crest</b>; a <b>mottled</b> stomach, from
     retained food; and <b>barium will not pass into the
-    duodenum</b>.<cite class="src srb">SRB 20 &middot; p.819</cite> S Das: <b>"Barium meal X-ray
-    will clinch the diagnosis."</b><cite class="src das">Das 34 &middot; p.508</cite>
+    duodenum</b>.​<cite class="src srb">SRB 20 &middot; p.819</cite> S Das: <b>"Barium meal X-ray
+    will clinch the diagnosis."</b>​<cite class="src das">Das 34 &middot; p.508</cite>
     <br><span class="label out">The complication nobody mentions</span>SRB warns that a barium meal
-    <b>may precipitate intestinal obstruction</b>.<cite class="src srb">SRB 20 &middot; p.808</cite>
+    <b>may precipitate intestinal obstruction</b>.​<cite class="src srb">SRB 20 &middot; p.808</cite>
     <br><span class="label">And the mechanism of the absent cap</span>With deformity of the first
     part of the duodenum, <b>barium will not stay, so the cap will not be
-    formed</b>.<cite class="src srb">SRB 20 &middot; p.808</cite></dd>
+    formed</b>.​<cite class="src srb">SRB 20 &middot; p.808</cite></dd>
     <dt>5. Goldstein's saline load test</dt>
     <dd>Instil <b>750 mL of saline</b>; aspirate <b>half an hour</b> later; <b>more than 250 mL
-    remaining suggests obstruction</b>.<cite class="src srb">SRB 20 &middot; p.819</cite> A
+    remaining suggests obstruction</b>.​<cite class="src srb">SRB 20 &middot; p.819</cite> A
     bedside test of gastric emptying that is worth naming even though endoscopy has superseded it,
     because it is the kind of thing an examiner asks to see whether you have read SRB or a
     summary.</dd>
@@ -1599,9 +1611,9 @@ body.guide { margin: 0; -webkit-text-size-adjust: 100%; }
     junction and which extend into the oesophagus are now staged by the oesophageal system</b>,
     while those within 5 cm that <b>do not</b> extend into the oesophagus, and all other gastric
     cancers, are staged by the gastric
-    system.<cite class="src bl">B&amp;L 67 &middot; p.1171</cite> Transperitoneal spread is
+    system.​<cite class="src bl">B&amp;L 67 &middot; p.1171</cite> Transperitoneal spread is
     <b>detected most effectively</b> by laparoscopy rather than by
-    CT.<cite class="src bl">B&amp;L 67 &middot; p.1174</cite></dd>
+    CT.​<cite class="src bl">B&amp;L 67 &middot; p.1174</cite></dd>
   </dl>
 
   <!-- ===================== 6. TREATMENT ===================== -->
@@ -1612,7 +1624,7 @@ body.guide { margin: 0; -webkit-text-size-adjust: 100%; }
     <span class="tag">The order of operations, literally</span>
     B&amp;L: <b>"Treating the patient involves correcting the metabolic abnormalities and dealing
     with the mechanical obstruction."</b> In that
-    order.<cite class="src bl">B&amp;L 67 &middot; p.1169</cite> Nobody with a hypochloraemic
+    order.​<cite class="src bl">B&amp;L 67 &middot; p.1169</cite> Nobody with a hypochloraemic
     alkalosis and a potassium of 2.5 should be anaesthetised, and saying so unprompted is worth
     more than any operative detail in this case.
   </div>
@@ -1624,9 +1636,9 @@ body.guide { margin: 0; -webkit-text-size-adjust: 100%; }
     <dd>B&amp;L: <b>"The patient should be rehydrated with intravenous isotonic saline with
     potassium supplementation."</b> And the reason, which is the examinable part: <b>"Replacing the
     sodium chloride and water allows the kidney to correct the acid-base
-    abnormality."</b><cite class="src bl">B&amp;L 67 &middot; p.1169</cite> Its summary box says the
+    abnormality."</b>​<cite class="src bl">B&amp;L 67 &middot; p.1169</cite> Its summary box says the
     same: the hypochloraemic alkalosis <b>should be treated with isotonic saline with
-    potassium</b>.<cite class="src bl">B&amp;L 67 &middot; p.1169</cite>
+    potassium</b>.​<cite class="src bl">B&amp;L 67 &middot; p.1169</cite>
     <br><span class="label">So</span>You do not give bicarbonate, and you do not give acid. You
     give the kidney back the chloride and the volume it needs to excrete bicarbonate itself.</dd>
     <dt>SRB's version, with the extras</dt>
@@ -1634,16 +1646,16 @@ body.guide { margin: 0; -webkit-text-size-adjust: 100%; }
     important</b>. <b>Intravenous potassium slowly under ECG monitoring</b>; intravenous
     <b>magnesium</b>; intravenous <b>calcium</b>. Plus <b>blood transfusion if anaemic</b> and
     <b>total parenteral nutrition
-    support</b>.<cite class="src srb">SRB 20 &middot; p.819, p.820</cite> The nutritional point is
+    support</b>.​<cite class="src srb">SRB 20 &middot; p.819, p.820</cite> The nutritional point is
     a real one: these patients have not eaten properly for weeks.</dd>
     <dt>Stomach wash</dt>
     <dd>With normal saline through a wide tube, which also <b>reduces the oedema of the stomach
-    wall</b>.<cite class="src srb">SRB 20 &middot; p.819</cite></dd>
+    wall</b>.​<cite class="src srb">SRB 20 &middot; p.819</cite></dd>
     <dt>And treat the ulcer while you wait</dt>
     <dd>B&amp;L: <b>"Early cases may settle with conservative treatment, as oedema around the ulcer
     diminishes as the ulcer is healed"</b>, and its summary box notes that <b>aggressive medical
     therapy for peptic ulcer disease often</b> suffices in early
-    cases.<cite class="src bl">B&amp;L 67 &middot; p.1169</cite> So part of the obstruction is
+    cases.​<cite class="src bl">B&amp;L 67 &middot; p.1169</cite> So part of the obstruction is
     oedema, which is reversible, and part is scar, which is not. That distinction is why a few days
     of decompression and acid suppression can convert an operation into a discharge.</dd>
   </dl>
@@ -1659,11 +1671,11 @@ body.guide { margin: 0; -webkit-text-size-adjust: 100%; }
       <dd>Positive, with a condition. Its summary box lists <b>"Endoscopic dilatation of the
       gastric outlet may be effective"</b> as a management option, and the text says <b>"Endoscopic
       treatment with balloon dilatation may be most useful in early cases and may have to be
-      repeated several times."</b><cite class="src bl">B&amp;L 67 &middot; p.1169</cite></dd>
+      repeated several times."</b>​<cite class="src bl">B&amp;L 67 &middot; p.1169</cite></dd>
       <dt>SRB</dt>
       <dd>Negative: <b>"Endoscopic balloon dilatation of the stenosed area benefits only
       temporarily with high recurrence
-      rate."</b><cite class="src srb">SRB 20 &middot; p.820</cite></dd>
+      rate."</b>​<cite class="src srb">SRB 20 &middot; p.820</cite></dd>
     </dl>
     <span class="ruling"><b>They are not far apart once you notice that B&amp;L concedes the
     recurrence in the same sentence: "may have to be repeated several times" is the same
@@ -1673,7 +1685,7 @@ body.guide { margin: 0; -webkit-text-size-adjust: 100%; }
     not a definitive treatment for an established fibrotic stricture."</b> Then add the two places
     endoscopy genuinely wins: it is <b>how you get the biopsy</b>, which is mandatory; and in
     <b>unresectable malignancy</b>, where B&amp;L says <b>a duodenal stent may be
-    considered</b>.<cite class="src bl">B&amp;L 67 &middot; p.1169</cite></span>
+    considered</b>.​<cite class="src bl">B&amp;L 67 &middot; p.1169</cite></span>
     </div>
   </details>
 
@@ -1682,15 +1694,15 @@ body.guide { margin: 0; -webkit-text-size-adjust: 100%; }
   <div class="pearl">
     <span class="tag">Gastroenterostomy, not pyloroplasty, and both books agree on why</span>
     B&amp;L: <b>"Traditionally, severe cases are treated surgically, usually with a
-    gastroenterostomy rather than a pyloroplasty."</b><cite class="src bl">B&amp;L 67 &middot; p.1169</cite>
+    gastroenterostomy rather than a pyloroplasty."</b>​<cite class="src bl">B&amp;L 67 &middot; p.1169</cite>
     Its summary box puts it as <b>a drainage procedure for benign disease and appropriate resection
-    for malignancy</b>.<cite class="src bl">B&amp;L 67 &middot; p.1169</cite>
+    for malignancy</b>.​<cite class="src bl">B&amp;L 67 &middot; p.1169</cite>
     <br><br>SRB supplies the mechanism B&amp;L leaves out, and it is the better answer: <b>"No role
     of pyloroplasty or only HSV in a scarred duodenum, as it can cause disruption and bile
-    leak."</b><cite class="src srb">SRB 20 &middot; p.820</cite> You cannot safely cut and
+    leak."</b>​<cite class="src srb">SRB 20 &middot; p.820</cite> You cannot safely cut and
     re-suture a thick, fibrotic, scarred duodenum, so you bypass it. SRB's operation of choice
     follows: <b>"GJ with vagotomy is commonly used in pyloric stenosis due to chronic duodenal
-    ulcer."</b><cite class="src srb">SRB 20 &middot; p.820</cite>
+    ulcer."</b>​<cite class="src srb">SRB 20 &middot; p.820</cite>
   </div>
 
   <dl class="findings">
@@ -1699,7 +1711,7 @@ body.guide { margin: 0; -webkit-text-size-adjust: 100%; }
     vagotomy is the classical setting for a <b>stomal ulcer</b>. S Das gives the figures: the
     incidence of gastro-jejunal ulcer is <b>very high when gastro-jejunostomy is not associated
     with vagotomy</b>, and recurrence is <b>3% after Pólya gastrectomy and 5% after vagotomy and
-    gastro-jejunostomy</b>.<cite class="src das">Das 34 &middot; p.508</cite></dd>
+    gastro-jejunostomy</b>.​<cite class="src das">Das 34 &middot; p.508</cite></dd>
     <dt>What vagotomy actually does, in SRB's phrase</dt>
     <dd><b>"No acid, no ulcer."</b> In <b>highly selective vagotomy</b>, only the fibres supplying
     the parietal cells are divided; the <b>nerve of Latarjet</b>, supplying the antral pump, is
@@ -1707,38 +1719,38 @@ body.guide { margin: 0; -webkit-text-size-adjust: 100%; }
     proximal to the pylorus are preserved, the crow's foot</b>, and <b>distal 6 cm of oesophageal
     nerve clearance is essential</b>. Described by <b>Amdrup and Johnston in 1969</b>; also called
     parietal cell or superselective
-    vagotomy.<cite class="src srb">SRB 20 &middot; p.818</cite>
+    vagotomy.​<cite class="src srb">SRB 20 &middot; p.818</cite>
     <br><span class="label">Its figures</span>Operative mortality <b>0.2%</b>, morbidity
     <b>0.5%</b>; very low post-vagotomy diarrhoea and dumping; but <b>lesser curve necrosis from
     ischaemia</b> and <b>recurrent ulcer in 10 to 15% at 10
-    years</b>.<cite class="src srb">SRB 20 &middot; p.818</cite>
+    years</b>.​<cite class="src srb">SRB 20 &middot; p.818</cite>
     <br><span class="label out">But not here</span>SRB specifically excludes <b>HSV alone</b> in a
     scarred duodenum for the same reason it excludes
-    pyloroplasty.<cite class="src srb">SRB 20 &middot; p.820</cite></dd>
+    pyloroplasty.​<cite class="src srb">SRB 20 &middot; p.820</cite></dd>
     <dt>Alternatives, and where they sit</dt>
     <dd><b>Vagotomy with antrectomy</b>: removes the gastrin-producing antrum and the vagal
     pathway, with gastroduodenal anastomosis; <b>ulcer recurrence very low but morbidity
     higher</b>; SRB says it is <b>occasionally used for intractable resistant duodenal ulcer or
     chronic duodenal ulcer with
-    obstruction</b>.<cite class="src srb">SRB 20 &middot; p.818, p.820</cite>
+    obstruction</b>.​<cite class="src srb">SRB 20 &middot; p.818, p.820</cite>
     <b>Gastrectomy and other procedures are usually not necessary in pyloric
-    stenosis.</b><cite class="src srb">SRB 20 &middot; p.820</cite></dd>
+    stenosis.</b>​<cite class="src srb">SRB 20 &middot; p.820</cite></dd>
     <dt>What to warn the patient about afterwards</dt>
     <dd>SRB: <b>gastric emptying may be delayed for 2 to 4 weeks after surgery in pyloric stenosis,
     though it usually recovers in 7
-    days</b>.<cite class="src srb">SRB 20 &middot; p.820</cite> A stomach dilated for months does
+    days</b>.​<cite class="src srb">SRB 20 &middot; p.820</cite> A stomach dilated for months does
     not regain tone overnight, and a patient who still vomits on day 5 does not necessarily need
     re-operation.</dd>
     <dt>And eradicate <i>H. pylori</i> anyway</dt>
     <dd>SRB: after recovery, <b>eradication of H. pylori is routinely done even though infection
     may not be evident in many patients with outlet
-    obstruction</b>.<cite class="src srb">SRB 20 &middot; p.820</cite> The triple regime it gives:
+    obstruction</b>.​<cite class="src srb">SRB 20 &middot; p.820</cite> The triple regime it gives:
     a <b>proton pump inhibitor</b> with <b>clarithromycin 500 mg twice daily</b> and
     <b>metronidazole 400 mg twice daily</b>, or amoxycillin 500 to 750 mg twice daily and
     tinidazole 600 mg twice daily. And a practical warning: <b>antacids and H2 blockers should not
     be used along with a PPI, because they create an alkaline medium that reduces the PPI's
     action</b>. <b>Follow-up gastroscopy is a must</b>, to confirm the ulcer has
-    healed.<cite class="src srb">SRB 20 &middot; p.818</cite></dd>
+    healed.​<cite class="src srb">SRB 20 &middot; p.818</cite></dd>
   </dl>
 
   <h3>If the cause is cancer</h3>
@@ -1747,15 +1759,15 @@ body.guide { margin: 0; -webkit-text-size-adjust: 100%; }
     <dt>The prognosis, stated honestly</dt>
     <dd><b>"Carcinoma of the stomach is a major cause of mortality worldwide. Its prognosis tends
     to be poor, with cure rates little better than 5 to 10%, although better results are obtained
-    in Japan, where the disease is common."</b><cite class="src bl">B&amp;L 67 &middot; p.1169</cite>
+    in Japan, where the disease is common."</b>​<cite class="src bl">B&amp;L 67 &middot; p.1169</cite>
     And the sentence that explains the gap: <b>"Gastric cancer is actually an eminently curable
     disease"</b> whose poor outcome is <b>owing to the advanced stage at
-    presentation</b>.<cite class="src bl">B&amp;L 67 &middot; p.1169</cite> Better results in
+    presentation</b>.​<cite class="src bl">B&amp;L 67 &middot; p.1169</cite> Better results in
     Japan come from a <b>high population incidence, screening programmes and high-quality
-    surgery</b>.<cite class="src bl">B&amp;L 67 &middot; p.1169</cite></dd>
+    surgery</b>.​<cite class="src bl">B&amp;L 67 &middot; p.1169</cite></dd>
     <dt>Incidence, for scale</dt>
     <dd>USA about <b>10 per 100 000 per year</b>; Eastern Europe about <b>40</b>; <b>Japan
-    approximately 70</b>.<cite class="src bl">B&amp;L 67 &middot; p.1169</cite></dd>
+    approximately 70</b>.​<cite class="src bl">B&amp;L 67 &middot; p.1169</cite></dd>
     <dt>The classification that actually matters clinically</dt>
     <dd>The <b>Laurén</b> classification, which B&amp;L calls <b>the most useful
     clinicopathological classification</b>. <b>Intestinal</b> type resembles a carcinoma elsewhere
@@ -1763,34 +1775,34 @@ body.guide { margin: 0; -webkit-text-size-adjust: 100%; }
     metaplasia</b>. <b>Diffuse</b> type, <b>often with signet ring cells</b>, <b>infiltrates deeply
     without forming an obvious mass but spreads widely in the gastric wall</b>, and
     <b>unsurprisingly has a much worse
-    prognosis</b>.<cite class="src bl">B&amp;L 67 &middot; p.1170</cite> SRB gives the intestinal
+    prognosis</b>.​<cite class="src bl">B&amp;L 67 &middot; p.1170</cite> SRB gives the intestinal
     type as <b>53%</b> with favourable prognosis, and notes that in the diffuse type
     <b>linitis plastica</b> is common, with <b>decreased E-cadherin</b> and p53 and p16
-    inactivation.<cite class="src srb">SRB 20 &middot; p.837</cite></dd>
+    inactivation.​<cite class="src srb">SRB 20 &middot; p.837</cite></dd>
     <dt>Early versus advanced, which is the staging that decides cure</dt>
     <dd><b>Early gastric cancer</b> is cancer <b>limited to the mucosa and submucosa, with or
     without node involvement, T1 any N</b>. It is <b>eminently curable, with 5-year survival around
     90%</b>, and is classified by the <b>Japanese</b> system as <b>protruding, superficial or
-    excavated</b>.<cite class="src bl">B&amp;L 67 &middot; p.1170</cite> <b>Advanced</b> cancer
+    excavated</b>.​<cite class="src bl">B&amp;L 67 &middot; p.1170</cite> <b>Advanced</b> cancer
     involves the <b>muscularis</b> and is classified by <b>Borrmann</b> into four types, of which
     <b>types III and IV are commonly
-    incurable</b>.<cite class="src bl">B&amp;L 67 &middot; p.1170</cite> SRB's Borrmann list:
+    incurable</b>.​<cite class="src bl">B&amp;L 67 &middot; p.1170</cite> SRB's Borrmann list:
     <b>I single polypoid; II ulcerated with a clear margin; III ulcerated without a clear margin;
     IV diffuse, linitis plastica; V
-    unclassified</b>.<cite class="src srb">SRB 20 &middot; p.838</cite></dd>
+    unclassified</b>.​<cite class="src srb">SRB 20 &middot; p.838</cite></dd>
     <dt>Resection, and the margin</dt>
     <dd>For distal tumours a <b>subtotal gastrectomy</b> suffices: <b>"it is unnecessary to remove
     the whole stomach"</b>, the proximal remnant surviving on the <b>short gastric
-    arteries</b>.<cite class="src bl">B&amp;L 67 &middot; p.1175</cite> <b>Resection margins should
+    arteries</b>.​<cite class="src bl">B&amp;L 67 &middot; p.1175</cite> <b>Resection margins should
     be well clear of the tumour, greater than 5 cm, with frozen section if either margin is in
     doubt.</b> Continuity is restored with a <b>Roux loop</b>, whose alimentary limb should be at
     least 50 cm, to prevent bile reflux
-    oesophagitis.<cite class="src bl">B&amp;L 67 &middot; p.1175</cite></dd>
+    oesophagitis.​<cite class="src bl">B&amp;L 67 &middot; p.1175</cite></dd>
     <dt>D1 or D2</dt>
     <dd><b>D1 removes the perigastric nodes; D2 clears the major arterial trunks.</b> In practice
     <b>most specialist centres perform a radical total gastrectomy conserving the spleen and
     pancreas, with D2 lymphadenectomy sparing station 10
-    nodes</b>.<cite class="src bl">B&amp;L 67 &middot; p.1175</cite> Conserving spleen and pancreas
+    nodes</b>.​<cite class="src bl">B&amp;L 67 &middot; p.1175</cite> Conserving spleen and pancreas
     is the modern part of that sentence and the part worth saying.</dd>
     <dt>Palliation of an obstructing, unresectable tumour</dt>
     <dd><b>Palliative resection is appropriate</b> where there are significant symptoms of
@@ -1800,9 +1812,9 @@ body.guide { margin: 0; -webkit-text-size-adjust: 100%; }
     adequately and may produce the additional problem of bile reflux."</b> A <b>Roux loop with a
     wide gastrojejunal anastomosis may be better, although even this may not allow the stomach to
     empty well</b>. For inoperable cardia tumours, <b>intubation or
-    stenting</b>.<cite class="src bl">B&amp;L 67 &middot; p.1175</cite> And for unresectable
+    stenting</b>.​<cite class="src bl">B&amp;L 67 &middot; p.1175</cite> And for unresectable
     malignant outlet obstruction, a <b>duodenal
-    stent</b>.<cite class="src bl">B&amp;L 67 &middot; p.1169</cite></dd>
+    stent</b>.​<cite class="src bl">B&amp;L 67 &middot; p.1169</cite></dd>
   </dl>
 
   <details class="conflict">
@@ -1816,13 +1828,13 @@ body.guide { margin: 0; -webkit-text-size-adjust: 100%; }
       <dd>"In Japan, <b>approximately one-third</b> of gastric cancers diagnosed are in this
       stage." It adds that early diagnosis in the UK is <b>relatively uncommon, as dyspeptic
       patients are not always referred for endoscopy at an appropriate
-      stage</b>.<cite class="src bl">B&amp;L 67 &middot; p.1170</cite></dd>
+      stage</b>.​<cite class="src bl">B&amp;L 67 &middot; p.1170</cite></dd>
       <dt>SRB</dt>
       <dd>"More common in Japan: <b>50%</b> of gastric cancers treated are early gastric cancers.
       <b>In USA, 20%.</b>" With the figures that matter more: <b>10% of early gastric cancers have
       nodal metastases, 3% in purely mucosal lesions and 20% in submucosal lesions</b>, and nodal
       spread depends on <b>tumour size over 2 cm</b> and
-      differentiation.<cite class="src srb">SRB 20 &middot; p.837</cite></dd>
+      differentiation.​<cite class="src srb">SRB 20 &middot; p.837</cite></dd>
     </dl>
     <span class="ruling"><b>A small numeric disagreement, and the figures are measuring slightly
     different things: B&amp;L says "diagnosed", SRB says "treated".</b> Answer the range and
@@ -1832,7 +1844,7 @@ body.guide { margin: 0; -webkit-text-size-adjust: 100%; }
     gastric cancer still has nodal metastases in about 10%, only 3% if confined to mucosa but 20%
     once the submucosa is involved</b>, which is exactly why endoscopic mucosal resection is
     offered for mucosal lesions and not for submucosal
-    ones.<cite class="src srb">SRB 20 &middot; p.837</cite> Quoting a bare percentage for Japan
+    ones.​<cite class="src srb">SRB 20 &middot; p.837</cite> Quoting a bare percentage for Japan
     gains nothing; explaining why submucosal invasion changes the operation gains a lot.</span>
     </div>
   </details>
@@ -1845,12 +1857,12 @@ body.guide { margin: 0; -webkit-text-size-adjust: 100%; }
     <details>
       <summary>What are the causes of gastric outlet obstruction in an adult?</summary>
       <p class="ans">The two common ones are gastric cancer and pyloric stenosis secondary to
-      peptic ulceration.<cite class="src bl">B&amp;L 67 &middot; p.1168</cite> SRB's fuller list
+      peptic ulceration.​<cite class="src bl">B&amp;L 67 &middot; p.1168</cite> SRB's fuller list
       adds congenital stenosis, adult pyloric stenosis, which is treated by pyloroplasty and not
       pyloromyotomy, and a pyloric mucosal diaphragm, which must be excised surgically or
-      endoscopically.<cite class="src srb">SRB 20 &middot; p.819</cite> And remember superior
+      endoscopically.​<cite class="src srb">SRB 20 &middot; p.819</cite> And remember superior
       mesenteric artery syndrome as a mimic, distinguished because its vomiting is
-      bilious.<cite class="src srb">SRB 20 &middot; p.832</cite></p>
+      bilious.​<cite class="src srb">SRB 20 &middot; p.832</cite></p>
     </details>
 
     <details>
@@ -1858,19 +1870,19 @@ body.guide { margin: 0; -webkit-text-size-adjust: 100%; }
       <p class="ans">Bailey and Love 28e is explicit: with the decreasing incidence of peptic
       ulceration, gastric outlet obstruction should be considered malignant until proven
       otherwise, and endoscopic biopsy of the pyloric region is
-      essential.<cite class="src bl">B&amp;L 67 &middot; p.1168, p.1169</cite> In India, where
+      essential.​<cite class="src bl">B&amp;L 67 &middot; p.1168, p.1169</cite> In India, where
       peptic ulcer disease is still common, a cicatrised chronic duodenal ulcer remains a frequent
       cause, so give the classical cause but manage it as malignant until the biopsy returns. The
       finding that shifts you towards cancer before the biopsy is a palpable mass: SRB says a mass
       is never palpable in benign pyloric stenosis and may be palpable in carcinoma
-      pylorus.<cite class="src srb">SRB 20 &middot; p.819</cite></p>
+      pylorus.​<cite class="src srb">SRB 20 &middot; p.819</cite></p>
     </details>
 
     <details>
       <summary>Describe the vomiting.</summary>
       <p class="ans">Three features. Large volume; completely lacking bile; and containing
       undigested or partially digested food eaten a day or even two or three days
-      earlier.<cite class="src bl">B&amp;L 67 &middot; p.1168</cite><cite class="src srb">SRB 20 &middot; p.818</cite><cite class="src das">Das 34 &middot; p.508</cite>
+      earlier.​<cite class="src bl">B&amp;L 67 &middot; p.1168</cite>​<cite class="src srb">SRB 20 &middot; p.818</cite>​<cite class="src das">Das 34 &middot; p.508</cite>
       S Das adds that it is typically in the evening and often foul and frothy. The absence of bile
       is the important part: it places the obstruction at or proximal to the pylorus.</p>
     </details>
@@ -1882,7 +1894,7 @@ body.guide { margin: 0; -webkit-text-size-adjust: 100%; }
       progresses the kidney must conserve sodium, so instead of excreting bicarbonate with sodium
       it excretes bicarbonate with hydrogen ion, and potassium is lost as well. So the urine turns
       acidic while the blood is alkalotic, and hypokalaemia
-      develops.<cite class="src bl">B&amp;L 67 &middot; p.1169</cite><cite class="src srb">SRB 20 &middot; p.820</cite>
+      develops.​<cite class="src bl">B&amp;L 67 &middot; p.1169</cite>​<cite class="src srb">SRB 20 &middot; p.820</cite>
       SRB puts it crisply: in alkalosis without hyponatraemia bicarbonate is secreted along with
       sodium, but here the body conserves sodium, so bicarbonate goes out with hydrogen.</p>
     </details>
@@ -1890,18 +1902,18 @@ body.guide { margin: 0; -webkit-text-size-adjust: 100%; }
     <details>
       <summary>Why can this patient have tetany?</summary>
       <p class="ans">Alkalosis lowers the circulating ionised calcium, and tetany can
-      occur.<cite class="src bl">B&amp;L 67 &middot; p.1169</cite> SRB calls it gastric tetany and
+      occur.​<cite class="src bl">B&amp;L 67 &middot; p.1169</cite> SRB calls it gastric tetany and
       groups it with the other features of alkalosis, rapid Cheyne-Stokes breathing, irritability,
-      confusion and sometimes convulsions.<cite class="src srb">SRB 20 &middot; p.820</cite></p>
+      confusion and sometimes convulsions.​<cite class="src srb">SRB 20 &middot; p.820</cite></p>
     </details>
 
     <details>
       <summary>Why is the alkalosis less marked when the cause is cancer?</summary>
       <p class="ans">Because of the relative hypochlorhydria, or achlorhydria, found in gastric
       cancer: there is less acid to lose in the
-      vomit.<cite class="src bl">B&amp;L 67 &middot; p.1168, p.1170</cite><cite class="src srb">SRB 20 &middot; p.820</cite>
+      vomit.​<cite class="src bl">B&amp;L 67 &middot; p.1168, p.1170</cite>​<cite class="src srb">SRB 20 &middot; p.820</cite>
       Bailey and Love's summary box goes as far as saying the hypochloraemic alkalosis is usually
-      only seen with peptic ulcer disease.<cite class="src bl">B&amp;L 67 &middot; p.1169</cite> So
+      only seen with peptic ulcer disease.​<cite class="src bl">B&amp;L 67 &middot; p.1169</cite> So
       a florid alkalosis suggests a benign cause, and its absence does not reassure you.</p>
     </details>
 
@@ -1909,10 +1921,10 @@ body.guide { margin: 0; -webkit-text-size-adjust: 100%; }
       <summary>What fluid would you give, and why that one?</summary>
       <p class="ans">Intravenous isotonic saline with potassium supplementation. The reason is the
       answer: replacing the sodium chloride and water allows the kidney itself to correct the
-      acid-base abnormality.<cite class="src bl">B&amp;L 67 &middot; p.1169</cite> Do not give
+      acid-base abnormality.​<cite class="src bl">B&amp;L 67 &middot; p.1169</cite> Do not give
       bicarbonate. SRB adds double strength saline in severe cases, slow correction, intravenous
       potassium under ECG monitoring, and magnesium and calcium as
-      needed.<cite class="src srb">SRB 20 &middot; p.820</cite></p>
+      needed.​<cite class="src srb">SRB 20 &middot; p.820</cite></p>
     </details>
 
     <details>
@@ -1920,19 +1932,19 @@ body.guide { margin: 0; -webkit-text-size-adjust: 100%; }
       <p class="ans">Empty the stomach properly. A large nasogastric tube may not be big enough for
       the contents, so it may be necessary to pass an orogastric tube and lavage the stomach until
       it is completely empty, which is what makes endoscopy and contrast radiology
-      possible.<cite class="src bl">B&amp;L 67 &middot; p.1169</cite> SRB names Ewald's tube and
+      possible.​<cite class="src bl">B&amp;L 67 &middot; p.1169</cite> SRB names Ewald's tube and
       adds that a saline stomach wash also reduces the oedema of the stomach wall and improves
-      gastric emptying.<cite class="src srb">SRB 20 &middot; p.819</cite></p>
+      gastric emptying.​<cite class="src srb">SRB 20 &middot; p.819</cite></p>
     </details>
 
     <details>
       <summary>Name the three physical signs of gastric outlet obstruction.</summary>
       <p class="ans">Visible gastric peristalsis, a positive auscultopercussion test and a positive
       succussion splash: stomach we see, stomach we feel, stomach we
-      hear.<cite class="src srb">SRB 20 &middot; p.818, p.840</cite> S Das calls visible
+      hear.​<cite class="src srb">SRB 20 &middot; p.818, p.840</cite> S Das calls visible
       peristalsis passing from left to right pathognomonic, and tells you to look for it whenever
       the history suggests pyloric
-      stenosis.<cite class="src das">Das 34 &middot; p.489, p.508</cite> Note that Bailey and Love
+      stenosis.​<cite class="src das">Das 34 &middot; p.489, p.508</cite> Note that Bailey and Love
       28e offers only two findings here, a visible distended stomach and a succussion splash, and
       does not mention peristalsis anywhere in the chapter.</p>
     </details>
@@ -1943,16 +1955,16 @@ body.guide { margin: 0; -webkit-text-size-adjust: 100%; }
       from the left side downwards at several points away from the epigastrium and join the points
       where the sound changes, mapping the greater curvature. Normally it lies above the umbilicus,
       midway between umbilicus and epigastrium; in gastric outlet obstruction it lies below the
-      umbilicus.<cite class="src srb">SRB 20 &middot; p.818</cite> On a barium meal, the equivalent
+      umbilicus.​<cite class="src srb">SRB 20 &middot; p.818</cite> On a barium meal, the equivalent
       is a greater curvature below the level of the iliac
-      crest.<cite class="src srb">SRB 20 &middot; p.819</cite></p>
+      crest.​<cite class="src srb">SRB 20 &middot; p.819</cite></p>
     </details>
 
     <details>
       <summary>How long must the stomach be empty before you test for a succussion splash?</summary>
       <p class="ans">At least four hours, and six is better. SRB itself gives both figures, four
       hours in its pyloric stenosis section and four to six hours in its gastric cancer
-      section.<cite class="src srb">SRB 20 &middot; p.818, p.840</cite> The reasoning is what
+      section.​<cite class="src srb">SRB 20 &middot; p.818, p.840</cite> The reasoning is what
       matters: the test asks whether the stomach still holds fluid when it should be empty, so the
       longer the fast the more specific the sign. Neither S Das nor Bailey and Love states a
       time.</p>
@@ -1963,10 +1975,10 @@ body.guide { margin: 0; -webkit-text-size-adjust: 100%; }
       <p class="ans">Absence of the duodenal cap, because with a deformed first part of the
       duodenum the barium will not stay long enough to form one; a dilated stomach with the greater
       curvature below the iliac crest; a mottled stomach from retained food; and barium failing to
-      pass into the duodenum.<cite class="src srb">SRB 20 &middot; p.808, p.819</cite> The risk SRB
+      pass into the duodenum.​<cite class="src srb">SRB 20 &middot; p.808, p.819</cite> The risk SRB
       flags is that it may precipitate intestinal
-      obstruction.<cite class="src srb">SRB 20 &middot; p.808</cite> S Das says barium meal will
-      clinch the diagnosis,<cite class="src das">Das 34 &middot; p.508</cite> but endoscopy has
+      obstruction.​<cite class="src srb">SRB 20 &middot; p.808</cite> S Das says barium meal will
+      clinch the diagnosis,​<cite class="src das">Das 34 &middot; p.508</cite> but endoscopy has
       superseded it because only endoscopy gives you the biopsy.</p>
     </details>
 
@@ -1974,17 +1986,17 @@ body.guide { margin: 0; -webkit-text-size-adjust: 100%; }
       <summary>What is Goldstein's saline load test?</summary>
       <p class="ans">Instil 750 mL of saline into the stomach and aspirate half an hour later. If
       more than 250 mL remains, that suggests
-      obstruction.<cite class="src srb">SRB 20 &middot; p.819</cite></p>
+      obstruction.​<cite class="src srb">SRB 20 &middot; p.819</cite></p>
     </details>
 
     <details>
       <summary>Gastroenterostomy or pyloroplasty, and why?</summary>
       <p class="ans">Gastroenterostomy. Bailey and Love says severe cases are treated surgically,
       usually with a gastroenterostomy rather than a
-      pyloroplasty,<cite class="src bl">B&amp;L 67 &middot; p.1169</cite> and SRB gives the reason:
+      pyloroplasty,​<cite class="src bl">B&amp;L 67 &middot; p.1169</cite> and SRB gives the reason:
       there is no role for pyloroplasty, or for highly selective vagotomy alone, in a scarred
       duodenum, because it can cause disruption and bile
-      leak.<cite class="src srb">SRB 20 &middot; p.820</cite> You cannot safely cut and re-suture
+      leak.​<cite class="src srb">SRB 20 &middot; p.820</cite> You cannot safely cut and re-suture
       thick fibrotic tissue, so you bypass it. SRB's usual operation is gastrojejunostomy with
       vagotomy, the vagotomy being added because a drainage procedure alone leaves the acid and
       invites a stomal ulcer.</p>
@@ -1997,7 +2009,7 @@ body.guide { margin: 0; -webkit-text-size-adjust: 100%; }
       done without vagotomy. It recurs in about 3% after Pólya gastrectomy and 5% after vagotomy
       with gastro-jejunostomy, usually within two years, with boring pain within half an hour of
       food radiating from above and left of the umbilicus to the left iliac
-      fossa.<cite class="src das">Das 34 &middot; p.508</cite> It is more prone to perforation than
+      fossa.​<cite class="src das">Das 34 &middot; p.508</cite> It is more prone to perforation than
       an ordinary peptic ulcer and may penetrate the transverse colon to form a gastro-jejunocolic
       fistula.</p>
     </details>
@@ -2005,7 +2017,7 @@ body.guide { margin: 0; -webkit-text-size-adjust: 100%; }
     <details>
       <summary>How is a gastro-jejunocolic fistula diagnosed?</summary>
       <p class="ans">By barium enema, not barium meal: in more than half of patients the barium
-      meal fails to reveal the fistula.<cite class="src das">Das 34 &middot; p.508</cite>
+      meal fails to reveal the fistula.​<cite class="src das">Das 34 &middot; p.508</cite>
       Clinically the anastomotic ulcer symptoms disappear and are replaced by severe diarrhoea,
       eructation of foul gas, and sometimes vomiting of fragments of formed faeces, from fouling of
       the jejunum by colonic contents.</p>
@@ -2020,7 +2032,7 @@ body.guide { margin: 0; -webkit-text-size-adjust: 100%; }
       distal 6 cm of oesophageal fibres is essential. Described by Amdrup and Johnston in 1969,
       and also called parietal cell or superselective vagotomy. Mortality 0.2%, morbidity 0.5%, but
       lesser curve necrosis from ischaemia and recurrent ulcer in 10 to 15% at ten
-      years.<cite class="src srb">SRB 20 &middot; p.818</cite> It is not the operation for a
+      years.​<cite class="src srb">SRB 20 &middot; p.818</cite> It is not the operation for a
       scarred duodenum with obstruction.</p>
     </details>
 
@@ -2028,7 +2040,7 @@ body.guide { margin: 0; -webkit-text-size-adjust: 100%; }
       <summary>Your patient is still vomiting on the fifth postoperative day. Are you worried?</summary>
       <p class="ans">Not immediately. SRB notes that after surgery for pyloric stenosis gastric
       emptying may be delayed for two to four weeks, although it usually recovers within seven
-      days.<cite class="src srb">SRB 20 &middot; p.820</cite> A stomach that has been dilated for
+      days.​<cite class="src srb">SRB 20 &middot; p.820</cite> A stomach that has been dilated for
       months does not regain tone at once. Exclude a mechanical problem and an electrolyte
       abnormality, keep the stomach decompressed and nutrition going, and give it time.</p>
     </details>
@@ -2036,20 +2048,20 @@ body.guide { margin: 0; -webkit-text-size-adjust: 100%; }
     <details>
       <summary>Would you eradicate Helicobacter pylori?</summary>
       <p class="ans">Yes, routinely after recovery, even though infection may not be evident in
-      many patients with outlet obstruction.<cite class="src srb">SRB 20 &middot; p.820</cite> A
+      many patients with outlet obstruction.​<cite class="src srb">SRB 20 &middot; p.820</cite> A
       proton pump inhibitor with clarithromycin 500 mg and metronidazole 400 mg twice daily, or
       amoxycillin with tinidazole; and follow-up gastroscopy is a must to confirm healing. Do not
       combine antacids or H2 blockers with the PPI, because the alkaline medium reduces the PPI's
-      action.<cite class="src srb">SRB 20 &middot; p.818</cite> Note separately that Bailey and
+      action.​<cite class="src srb">SRB 20 &middot; p.818</cite> Note separately that Bailey and
       Love says the evidence does not support eradication programmes in asymptomatic people for
-      cancer prevention.<cite class="src bl">B&amp;L 67 &middot; p.1170</cite></p>
+      cancer prevention.​<cite class="src bl">B&amp;L 67 &middot; p.1170</cite></p>
     </details>
 
     <details>
       <summary>Which previous operations increase the risk of gastric cancer?</summary>
       <p class="ans">Drainage procedures: Billroth II or Pólya gastrectomy, gastroenterostomy and
       pyloroplasty, which carry approximately four times the average risk, thought to be from bile
-      reflux and intestinal metaplasia.<cite class="src bl">B&amp;L 67 &middot; p.1170</cite> It is
+      reflux and intestinal metaplasia.​<cite class="src bl">B&amp;L 67 &middot; p.1170</cite> It is
       worth volunteering, because it is the one risk factor the surgeon creates.</p>
     </details>
 
@@ -2060,7 +2072,7 @@ body.guide { margin: 0; -webkit-text-size-adjust: 100%; }
       better prognosis, about 53% of cases. Diffuse type, often with signet ring cells, infiltrates
       deeply without forming an obvious mass but spreads widely in the gastric wall, shows reduced
       E-cadherin, and has a much worse prognosis; linitis plastica belongs
-      here.<cite class="src bl">B&amp;L 67 &middot; p.1170</cite><cite class="src srb">SRB 20 &middot; p.837</cite>
+      here.​<cite class="src bl">B&amp;L 67 &middot; p.1170</cite>​<cite class="src srb">SRB 20 &middot; p.837</cite>
       It matters because the diffuse type is the one that will not give you a mass to feel or a
       clean margin to resect.</p>
     </details>
@@ -2070,11 +2082,11 @@ body.guide { margin: 0; -webkit-text-size-adjust: 100%; }
       <p class="ans">Cancer limited to the mucosa and submucosa, with or without lymph node
       involvement, that is T1 with any N. Five-year survival is around 90%, and the Japanese
       classification describes it as protruding, superficial or
-      excavated.<cite class="src bl">B&amp;L 67 &middot; p.1170</cite> The figures that change
+      excavated.​<cite class="src bl">B&amp;L 67 &middot; p.1170</cite> The figures that change
       management are SRB's: nodal metastases in about 10% overall, but only 3% when confined to
       mucosa against 20% once the submucosa is involved, which is why endoscopic mucosal resection
       suits mucosal lesions and not submucosal
-      ones.<cite class="src srb">SRB 20 &middot; p.837</cite></p>
+      ones.​<cite class="src srb">SRB 20 &middot; p.837</cite></p>
     </details>
 
     <details>
@@ -2082,11 +2094,11 @@ body.guide { margin: 0; -webkit-text-size-adjust: 100%; }
       <p class="ans">D1 removes the perigastric nodes; D2 clears the major arterial trunks. In
       practice most specialist centres perform a radical total gastrectomy conserving the spleen
       and pancreas, with D2 lymphadenectomy sparing station 10
-      nodes.<cite class="src bl">B&amp;L 67 &middot; p.1175</cite> For a distal tumour it is
+      nodes.​<cite class="src bl">B&amp;L 67 &middot; p.1175</cite> For a distal tumour it is
       unnecessary to remove the whole stomach; a subtotal gastrectomy suffices, with the remnant
       supplied by the short gastric arteries, margins more than 5 cm clear, frozen section if a
       margin is in doubt, and a Roux loop of at least 50 cm to prevent bile reflux
-      oesophagitis.<cite class="src bl">B&amp;L 67 &middot; p.1175</cite></p>
+      oesophagitis.​<cite class="src bl">B&amp;L 67 &middot; p.1175</cite></p>
     </details>
 
     <details>
@@ -2097,7 +2109,7 @@ body.guide { margin: 0; -webkit-text-size-adjust: 100%; }
       that frequently fails to let the stomach empty and may add bile reflux; a Roux loop with a
       wide gastrojejunal anastomosis may be better, though even that may not empty well. A duodenal
       stent may be considered, and for inoperable cardia tumours, intubation or
-      stenting.<cite class="src bl">B&amp;L 67 &middot; p.1169, p.1175</cite></p>
+      stenting.​<cite class="src bl">B&amp;L 67 &middot; p.1169, p.1175</cite></p>
     </details>
 
     <details>
@@ -2106,9 +2118,9 @@ body.guide { margin: 0; -webkit-text-size-adjust: 100%; }
       nodular liver, with umbilication in about 50%; ascites; a rectovesical shelf, Blumer's shelf,
       on rectal examination; Sister Joseph's nodule at the umbilicus; Krukenberg's tumours in the
       ovaries from transcoelomic spread; and Trousseau's sign, migrating
-      thrombophlebitis.<cite class="src srb">SRB 20 &middot; p.841</cite><cite class="src bl">B&amp;L 67 &middot; p.1171, p.1174</cite>
+      thrombophlebitis.​<cite class="src srb">SRB 20 &middot; p.841</cite>​<cite class="src bl">B&amp;L 67 &middot; p.1171, p.1174</cite>
       Transperitoneal spread is detected most effectively by laparoscopy rather than
-      CT.<cite class="src bl">B&amp;L 67 &middot; p.1174</cite></p>
+      CT.​<cite class="src bl">B&amp;L 67 &middot; p.1174</cite></p>
     </details>
 
     <details>
@@ -2117,7 +2129,7 @@ body.guide { margin: 0; -webkit-text-size-adjust: 100%; }
       cancer is actually an eminently curable disease, with cure rates little better than 5 to 10%
       overall only because patients present late; better results in Japan come from high population
       incidence, screening programmes and high-quality
-      surgery.<cite class="src bl">B&amp;L 67 &middot; p.1169</cite> Early gastric cancer has a
+      surgery.​<cite class="src bl">B&amp;L 67 &middot; p.1169</cite> Early gastric cancer has a
       five-year survival of about 90%.</p>
     </details>
 
@@ -2130,16 +2142,16 @@ body.guide { margin: 0; -webkit-text-size-adjust: 100%; }
       associated with H. pylori; proximal cancer affects higher socioeconomic groups, is not
       associated with H. pylori, is associated with obesity, and its aetiology remains an enigma.
       This shift has not been seen in Japan, where distal cancer still
-      predominates.<cite class="src bl">B&amp;L 67 &middot; p.1170</cite></p>
+      predominates.​<cite class="src bl">B&amp;L 67 &middot; p.1170</cite></p>
     </details>
 
     <details>
       <summary>Would you dilate the stricture endoscopically?</summary>
       <p class="ans">In selected cases. Bailey and Love says endoscopic balloon dilatation may be
       effective and is most useful in early cases, but may have to be repeated several
-      times.<cite class="src bl">B&amp;L 67 &middot; p.1169</cite> SRB puts the same observation as
+      times.​<cite class="src bl">B&amp;L 67 &middot; p.1169</cite> SRB puts the same observation as
       an objection: it benefits only temporarily, with a high recurrence
-      rate.<cite class="src srb">SRB 20 &middot; p.820</cite> So it has a role in early oedematous
+      rate.​<cite class="src srb">SRB 20 &middot; p.820</cite> So it has a role in early oedematous
       stenosis and in the patient unfit for surgery, but it is not definitive treatment for an
       established fibrotic stricture. What endoscopy is indispensable for is the biopsy.</p>
     </details>
@@ -2149,7 +2161,7 @@ body.guide { margin: 0; -webkit-text-size-adjust: 100%; }
       <p class="ans">Carcinoma of the stomach causing gastric outlet obstruction. The short
       history, the absence of the long ulcer history that benign stenosis requires, and the
       palpable mass all point that way, since SRB says a mass is never palpable in benign pyloric
-      stenosis.<cite class="src srb">SRB 20 &middot; p.818, p.819</cite><cite class="src bl">B&amp;L 67 &middot; p.1168</cite>
+      stenosis.​<cite class="src srb">SRB 20 &middot; p.818, p.819</cite>​<cite class="src bl">B&amp;L 67 &middot; p.1168</cite>
       Expect a less marked alkalosis because of hypochlorhydria. Confirm with endoscopy and biopsy,
       stage with CT, and consider laparoscopy, which detects transperitoneal spread most
       effectively.</p>

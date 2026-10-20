@@ -30,6 +30,19 @@ SCRIPT_SRC = re.compile(
 WRAP = re.compile(r'(<div class="wrap">.*</div>)\s*<script', re.DOTALL)
 
 
+
+# A citation chip must never split across two lines, but a run of chips sits with no
+# whitespace between them, so the line had nowhere to break and the page grew wider
+# than the phone instead. This puts a zero-width space before each chip: a break
+# opportunity outside the chip, so a chip that will not fit moves to the next line
+# whole. It goes in here rather than in the reference files so the source stays
+# readable, and it is outside the element, so the chip's own text is unchanged and
+# the citation keys still match.
+CHIP_START = re.compile(r'(?<!​)<cite class="src')
+
+def space_chips(html: str) -> str:
+    return CHIP_START.sub(lambda m: "​" + m.group(0), html)
+
 def main() -> int:
     if not CSS.exists():
         print(f"missing stylesheet: {CSS}", file=sys.stderr)
@@ -45,7 +58,7 @@ def main() -> int:
 
     OUT.mkdir(exist_ok=True)
     for page in pages:
-        html = page.read_text(encoding="utf-8")
+        html = space_chips(page.read_text(encoding="utf-8"))
         if not LINK.search(html):
             print(f"  !  {page.name}: no stylesheet link found, copied unchanged")
             inlined = html

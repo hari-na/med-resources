@@ -24,6 +24,7 @@
   --ink-soft:    #5a6269;
   --rule:        #ddd8ce;
   --accent:      #005f73;
+  --on-accent:   #fff;
   --accent-soft: #e3eef0;
   --flag:        #8a5a2b;
   --flag-soft:   #f6ece0;
@@ -86,21 +87,21 @@
 
 .guide[data-theme="sepia"] {
   --paper: #f4ecd8; --ink: #433422; --ink-soft: #6f5f4a; --rule: #ddd0b4;
-  --accent: #7a4a1e; --accent-soft: #ece0c8; --flag: #8a5a2b; --flag-soft: #ece0c8;
+  --accent: #7a4a1e; --on-accent: #fff; --accent-soft: #ece0c8; --flag: #8a5a2b; --flag-soft: #ece0c8;
   --cite: #8a7b63; --mark: #f5d98a; --bl: #6a4a7a; --srb: #3f6b4a;
   color-scheme: light;
 }
 
 .guide[data-theme="dark"] {
   --paper: #15181a; --ink: #e8e6e1; --ink-soft: #a3abb2; --rule: #2e3338;
-  --accent: #6fc3d2; --accent-soft: #1b2a2e; --flag: #d9a36a; --flag-soft: #2a2119;
+  --accent: #6fc3d2; --on-accent: #0b1416; --accent-soft: #1b2a2e; --flag: #d9a36a; --flag-soft: #2a2119;
   --cite: #78828a; --mark: #4a4120; --bl: #a893dd; --srb: #6fc3a8;
   color-scheme: dark;
 }
 
 .guide[data-theme="contrast"] {
   --paper: #000000; --ink: #ffffff; --ink-soft: #d8d8d8; --rule: #6a6a6a;
-  --accent: #6fe3ff; --accent-soft: #10242b; --flag: #ffc46b; --flag-soft: #2a2008;
+  --accent: #6fe3ff; --on-accent: #000; --accent-soft: #10242b; --flag: #ffc46b; --flag-soft: #2a2008;
   --cite: #bdbdbd; --mark: #4a4a00; --bl: #d0b8ff; --srb: #7fe8c0;
   color-scheme: dark;
 }
@@ -109,7 +110,7 @@
 @media (prefers-color-scheme: dark) {
   .guide[data-theme="auto"] {
     --paper: #15181a; --ink: #e8e6e1; --ink-soft: #a3abb2; --rule: #2e3338;
-    --accent: #6fc3d2; --accent-soft: #1b2a2e; --flag: #d9a36a; --flag-soft: #2a2119;
+    --accent: #6fc3d2; --on-accent: #0b1416; --accent-soft: #1b2a2e; --flag: #d9a36a; --flag-soft: #2a2119;
     --cite: #78828a; --mark: #4a4120; --bl: #a893dd; --srb: #6fc3a8;
     color-scheme: dark;
   }
@@ -141,6 +142,7 @@ body.guide { margin: 0; -webkit-text-size-adjust: 100%; }
   font-family: var(--face-body);
   font-size: 2.1rem; font-weight: 600; line-height: 1.15;
   letter-spacing: -0.015em; text-wrap: balance; margin: 0 0 0.7rem;
+  overflow-wrap: break-word; hyphens: auto;
 }
 
 .guide .standfirst { font-size: 1.02rem; color: var(--ink-soft); margin: 0 0 1.6rem; }
@@ -311,7 +313,11 @@ body.guide { margin: 0; -webkit-text-size-adjust: 100%; }
 .guide cite.src {
   font-family: var(--face-ui); font-style: normal;
   font-size: 0.66em; font-weight: 600; letter-spacing: 0.02em;
-  color: var(--cite); white-space: nowrap;
+  color: var(--cite);
+  /* The chip stays on one line. build.py puts a zero-width space before each one,
+     which is what lets a chip that will not fit move to the next line whole
+     instead of widening the page past the phone. */
+  white-space: nowrap; max-width: 100%;
   border: 1px solid var(--rule); border-radius: 2px;
   padding: 0.05rem 0.28rem; margin-left: 0.3rem; vertical-align: 0.12em;
 }
@@ -331,7 +337,11 @@ body.guide { margin: 0; -webkit-text-size-adjust: 100%; }
   cursor: pointer; list-style: none; display: flex; gap: 0.55rem; align-items: baseline;
   padding: 0.7rem 0.9rem; font-family: var(--face-ui);
   font-size: 0.82em; line-height: 1.45; color: var(--ink);
+  flex-wrap: wrap;
 }
+/* A flex item defaults to min-width:auto and so refuses to shrink below its own
+   content width; a long source line in the summary then widened the whole page. */
+.guide details.conflict > summary > * { min-width: 0; overflow-wrap: break-word; }
 .guide details.conflict > summary::-webkit-details-marker { display: none; }
 .guide details.conflict > summary::before {
   content: "*"; color: var(--flag); font-size: 1em; font-weight: 700;
@@ -419,7 +429,7 @@ body.guide { margin: 0; -webkit-text-size-adjust: 100%; }
 @media print {
   .guide {
     --paper: #fff; --ink: #000; --ink-soft: #333; --rule: #bbb;
-    --accent: #004c5c; --accent-soft: #eef4f5; --cite: #666;
+    --accent: #004c5c; --on-accent: #fff; --accent-soft: #eef4f5; --cite: #666;
     --measure: none; --fs: 10.5pt; --lh: 1.45;
     --face-body: "Spectral", Georgia, serif;
     --face-ui: "Inter", system-ui, sans-serif;
@@ -785,7 +795,9 @@ body.guide { margin: 0; -webkit-text-size-adjust: 100%; }
   background: none; color: var(--ink, #222);
 }
 .rdr-ne-row .rdr-ok {
-  background: var(--accent, #005f73); border-color: var(--accent, #005f73); color: #fff;
+  background: var(--accent, #005f73); border-color: var(--accent, #005f73);
+  /* not #fff: the dark and high-contrast accents are pale, and white on them is 2:1 */
+  color: var(--on-accent, #fff);
 }
 .rdr-ne-row .rdr-del { color: var(--flag, #8a5a2b); }
 
@@ -990,14 +1002,14 @@ body.guide { margin: 0; -webkit-text-size-adjust: 100%; }
     <br><br><b>1.</b> <b>Chapter 6, "Tropical infections and infestations", pp.72 and 73</b>, under
     <b>FILARIASIS</b>. This is the only substantive discussion, and it is about filarial
     lymphoedema and elephantiasis
-    specifically.<cite class="src bl">B&amp;L 6 &middot; p.72</cite><cite class="src bl">B&amp;L 6 &middot; p.73</cite>
+    specifically.​<cite class="src bl">B&amp;L 6 &middot; p.72</cite>​<cite class="src bl">B&amp;L 6 &middot; p.73</cite>
     <br><b>2.</b> <b>Chapter 45, p.661</b>, one sentence under angiosarcoma: the
     <b>lymphangiosarcoma</b> variant <b>"arises from lymphatic endothelium and can develop in
     lymphoedematous tissue, particularly an
-    extremity"</b>.<cite class="src bl">B&amp;L 45 &middot; p.661</cite>
+    extremity"</b>.​<cite class="src bl">B&amp;L 45 &middot; p.661</cite>
     <br><b>3.</b> <b>Chapter 58, breast</b>, as a complication of axillary treatment: <b>"the axilla
     should not be irradiated after axillary node dissection as this increases the risk of
-    lymphoedema."</b><cite class="src bl">B&amp;L 58 &middot; p.939</cite>
+    lymphoedema."</b>​<cite class="src bl">B&amp;L 58 &middot; p.939</cite>
     <br><br>So <b>everything else in this case is S Das ch.8 and SRB ch.1.</b> Do not waste time
     looking for Kinmonth's classification, Browse's classification, Milroy's disease, lymphoedema
     praecox, the grading, lymphoscintigraphy or the named operations in Bailey &amp; Love 28e. None
@@ -1012,10 +1024,10 @@ body.guide { margin: 0; -webkit-text-size-adjust: 100%; }
     <dd>SRB: <b>"It is accumulation of fluid (lymph) in extracellular and extravascular fluid
     compartment, commonly in subcutaneous tissue. It is primarily due to defective lymphatic
     drainage. It is increased protein rich interstitial
-    fluid."</b><cite class="src srb">SRB 1 &middot; p.241</cite> S Das: <b>"lymphoedema is caused by
+    fluid."</b>​<cite class="src srb">SRB 1 &middot; p.241</cite> S Das: <b>"lymphoedema is caused by
     accumulation of lymph within the tissues. It mainly affects the subcutaneous tissues of the
     limbs. This is due to stagnation of lymph within the
-    lymphatics."</b><cite class="src das">Das 8 &middot; p.114</cite>
+    lymphatics."</b>​<cite class="src das">Das 8 &middot; p.114</cite>
     <br><span class="label">The three words that matter</span><b>Protein rich.</b> That is what
     distinguishes it from every other oedema and explains the whole natural history: protein in the
     interstitium drives fibrosis, fibrosis makes the oedema non-pitting, and non-pitting oedema does
@@ -1026,11 +1038,11 @@ body.guide { margin: 0; -webkit-text-size-adjust: 100%; }
     to <b>"lymphatic hypertension and dilatation causing lymph stasis, accumulation of proteins,
     glycosamines, growth factors, and bacteria. There is more collagen formation, deposition of
     proteins, fibroblasts, ground substance causing fibrosis in subcutaneous and outside deep
-    fascia."</b><cite class="src srb">SRB 1 &middot; p.242</cite> Then: <b>"activation of collagens
+    fascia."</b>​<cite class="src srb">SRB 1 &middot; p.242</cite> Then: <b>"activation of collagens
     and keratinocytes"</b>, <b>"dermal thickening and dermal proliferation"</b>, <b>cracks,
-    ulceration, abscess</b>, and finally <b>elephantiasis</b>.<cite class="src srb">SRB 1 &middot; p.244</cite>
+    ulceration, abscess</b>, and finally <b>elephantiasis</b>.​<cite class="src srb">SRB 1 &middot; p.244</cite>
     <br><span class="label out">The detail examiners like</span><b>"Muscles are normal without any
-    oedema but may get hypertrophied."</b><cite class="src srb">SRB 1 &middot; p.242</cite> The
+    oedema but may get hypertrophied."</b>​<cite class="src srb">SRB 1 &middot; p.242</cite> The
     disease is <b>outside</b> the deep fascia. That is why the limb is heavy but not weak, and why
     one class of operation works by cutting windows in the deep fascia.</dd>
     <dt>The anatomical fact the operations are built on</dt>
@@ -1039,7 +1051,7 @@ body.guide { margin: 0; -webkit-text-size-adjust: 100%; }
     lymphatics are involved by the disease, deep lymphatics are not. Superficial and deep lymphatics
     are not communicating with each other (unlike the veins in the limb where superficial and deep
     veins are freely communicating with each
-    other)."</b><cite class="src srb">SRB 1 &middot; p.244</cite>
+    other)."</b>​<cite class="src srb">SRB 1 &middot; p.244</cite>
     <br><span class="label">Why this is the key to the viva</span>Because it explains, in one
     stroke, why the leg swells although the deep system is healthy, and why every "physiological"
     operation ever devised has the same aim: <b>to create a communication between the diseased
@@ -1054,26 +1066,26 @@ body.guide { margin: 0; -webkit-text-size-adjust: 100%; }
     <dt>Kinmonth's, which is the one to open with</dt>
     <dd><b>Primary</b>, <b>"without any identifiable lymphatic disease"</b>; and <b>secondary</b>,
     <b>"acquired due to definitive cause. Most common
-    form."</b><cite class="src srb">SRB 1 &middot; p.242</cite> Note that last phrase, because
+    form."</b>​<cite class="src srb">SRB 1 &middot; p.242</cite> Note that last phrase, because
     candidates assume primary is commoner.</dd>
     <dt>Primary, subdivided by age of onset: the three names</dt>
     <dd><b>Lymphoedema congenita</b>, present at birth to under 2 years, <b>10%</b>. The familial
     form is <b>Nonne-Milroy's disease</b>: <b>"type I familial, autosomal dominant, chromosome 5
     related; bilateral upper and lower limbs, genitalia and face may be involved. Incidence is 1 in
-    6000 of live births."</b><cite class="src srb">SRB 1 &middot; p.242</cite>
+    6000 of live births."</b>​<cite class="src srb">SRB 1 &middot; p.242</cite>
     <br><b>Lymphoedema praecox</b>, at puberty up to about 35 years, <b>80%</b>, so much the
     commonest primary form. The familial form is <b>Letessier-Meige's syndrome</b>, <b>type II
-    familial</b>.<cite class="src srb">SRB 1 &middot; p.242</cite>
+    familial</b>.​<cite class="src srb">SRB 1 &middot; p.242</cite>
     <br><b>Lymphoedema tarda</b>, in adult life after 35
-    years.<cite class="src srb">SRB 1 &middot; p.242</cite>
+    years.​<cite class="src srb">SRB 1 &middot; p.242</cite>
     <br><span class="label">And the syndromes to name</span>Primary lymphoedema can be
     <b>syndromic</b>: <b>Turner's, Klinefelter's, Down's, Klippel-Trenaunay-Weber</b>. It
     <b>"affects commonly females"</b> and is <b>"common in lower limb and left
-    side"</b>.<cite class="src srb">SRB 1 &middot; p.242</cite></dd>
+    side"</b>.​<cite class="src srb">SRB 1 &middot; p.242</cite></dd>
     <dt>Browse's lymphangiographic classification, which an examiner may ask for by name</dt>
     <dd>Classifies by <b>what the lymphangiogram shows</b> rather than by when the swelling started,
     which makes it the more useful of the two for planning
-    treatment:<cite class="src srb">SRB 1 &middot; p.241</cite>
+    treatment:​<cite class="src srb">SRB 1 &middot; p.241</cite>
     <br><b>Congenital hyperplasia, 10%.</b> <b>"Common in males; entire leg is involved; one or both
     sides; with often family history; progressive; involves increased number of lymphatics and lymph
     nodes associated with chylous ascites, chylothorax and protein losing
@@ -1091,38 +1103,38 @@ body.guide { margin: 0; -webkit-text-size-adjust: 100%; }
     marks.
     <span class="label out">A caution about the percentages</span>SRB's own radiological breakdown
     on the next page gives <b>hypoplasia 70%, aplasia 15%, hyperplasia 15%</b>, which does not quite
-    reconcile with Browse's 10 / 80 / 10.<cite class="src srb">SRB 1 &middot; p.242</cite> Quote one
+    reconcile with Browse's 10 / 80 / 10.​<cite class="src srb">SRB 1 &middot; p.242</cite> Quote one
     set or the other, not both in the same breath.</dd>
     <dt>Secondary: the causes, with the commonest first</dt>
     <dd>SRB's list, and the order to give it in depends on where you
-    are:<cite class="src srb">SRB 1 &middot; p.242</cite>
+    are:​<cite class="src srb">SRB 1 &middot; p.242</cite>
     <br><b>Surgery</b>, specifically <b>"inguinal block or axillary block dissection, post-mastectomy
     with axillary clearance"</b>. S Das's illustration is exactly this: <b>lymphoedema of the arm
-    following radical mastectomy</b>,<cite class="src das">Das 8 &middot; p.114</cite> and he notes
+    following radical mastectomy</b>,​<cite class="src das">Das 8 &middot; p.114</cite> and he notes
     secondary lymphoedema <b>"often follows operation like extirpation of lymph nodes, e.g. radical
-    mastectomy"</b>.<cite class="src das">Das 8 &middot; p.114</cite>
+    mastectomy"</b>.​<cite class="src das">Das 8 &middot; p.114</cite>
     <br><b>Filarial</b>, <b>"due to Wuchereria bancrofti, common cause in coastal
     region"</b>. S Das: <b>"lymphoedema following filariasis is more common in tropical countries
     and Orissa seems to be the most affected state in
-    India."</b><cite class="src das">Das 8 &middot; p.114</cite>
+    India."</b>​<cite class="src das">Das 8 &middot; p.114</cite>
     <br><b>Advanced malignancy</b>, <b>"hard, fixed lymph nodes in axilla or in inguinal
     region"</b>.
     <br><b>Post-radiotherapy.</b> B&amp;L's version of this is the practical rule: <b>"the axilla
     should not be irradiated after axillary node dissection as this increases the risk of
-    lymphoedema."</b><cite class="src bl">B&amp;L 58 &middot; p.939</cite> Surgery <i>plus</i>
+    lymphoedema."</b>​<cite class="src bl">B&amp;L 58 &middot; p.939</cite> Surgery <i>plus</i>
     radiotherapy to the same basin is the combination that causes it.
     <br><b>Infection:</b> tuberculosis, syphilis, fungal and bacterial.
     <br><b>Trauma</b>, and rarely rheumatoid arthritis, snake and insect bites, deep vein
     thrombosis and chronic venous insufficiency.
     <br><span class="label out">And the timing clue</span>SRB: <b>"secondary lymphoedema develops
-    rapidly."</b><cite class="src srb">SRB 1 &middot; p.242</cite> S Das makes the same contrast:
+    rapidly."</b>​<cite class="src srb">SRB 1 &middot; p.242</cite> S Das makes the same contrast:
     primary lymphoedema is <b>"slowly progressive swelling of the limb and the genitalia which takes
     even years to develop"</b>, whereas secondary <b>"is often associated with some sort of
-    complaints"</b> that point to the cause.<cite class="src das">Das 8 &middot; p.114</cite></dd>
+    complaints"</b> that point to the cause.​<cite class="src das">Das 8 &middot; p.114</cite></dd>
     <dt>One cause neither of the other books gives, worth a sentence</dt>
     <dd><b>Podoconiosis.</b> SRB: <b>"endemic elephantiasis or podoconiosis is common in Africa;
     seen in barefoot workers; due to destruction of lymphatics by silica derived from soil containing
-    alkaline volcanic rocks."</b><cite class="src srb">SRB 1 &middot; p.244</cite> Non-infective,
+    alkaline volcanic rocks."</b>​<cite class="src srb">SRB 1 &middot; p.244</cite> Non-infective,
     non-filarial elephantiasis from walking barefoot on volcanic soil. If you can name it, do.</dd>
   </dl>
 
@@ -1132,8 +1144,8 @@ body.guide { margin: 0; -webkit-text-size-adjust: 100%; }
     <span class="ask">1. How old was the patient when it started?</span>
     <span class="why">It is the axis of the whole primary classification. S Das: <b>"primary
     lymphoedema may reveal itself in young age, whereas secondary lymphoedema mostly presents in
-    middle and old ages."</b><cite class="src das">Das 8 &middot; p.114</cite> Onset at birth means
-    congenita, at puberty praecox, after 35 tarda.<cite class="src srb">SRB 1 &middot; p.242</cite></span>
+    middle and old ages."</b>​<cite class="src das">Das 8 &middot; p.114</cite> Onset at birth means
+    congenita, at puberty praecox, after 35 tarda.​<cite class="src srb">SRB 1 &middot; p.242</cite></span>
     <span class="label">Say the name, then the age bracket</span>"Onset at puberty puts this in
     lymphoedema praecox, which is 80% of primary lymphoedema." That is worth more than describing
     the swelling.
@@ -1144,13 +1156,13 @@ body.guide { margin: 0; -webkit-text-size-adjust: 100%; }
     <span class="why">S Das: <b>"somehow or other females are more affected than males so far as
     primary lymphoedema is concerned. Even secondary lymphoedema is more common in women following
     radical mastectomy or due to involvement of the iliac and inguinal nodes from malignant tumours
-    of the uterus or ovary."</b><cite class="src das">Das 8 &middot; p.114</cite> A family history
+    of the uterus or ovary."</b>​<cite class="src das">Das 8 &middot; p.114</cite> A family history
     points to <b>Nonne-Milroy's</b> (autosomal dominant) or
-    <b>Letessier-Meige's</b>.<cite class="src srb">SRB 1 &middot; p.242</cite></span>
+    <b>Letessier-Meige's</b>.​<cite class="src srb">SRB 1 &middot; p.242</cite></span>
     <span class="label out">And the one exception</span>B&amp;L's filarial disease runs the other
     way: <b>"it is mainly males who are affected because females generally cover a greater part of
     their bodies with clothing, thus making them less prone to mosquito
-    bites."</b><cite class="src bl">B&amp;L 6 &middot; p.72</cite> So a filarial leg in an endemic
+    bites."</b>​<cite class="src bl">B&amp;L 6 &middot; p.72</cite> So a filarial leg in an endemic
     area is more often a man's; a primary lymphoedema is more often a woman's.
   </div>
 
@@ -1160,10 +1172,10 @@ body.guide { margin: 0; -webkit-text-size-adjust: 100%; }
     India. B&amp;L: filariasis <b>"affects more than 120 million people worldwide, two-thirds of whom
     live in India, China and Indonesia. According to the World Health Organization, after leprosy,
     filariasis is the most common cause of long-term
-    disability."</b><cite class="src bl">B&amp;L 6 &middot; p.72</cite> SRB adds that filarial
+    disability."</b>​<cite class="src bl">B&amp;L 6 &middot; p.72</cite> SRB adds that filarial
     lymphoedema is the <b>"common cause in coastal
-    region"</b>,<cite class="src srb">SRB 1 &middot; p.242</cite> and S Das names <b>Orissa</b> as
-    the most affected Indian state.<cite class="src das">Das 8 &middot; p.114</cite></span>
+    region"</b>,​<cite class="src srb">SRB 1 &middot; p.242</cite> and S Das names <b>Orissa</b> as
+    the most affected Indian state.​<cite class="src das">Das 8 &middot; p.114</cite></span>
   </div>
 
   <div class="step">
@@ -1172,10 +1184,10 @@ body.guide { margin: 0; -webkit-text-size-adjust: 100%; }
     almost always in the history rather than on examination. Ask about
     <b>mastectomy with axillary clearance, inguinal or ilioinguinal block dissection, radiotherapy
     to the axilla or groin, and any known
-    malignancy</b>.<cite class="src srb">SRB 1 &middot; p.242</cite></span>
+    malignancy</b>.​<cite class="src srb">SRB 1 &middot; p.242</cite></span>
     <span class="label">The example SRB illustrates</span>Lymphoedema of the lower limb developed
     <b>after ilioinguinal block dissection for nodal secondaries from
-    melanoma</b>.<cite class="src srb">SRB 1 &middot; p.244</cite>
+    melanoma</b>.​<cite class="src srb">SRB 1 &middot; p.244</cite>
   </div>
 
   <div class="step">
@@ -1185,30 +1197,30 @@ body.guide { margin: 0; -webkit-text-size-adjust: 100%; }
     there are episodic attacks of fever with lymphadenitis and lymphangitis"</b>, and later
     <b>"recurrent attacks of lymphangitis cause fibrosis of the lymph channels, resulting in a
     grossly swollen limb with thickened skin, producing the condition of
-    elephantiasis."</b><cite class="src bl">B&amp;L 6 &middot; p.72</cite> SRB lists <b>minor trauma
+    elephantiasis."</b>​<cite class="src bl">B&amp;L 6 &middot; p.72</cite> SRB lists <b>minor trauma
     and lymphoedema</b> as the precipitating factors for acute lymphangitis, and
     <b>"development of lymphoedema"</b> as one of its
-    complications.<cite class="src srb">SRB 1 &middot; p.241</cite></span>
+    complications.​<cite class="src srb">SRB 1 &middot; p.241</cite></span>
     <span class="label out">So say the vicious circle out loud</span><b>Lymph stasis invites
     infection; infection scars the remaining lymphatics; more scarring means more stasis.</b> That
     is why antibiotics, skin care and antifungals are not minor adjuncts in this disease but the
     main long-term treatment. B&amp;L notes <b>"secondary streptococcal infection is
-    common"</b>.<cite class="src bl">B&amp;L 6 &middot; p.72</cite>
+    common"</b>.​<cite class="src bl">B&amp;L 6 &middot; p.72</cite>
   </div>
 
   <div class="step">
     <span class="ask">6. Is there pain, and how disabling is it?</span>
     <span class="why">Candidates assume lymphoedema is painless. SRB: <b>"dull ache, severe pain,
     burning, bursting, cramps; 50% patients will have
-    pain."</b><cite class="src srb">SRB 1 &middot; p.244</cite> It also lists
+    pain."</b>​<cite class="src srb">SRB 1 &middot; p.244</cite> It also lists
     <b>"debility, immobility, obesity, muscle wasting"</b> and <b>"psychological and social
-    discomfort causing severe morbidity"</b>.<cite class="src srb">SRB 1 &middot; p.244</cite>
+    discomfort causing severe morbidity"</b>.​<cite class="src srb">SRB 1 &middot; p.244</cite>
     S Das, by contrast, says <b>"not many complaints are associated with this disease particularly
-    the primary lymphoedema"</b>.<cite class="src das">Das 8 &middot; p.114</cite></span>
+    the primary lymphoedema"</b>.​<cite class="src das">Das 8 &middot; p.114</cite></span>
     <span class="label">What to say</span>Half have pain, and the disability is what the patient
     actually comes about. B&amp;L's judgement on the advanced disease is blunt: <b>"gross forms of
     the disease cause a great deal of disability and
-    misery."</b><cite class="src bl">B&amp;L 6 &middot; p.73</cite>
+    misery."</b>​<cite class="src bl">B&amp;L 6 &middot; p.73</cite>
   </div>
 
   <div class="step">
@@ -1216,12 +1228,12 @@ body.guide { margin: 0; -webkit-text-size-adjust: 100%; }
     <span class="why">Because these are the manifestations that confirm lymphatic obstruction
     elsewhere. B&amp;L: <b>"chyluria and chylous ascites may occur"</b>, and <b>"bilateral lower limb
     filariasis is often associated with scrotal and penile elephantiasis. Early on, there may be a
-    hydrocele underlying scrotal filariasis."</b><cite class="src bl">B&amp;L 6 &middot; pp.72, 73</cite>
+    hydrocele underlying scrotal filariasis."</b>​<cite class="src bl">B&amp;L 6 &middot; pp.72, 73</cite>
     SRB adds <b>"protein losing diarrhoea, chylous ascites, chylothorax, chyluria,
-    lymphorrhoea"</b>.<cite class="src srb">SRB 1 &middot; p.244</cite></span>
+    lymphorrhoea"</b>.​<cite class="src srb">SRB 1 &middot; p.244</cite></span>
     <span class="label">And one respiratory form to name</span><b>Tropical pulmonary
     eosinophilia</b>: B&amp;L, <b>"a mild form of the disease can affect the respiratory tract,
-    causing dry cough"</b>.<cite class="src bl">B&amp;L 6 &middot; p.73</cite>
+    causing dry cough"</b>.​<cite class="src bl">B&amp;L 6 &middot; p.73</cite>
   </div>
 
   <h2><span class="n">4</span>Examination: the signs, and Stemmer's first</h2>
@@ -1229,7 +1241,7 @@ body.guide { margin: 0; -webkit-text-size-adjust: 100%; }
   <dl class="findings">
     <dt>Stemmer's sign, which is the one to lead with</dt>
     <dd>SRB: <b>"skin over the dorsum of foot cannot be pinched because of subcutaneous fibrosis,
-    Stemmer's sign."</b><cite class="src srb">SRB 1 &middot; p.244</cite>
+    Stemmer's sign."</b>​<cite class="src srb">SRB 1 &middot; p.244</cite>
     <br><span class="label">Why it works</span>In any other oedema the subcutaneous tissue is
     water-logged but loose, so you can pick up a fold of skin at the base of the second toe. In
     lymphoedema the protein-rich fluid has driven <b>subdermal fibrosis</b>, so skin and subcutis are
@@ -1237,7 +1249,7 @@ body.guide { margin: 0; -webkit-text-size-adjust: 100%; }
     it is positive in lymphoedema and negative in cardiac, renal and hepatic oedema.</dd>
     <dt>The shape of the limb, which is diagnostic at a glance</dt>
     <dd>SRB's four descriptors, all worth learning as
-    phrases:<cite class="src srb">SRB 1 &middot; p.244</cite>
+    phrases:​<cite class="src srb">SRB 1 &middot; p.244</cite>
     <br><b>Tree trunk pattern leg</b>: swelling in the foot extending progressively up the leg, with
     <b>"loss of normal perimalleolar shape"</b>. The ankle becomes a column rather than a waist.
     <br><b>Buffalo hump</b> on the dorsum of the foot.
@@ -1248,9 +1260,9 @@ body.guide { margin: 0; -webkit-text-size-adjust: 100%; }
     <dt>Pitting or non-pitting, and why you must say which</dt>
     <dd>S Das: <b>"in the early stage this oedema pits on pressure, but gradually the subcutaneous
     tissue becomes fibrosed and the skin becomes keratotic
-    (elephantiasis)."</b><cite class="src das">Das 8 &middot; p.114</cite> SRB: <b>"initially pitting
+    (elephantiasis)."</b>​<cite class="src das">Das 8 &middot; p.114</cite> SRB: <b>"initially pitting
     oedema occurs, which later becomes
-    non-pitting."</b><cite class="src srb">SRB 1 &middot; p.244</cite>
+    non-pitting."</b>​<cite class="src srb">SRB 1 &middot; p.244</cite>
     <br><span class="label out">This is not a detail, it is the treatment decision</span>Pitting
     oedema is fluid, and fluid can be moved by elevation, compression and massage. Non-pitting
     oedema is fibrosis and deposited protein, and nothing short of excision will shift it. So the
@@ -1259,39 +1271,39 @@ body.guide { margin: 0; -webkit-text-size-adjust: 100%; }
     <dt>The skin, in detail</dt>
     <dd>Look for <b>"eczema, fissuring, papillae formation, ulceration, lymph ooze,
     elephantiasis"</b>, and for <b>athlete's foot</b>, which SRB lists with <b>"joint pain and
-    disability"</b>.<cite class="src srb">SRB 1 &middot; p.244</cite> B&amp;L explains why the skin
+    disability"</b>.​<cite class="src srb">SRB 1 &middot; p.244</cite> B&amp;L explains why the skin
     thickens before the limb looks huge: <b>"obstruction to the cutaneous lymphatics causes skin
     thickening, not unlike the peau d'orange appearance in breast cancer, thus exacerbating the limb
-    swelling."</b><cite class="src bl">B&amp;L 6 &middot; p.72</cite>
+    swelling."</b>​<cite class="src bl">B&amp;L 6 &middot; p.72</cite>
     <br><span class="label">And look between the toes</span>Interdigital fungal infection is the
     commonest portal of entry for the streptococcus that causes the next attack of lymphangitis.
     Finding and treating it is an answer to "how would you prevent recurrence?"</dd>
     <dt>What else to examine, and why each</dt>
     <dd><b>Regional lymph nodes</b>, for a cause: hard fixed nodes mean malignant obstruction. S Das:
     <b>"in case of secondary lymphoedema examination must include regional lymph nodes and general
-    examination to find out the diagnosis."</b><cite class="src das">Das 8 &middot; p.114</cite>
+    examination to find out the diagnosis."</b>​<cite class="src das">Das 8 &middot; p.114</cite>
     <br><b>The scars</b> of a previous mastectomy, axillary or groin dissection, or the skin changes
     of previous radiotherapy.
     <br><b>Abdomen and pelvis</b>, in proximal-obliteration disease, for a mass blocking the
     aortoiliac nodes.
     <br><b>Subcutaneous nodules along the lymphatics.</b> S Das: these occur <b>"as in case of
     malignant melanoma and carcinoma. In case of malignant melanoma these nodules are often of deep
-    brown to black colour."</b><cite class="src das">Das 8 &middot; p.114</cite> And B&amp;L adds
+    brown to black colour."</b>​<cite class="src das">Das 8 &middot; p.114</cite> And B&amp;L adds
     the one finding unique to filariasis: <b>"occasionally, adult worms may be felt
-    subcutaneously."</b><cite class="src bl">B&amp;L 6 &middot; p.72</cite>
+    subcutaneously."</b>​<cite class="src bl">B&amp;L 6 &middot; p.72</cite>
     <br><b>Acute lymphangitis</b>, if present: <b>"prominent lymphatic vessels as red streaks
     progressing towards the regional lymph nodes. There may be brawny oedema
-    around."</b><cite class="src das">Das 8 &middot; p.114</cite> SRB: <b>"diffuse swelling in the
+    around."</b>​<cite class="src das">Das 8 &middot; p.114</cite> SRB: <b>"diffuse swelling in the
     skin with redness which blanches on pressure is
     typical"</b>, with fever, chills and tender regional
-    nodes.<cite class="src srb">SRB 1 &middot; p.241</cite></dd>
+    nodes.​<cite class="src srb">SRB 1 &middot; p.241</cite></dd>
     <dt>And the sites other than the leg</dt>
     <dd>Lower limb is commonest. Then <b>upper limb; scrotum and penis</b> (SRB's phrase for the
     penile form is <b>"ram's horn penis"</b>); <b>breast</b>, which <b>"requires reduction
     mammoplasty"</b>; <b>labia; eyelid</b>; and localised
-    lymphoedema.<cite class="src srb">SRB 1 &middot; p.244</cite> S Das illustrates both
+    lymphoedema.​<cite class="src srb">SRB 1 &middot; p.244</cite> S Das illustrates both
     <b>lymphoedema of the arm after radical mastectomy</b> and <b>huge elephantiasis of both
-    legs</b>.<cite class="src das">Das 8 &middot; p.114</cite></dd>
+    legs</b>.​<cite class="src das">Das 8 &middot; p.114</cite></dd>
   </dl>
 
   <div class="pearl">
@@ -1301,10 +1313,10 @@ body.guide { margin: 0; -webkit-text-size-adjust: 100%; }
     is due to excess deposition of interstitial fluid."</b>
     <br><b>Grade II:</b> <b>"non-pitting oedema occurs which does not reduce on elevation."</b>
     <br><b>Grade III:</b> <b>"oedema with irreversible skin changes like fibrosis, papillae,
-    fissuring."</b><cite class="src srb">SRB 1 &middot; p.245</cite>
+    fissuring."</b>​<cite class="src srb">SRB 1 &middot; p.245</cite>
     <br><br>And a second, volumetric scale: <b>mild</b>, under 20% excess limb volume;
     <b>moderate</b>, 20 to 40%; <b>severe</b>, over
-    40%.<cite class="src srb">SRB 1 &middot; p.245</cite>
+    40%.​<cite class="src srb">SRB 1 &middot; p.245</cite>
     <br><br><b>Why the grade is the answer, not an ornament.</b> Grade I is reversible by elevation,
     so conservative treatment is enough. Grade II has lost that reversibility, so it needs sustained
     compression. Grade III has fixed skin change, which is the only group in which excisional
@@ -1318,46 +1330,46 @@ body.guide { margin: 0; -webkit-text-size-adjust: 100%; }
     <dd>B&amp;L: <b>"filariasis is mainly caused by the parasite Wuchereria bancrofti, which is
     transmitted by the mosquito. Variants of the parasite called Brugia malayi and Brugia timori are
     responsible for causing the disease in about 10% of those
-    infected."</b><cite class="src bl">B&amp;L 6 &middot; p.72</cite> SRB names the Indian vector:
+    infected."</b>​<cite class="src bl">B&amp;L 6 &middot; p.72</cite> SRB names the Indian vector:
     <b>Culex fatigans</b>, with <b>man the definitive host</b> and the <b>female mosquito the
     intermediate host</b>; <b>"animal or reservoir host is not
-    known."</b><cite class="src srb">SRB 1 &middot; p.242</cite></dd>
+    known."</b>​<cite class="src srb">SRB 1 &middot; p.242</cite></dd>
     <dt>Nocturnal periodicity, and the reason for it</dt>
     <dd>SRB: <b>"in India, Asian countries and China, they show nocturnal periodicity (from 10 PM to
     4 AM). It is related to night biting habits of the vector, Culex fatigans mosquito and sleeping
-    habits of the host."</b><cite class="src srb">SRB 1 &middot; p.242</cite>
+    habits of the host."</b>​<cite class="src srb">SRB 1 &middot; p.242</cite>
     <br><span class="label">So the blood smear has a time</span>S Das puts it in his investigation
     list as <b>"microfilaria in the peripheral blood vessels when the patient is
-    sleeping"</b>.<cite class="src das">Das 8 &middot; p.115</cite> B&amp;L: <b>"a nocturnal
+    sleeping"</b>.​<cite class="src das">Das 8 &middot; p.115</cite> B&amp;L: <b>"a nocturnal
     peripheral blood smear may show the immature forms, or
-    microfilariae."</b><cite class="src bl">B&amp;L 6 &middot; p.73</cite> Saying <b>nocturnal</b>
+    microfilariae."</b>​<cite class="src bl">B&amp;L 6 &middot; p.73</cite> Saying <b>nocturnal</b>
     and knowing <i>why</i> is a reliable mark.</dd>
     <dt>The timings worth remembering</dt>
     <dd><b>Maturation to adult worm takes almost a year</b> after the bite, which is why the disease
-    appears long after exposure.<cite class="src bl">B&amp;L 6 &middot; p.72</cite> In the mosquito,
+    appears long after exposure.​<cite class="src bl">B&amp;L 6 &middot; p.72</cite> In the mosquito,
     <b>"it takes 20 days for microfilaria to develop into infective 3rd stage
-    larva"</b>.<cite class="src srb">SRB 1 &middot; p.243</cite> <b>Life span of microfilaria in
+    larva"</b>.​<cite class="src srb">SRB 1 &middot; p.243</cite> <b>Life span of microfilaria in
     human blood is 3 months</b>, and a <b>gravid female releases up to 50 000 microfilariae a
-    day</b> into the lymph.<cite class="src srb">SRB 1 &middot; p.243</cite>
+    day</b> into the lymph.​<cite class="src srb">SRB 1 &middot; p.243</cite>
     <br><span class="label out">And the fact that explains why the parasite load does not escalate</span>
     SRB says it twice: <b>"microfilaria never multiplies in mosquito nor in
     human"</b>, and <b>"one microfilaria forms one infective
-    larva"</b>.<cite class="src srb">SRB 1 &middot; p.243</cite> Disease severity comes from
+    larva"</b>.​<cite class="src srb">SRB 1 &middot; p.243</cite> Disease severity comes from
     <b>repeated bites over years</b>, not from multiplication inside the host. That is why filarial
     elephantiasis is a disease of long residence in an endemic area.</dd>
     <dt>Where the adult worms sit</dt>
     <dd>B&amp;L: <b>"the adult worms mainly colonise the lymphatic
     system"</b>, and <b>"the adult worms cause lymphatic obstruction, resulting in massive lower limb
-    oedema."</b><cite class="src bl">B&amp;L 6 &middot; p.72</cite> SRB is more specific: the
+    oedema."</b>​<cite class="src bl">B&amp;L 6 &middot; p.72</cite> SRB is more specific: the
     infective larva <b>"enters regional lymph nodes in inguinal or axillary or abdominal nodes"</b>
     and develops into the adult worm <b>in the lymph
-    nodes</b>.<cite class="src srb">SRB 1 &middot; p.243</cite></dd>
+    nodes</b>.​<cite class="src srb">SRB 1 &middot; p.243</cite></dd>
     <dt>Where to find the parasite</dt>
     <dd>B&amp;L: <b>"the parasite may also be seen in chylous urine, ascites and hydrocele
     fluid"</b>, and <b>"eosinophilia is
-    common"</b>.<cite class="src bl">B&amp;L 6 &middot; p.73</cite> S Das lists eosinophilia under
+    common"</b>.​<cite class="src bl">B&amp;L 6 &middot; p.73</cite> S Das lists eosinophilia under
     his blood examination as the finding <b>"often seen in case of
-    filariasis"</b>.<cite class="src das">Das 8 &middot; p.115</cite></dd>
+    filariasis"</b>.​<cite class="src das">Das 8 &middot; p.115</cite></dd>
   </dl>
 
   <h2><span class="n">6</span>Investigations</h2>
@@ -1366,51 +1378,51 @@ body.guide { margin: 0; -webkit-text-size-adjust: 100%; }
     <dt>Blood</dt>
     <dd><b>Eosinophilia</b> for filariasis; <b>nocturnal peripheral smear</b> for microfilariae;
     <b>raised ESR</b>, which S Das associates with tuberculosis, secondary carcinoma and primary
-    malignant lymphadenopathy.<cite class="src das">Das 8 &middot; p.115</cite> SRB's minimum is
-    <b>"ESR, peripheral smear"</b>.<cite class="src srb">SRB 1 &middot; p.246</cite></dd>
+    malignant lymphadenopathy.​<cite class="src das">Das 8 &middot; p.115</cite> SRB's minimum is
+    <b>"ESR, peripheral smear"</b>.​<cite class="src srb">SRB 1 &middot; p.246</cite></dd>
     <dt>For the cause, not the diagnosis</dt>
     <dd>SRB: <b>"for the cause, venous Doppler, US abdomen"</b>, and <b>"MRI, CT scan to identify the
-    cause"</b>.<cite class="src srb">SRB 1 &middot; p.246</cite>
+    cause"</b>.​<cite class="src srb">SRB 1 &middot; p.246</cite>
     <br><span class="label">Why a venous Doppler in a lymphoedema case</span>Two reasons, and both
     are good answers. To <b>exclude</b> deep venous disease, which is the main differential for a
     swollen limb; and because <b>chronic venous insufficiency and deep vein thrombosis are themselves
-    listed causes of secondary lymphoedema</b>, so the two can coexist.<cite class="src srb">SRB 1 &middot; p.242</cite></dd>
+    listed causes of secondary lymphoedema</b>, so the two can coexist.​<cite class="src srb">SRB 1 &middot; p.242</cite></dd>
     <dt>Lymphangiography</dt>
     <dd>S Das describes the technique: <b>"injection of patent blue dye into the web between the
     toes will show lymphatics on the dorsum of the foot. One of these lymphatics is cannulated and
     ultrafluid lipiodol (radio-opaque dye) is injected to visualize on X-ray the main lymphatic
     channels of the leg and subsequently the lymph
-    nodes."</b><cite class="src das">Das 8 &middot; p.116</cite> SRB gives the rate: <b>"injected
+    nodes."</b>​<cite class="src das">Das 8 &middot; p.116</cite> SRB gives the rate: <b>"injected
     slowly using pressure pump at a rate of 1 ml in 8 minutes (total quantity is 7
     ml)"</b>, reaching iliac and para-aortic nodes over 24
-    hours.<cite class="src srb">SRB 1 &middot; p.241</cite>
+    hours.​<cite class="src srb">SRB 1 &middot; p.241</cite>
     <br><span class="label">And the appearances S Das attaches to it</span><b>"Irregular filling
     defect in the lymph node means secondary metastasis. Soap bubble or foamy appearance is seen in
     Hodgkin's disease. Coarse nodular storage pattern is seen in lymphosarcoma and marginal sunburst
     appearance is the feature found in reticulum cell
-    sarcoma."</b><cite class="src das">Das 8 &middot; p.116</cite>
+    sarcoma."</b>​<cite class="src das">Das 8 &middot; p.116</cite>
     <br><span class="label out">SRB's disadvantages, which is why it has been displaced</span>
     <b>"Technically difficult; extravasation of dye can occur; dye may not reach the required area;
-    time consuming and invasive procedure."</b><cite class="src srb">SRB 1 &middot; p.241</cite></dd>
+    time consuming and invasive procedure."</b>​<cite class="src srb">SRB 1 &middot; p.241</cite></dd>
     <dt>Isotope lymphoscintigraphy, and the numbers to quote</dt>
     <dd>SRB: <b>"radioactive technetium labelled sulphide colloid particles, or radioiodinated human
     albumin are injected into the web space using fine needle. These particles are specifically taken
     up by lymphatics."</b> Radioactivity in the inguinal nodes is measured at 30 and 60 minutes:
     <b>"normal uptake is 0.6 to 1.6%; if it is under 0.3% in 30 minutes it is diagnostic of
     lymphoedema. If it is over 2% it suggests rapid abnormal clearance due to oedema as the result of
-    venous disease."</b><cite class="src srb">SRB 1 &middot; p.241</cite>
+    venous disease."</b>​<cite class="src srb">SRB 1 &middot; p.241</cite>
     <br><span class="label">SRB's verdict</span><b>"It is the test of choice. It is simple and
     safe... it has 90% sensitivity; 100%
-    specificity."</b><cite class="src srb">SRB 1 &middot; p.241</cite> It is <b>more sensitive,
+    specificity."</b>​<cite class="src srb">SRB 1 &middot; p.241</cite> It is <b>more sensitive,
     technically easier and faster than lymphangiography</b>, and it shows the thoracic duct, other
     nodes and the liver, and allows comparison with the other
-    limb.<cite class="src srb">SRB 1 &middot; p.241</cite>
+    limb.​<cite class="src srb">SRB 1 &middot; p.241</cite>
     <br><span class="label out">Note the over-2% result</span>It is the only test here that
     distinguishes lymphoedema from venous oedema <b>positively</b>, by showing <i>too fast</i> a
     clearance rather than too slow. That is a sophisticated point and it is worth making.</dd>
     <dt>And one newer method SRB names</dt>
     <dd><b>"Lymphofluoroscopy using indocyanine green is excellent
-    method."</b><cite class="src srb">SRB 1 &middot; p.246</cite></dd>
+    method."</b>​<cite class="src srb">SRB 1 &middot; p.246</cite></dd>
   </dl>
 
   <details class="conflict">
@@ -1426,22 +1438,22 @@ body.guide { margin: 0; -webkit-text-size-adjust: 100%; }
       <dt>S Das</dt>
       <dd>Gives lymphangiography the full technique and a table of appearances, and introduces it as
       <b>"of immense value in finding out the causes of lymphoedema, lymph node enlargement and sites
-      of lymph node metastasis"</b>.<cite class="src das">Das 8 &middot; p.116</cite> Isotope
+      of lymph node metastasis"</b>.​<cite class="src das">Das 8 &middot; p.116</cite> Isotope
       lymphoscintigraphy is not described; the nearest thing is <b>scanning with gallium
-      67</b>.<cite class="src das">Das 8 &middot; p.116</cite></dd>
+      67</b>.​<cite class="src das">Das 8 &middot; p.116</cite></dd>
       <dt>SRB</dt>
       <dd>Keeps lymphangiography, but lists four disadvantages and then displaces it: isotope
       lymphoscintigraphy <b>"is the test of choice. It is simple and safe"</b>, with <b>90%
       sensitivity and 100% specificity</b> and the ability to show the thoracic duct and
-      liver.<cite class="src srb">SRB 1 &middot; p.241</cite> SRB also lists Doppler, abdominal
+      liver.​<cite class="src srb">SRB 1 &middot; p.241</cite> SRB also lists Doppler, abdominal
       ultrasound, CT, MRI and indocyanine green
-      lymphofluoroscopy.<cite class="src srb">SRB 1 &middot; p.246</cite></dd>
+      lymphofluoroscopy.​<cite class="src srb">SRB 1 &middot; p.246</cite></dd>
       <dt>Bailey &amp; Love 28e</dt>
       <dd>Neither test appears. What appears instead is a judgement: <b>"the condition of filariasis
       is clinically very obvious, and thus investigations in the full-blown case are
       superfluous."</b> The only tests it names are the <b>nocturnal peripheral blood smear</b> and
       looking for the parasite in <b>chylous urine, ascites or hydrocele
-      fluid</b>.<cite class="src bl">B&amp;L 6 &middot; p.73</cite></dd>
+      fluid</b>.​<cite class="src bl">B&amp;L 6 &middot; p.73</cite></dd>
       <dt>They are answering different questions, and that is the reconciliation</dt>
       <dd>B&amp;L is writing about <b>established filarial elephantiasis in an endemic area</b>,
       where the diagnosis is visible from the door and no imaging will change the management, which
@@ -1471,31 +1483,31 @@ body.guide { margin: 0; -webkit-text-size-adjust: 100%; }
     <tbody>
       <tr><td><b>Lymphoedema</b></td><td><b>Stemmer's sign positive</b>; toes and dorsum of foot
           involved, perimalleolar waist lost; non-pitting once established; does not resolve on
-          overnight elevation<cite class="src srb">SRB 1 &middot; p.244</cite></td></tr>
+          overnight elevation​<cite class="src srb">SRB 1 &middot; p.244</cite></td></tr>
       <tr><td><b>Cardiac, renal or hepatic oedema</b></td><td>Bilateral, pitting, resolves on
           elevation, spares the toes, and there are systemic findings. SRB lists cardiac causes,
           hypoproteinaemia, malnutrition, nephrotic syndrome and liver
-          failure<cite class="src srb">SRB 1 &middot; p.245</cite></td></tr>
+          failure​<cite class="src srb">SRB 1 &middot; p.245</cite></td></tr>
       <tr><td><b>Venous disease: deep vein thrombosis, chronic venous insufficiency</b></td>
           <td>Dilated veins, pigmentation, lipodermatosclerosis in the gaiter area, ulcer above the
           medial malleolus; toes and dorsum spared. Venous Doppler settles it. Remember both are
           also listed <i>causes</i> of secondary
-          lymphoedema<cite class="src srb">SRB 1 &middot; pp.242, 245</cite></td></tr>
+          lymphoedema​<cite class="src srb">SRB 1 &middot; pp.242, 245</cite></td></tr>
       <tr><td><b>Lipoedema</b></td><td>SRB's distinguishing list, which is the best answer here:
           <b>"occurs exclusively in females; begins in puberty; bilateral and symmetrical; trunk may
           be involved; feet are not involved; not pitting; not related to elevation or compression;
-          MRI shows only fat without fluid"</b><cite class="src srb">SRB 1 &middot; p.246</cite></td></tr>
+          MRI shows only fat without fluid"</b>​<cite class="src srb">SRB 1 &middot; p.246</cite></td></tr>
       <tr><td><b>Myxoedema</b></td><td>Non-pitting, but with the systemic features of
-          hypothyroidism<cite class="src srb">SRB 1 &middot; p.245</cite></td></tr>
+          hypothyroidism​<cite class="src srb">SRB 1 &middot; p.245</cite></td></tr>
       <tr><td><b>Arterial disease and arteriovenous malformation</b></td><td>Pulses, bruit, warmth,
           and limb overgrowth in a long-standing
-          malformation<cite class="src srb">SRB 1 &middot; p.246</cite></td></tr>
+          malformation​<cite class="src srb">SRB 1 &middot; p.246</cite></td></tr>
       <tr><td><b>Drug-induced</b></td><td><b>Steroids, oestrogens,
-          nifedipine</b><cite class="src srb">SRB 1 &middot; p.246</cite>. Ask the question; it
+          nifedipine</b>​<cite class="src srb">SRB 1 &middot; p.246</cite>. Ask the question; it
           saves a workup</td></tr>
       <tr><td><b>Gigantism, and external venous compression by an abdominal tumour</b></td>
           <td>Whole-limb overgrowth including bone in the first; in the second, dilated collateral
-          veins and a palpable mass<cite class="src srb">SRB 1 &middot; p.246</cite></td></tr>
+          veins and a palpable mass​<cite class="src srb">SRB 1 &middot; p.246</cite></td></tr>
     </tbody>
   </table>
   </div>
@@ -1513,31 +1525,31 @@ body.guide { margin: 0; -webkit-text-size-adjust: 100%; }
     <dt>Infective, and commonest</dt>
     <dd><b>"Recurrent cellulitis, non-healing ulcers, septicaemia"</b>; <b>"skin thickening, abscess
     and maggot's formation"</b>; and <b>recurrent streptococcal
-    infection</b>.<cite class="src srb">SRB 1 &middot; p.246</cite> B&amp;L: <b>"secondary
-    streptococcal infection is common."</b><cite class="src bl">B&amp;L 6 &middot; p.72</cite></dd>
+    infection</b>.​<cite class="src srb">SRB 1 &middot; p.246</cite> B&amp;L: <b>"secondary
+    streptococcal infection is common."</b>​<cite class="src bl">B&amp;L 6 &middot; p.72</cite></dd>
     <dt>Lymphangiosarcoma, the Stewart-Treves syndrome</dt>
     <dd>SRB gives the figures and the picture: <b>"lymphangiosarcoma, Stewart-Treves syndrome (0.5%,
     occurs after 10 years), which presents as multiple bluish satellite nodules in the skin of the
     limb often with ulceration and haemorrhage. Skin or nodule biopsy is confirmative.
     Chemotherapy, radiotherapy, later even though radical amputation is the treatment, it carries
     very poor prognosis. This syndrome is usually seen in upper limb after
-    mastectomy."</b><cite class="src srb">SRB 1 &middot; p.246</cite> B&amp;L's only reference to it
+    mastectomy."</b>​<cite class="src srb">SRB 1 &middot; p.246</cite> B&amp;L's only reference to it
     is in the skin chapter: the <b>lymphangiosarcoma</b> variant of angiosarcoma <b>"arises from
     lymphatic endothelium and can develop in lymphoedematous tissue, particularly an extremity.
     Proliferation is rapid with early systemic
-    spread."</b><cite class="src bl">B&amp;L 45 &middot; p.661</cite>
+    spread."</b>​<cite class="src bl">B&amp;L 45 &middot; p.661</cite>
     <br><span class="label">Why this earns a mark</span>Because it answers "why does a
     post-mastectomy lymphoedema need following up?" <b>A new bluish nodule in a chronically
     lymphoedematous arm is a lymphangiosarcoma until biopsy says otherwise</b>, and the prognosis is
     poor. B&amp;L's breast chapter adds <b>chronic lymphoedema</b> to its own list of factors
-    associated with sarcoma.<cite class="src bl">B&amp;L 58 &middot; p.942</cite></dd>
+    associated with sarcoma.​<cite class="src bl">B&amp;L 58 &middot; p.942</cite></dd>
     <dt>Functional and systemic</dt>
     <dd>Immobility, muscle wasting, severe psychological and social
-    morbidity;<cite class="src srb">SRB 1 &middot; p.244</cite> and the chylous complications:
+    morbidity;​<cite class="src srb">SRB 1 &middot; p.244</cite> and the chylous complications:
     protein-losing diarrhoea, chylous ascites, chylothorax, chyluria and
-    lymphorrhoea.<cite class="src srb">SRB 1 &middot; p.244</cite> B&amp;L notes filarial
+    lymphorrhoea.​<cite class="src srb">SRB 1 &middot; p.244</cite> B&amp;L notes filarial
     elephantiasis as a leading cause of <b>long-term disability
-    worldwide</b>.<cite class="src bl">B&amp;L 6 &middot; p.72</cite></dd>
+    worldwide</b>.​<cite class="src bl">B&amp;L 6 &middot; p.72</cite></dd>
   </dl>
 
   <h2><span class="n">9</span>Treatment</h2>
@@ -1552,15 +1564,15 @@ body.guide { margin: 0; -webkit-text-size-adjust: 100%; }
     <dd><b>Elevation, exercise and weight reduction.</b> SRB specifies the kind of exercise and the
     reason: <b>"static isometric activities like prolonged standing or carrying weights should be
     avoided; rhythmic isotonic movements like swimming or massaging should be
-    encouraged."</b><cite class="src srb">SRB 1 &middot; p.246</cite> Rhythmic muscle contraction
+    encouraged."</b>​<cite class="src srb">SRB 1 &middot; p.246</cite> Rhythmic muscle contraction
     pumps lymph; static loading does not.
     <br><b>Compression.</b> <b>Multilayered lymphoedema bandaging (MLLB)</b>, <b>non-elastic type
     preferred</b>; graded stockings; and <b>intermittent pneumatic compression devices at pressures
     over 50 mmHg</b>. It <b>"reduces the oedema, skin changes, lymphorrhoea; softens and supports the
     inelastic skin; may restore the shape of the
-    limb."</b><cite class="src srb">SRB 1 &middot; p.246</cite>
+    limb."</b>​<cite class="src srb">SRB 1 &middot; p.246</cite>
     <br><span class="label out">And the safety check before you bandage anything</span><b>"ABPI
-    should be assessed prior using the MLLB."</b><cite class="src srb">SRB 1 &middot; p.246</cite>
+    should be assessed prior using the MLLB."</b>​<cite class="src srb">SRB 1 &middot; p.246</cite>
     Compressing a limb with arterial disease causes ischaemia. Saying this unprompted is one of the
     most reliable marks in the case.
     <br><b>Complex decongestive therapy</b>, which is the formal name for the whole programme:
@@ -1569,18 +1581,18 @@ body.guide { margin: 0; -webkit-text-size-adjust: 100%; }
     therapy."</b> Low-stretch wraps in the intensive phase, worn initially for 24 hours; graduated
     elastic garments in maintenance, giving <b>"maximum pressure of 50 mmHg at the distal part with
     gradual reduction of pressure in proximal
-    portion"</b>.<cite class="src srb">SRB 1 &middot; p.246</cite>
+    portion"</b>.​<cite class="src srb">SRB 1 &middot; p.246</cite>
     <br><b>Manual lymphatic drainage</b>, and the order is not arbitrary: <b>"a specialised technique
     to stimulate the contractility of lymph collecting vessels... done first on the opposite normal
     side; then trunk, same side trunk; same side proximal; same side distal and later same side
     distal to proximal fashion, so as to redirect the lymph towards functioning lymphatic
-    territories."</b><cite class="src srb">SRB 1 &middot; p.246</cite> You clear the receiving
+    territories."</b>​<cite class="src srb">SRB 1 &middot; p.246</cite> You clear the receiving
     territory before you push lymph into it.
     <br><span class="label">B&amp;L's position on this</span>It endorses only one of these and
     endorses it twice: <b>"in the early stages of limb swelling, intermittent pneumatic compression
     helps, but the treatment has to be repeated over a prolonged
     period"</b>, and in its summary box, <b>"intermittent pneumatic compression gives some
-    relief."</b><cite class="src bl">B&amp;L 6 &middot; p.73</cite> <i>Some relief</i>, repeated
+    relief."</b>​<cite class="src bl">B&amp;L 6 &middot; p.73</cite> <i>Some relief</i>, repeated
     indefinitely, is the honest framing.</dd>
     <dt>Skin care, which is not an afterthought</dt>
     <dd>SRB's list, and each item has a target: <b>keratolytics like 5% salicylic acid</b> for the
@@ -1588,40 +1600,40 @@ body.guide { margin: 0; -webkit-text-size-adjust: 100%; }
     <b>avoidance of skin sensitisers like some soaps</b>; <b>topical steroids</b> and
     <b>control of allergy</b> for the eczema; <b>fluconazole</b> and <b>3% benzoic acid ointment to
     prevent athlete's foot</b> for the fungal portal of entry; and <b>control of lymphorrhoea and
-    prevention of skin infections</b>.<cite class="src srb">SRB 1 &middot; p.246</cite> Also
+    prevention of skin infections</b>.​<cite class="src srb">SRB 1 &middot; p.246</cite> Also
     <b>"regular washing and keeping the limb clean is very
-    important"</b>.<cite class="src srb">SRB 1 &middot; p.246</cite>
+    important"</b>.​<cite class="src srb">SRB 1 &middot; p.246</cite>
     <br><span class="label">The reason to say all this</span>Every attack of cellulitis destroys
     more lymphatics, so preventing the next attack is the only intervention that changes the
     trajectory of the disease. Skin care <b>is</b> the treatment.</dd>
     <dt>Drugs</dt>
     <dd><b>Antibiotics:</b> <b>flucloxacillin, erythromycin, long-acting
-    penicillins</b>.<cite class="src srb">SRB 1 &middot; p.246</cite>
+    penicillins</b>.​<cite class="src srb">SRB 1 &middot; p.246</cite>
     <br><b>Antifungals:</b> topical <b>1% clotrimazole</b> and systemic <b>griseofulvin 250 to 1000
-    mg</b>.<cite class="src srb">SRB 1 &middot; p.246</cite>
+    mg</b>.​<cite class="src srb">SRB 1 &middot; p.246</cite>
     <br><b>Diethylcarbamazine citrate 100 mg three times a day for 3
-    weeks</b>.<cite class="src srb">SRB 1 &middot; p.246</cite> See the amber box: B&amp;L qualifies
+    weeks</b>.​<cite class="src srb">SRB 1 &middot; p.246</cite> See the amber box: B&amp;L qualifies
     when this works.
     <br><b>Benzopyrones:</b> <b>"coumarin (1,2 benzopyrones) derivatives with no anticoagulant effect
     but increase the lymphatic peristalsis and pumping mechanism along with
-    proteolysis."</b><cite class="src srb">SRB 1 &middot; p.246</cite>
+    proteolysis."</b>​<cite class="src srb">SRB 1 &middot; p.246</cite>
     <br><span class="label out">Two drugs to say you would not use</span><b>Diuretics:</b>
     <b>"to reduce the oedema is controversial. It more often causes electrolyte imbalance than being
-    beneficial."</b><cite class="src srb">SRB 1 &middot; p.246</cite> The fluid is in the
+    beneficial."</b>​<cite class="src srb">SRB 1 &middot; p.246</cite> The fluid is in the
     interstitium with its protein; a diuretic cannot move it and only dehydrates the patient.
     <br><b>NSAIDs:</b> <b>"NSAIDs are better avoided in lymphoedema as it may precipitate
-    necrotizing fasciitis."</b><cite class="src srb">SRB 1 &middot; p.246</cite> Naming that reason
+    necrotizing fasciitis."</b>​<cite class="src srb">SRB 1 &middot; p.246</cite> Naming that reason
     is memorable and it is SRB's own.</dd>
     <dt>Surgery: the three families, and what each is trying to do</dt>
     <dd>Learn the <b>principle</b> of each family rather than the list of eponyms, because the
     principle is the
-    question.<cite class="src srb">SRB 1 &middot; pp.246, 247</cite>
+    question.​<cite class="src srb">SRB 1 &middot; pp.246, 247</cite>
     <br><b>1. Excisional:</b> take the diseased tissue away. <b>Charles' operation</b>, where
     <b>"after excising lymphoedematous tissue, area is covered with skin graft"</b>. <b>Homans'
     operation</b>, where the lymphoedematous tissue is excised under raised skin flaps which are then
     <b>"trimmed to required size and sutured primarily"</b>, with <b>"medial and lateral sides of the
     limb done at separate sittings with 6 months
-    interval"</b>.<cite class="src srb">SRB 1 &middot; pp.246, 247</cite>
+    interval"</b>.​<cite class="src srb">SRB 1 &middot; pp.246, 247</cite>
     <br><b>2. Physiological:</b> build a new route for the lymph. <b>Omentoplasty</b>, because
     <b>"as omentum contains plenty of lymphatics, omental transfer with pedicle will facilitate lymph
     drainage"</b>. <b>Nodovenous shunt (Nielubowicz)</b>, anastomosing an inguinal node to the long
@@ -1631,28 +1643,28 @@ body.guide { margin: 0; -webkit-text-size-adjust: 100%; }
     communicate with the lymphatics. Also <b>Baumeister lymphatic grafting</b> and
     <b>autotransplantation of a free lymphatic flap from the opposite side (Trevidic and
     Cormier)</b> for post-mastectomy
-    lymphoedema.<cite class="src srb">SRB 1 &middot; pp.246, 247</cite>
+    lymphoedema.​<cite class="src srb">SRB 1 &middot; pp.246, 247</cite>
     <br><b>3. Combined:</b> excise <i>and</i> connect. <b>Sistrunk's operation</b>: <b>"along with
     excision of lymphoedematous tissue, window cuts in deep fascia is done, so as to allow
     communication into normal deep lymphatics."</b> <b>Thompson's Swiss-roll operation</b>:
     <b>"lymphoedematous tissue is excised under the skin flaps. Epidermis and part of the dermis of
     one of the skin flaps is shaved off using Humby's knife. It is buried under opposite flap, deep
     to"</b> the deep fascia, so the shaved dermis carries its lymphatics down to the muscle and makes
-    a connection with the deep system.<cite class="src srb">SRB 1 &middot; pp.246, 247</cite>
+    a connection with the deep system.​<cite class="src srb">SRB 1 &middot; pp.246, 247</cite>
     <br><span class="label">And one of historical interest only, which SRB labels as such</span>
     <b>Handley's (1908)</b> buried silk or nylon threads or perforated polyethylene tubes from ankle
     to mid-abdomen, left for a year: <b>"procedure is only of historical
-    interest."</b><cite class="src srb">SRB 1 &middot; p.247</cite> Also <b>Gillies'</b> skin bridge
-    across the thigh and abdomen.<cite class="src srb">SRB 1 &middot; p.247</cite>
+    interest."</b>​<cite class="src srb">SRB 1 &middot; p.247</cite> Also <b>Gillies'</b> skin bridge
+    across the thigh and abdomen.​<cite class="src srb">SRB 1 &middot; p.247</cite>
     <br><span class="label out">Before you offer any of these</span>Read the amber box below.
     B&amp;L's position on all of it is that it does not work.</dd>
     <dt>And the one operation all three books endorse</dt>
     <dd>For the <b>scrotum</b>. B&amp;L: <b>"a hydrocele is treated by the usual operation of
     excision and eversion of the sac with, if necessary, excision of redundant scrotal
-    skin."</b><cite class="src bl">B&amp;L 6 &middot; p.73</cite> SRB illustrates
+    skin."</b>​<cite class="src bl">B&amp;L 6 &middot; p.73</cite> SRB illustrates
     <b>scrotal reduction</b> for <b>"extensive scrotal lymphoedema of filarial origin"</b> and
     reduction with reconstruction for a lymphoedematous penis, <b>"otherwise it may cause urinary
-    problem and sexual dysfunction"</b>.<cite class="src srb">SRB 1 &middot; p.245</cite>
+    problem and sexual dysfunction"</b>.​<cite class="src srb">SRB 1 &middot; p.245</cite>
     <br><span class="label">Why the genitalia are the exception</span>Because here the swelling
     causes a <b>functional</b> problem, obstructed micturition and sexual dysfunction, that excision
     reliably fixes, and the skin cover is redundant and easy to tailor. In a limb the swelling is
@@ -1678,18 +1690,18 @@ body.guide { margin: 0; -webkit-text-size-adjust: 100%; }
       Cormier), Gillies' skin bridge</b>, with Handley's threads marked as historical. It gives
       operative detail down to suture size: <b>"at least 4 lymphatics should be anastomosed using 7
       zero or 11 zero prolene, using operative
-      microscope."</b><cite class="src srb">SRB 1 &middot; pp.246, 247</cite> No operation is
+      microscope."</b>​<cite class="src srb">SRB 1 &middot; pp.246, 247</cite> No operation is
       described as ineffective.</dd>
       <dt>Bailey &amp; Love 28e</dt>
       <dd>Two sentences, both dismissive, and it is the only thing it says about limb surgery.
       <b>"Operations for reducing the size of the limb are hardly ever done these days because the
-      procedures are so rarely successful."</b><cite class="src bl">B&amp;L 6 &middot; p.73</cite>
+      procedures are so rarely successful."</b>​<cite class="src bl">B&amp;L 6 &middot; p.73</cite>
       And in its summary box: <b>"the value of various surgical procedures is largely unproven and
-      hence they are rarely performed."</b><cite class="src bl">B&amp;L 6 &middot; p.73</cite> Not
+      hence they are rarely performed."</b>​<cite class="src bl">B&amp;L 6 &middot; p.73</cite> Not
       one of SRB's eponyms appears anywhere in the chapter. What B&amp;L does endorse is medical
       treatment, <b>intermittent pneumatic compression</b>, and <b>operation on the scrotum</b> for
       a hydrocele with excision of redundant
-      skin.<cite class="src bl">B&amp;L 6 &middot; p.73</cite></dd>
+      skin.​<cite class="src bl">B&amp;L 6 &middot; p.73</cite></dd>
       <dt>Why they differ, which is the part worth understanding</dt>
       <dd>Both are right about different things. The surgery has two honest problems. <b>Excisional
       operations work but at a price:</b> Charles' operation does reduce a huge limb, and leaves a
@@ -1736,14 +1748,14 @@ body.guide { margin: 0; -webkit-text-size-adjust: 100%; }
       <dt>SRB</dt>
       <dd>Lists it among the conservative measures with a dose and no stage qualifier:
       <b>"diethyl carbamazine citrate (DEC) 100 mg TID for 3
-      weeks."</b><cite class="src srb">SRB 1 &middot; p.246</cite> It sits in the same list as
+      weeks."</b>​<cite class="src srb">SRB 1 &middot; p.246</cite> It sits in the same list as
       antibiotics, antifungals, compression and skin care, as part of the standard programme.</dd>
       <dt>Bailey &amp; Love 28e</dt>
       <dd>Puts a clear boundary on it: <b>"medical treatment with diethylcarbamazine is very
       effective in the early stages before the gross deformities of elephantiasis have
-      developed."</b><cite class="src bl">B&amp;L 6 &middot; p.73</cite> Its summary box says the
+      developed."</b>​<cite class="src bl">B&amp;L 6 &middot; p.73</cite> Its summary box says the
       same in fewer words: <b>"early cases are very amenable to medical
-      treatment."</b><cite class="src bl">B&amp;L 6 &middot; p.73</cite> The implication is that in
+      treatment."</b>​<cite class="src bl">B&amp;L 6 &middot; p.73</cite> The implication is that in
       established elephantiasis DEC is not the answer.</dd>
       <dt>Why both are defensible</dt>
       <dd>DEC kills the parasite. It cannot undo fibrosis. In early disease, where the swelling is
@@ -1771,7 +1783,7 @@ body.guide { margin: 0; -webkit-text-size-adjust: 100%; }
       <summary>Define lymphoedema.</summary>
       <p class="ans">Accumulation of protein-rich lymph in the extracellular, extravascular
       compartment, commonly the subcutaneous tissue, due to defective lymphatic
-      drainage.<cite class="src srb">SRB 1 &middot; p.241</cite> The words that matter are
+      drainage.​<cite class="src srb">SRB 1 &middot; p.241</cite> The words that matter are
       <i>protein rich</i>, because the protein drives the fibrosis that makes the oedema
       non-pitting.</p>
     </details>
@@ -1779,7 +1791,7 @@ body.guide { margin: 0; -webkit-text-size-adjust: 100%; }
     <details>
       <summary>One sign that separates lymphoedema from every other swollen limb.</summary>
       <p class="ans">Stemmer's sign: the skin over the dorsum of the foot cannot be pinched, because
-      of subcutaneous fibrosis.<cite class="src srb">SRB 1 &middot; p.244</cite> It tests fibrosis,
+      of subcutaneous fibrosis.​<cite class="src srb">SRB 1 &middot; p.244</cite> It tests fibrosis,
       not fluid, which is why it is negative in cardiac, renal, hepatic and venous oedema.</p>
     </details>
 
@@ -1789,13 +1801,13 @@ body.guide { margin: 0; -webkit-text-size-adjust: 100%; }
       acquired from a definite cause, which is the commoner form. Primary is subdivided by age of
       onset: congenita at birth to two years (10%, familial form Nonne-Milroy's disease,
       autosomal dominant); praecox at puberty up to about 35 (80%, familial form
-      Letessier-Meige's); and tarda after 35.<cite class="src srb">SRB 1 &middot; p.242</cite></p>
+      Letessier-Meige's); and tarda after 35.​<cite class="src srb">SRB 1 &middot; p.242</cite></p>
     </details>
 
     <details>
       <summary>What is Browse's classification, and why is it more useful?</summary>
       <p class="ans">A lymphangiographic classification: congenital hyperplasia 10%, distal
-      obliteration 80%, proximal obliteration 10%.<cite class="src srb">SRB 1 &middot; p.241</cite>
+      obliteration 80%, proximal obliteration 10%.​<cite class="src srb">SRB 1 &middot; p.241</cite>
       It is more useful because it maps onto the bedside picture and onto management. Distal disease
       is bilateral, slowly progressive, starts at the ankle, affects young women. Proximal disease is
       unilateral, rapidly progressive, involves the thigh and is caused by an aortoiliac nodal block,
@@ -1808,7 +1820,7 @@ body.guide { margin: 0; -webkit-text-size-adjust: 100%; }
       radiotherapy to the same nodal basin; filariasis; advanced malignancy with hard fixed nodes;
       infection including tuberculosis, syphilis and fungal; trauma; and rarely rheumatoid arthritis,
       insect and snake bites, deep vein thrombosis and chronic venous
-      insufficiency.<cite class="src srb">SRB 1 &middot; p.242</cite> Secondary lymphoedema develops
+      insufficiency.​<cite class="src srb">SRB 1 &middot; p.242</cite> Secondary lymphoedema develops
       rapidly, which is a useful historical pointer.</p>
     </details>
 
@@ -1817,7 +1829,7 @@ body.guide { margin: 0; -webkit-text-size-adjust: 100%; }
       <p class="ans">Because the disease is confined to skin and subcutaneous tissue, outside the
       deep fascia. Only the superficial lymphatics are involved; the deep lymphatics are normal, and
       unlike the superficial and deep veins the two lymphatic systems do not communicate with each
-      other.<cite class="src srb">SRB 1 &middot; pp.242, 244</cite> The muscles are normal and may
+      other.​<cite class="src srb">SRB 1 &middot; pp.242, 244</cite> The muscles are normal and may
       even hypertrophy.</p>
     </details>
 
@@ -1827,7 +1839,7 @@ body.guide { margin: 0; -webkit-text-size-adjust: 100%; }
       normal deep ones, which do not naturally communicate. That is what Sistrunk's windows in the
       deep fascia, Thompson's buried shaved dermal flap, the nodovenous and lymphovenous shunts, the
       ileal mucosal patch and omentoplasty are all attempting to
-      do.<cite class="src srb">SRB 1 &middot; pp.244, 246, 247</cite></p>
+      do.​<cite class="src srb">SRB 1 &middot; pp.244, 246, 247</cite></p>
     </details>
 
     <details>
@@ -1835,7 +1847,7 @@ body.guide { margin: 0; -webkit-text-size-adjust: 100%; }
       <p class="ans">Latent, subclinical with no apparent swelling. Grade I, pitting oedema that more
       or less disappears on elevation. Grade II, non-pitting oedema that does not reduce on
       elevation. Grade III, oedema with irreversible skin changes, fibrosis, papillae and
-      fissuring.<cite class="src srb">SRB 1 &middot; p.245</cite> There is also a volumetric scale:
+      fissuring.​<cite class="src srb">SRB 1 &middot; p.245</cite> There is also a volumetric scale:
       mild under 20% excess limb volume, moderate 20 to 40%, severe over 40%.</p>
     </details>
 
@@ -1846,7 +1858,7 @@ body.guide { margin: 0; -webkit-text-size-adjust: 100%; }
       inguinal node activity is measured at 30 and 60 minutes. Normal uptake is 0.6 to 1.6%; under
       0.3% at 30 minutes is diagnostic of lymphoedema, and over 2% suggests venous oedema with rapid
       clearance. Sensitivity about 90%, specificity
-      100%.<cite class="src srb">SRB 1 &middot; p.241</cite></p>
+      100%.​<cite class="src srb">SRB 1 &middot; p.241</cite></p>
     </details>
 
     <details>
@@ -1854,7 +1866,7 @@ body.guide { margin: 0; -webkit-text-size-adjust: 100%; }
       <p class="ans">Lipoedema occurs exclusively in women, begins at puberty, is bilateral and
       symmetrical, may involve the trunk, and crucially <b>spares the feet</b>. It is non-pitting but
       unrelated to elevation or compression, and MRI shows fat without
-      fluid.<cite class="src srb">SRB 1 &middot; p.246</cite> Lymphoedema involves the foot and the
+      fluid.​<cite class="src srb">SRB 1 &middot; p.246</cite> Lymphoedema involves the foot and the
       toes and has a positive Stemmer's sign.</p>
     </details>
 
@@ -1862,19 +1874,19 @@ body.guide { margin: 0; -webkit-text-size-adjust: 100%; }
       <summary>Why do you not give diuretics?</summary>
       <p class="ans">Because the fluid is protein-rich interstitial fluid outside the vascular
       compartment; a diuretic cannot mobilise it and more often causes electrolyte imbalance than
-      benefit.<cite class="src srb">SRB 1 &middot; p.246</cite></p>
+      benefit.​<cite class="src srb">SRB 1 &middot; p.246</cite></p>
     </details>
 
     <details>
       <summary>Any drug you would specifically avoid?</summary>
       <p class="ans">NSAIDs, because SRB notes they may precipitate necrotising fasciitis in a
-      lymphoedematous limb.<cite class="src srb">SRB 1 &middot; p.246</cite> Pain is relieved by
+      lymphoedematous limb.​<cite class="src srb">SRB 1 &middot; p.246</cite> Pain is relieved by
       other means.</p>
     </details>
 
     <details>
       <summary>What would you check before applying compression bandaging?</summary>
-      <p class="ans">The ankle-brachial pressure index.<cite class="src srb">SRB 1 &middot; p.246</cite>
+      <p class="ans">The ankle-brachial pressure index.​<cite class="src srb">SRB 1 &middot; p.246</cite>
       Compressing a limb with significant arterial disease causes ischaemia.</p>
     </details>
 
@@ -1883,27 +1895,27 @@ body.guide { margin: 0; -webkit-text-size-adjust: 100%; }
       <p class="ans">Lymphangiosarcoma, the Stewart-Treves syndrome: multiple bluish satellite
       nodules, often ulcerating and bleeding, occurring in about 0.5% and typically after ten years,
       most often in the upper limb after mastectomy. Skin or nodule biopsy confirms it. Prognosis is
-      very poor even with radical amputation.<cite class="src srb">SRB 1 &middot; p.246</cite>
+      very poor even with radical amputation.​<cite class="src srb">SRB 1 &middot; p.246</cite>
       Bailey and Love describes the same tumour as the lymphangiosarcoma variant of angiosarcoma,
       arising from lymphatic endothelium in lymphoedematous tissue with rapid proliferation and early
-      systemic spread.<cite class="src bl">B&amp;L 45 &middot; p.661</cite></p>
+      systemic spread.​<cite class="src bl">B&amp;L 45 &middot; p.661</cite></p>
     </details>
 
     <details>
       <summary>Which parasite causes filarial lymphoedema, and which mosquito?</summary>
       <p class="ans">Wuchereria bancrofti, with Brugia malayi and Brugia timori responsible in about
-      10%.<cite class="src bl">B&amp;L 6 &middot; p.72</cite> In India the vector is Culex fatigans;
+      10%.​<cite class="src bl">B&amp;L 6 &middot; p.72</cite> In India the vector is Culex fatigans;
       man is the definitive host, the female mosquito the intermediate host, and no animal reservoir
-      is known.<cite class="src srb">SRB 1 &middot; p.242</cite></p>
+      is known.​<cite class="src srb">SRB 1 &middot; p.242</cite></p>
     </details>
 
     <details>
       <summary>When would you take the blood smear for microfilariae, and why?</summary>
       <p class="ans">At night, classically between 10 pm and 4 am, because the microfilariae show
       nocturnal periodicity matched to the night-biting habit of Culex and the sleeping habit of the
-      host.<cite class="src srb">SRB 1 &middot; p.242</cite><cite class="src das">Das 8 &middot; p.115</cite>
+      host.​<cite class="src srb">SRB 1 &middot; p.242</cite>​<cite class="src das">Das 8 &middot; p.115</cite>
       Eosinophilia is also common, and the parasite may be found in chylous urine, ascites or
-      hydrocele fluid.<cite class="src bl">B&amp;L 6 &middot; p.73</cite></p>
+      hydrocele fluid.​<cite class="src bl">B&amp;L 6 &middot; p.73</cite></p>
     </details>
 
     <details>
@@ -1911,7 +1923,7 @@ body.guide { margin: 0; -webkit-text-size-adjust: 100%; }
       <p class="ans">Because they do not multiply: one microfilaria produces one infective larva, and
       the microfilaria never multiplies in mosquito or human. Severity comes from repeated infective
       bites over years, and from the fibrosis left by recurrent attacks of lymphangitis, not from an
-      expanding parasite load.<cite class="src srb">SRB 1 &middot; p.243</cite><cite class="src bl">B&amp;L 6 &middot; p.72</cite></p>
+      expanding parasite load.​<cite class="src srb">SRB 1 &middot; p.243</cite>​<cite class="src bl">B&amp;L 6 &middot; p.72</cite></p>
     </details>
 
     <details>
@@ -1920,9 +1932,9 @@ body.guide { margin: 0; -webkit-text-size-adjust: 100%; }
       reduction, meticulous skin and interdigital care with antifungals, prompt antibiotics for every
       cellulitis, and sustained compression by multilayer bandaging and graded stockings, with the
       ABPI checked first. Diethylcarbamazine to clear microfilaraemia, though it will not reduce an
-      established limb.<cite class="src srb">SRB 1 &middot; p.246</cite><cite class="src bl">B&amp;L 6 &middot; p.73</cite>
+      established limb.​<cite class="src srb">SRB 1 &middot; p.246</cite>​<cite class="src bl">B&amp;L 6 &middot; p.73</cite>
       Bailey and Love regards limb-reduction operations as rarely performed and of largely unproven
-      value.<cite class="src bl">B&amp;L 6 &middot; p.73</cite></p>
+      value.​<cite class="src bl">B&amp;L 6 &middot; p.73</cite></p>
     </details>
 
     <details>
@@ -1932,7 +1944,7 @@ body.guide { margin: 0; -webkit-text-size-adjust: 100%; }
       lymphovenous shunt (O'Brien's); ileal mucosal patch (Kinmonth); Baumeister lymphatic grafting;
       free lymphatic flap autotransplantation. Combined: Sistrunk's operation, excision plus windows
       in the deep fascia; Thompson's Swiss-roll operation, excision plus a shaved dermal flap buried
-      against the muscle.<cite class="src srb">SRB 1 &middot; pp.246, 247</cite> Handley's buried
+      against the muscle.​<cite class="src srb">SRB 1 &middot; pp.246, 247</cite> Handley's buried
       threads are of historical interest only.</p>
     </details>
 
@@ -1941,8 +1953,8 @@ body.guide { margin: 0; -webkit-text-size-adjust: 100%; }
       <p class="ans">Genital. Scrotal and penile lymphoedema cause urinary and sexual dysfunction
       that reduction surgery reliably relieves, and both books endorse operating there: Bailey and
       Love for excision and eversion of the hydrocele sac with excision of redundant scrotal
-      skin,<cite class="src bl">B&amp;L 6 &middot; p.73</cite> SRB for scrotal reduction and for
-      penile reduction with reconstruction.<cite class="src srb">SRB 1 &middot; p.245</cite>
+      skin,​<cite class="src bl">B&amp;L 6 &middot; p.73</cite> SRB for scrotal reduction and for
+      penile reduction with reconstruction.​<cite class="src srb">SRB 1 &middot; p.245</cite>
       Breast lymphoedema may need reduction mammoplasty.</p>
     </details>
 
@@ -1950,7 +1962,7 @@ body.guide { margin: 0; -webkit-text-size-adjust: 100%; }
       <summary>What is podoconiosis?</summary>
       <p class="ans">Endemic, non-filarial elephantiasis, common in Africa and seen in barefoot
       workers, caused by destruction of lymphatics by silica from soil containing alkaline volcanic
-      rock.<cite class="src srb">SRB 1 &middot; p.244</cite></p>
+      rock.​<cite class="src srb">SRB 1 &middot; p.244</cite></p>
     </details>
 
     <details>
@@ -1958,7 +1970,7 @@ body.guide { margin: 0; -webkit-text-size-adjust: 100%; }
       <p class="ans">Opposite normal side first, then the trunk, then the trunk on the affected side,
       then the affected limb proximally, then distally, and finally distal to proximal, so as to
       redirect lymph towards functioning lymphatic
-      territories.<cite class="src srb">SRB 1 &middot; p.246</cite> You clear the receiving
+      territories.​<cite class="src srb">SRB 1 &middot; p.246</cite> You clear the receiving
       territory before pushing lymph into it.</p>
     </details>
   </div>

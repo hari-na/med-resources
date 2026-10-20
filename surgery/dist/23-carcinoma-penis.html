@@ -24,6 +24,7 @@
   --ink-soft:    #5a6269;
   --rule:        #ddd8ce;
   --accent:      #005f73;
+  --on-accent:   #fff;
   --accent-soft: #e3eef0;
   --flag:        #8a5a2b;
   --flag-soft:   #f6ece0;
@@ -86,21 +87,21 @@
 
 .guide[data-theme="sepia"] {
   --paper: #f4ecd8; --ink: #433422; --ink-soft: #6f5f4a; --rule: #ddd0b4;
-  --accent: #7a4a1e; --accent-soft: #ece0c8; --flag: #8a5a2b; --flag-soft: #ece0c8;
+  --accent: #7a4a1e; --on-accent: #fff; --accent-soft: #ece0c8; --flag: #8a5a2b; --flag-soft: #ece0c8;
   --cite: #8a7b63; --mark: #f5d98a; --bl: #6a4a7a; --srb: #3f6b4a;
   color-scheme: light;
 }
 
 .guide[data-theme="dark"] {
   --paper: #15181a; --ink: #e8e6e1; --ink-soft: #a3abb2; --rule: #2e3338;
-  --accent: #6fc3d2; --accent-soft: #1b2a2e; --flag: #d9a36a; --flag-soft: #2a2119;
+  --accent: #6fc3d2; --on-accent: #0b1416; --accent-soft: #1b2a2e; --flag: #d9a36a; --flag-soft: #2a2119;
   --cite: #78828a; --mark: #4a4120; --bl: #a893dd; --srb: #6fc3a8;
   color-scheme: dark;
 }
 
 .guide[data-theme="contrast"] {
   --paper: #000000; --ink: #ffffff; --ink-soft: #d8d8d8; --rule: #6a6a6a;
-  --accent: #6fe3ff; --accent-soft: #10242b; --flag: #ffc46b; --flag-soft: #2a2008;
+  --accent: #6fe3ff; --on-accent: #000; --accent-soft: #10242b; --flag: #ffc46b; --flag-soft: #2a2008;
   --cite: #bdbdbd; --mark: #4a4a00; --bl: #d0b8ff; --srb: #7fe8c0;
   color-scheme: dark;
 }
@@ -109,7 +110,7 @@
 @media (prefers-color-scheme: dark) {
   .guide[data-theme="auto"] {
     --paper: #15181a; --ink: #e8e6e1; --ink-soft: #a3abb2; --rule: #2e3338;
-    --accent: #6fc3d2; --accent-soft: #1b2a2e; --flag: #d9a36a; --flag-soft: #2a2119;
+    --accent: #6fc3d2; --on-accent: #0b1416; --accent-soft: #1b2a2e; --flag: #d9a36a; --flag-soft: #2a2119;
     --cite: #78828a; --mark: #4a4120; --bl: #a893dd; --srb: #6fc3a8;
     color-scheme: dark;
   }
@@ -141,6 +142,7 @@ body.guide { margin: 0; -webkit-text-size-adjust: 100%; }
   font-family: var(--face-body);
   font-size: 2.1rem; font-weight: 600; line-height: 1.15;
   letter-spacing: -0.015em; text-wrap: balance; margin: 0 0 0.7rem;
+  overflow-wrap: break-word; hyphens: auto;
 }
 
 .guide .standfirst { font-size: 1.02rem; color: var(--ink-soft); margin: 0 0 1.6rem; }
@@ -311,7 +313,11 @@ body.guide { margin: 0; -webkit-text-size-adjust: 100%; }
 .guide cite.src {
   font-family: var(--face-ui); font-style: normal;
   font-size: 0.66em; font-weight: 600; letter-spacing: 0.02em;
-  color: var(--cite); white-space: nowrap;
+  color: var(--cite);
+  /* The chip stays on one line. build.py puts a zero-width space before each one,
+     which is what lets a chip that will not fit move to the next line whole
+     instead of widening the page past the phone. */
+  white-space: nowrap; max-width: 100%;
   border: 1px solid var(--rule); border-radius: 2px;
   padding: 0.05rem 0.28rem; margin-left: 0.3rem; vertical-align: 0.12em;
 }
@@ -331,7 +337,11 @@ body.guide { margin: 0; -webkit-text-size-adjust: 100%; }
   cursor: pointer; list-style: none; display: flex; gap: 0.55rem; align-items: baseline;
   padding: 0.7rem 0.9rem; font-family: var(--face-ui);
   font-size: 0.82em; line-height: 1.45; color: var(--ink);
+  flex-wrap: wrap;
 }
+/* A flex item defaults to min-width:auto and so refuses to shrink below its own
+   content width; a long source line in the summary then widened the whole page. */
+.guide details.conflict > summary > * { min-width: 0; overflow-wrap: break-word; }
 .guide details.conflict > summary::-webkit-details-marker { display: none; }
 .guide details.conflict > summary::before {
   content: "*"; color: var(--flag); font-size: 1em; font-weight: 700;
@@ -419,7 +429,7 @@ body.guide { margin: 0; -webkit-text-size-adjust: 100%; }
 @media print {
   .guide {
     --paper: #fff; --ink: #000; --ink-soft: #333; --rule: #bbb;
-    --accent: #004c5c; --accent-soft: #eef4f5; --cite: #666;
+    --accent: #004c5c; --on-accent: #fff; --accent-soft: #eef4f5; --cite: #666;
     --measure: none; --fs: 10.5pt; --lh: 1.45;
     --face-body: "Spectral", Georgia, serif;
     --face-ui: "Inter", system-ui, sans-serif;
@@ -785,7 +795,9 @@ body.guide { margin: 0; -webkit-text-size-adjust: 100%; }
   background: none; color: var(--ink, #222);
 }
 .rdr-ne-row .rdr-ok {
-  background: var(--accent, #005f73); border-color: var(--accent, #005f73); color: #fff;
+  background: var(--accent, #005f73); border-color: var(--accent, #005f73);
+  /* not #fff: the dark and high-contrast accents are pale, and white on them is 2:1 */
+  color: var(--on-accent, #fff);
 }
 .rdr-ne-row .rdr-del { color: var(--flag, #8a5a2b); }
 
@@ -990,11 +1002,11 @@ body.guide { margin: 0; -webkit-text-size-adjust: 100%; }
     <dt>1. Circumcision</dt>
     <dd>B&amp;L: <b>"Circumcision soon after birth confers immunity against carcinoma of the penis.
     Later circumcision does not seem to have the same benefit, with the assumption that smegma is in
-    some way carcinogenic."</b><cite class="src bl">B&amp;L 85 &middot; p.1551</cite> SRB:
+    some way carcinogenic."</b>​<cite class="src bl">B&amp;L 85 &middot; p.1551</cite> SRB:
     <b>"Circumcision during infancy confers total immunity against carcinoma
-    penis."</b><cite class="src srb">SRB 26 &middot; p.1052</cite> S Das makes the same observation
+    penis."</b>​<cite class="src srb">SRB 26 &middot; p.1052</cite> S Das makes the same observation
     from the epidemiology of communities that practise neonatal
-    circumcision.<cite class="src das">Das 40 &middot; p.631</cite>
+    circumcision.​<cite class="src das">Das 40 &middot; p.631</cite>
     <br><span class="label">The mechanism to give</span><b>Smegma, retained behind a non-retractile
     prepuce, is assumed to be the carcinogen.</b> That single assumption links circumcision,
     phimosis, chronic balanoposthitis and poor hygiene into one causal story, which is why it is
@@ -1003,40 +1015,40 @@ body.guide { margin: 0; -webkit-text-size-adjust: 100%; }
     agree on whether circumcision later in infancy still protects. See the first amber box.</dd>
     <dt>2. Human papillomavirus</dt>
     <dd>B&amp;L: <b>"Infection with HPV types 16 and 18 is a risk
-    factor."</b><cite class="src bl">B&amp;L 85 &middot; p.1551</cite> SRB names <b>HPV-16</b> with
+    factor."</b>​<cite class="src bl">B&amp;L 85 &middot; p.1551</cite> SRB names <b>HPV-16</b> with
     HIV infection, and <b>condyloma acuminata (by human papilloma
-    virus)</b>.<cite class="src srb">SRB 26 &middot; p.1052</cite>
+    virus)</b>.​<cite class="src srb">SRB 26 &middot; p.1052</cite>
     <br><span class="label">Do not confuse the two sets of types</span><b>16 and 18 cause
     cancer</b>; <b>6 and 11 cause genital warts</b> and the Buschke-L&ouml;wenstein tumour. B&amp;L
     gives both: condylomata acuminata are caused by <b>"HPV types 6 and
-    11"</b>.<cite class="src bl">B&amp;L 85 &middot; p.1546</cite></dd>
+    11"</b>.​<cite class="src bl">B&amp;L 85 &middot; p.1546</cite></dd>
     <dt>3. The premalignant conditions</dt>
     <dd>All three books give substantially the same list. B&amp;L: <b>"definite precancerous states
     including leukoplakia of the glans, which is similar to the condition seen on the tongue, and
     penile intraepithelial neoplasia (PeIN)"</b>, plus <b>lichen sclerosus</b> and
-    <b>smoking</b>.<cite class="src bl">B&amp;L 85 &middot; p.1551</cite> SRB adds <b>long-standing
+    <b>smoking</b>.​<cite class="src bl">B&amp;L 85 &middot; p.1551</cite> SRB adds <b>long-standing
     genital warts</b>, <b>Paget's disease of the penis</b>, <b>erythroplasia of Queyrat</b>, which it
     defines as <b>"persistent rawness of glans penis"</b>, and <b>balanitis xerotica
-    obliterans</b>.<cite class="src srb">SRB 26 &middot; p.1052</cite> S Das's list is <b>chronic
+    obliterans</b>.​<cite class="src srb">SRB 26 &middot; p.1052</cite> S Das's list is <b>chronic
     balanoposthitis, leukoplakia, papillomas, Paget's disease and erythroplasia of
-    Queyrat</b>.<cite class="src das">Das 40 &middot; p.638</cite>
+    Queyrat</b>.​<cite class="src das">Das 40 &middot; p.638</cite>
     <br><span class="label">One term worth unpacking</span><b>Balanitis xerotica obliterans is
     lichen sclerosus of the glans and prepuce.</b> B&amp;L uses "lichen sclerosus" and SRB uses
     "balanitis xerotica obliterans", and a candidate who recognises them as the same condition will
     not be caught out by either book.</dd>
     <dt>4. Phimosis, and the warning sign in an adult</dt>
     <dd>B&amp;L: <b>"phimosis and chronic balanoposthitis are known to be contributory
-    factors."</b><cite class="src bl">B&amp;L 85 &middot; p.1551</cite> SRB lists among the problems
+    factors."</b>​<cite class="src bl">B&amp;L 85 &middot; p.1551</cite> SRB lists among the problems
     of phimosis <b>"carcinoma of penis later"</b>, alongside recurrent balanoposthitis, calculus
     formation from smegma and retention of
-    urine.<cite class="src srb">SRB 26 &middot; p.1048</cite>
+    urine.​<cite class="src srb">SRB 26 &middot; p.1048</cite>
     <br><span class="label out">The sentence that wins a viva</span>SRB: <b>"in an adult, recent
     onset of phimosis should raise the suspicion of carcinoma
-    penis."</b><cite class="src srb">SRB 26 &middot; p.1053</cite> A prepuce that has always been
+    penis."</b>​<cite class="src srb">SRB 26 &middot; p.1053</cite> A prepuce that has always been
     tight is phimosis; a prepuce that has <b>recently</b> become tight in a man of fifty is a
     carcinoma growing underneath it.</dd>
     <dt>5. Where it is common</dt>
-    <dd>SRB: <b>"it is common in Asia and Africa."</b><cite class="src srb">SRB 26 &middot; p.1052</cite>
+    <dd>SRB: <b>"it is common in Asia and Africa."</b>​<cite class="src srb">SRB 26 &middot; p.1052</cite>
     That is relevant: this is a case you will see in India and may never see in a British
     hospital.</dd>
   </dl>
@@ -1053,12 +1065,12 @@ body.guide { margin: 0; -webkit-text-size-adjust: 100%; }
       <dt>On the timing of circumcision</dt>
       <dd><b>S Das:</b> <b>"Firstly circumcision, if correctly performed soon after birth, confers
       almost total immunity against this disease. But circumcision done in early infancy does not
-      provide the same degree of immunity."</b><cite class="src das">Das 40 &middot; p.638</cite>
+      provide the same degree of immunity."</b>​<cite class="src das">Das 40 &middot; p.638</cite>
       <br><b>SRB:</b> <b>"Circumcision during infancy confers total immunity against carcinoma
-      penis."</b><cite class="src srb">SRB 26 &middot; p.1052</cite>
+      penis."</b>​<cite class="src srb">SRB 26 &middot; p.1052</cite>
       <br><b>B&amp;L:</b> <b>"Circumcision soon after birth confers immunity against carcinoma of
       the penis. Later circumcision does not seem to have the same
-      benefit."</b><cite class="src bl">B&amp;L 85 &middot; p.1551</cite>
+      benefit."</b>​<cite class="src bl">B&amp;L 85 &middot; p.1551</cite>
       <br>So S Das draws the line between the <i>newborn</i> and <i>early infancy</i>, and SRB says
       infancy as a whole confers total immunity. B&amp;L agrees with S Das's direction but says only
       <b>"later"</b> without defining it. S Das's sentence, as printed, distinguishes "soon after
@@ -1067,9 +1079,9 @@ body.guide { margin: 0; -webkit-text-size-adjust: 100%; }
       teaching say.</dd>
       <dt>On the proportion under forty</dt>
       <dd><b>S Das:</b> <b>"Though majority of the patients are above 40 years of age yet 30% of the
-      patients are under 40 years of age."</b><cite class="src das">Das 40 &middot; p.638</cite>
+      patients are under 40 years of age."</b>​<cite class="src das">Das 40 &middot; p.638</cite>
       <br><b>B&amp;L:</b> <b>"About 10% of patients are under 40 years of
-      age."</b><cite class="src bl">B&amp;L 85 &middot; p.1552</cite>
+      age."</b>​<cite class="src bl">B&amp;L 85 &middot; p.1552</cite>
       <br>A threefold difference, and neither book qualifies its figure. Both are compatible with
       the same clinical rule, that this is a disease of men over forty and that youth does not
       exclude it.</dd>
@@ -1093,79 +1105,79 @@ body.guide { margin: 0; -webkit-text-size-adjust: 100%; }
     <dt>The cell type, and the one exception</dt>
     <dd>B&amp;L: <b>"carcinoma of the penis is most typically a squamous cell carcinoma arising in
     the skin of the glans penis or the
-    prepuce."</b><cite class="src bl">B&amp;L 85 &middot; p.1552</cite> S Das adds the rarity:
+    prepuce."</b>​<cite class="src bl">B&amp;L 85 &middot; p.1552</cite> S Das adds the rarity:
     <b>"majority of the carcinomas are of squamous variety, only rarely columnar variety may develop
     arising from Tyson's glands (situated on either side of the
-    frenum)."</b><cite class="src das">Das 40 &middot; p.638</cite> That columnar variant from
+    frenum)."</b>​<cite class="src das">Das 40 &middot; p.638</cite> That columnar variant from
     Tyson's glands appears in neither of the other two books, and it is the kind of detail an
     examiner who learned from S Das may ask for.</dd>
     <dt>The three macroscopic types</dt>
     <dd>SRB: <b>infiltrating</b>, which <b>"occurs in a preexisting leukoplakia. It often presents as
     indurated area"</b>; <b>papilliferous</b>, which <b>"eventually attains a large size forming a
     fungating foul smelling lesion which often gets infected"</b>; and
-    <b>ulcerative</b>.<cite class="src srb">SRB 26 &middot; p.1053</cite> B&amp;L gives two and ties
+    <b>ulcerative</b>.​<cite class="src srb">SRB 26 &middot; p.1053</cite> B&amp;L gives two and ties
     each to its precursor: <b>"it may be flat and infiltrating or warty in appearance. The former
     often starts as leukoplakia or PeIN; the latter results from an existing
-    papilloma."</b><cite class="src bl">B&amp;L 85 &middot; p.1552</cite>
+    papilloma."</b>​<cite class="src bl">B&amp;L 85 &middot; p.1552</cite>
     <br><span class="label">The point of the two-type division</span><b>Flat and infiltrating comes
     from leukoplakia or carcinoma in situ; warty comes from a papilloma.</b> Saying which precursor
     goes with which appearance turns a list into an explanation.</dd>
     <dt>Site and grade</dt>
     <dd>SRB: <b>"glans penis is the most common site (coronal sulcus for basal cell
     carcinoma)"</b>, and <b>"80% are of low grade
-    tumours."</b><cite class="src srb">SRB 26 &middot; p.1053</cite></dd>
+    tumours."</b>​<cite class="src srb">SRB 26 &middot; p.1053</cite></dd>
     <dt>Penile intraepithelial neoplasia, and its two eponyms</dt>
     <dd>B&amp;L's definition settles the naming, which is a favourite question: <b>"PeIN is typically
     seen as a red cutaneous patch on the penis. When it occurs on the glans penis, it is known as
     erythroplasia of Queyrat; when it occurs on the shaft of the penis, it is called Bowen's
-    disease."</b><cite class="src bl">B&amp;L 85 &middot; p.1552</cite>
+    disease."</b>​<cite class="src bl">B&amp;L 85 &middot; p.1552</cite>
     <br><span class="label">So the eponym is decided by the site, not the histology</span>
     <b>Glans: Queyrat. Shaft: Bowen.</b> Same lesion, two names. And B&amp;L adds the practical
     caution: <b>"there are several other benign causes of red patches on the penis; when there is
     clinical doubt as to the underlying diagnosis a biopsy is
-    indicated."</b><cite class="src bl">B&amp;L 85 &middot; p.1552</cite></dd>
+    indicated."</b>​<cite class="src bl">B&amp;L 85 &middot; p.1552</cite></dd>
     <dt>How it spreads: local</dt>
     <dd>Slowly, and with one anatomical barrier worth naming. B&amp;L: <b>"local growth continues for
-    months or years."</b><cite class="src bl">B&amp;L 85 &middot; p.1552</cite> S Das explains why:
+    months or years."</b>​<cite class="src bl">B&amp;L 85 &middot; p.1552</cite> S Das explains why:
     <b>"direct spread to the body of the penis is prevented by a fascial sheath for many months.
-    Lastly this is a slow growing tumour."</b><cite class="src das">Das 40 &middot; p.638</cite>
+    Lastly this is a slow growing tumour."</b>​<cite class="src das">Das 40 &middot; p.638</cite>
     <br><span class="label">Why that fascial sheath matters</span>Buck's fascia holds the tumour on
     the glans for a long time, which is exactly what makes conservative, glans-preserving surgery
     possible in early disease. The anatomy is the justification for the modern operation.</dd>
     <dt>How it spreads: lymphatic, which is the whole prognosis</dt>
     <dd>B&amp;L: <b>"the earliest lymphatic spread is to the inguinal nodes (N1 and N2 disease) and
     then to the iliac nodes (N3 disease). Distant metastatic deposits are
-    infrequent."</b><cite class="src bl">B&amp;L 85 &middot; p.1552</cite> S Das: <b>"the earliest
+    infrequent."</b>​<cite class="src bl">B&amp;L 85 &middot; p.1552</cite> S Das: <b>"the earliest
     spread is to the lymph nodes (first to inguinal group and then to iliac
-    group)."</b><cite class="src das">Das 40 &middot; p.638</cite> SRB: through lymphatics <b>"to
+    group)."</b>​<cite class="src das">Das 40 &middot; p.638</cite> SRB: through lymphatics <b>"to
     the horizontal group of inguinal lymph nodes which become nodular and hard. Lymph nodes on both
-    sides can get involved."</b><cite class="src srb">SRB 26 &middot; p.1053</cite>
+    sides can get involved."</b>​<cite class="src srb">SRB 26 &middot; p.1053</cite>
     <br><span class="label out">The three points about lymphatic spread that earn marks</span>
     <b>1. It is bilateral</b>, because the lymphatics of the penis cross the midline. So a block
     dissection is a <b>bilateral</b> operation.
     <br><b>2. The glans drains further than you think.</b> SRB: <b>"from glans, it also spreads to
     Cloquet lymph node which is located in femoral
-    canal."</b><cite class="src srb">SRB 26 &middot; p.1053</cite>
+    canal."</b>​<cite class="src srb">SRB 26 &middot; p.1053</cite>
     <br><b>3. The shaft can skip the groin.</b> SRB: <b>"carcinoma from shaft of penis can spread
-    directly to the external iliac lymph nodes."</b><cite class="src srb">SRB 26 &middot; p.1053</cite>
+    directly to the external iliac lymph nodes."</b>​<cite class="src srb">SRB 26 &middot; p.1053</cite>
     So impalpable groins do not mean no nodal disease in a shaft tumour.
     <br><span class="label">And SRB's phrase for the whole disease</span><b>"It is a locoregional
     malignant disease"</b>, with <b>"blood spread is
-    rare"</b>.<cite class="src srb">SRB 26 &middot; p.1053</cite> That is why surgery to the primary
+    rare"</b>.​<cite class="src srb">SRB 26 &middot; p.1053</cite> That is why surgery to the primary
     and the nodes still cures, even in advanced local disease.</dd>
     <dt>How patients die of it</dt>
     <dd>All three books give the same mechanism and it is worth saying. B&amp;L: <b>"the inguinal
     nodes can erode the skin of the groin and, in rare cases, death of the patient can result from
     erosion of the femoral or external iliac
-    vessels."</b><cite class="src bl">B&amp;L 85 &middot; p.1552</cite> S Das: <b>"death may occur
+    vessels."</b>​<cite class="src bl">B&amp;L 85 &middot; p.1552</cite> S Das: <b>"death may occur
     due to bleeding from external iliac or femoral vessel from erosion by the metastatic lymph
-    nodes."</b><cite class="src das">Das 40 &middot; p.638</cite> SRB: once the nodes are fixed,
+    nodes."</b>​<cite class="src das">Das 40 &middot; p.638</cite> SRB: once the nodes are fixed,
     <b>"it may erode into the femoral vessels causing torrential haemorrhage and
-    death."</b><cite class="src srb">SRB 26 &middot; p.1053</cite>
+    death."</b>​<cite class="src srb">SRB 26 &middot; p.1053</cite>
     <br><span class="label">This is also the reason for palliative treatment</span>SRB gives
     palliative external radiotherapy to fixed inguinal nodes specifically <b>"to palliate pain,
     fungation and anticipated erosion into femoral
-    vessels."</b><cite class="src srb">SRB 26 &middot; p.1055</cite> Pre-empting a fatal bleed is a
+    vessels."</b>​<cite class="src srb">SRB 26 &middot; p.1055</cite> Pre-empting a fatal bleed is a
     legitimate reason to irradiate an incurable patient.</dd>
   </dl>
 
@@ -1175,16 +1187,16 @@ body.guide { margin: 0; -webkit-text-size-adjust: 100%; }
     <span class="ask">1. How did it present, and how long has he had it?</span>
     <span class="why">Because late presentation is the rule and the reason is not medical. B&amp;L:
     <b>"many patients present late as a fungating or ulcerative growth, either because of
-    embarrassment or because of misdiagnosis."</b><cite class="src bl">B&amp;L 85 &middot; p.1552</cite>
+    embarrassment or because of misdiagnosis."</b>​<cite class="src bl">B&amp;L 85 &middot; p.1552</cite>
     S Das describes exactly the misdiagnosis: <b>"in an uncircumcised individual mild irritation and
     purulent discharge from under the prepuce are often the first symptoms. Gradually blood stained
     foul discharge may be noticed. At this stage the condition may be misdiagnosed as
-    balanoposthitis."</b><cite class="src das">Das 40 &middot; p.638</cite></span>
+    balanoposthitis."</b>​<cite class="src das">Das 40 &middot; p.638</cite></span>
     <span class="label out">So S Das gives the instruction that follows</span><b>"One must be clever
     enough to suspect this to be a case of carcinoma and a dorsal slit must be performed for proper
-    inspection."</b><cite class="src das">Das 40 &middot; p.638</cite> B&amp;L says the same: <b>"in
+    inspection."</b>​<cite class="src das">Das 40 &middot; p.638</cite> B&amp;L says the same: <b>"in
     many, the prepuce is non-retractile and must be split to view the
-    lesion."</b><cite class="src bl">B&amp;L 85 &middot; p.1552</cite> <b>You cannot diagnose what
+    lesion."</b>​<cite class="src bl">B&amp;L 85 &middot; p.1552</cite> <b>You cannot diagnose what
     you have not seen.</b> A purulent preputial discharge treated as balanoposthitis without
     retracting or splitting the prepuce is how these cancers are missed.
   </div>
@@ -1192,14 +1204,14 @@ body.guide { margin: 0; -webkit-text-size-adjust: 100%; }
   <div class="step">
     <span class="ask">2. Is it painful?</span>
     <span class="why">Characteristically not, which is itself part of why it presents late. B&amp;L:
-    <b>"there is typically little or no pain."</b><cite class="src bl">B&amp;L 85 &middot; p.1552</cite>
-    S Das: <b>"it is a painless condition."</b><cite class="src das">Das 40 &middot; p.638</cite>
+    <b>"there is typically little or no pain."</b>​<cite class="src bl">B&amp;L 85 &middot; p.1552</cite>
+    S Das: <b>"it is a painless condition."</b>​<cite class="src das">Das 40 &middot; p.638</cite>
     SRB explains when it does hurt: <b>"lesion is painless initially but later becomes painful due to
     secondary infection, often accompanied by discharge which is foul smelling, purulent and
-    irritating."</b><cite class="src srb">SRB 26 &middot; p.1053</cite></span>
+    irritating."</b>​<cite class="src srb">SRB 26 &middot; p.1053</cite></span>
     <span class="label">So pain means one of two things</span>Either <b>secondary infection</b> of
     the primary, or <b>fixed inguinal nodes</b>, which SRB says cause <b>"severe excruciating pain
-    and lymphoedema"</b>.<cite class="src srb">SRB 26 &middot; p.1053</cite> Pain in this disease is
+    and lymphoedema"</b>.​<cite class="src srb">SRB 26 &middot; p.1053</cite> Pain in this disease is
     a sign of a complication, not of the tumour.
   </div>
 
@@ -1208,8 +1220,8 @@ body.guide { margin: 0; -webkit-text-size-adjust: 100%; }
     <span class="why">Because it tells you the meatus or urethra is involved, which changes the T
     stage. SRB lists <b>"altered urinary stream"</b> among the clinical features and notes
     <b>"urethral meatus may get involved causing alteration in urinary
-    stream."</b><cite class="src srb">SRB 26 &middot; p.1053</cite> B&amp;L's T3 is urethral
-    invasion.<cite class="src bl">B&amp;L 85 &middot; p.1552</cite></span>
+    stream."</b>​<cite class="src srb">SRB 26 &middot; p.1053</cite> B&amp;L's T3 is urethral
+    invasion.​<cite class="src bl">B&amp;L 85 &middot; p.1552</cite></span>
   </div>
 
   <div class="step">
@@ -1217,37 +1229,37 @@ body.guide { margin: 0; -webkit-text-size-adjust: 100%; }
     <span class="why">S Das gives the two forms and the words to use: <b>"majority of the patients
     present with a lump or an ulcer. The lump is a sessile cauliflower growth with an indurated base
     whereas an ulcer has the same indurated base with rolled out and everted margin, the floor is
-    formed by necrosed tissues."</b><cite class="src das">Das 40 &middot; p.638</cite></span>
+    formed by necrosed tissues."</b>​<cite class="src das">Das 40 &middot; p.638</cite></span>
     <span class="label">Three words to use, in this order</span><b>Indurated base. Everted margin.
     Necrotic floor.</b> An everted or rolled-out edge on an indurated base is a squamous carcinoma
     anywhere in the body, and saying so connects this case to the ulcer case. Then palpate
     <b>proximally along the shaft</b> for induration, because SRB notes <b>"it spreads proximally to
     the body of penis causing induration"</b>, and that is what decides partial against total
-    amputation.<cite class="src srb">SRB 26 &middot; p.1053</cite>
+    amputation.​<cite class="src srb">SRB 26 &middot; p.1053</cite>
   </div>
 
   <div class="step">
     <span class="ask">5. Palpate both groins, and then the iliac nodes</span>
     <span class="why">Because half of what you feel is not cancer. B&amp;L: <b>"around 50% have
     inguinal lymph node enlargement at presentation but the nodal enlargement often reflects
-    infection."</b><cite class="src bl">B&amp;L 85 &middot; p.1552</cite> S Das: <b>"the inguinal
+    infection."</b>​<cite class="src bl">B&amp;L 85 &middot; p.1552</cite> S Das: <b>"the inguinal
     lymph nodes are often enlarged, but about half of these cases the enlargement is due to sepsis
-    and the other half due to secondary deposits."</b><cite class="src das">Das 40 &middot; p.638</cite>
+    and the other half due to secondary deposits."</b>​<cite class="src das">Das 40 &middot; p.638</cite>
     SRB: <b>"only 50% of palpable inguinal nodes are involved by metastatic
-    spread."</b><cite class="src srb">SRB 26 &middot; p.1054</cite> All three books say the same
+    spread."</b>​<cite class="src srb">SRB 26 &middot; p.1054</cite> All three books say the same
     thing, and it is the single most important fact in the management.</span>
     <span class="label">Palpate the nodes you were not taught to palpate</span>S Das illustrates
     both manoeuvres: palpating the inguinal nodes, and <b>palpating the external iliac nodes with
     the thigh flexed to relax the abdominal
-    muscles</b>.<cite class="src das">Das 40 &middot; pp.637, 638</cite> He is explicit: <b>"one must
+    muscles</b>.​<cite class="src das">Das 40 &middot; pp.637, 638</cite> He is explicit: <b>"one must
     palpate the iliac group of lymph nodes to exclude secondaries in these
-    nodes."</b><cite class="src das">Das 40 &middot; p.638</cite> SRB says external iliac nodes are
+    nodes."</b>​<cite class="src das">Das 40 &middot; p.638</cite> SRB says external iliac nodes are
     felt <b>"above and on medial aspect of the inguinal
-    ligament"</b>.<cite class="src srb">SRB 26 &middot; p.1053</cite> Flexing the hip to relax the
+    ligament"</b>.​<cite class="src srb">SRB 26 &middot; p.1053</cite> Flexing the hip to relax the
     abdominal wall, and saying why you are doing it, is a free mark.
     <span class="label out">And say what the nodes feel like</span>Metastatic nodes become
     <b>"nodular and hard"</b>, and later <b>fixed</b>; SRB: <b>"fixed lymph node status indicates the
-    advancement of the disease."</b><cite class="src srb">SRB 26 &middot; p.1053</cite> Tender,
+    advancement of the disease."</b>​<cite class="src srb">SRB 26 &middot; p.1053</cite> Tender,
     softer, mobile nodes in the presence of a foul infected primary are more likely septic.
   </div>
 
@@ -1257,7 +1269,7 @@ body.guide { margin: 0; -webkit-text-size-adjust: 100%; }
     anterosuperior iliac spine and pubic tubercle; laterally line joining anterosuperior iliac spine
     and a point 20 cm below it; medially pubic tubercle and a point 15 cm below it. Nodal block
     dissection for carcinoma penis should cover this area
-    adequately."</b><cite class="src srb">SRB 26 &middot; p.1055</cite>
+    adequately."</b>​<cite class="src srb">SRB 26 &middot; p.1055</cite>
     <br><br>Learn it as a <b>quadrangle hung from the line between the anterior superior iliac spine
     and the pubic tubercle</b>, 20 cm down laterally and 15 cm down medially. It appears nowhere in
     Bailey &amp; Love 28e.
@@ -1268,20 +1280,20 @@ body.guide { margin: 0; -webkit-text-size-adjust: 100%; }
   <dl class="findings">
     <dt>Biopsy of the primary, which is not optional</dt>
     <dd>B&amp;L says it twice: <b>"a biopsy should be performed"</b>, and <b>"a biopsy should be
-    performed to make the diagnosis."</b><cite class="src bl">B&amp;L 85 &middot; p.1552</cite> SRB
+    performed to make the diagnosis."</b>​<cite class="src bl">B&amp;L 85 &middot; p.1552</cite> SRB
     specifies the kind and what it shows: <b>"wedge biopsy from the lesion shows squamous cell
-    carcinoma with epithelial pearls."</b><cite class="src srb">SRB 26 &middot; p.1053</cite>
+    carcinoma with epithelial pearls."</b>​<cite class="src srb">SRB 26 &middot; p.1053</cite>
     <br><span class="label">SRB's grading by epithelial pearls, which is unique to it</span>
     <b>Very well differentiated: 75% epithelial pearls. Well differentiated: 50 to 75%. Moderately
     differentiated: 25 to 50%. Undifferentiated: under
-    25%.</b><cite class="src srb">SRB 26 &middot; p.1053</cite> Grade matters here because SRB uses
+    25%.</b>​<cite class="src srb">SRB 26 &middot; p.1053</cite> Grade matters here because SRB uses
     it to decide both the extent of amputation and whether to do a prophylactic groin
     dissection.</dd>
     <dt>The nodes: aspirate, never open</dt>
     <dd>SRB is emphatic: <b>"FNAC of lymph nodes (no open biopsy for lymph
-    nodes)."</b><cite class="src srb">SRB 26 &middot; p.1053</cite> B&amp;L agrees and adds the
+    nodes)."</b>​<cite class="src srb">SRB 26 &middot; p.1053</cite> B&amp;L agrees and adds the
     guidance: <b>"for palpable nodes, ultrasound-guided fine-needle aspiration will confirm the
-    diagnosis."</b><cite class="src bl">B&amp;L 85 &middot; p.1553</cite>
+    diagnosis."</b>​<cite class="src bl">B&amp;L 85 &middot; p.1553</cite>
     <br><span class="label">Why no open biopsy</span>An incision in the groin before a block
     dissection contaminates the field, compromises the skin flaps on which the dissection depends,
     and risks seeding a wound that is already at high risk of necrosis. A needle gives the same
@@ -1291,21 +1303,21 @@ body.guide { margin: 0; -webkit-text-size-adjust: 100%; }
     above and medial to the junction of saphenous and femoral vein. It is the first node to get
     involved in carcinoma penis. So this sentinel lymph node biopsy after isosulphan blue dye
     injection into the primary is done to decide for the necessity for ilioinguinal block
-    dissection."</b><cite class="src srb">SRB 26 &middot; p.1053</cite> B&amp;L gives it the same
+    dissection."</b>​<cite class="src srb">SRB 26 &middot; p.1053</cite> B&amp;L gives it the same
     role, for the impalpable groin: <b>"the management of patients where the nodes are not palpable
     involves the use of sentinel lymph node biopsy (SLNB) followed by inguinal node dissection if the
-    SLNB is positive."</b><cite class="src bl">B&amp;L 85 &middot; p.1553</cite>
+    SLNB is positive."</b>​<cite class="src bl">B&amp;L 85 &middot; p.1553</cite>
     <br><span class="label out">So the two books agree here, and the agreement is useful</span>
     <b>Palpable nodes: FNAC, then block dissection. Impalpable nodes: sentinel node biopsy, then
     block dissection only if positive.</b> That is a clean, defensible answer drawn from both
     books.</dd>
     <dt>Imaging</dt>
     <dd>B&amp;L: <b>"MRI is performed for local staging. Assessment of locoregional lymph node status
-    is essential."</b><cite class="src bl">B&amp;L 85 &middot; p.1552</cite> SRB: <b>"ultrasound
+    is essential."</b>​<cite class="src bl">B&amp;L 85 &middot; p.1552</cite> SRB: <b>"ultrasound
     abdomen, to look for involvement of external iliac lymph
-    nodes."</b><cite class="src srb">SRB 26 &middot; p.1053</cite> B&amp;L also uses <b>CT</b> for
+    nodes."</b>​<cite class="src srb">SRB 26 &middot; p.1053</cite> B&amp;L also uses <b>CT</b> for
     the pelvic nodes when deciding on pelvic
-    lymphadenectomy.<cite class="src bl">B&amp;L 85 &middot; p.1553</cite>
+    lymphadenectomy.​<cite class="src bl">B&amp;L 85 &middot; p.1553</cite>
     <br><span class="label">Why MRI for the primary</span>Because the T stage is about which erectile
     body the tumour has entered, and MRI shows corpus spongiosum and corpus cavernosum. That is the
     measurement that decides glansectomy against partial penectomy.</dd>
@@ -1317,13 +1329,13 @@ body.guide { margin: 0; -webkit-text-size-adjust: 100%; }
     <dt>The T stages, which both books give in the same terms</dt>
     <dd>B&amp;L, compactly: <b>"T1 tumours are confined to the skin, with T2 tumours invading the
     corpus spongiosum or the corpus cavernosum. T3 tumours invade the urethra and T4 tumours invade
-    adjacent structures."</b><cite class="src bl">B&amp;L 85 &middot; p.1552</cite>
+    adjacent structures."</b>​<cite class="src bl">B&amp;L 85 &middot; p.1552</cite>
     <br>SRB's version, from <b>AJCC 8th edition, 2018</b>, separates the two erectile bodies:
     <b>T2</b> invades <b>corpus spongiosum</b>, <b>T3</b> invades <b>corpora cavernosa</b>, each with
     or without urethral invasion, and <b>T4</b> invades adjacent structures such as prostate, scrotum
-    or pubic bone.<cite class="src srb">SRB 26 &middot; p.1054</cite> SRB also subdivides
+    or pubic bone.​<cite class="src srb">SRB 26 &middot; p.1054</cite> SRB also subdivides
     <b>T1a</b>, without lymphovascular or perineural invasion and not high grade, from <b>T1b</b>,
-    with invasion or high grade.<cite class="src srb">SRB 26 &middot; p.1054</cite>
+    with invasion or high grade.​<cite class="src srb">SRB 26 &middot; p.1054</cite>
     <br><span class="label out">Note the difference</span>B&amp;L puts both erectile bodies in T2 and
     makes urethral invasion T3. The AJCC 8th edition that SRB reproduces splits spongiosum (T2) from
     cavernosa (T3) and treats urethral invasion as a modifier rather than a stage. <b>Use SRB's
@@ -1331,10 +1343,10 @@ body.guide { margin: 0; -webkit-text-size-adjust: 100%; }
     it.</dd>
     <dt>The N stages</dt>
     <dd>B&amp;L: inguinal nodes are <b>N1 and N2</b>, iliac nodes are
-    <b>N3</b>.<cite class="src bl">B&amp;L 85 &middot; p.1552</cite> SRB's clinical N: <b>cN1</b> one
+    <b>N3</b>.​<cite class="src bl">B&amp;L 85 &middot; p.1552</cite> SRB's clinical N: <b>cN1</b> one
     palpable mobile unilateral inguinal node; <b>cN2</b> two or more palpable mobile unilateral
     nodes; <b>cN3</b> a palpable fixed inguinal nodal mass, or pelvic lymphadenopathy, unilateral or
-    bilateral.<cite class="src srb">SRB 26 &middot; p.1054</cite>
+    bilateral.​<cite class="src srb">SRB 26 &middot; p.1054</cite>
     <br><span class="label">The useful shorthand</span><b>N1 one node, N2 several, N3 fixed or
     pelvic.</b> Fixity and pelvic disease are both N3, which is why a fixed groin is a different
     prognosis from a mobile one.</dd>
@@ -1343,7 +1355,7 @@ body.guide { margin: 0; -webkit-text-size-adjust: 100%; }
     <b>Stage II:</b> tumour extending into the body of the penis, <b>70%</b>. <b>Stage III:</b>
     tumour with <b>mobile</b> inguinal nodes, <b>50%</b>. <b>Stage IV:</b> tumour spreading to
     adjacent structures or <b>fixed</b> nodes,
-    <b>5%</b>.<cite class="src srb">SRB 26 &middot; p.1053</cite>
+    <b>5%</b>.​<cite class="src srb">SRB 26 &middot; p.1053</cite>
     <br><span class="label">Why Jackson's is still worth knowing</span>Because it is clinical. You
     can stage a patient with your hands at the bedside and quote a prognosis, which is exactly what
     a clinical examination asks you to do. And the four survival figures, <b>90, 70, 50, 5</b>, carry
@@ -1363,7 +1375,7 @@ body.guide { margin: 0; -webkit-text-size-adjust: 100%; }
       <dt>SRB</dt>
       <dd>Gives <b>both</b> systems, Jackson's first with survival attached to each stage, then the
       full AJCC 8th edition TNM with stage groupings to stage
-      IV.<cite class="src srb">SRB 26 &middot; pp.1053, 1054</cite> Jackson's four stages: glans or
+      IV.​<cite class="src srb">SRB 26 &middot; pp.1053, 1054</cite> Jackson's four stages: glans or
       prepuce only 90%; body of penis 70%; mobile inguinal nodes 50%; adjacent structures or fixed
       nodes 5%.</dd>
       <dt>Bailey &amp; Love 28e</dt>
@@ -1371,9 +1383,9 @@ body.guide { margin: 0; -webkit-text-size-adjust: 100%; }
       then two survival figures grouped by nodal status rather than by stage: <b>"the prognosis for
       tumours confined to the penis is good with 5-year survival rates in excess of 80%. With nodal
       involvement the 5-year survival rate falls to around
-      40%."</b><cite class="src bl">B&amp;L 85 &middot; p.1553</cite> Its summary box reduces the
+      40%."</b>​<cite class="src bl">B&amp;L 85 &middot; p.1553</cite> Its summary box reduces the
       prognosis to one line: <b>"nodal involvement indicates a poor
-      prognosis."</b><cite class="src bl">B&amp;L 85 &middot; p.1553</cite></dd>
+      prognosis."</b>​<cite class="src bl">B&amp;L 85 &middot; p.1553</cite></dd>
       <dt>Do the figures actually conflict?</dt>
       <dd>Less than they look. B&amp;L's <b>over 80% for disease confined to the penis</b> is an
       average of Jackson's stage I (90%) and stage II (70%), which is about right. B&amp;L's
@@ -1402,22 +1414,22 @@ body.guide { margin: 0; -webkit-text-size-adjust: 100%; }
     <dt>Carcinoma in situ, where the books fully agree</dt>
     <dd>B&amp;L: <b>"when the diagnosis of carcinoma in situ is confirmed, treatment is by means of
     topical 5-fluorouracil cream, CO2 laser ablation or surgical
-    excision."</b><cite class="src bl">B&amp;L 85 &middot; p.1552</cite> SRB: <b>"topical 5 FU cream
+    excision."</b>​<cite class="src bl">B&amp;L 85 &middot; p.1552</cite> SRB: <b>"topical 5 FU cream
     or imiquimab or Mohs surgery or limited wide excision or Nd:YAG laser photoirradiation is useful
-    in carcinoma in situ."</b><cite class="src srb">SRB 26 &middot; p.1055</cite> So: <b>topical
+    in carcinoma in situ."</b>​<cite class="src srb">SRB 26 &middot; p.1055</cite> So: <b>topical
     5-FU, laser, or limited excision</b>, with imiquimab and Mohs as SRB's additions.</dd>
     <dt>Small, low-grade, low-stage tumours: organ preservation</dt>
     <dd>B&amp;L: <b>"patients with small lesions of low grade and low stage are treated with
     organ-preserving surgery, such as limited excision, Mohs' surgery or laser ablation. Mohs'
     micrographic surgery is based on sequential tissue excision under repeat microscopic control.
     This helps in accurately identifying the tumour margin and maximally preserves the uninvolved
-    tissues."</b><cite class="src bl">B&amp;L 85 &middot; p.1553</cite></dd>
+    tissues."</b>​<cite class="src bl">B&amp;L 85 &middot; p.1553</cite></dd>
     <dt>Glansectomy, partial and total penectomy</dt>
     <dd>B&amp;L's ladder: <b>"tumours affecting the glans penis require glansectomy, with more
     advanced tumours requiring partial penectomy. In advanced cases, total penectomy is required with
     the formation of a perineal urethrostomy. These techniques are indicated even in advanced
     metastatic disease for reasons of local
-    control."</b><cite class="src bl">B&amp;L 85 &middot; p.1553</cite>
+    control."</b>​<cite class="src bl">B&amp;L 85 &middot; p.1553</cite>
     <br><span class="label">Note that last sentence</span><b>Local control is a reason to operate
     even when the disease is incurable.</b> This is a locoregional cancer that kills by fungation and
     vascular erosion, so removing the primary is worth doing even with metastases.
@@ -1425,17 +1437,17 @@ body.guide { margin: 0; -webkit-text-size-adjust: 100%; }
     the books part company: <b>"if growth involves the glans without extending into the proximal part
     of shaft of the penis, then partial amputation of the penis is done. A length of 2.5 cm stump is
     retained. Clearance of 2 cm from the proximal extended part of the tumour is needed. Advantage is
-    proper streaming of the urine is possible."</b><cite class="src srb">SRB 26 &middot; p.1054</cite>
+    proper streaming of the urine is possible."</b>​<cite class="src srb">SRB 26 &middot; p.1054</cite>
     <br>And for the more advanced: <b>"if tumour involves the proximal part of the body of penis or
     if it is anaplastic or poorly differentiated tumour, total amputation of penis is done with
-    perineal urethrostomy."</b><cite class="src srb">SRB 26 &middot; p.1054</cite>
+    perineal urethrostomy."</b>​<cite class="src srb">SRB 26 &middot; p.1054</cite>
     <br><span class="label out">Read the amber box before you quote 2 cm</span>B&amp;L explicitly
     describes the 2 cm margin as superseded.</dd>
     <dt>Perineal urethrostomy, and its two problems</dt>
     <dd>SRB: <b>"problems with perineal urethrostomy are scrotal ammoniacal dermatitis and stricture
     at urethrostomy site. Dermatitis is prevented by asking the patient to urinate in sitting
     position lifting the scrotum upwards. Stricture needs
-    dilatation."</b><cite class="src srb">SRB 26 &middot; p.1054</cite>
+    dilatation."</b>​<cite class="src srb">SRB 26 &middot; p.1054</cite>
     <br><span class="label">The advice is practical and memorable</span><b>Sit to void and lift the
     scrotum.</b> That one instruction prevents the commoner of the two complications, and it is the
     sort of thing examiners reward because it shows you have thought about the patient after the
@@ -1446,22 +1458,22 @@ body.guide { margin: 0; -webkit-text-size-adjust: 100%; }
     and curative radiotherapy to the penis can be given using radioactive tantalum wire implantation
     (6000 cGy in 7 days) or by wearing radium penile mould continuously or intermittently (6000 cGy
     in 7 days) or by linear accelerator external beam radiotherapy (6000 cGy in 5 weeks). Involvement
-    of nodes in these patients is less than 10%."</b><cite class="src srb">SRB 26 &middot; p.1054</cite>
+    of nodes in these patients is less than 10%."</b>​<cite class="src srb">SRB 26 &middot; p.1054</cite>
     Its indications list for radiotherapy is: <b>carcinoma in situ; small lesion under 2 cm; lesion
     confined to the glans; small lesion in a young individual; advanced inoperable disease;
     palliation of inoperable groin nodes; and post-operative
-    radiotherapy.</b><cite class="src srb">SRB 26 &middot; p.1055</cite>
+    radiotherapy.</b>​<cite class="src srb">SRB 26 &middot; p.1055</cite>
     <br><span class="label out">B&amp;L offers none of this for the primary</span>See the amber
     box.</dd>
     <dt>Chemotherapy</dt>
     <dd>B&amp;L: <b>"chemotherapy is relatively ineffective and currently is reserved for palliation
-    in those with metastatic disease."</b><cite class="src bl">B&amp;L 85 &middot; p.1553</cite>
+    in those with metastatic disease."</b>​<cite class="src bl">B&amp;L 85 &middot; p.1553</cite>
     SRB gives the agents: <b>"5 FU; methotrexate, bleomycin, cisplatin and vincristine"</b>, and
     adds a useful pharmacological point: <b>"bleomycin is a radiosensitiser and so beneficial if RT
-    is planned later."</b><cite class="src srb">SRB 26 &middot; p.1055</cite>
+    is planned later."</b>​<cite class="src srb">SRB 26 &middot; p.1055</cite>
     <br><span class="label">So the honest answer</span><b>Chemotherapy is the weakest arm in this
     disease.</b> Surgery is the mainstay, which is what B&amp;L's summary box says: <b>"surgery is
-    the mainstay of treatment."</b><cite class="src bl">B&amp;L 85 &middot; p.1553</cite></dd>
+    the mainstay of treatment."</b>​<cite class="src bl">B&amp;L 85 &middot; p.1553</cite></dd>
   </dl>
 
   <details class="conflict">
@@ -1477,30 +1489,30 @@ body.guide { margin: 0; -webkit-text-size-adjust: 100%; }
       <dd>Gives the classical measurements, and a functional reason for the stump: <b>"a length of
       2.5 cm stump is retained. Clearance of 2 cm from the proximal extended part of the tumour is
       needed. Advantage is proper streaming of the urine is
-      possible."</b><cite class="src srb">SRB 26 &middot; p.1054</cite> So the stump length is chosen
+      possible."</b>​<cite class="src srb">SRB 26 &middot; p.1054</cite> So the stump length is chosen
       to let the man stand to void, and the clearance is a fixed 2 cm.</dd>
       <dt>Bailey &amp; Love 28e</dt>
       <dd>Names the old rule in order to retire it: <b>"for most primary tumours surgical excision is
       the mainstay of treatment, with the traditional view that a 2-cm margin of normal tissue be
       removed being superseded by a more recent, more conservative view, such that penis-preserving
       surgery with excision of much lower margins of normal tissue is now
-      accepted."</b><cite class="src bl">B&amp;L 85 &middot; p.1553</cite> And the operations it
+      accepted."</b>​<cite class="src bl">B&amp;L 85 &middot; p.1553</cite> And the operations it
       offers reflect that: <b>limited excision, Mohs' micrographic surgery, laser ablation</b> for
       small low-grade tumours, and <b>glansectomy</b> for tumours of the glans, with partial
       penectomy reserved for more advanced
-      disease.<cite class="src bl">B&amp;L 85 &middot; p.1553</cite></dd>
+      disease.​<cite class="src bl">B&amp;L 85 &middot; p.1553</cite></dd>
       <dt>What changed, and why</dt>
       <dd>Two things, and both are worth saying. <b>Pathology:</b> studies of resection specimens
       showed that penile squamous carcinoma does not spread far beyond its visible edge, which S Das
       explains anatomically, since <b>"direct spread to the body of the penis is prevented by a
       fascial sheath for many months"</b> and <b>"this is a slow growing
-      tumour"</b>.<cite class="src das">Das 40 &middot; p.638</cite> So the 2 cm was always more
+      tumour"</b>.​<cite class="src das">Das 40 &middot; p.638</cite> So the 2 cm was always more
       than necessary. <b>Consequence:</b> the organ is not expendable. A 2 cm margin on a glans
       tumour costs the whole glans and much of the shaft, with devastating sexual and psychological
       results in a man who will often be cured; <b>Mohs' surgery</b>, which B&amp;L describes as
       <b>"sequential tissue excision under repeat microscopic control"</b> that <b>"maximally
       preserves the uninvolved tissues"</b>, exists precisely to resolve that
-      tension.<cite class="src bl">B&amp;L 85 &middot; p.1553</cite> Note that the disagreement is
+      tension.​<cite class="src bl">B&amp;L 85 &middot; p.1553</cite> Note that the disagreement is
       about the <i>margin</i>, not the principle; both books agree that excision is the mainstay and
       that the proximal extent of induration decides partial against total amputation.</dd>
     </dl>
@@ -1536,19 +1548,19 @@ body.guide { margin: 0; -webkit-text-size-adjust: 100%; }
       can be given using radioactive tantalum wire implantation (6000 cGy in 7 days) or by wearing
       radium penile mould continuously or intermittently (6000 cGy in 7 days) or by linear
       accelerator external beam radiotherapy (6000 cGy in 5 weeks). Involvement of nodes in these
-      patients is less than 10%."</b><cite class="src srb">SRB 26 &middot; p.1054</cite> SRB also
+      patients is less than 10%."</b>​<cite class="src srb">SRB 26 &middot; p.1054</cite> SRB also
       gives post-operative radiotherapy to the groin and palliative radiotherapy for fixed
-      nodes.<cite class="src srb">SRB 26 &middot; p.1055</cite></dd>
+      nodes.​<cite class="src srb">SRB 26 &middot; p.1055</cite></dd>
       <dt>Bailey &amp; Love 28e</dt>
       <dd>Mentions radiotherapy exactly once in the whole section, and not for the primary: among
       the options for pelvic nodes, <b>"when the iliac nodes are not enlarged in the presence of N2
       disease, the options are observation, pelvic lymphadenectomy or
-      radiotherapy."</b><cite class="src bl">B&amp;L 85 &middot; p.1553</cite> Neither
+      radiotherapy."</b>​<cite class="src bl">B&amp;L 85 &middot; p.1553</cite> Neither
       <b>tantalum</b> nor a <b>radium mould</b> appears anywhere in the chapter. Where SRB offers
       radiotherapy, B&amp;L offers surgery: <b>limited excision, Mohs', laser ablation,
-      glansectomy</b>.<cite class="src bl">B&amp;L 85 &middot; p.1553</cite> Its summary box is
+      glansectomy</b>.​<cite class="src bl">B&amp;L 85 &middot; p.1553</cite> Its summary box is
       unambiguous: <b>"surgery is the mainstay of
-      treatment."</b><cite class="src bl">B&amp;L 85 &middot; p.1553</cite></dd>
+      treatment."</b>​<cite class="src bl">B&amp;L 85 &middot; p.1553</cite></dd>
       <dt>Why the two books diverge</dt>
       <dd>They are competing for the same patient. The reason to irradiate a small glans tumour was
       always <b>organ preservation</b>, because the surgical alternative used to be a 2 cm margin and
@@ -1587,7 +1599,7 @@ body.guide { margin: 0; -webkit-text-size-adjust: 100%; }
     least 3 weeks after local treatment of the primary lesion. Enlargement caused by infection will
     usually show signs of subsiding with antibiotic treatment. For palpable nodes, ultrasound-guided
     fine-needle aspiration will confirm the diagnosis and a block dissection of both groins should be
-    undertaken."</b><cite class="src bl">B&amp;L 85 &middot; p.1553</cite>
+    undertaken."</b>​<cite class="src bl">B&amp;L 85 &middot; p.1553</cite>
     <br><span class="label">Note: both groins</span>Not the side of the lesion. The penile
     lymphatics cross the midline, so a positive node on one side mandates a bilateral
     dissection.</dd>
@@ -1597,46 +1609,46 @@ body.guide { margin: 0; -webkit-text-size-adjust: 100%; }
     dissection within 4 weeks of surgery for primary tumour. Secondary inguinal block is doing block
     dissection after 4 weeks of surgery for primary disease. Only 50% of palpable inguinal nodes are
     involved by metastatic spread. So often a course of antibiotic is given and waited for 4 to 6
-    weeks."</b><cite class="src srb">SRB 26 &middot; p.1054</cite></dd>
+    weeks."</b>​<cite class="src srb">SRB 26 &middot; p.1054</cite></dd>
     <dt>When to dissect an impalpable groin: prophylactic dissection</dt>
     <dd>SRB gives the risk threshold: <b>"if primary tumour is poorly differentiated, and if tumour
     is T2 or above, chances of inguinal nodal spread is more than 50% and so a prophylactic inguinal
-    nodal dissection is done."</b><cite class="src srb">SRB 26 &middot; p.1055</cite> Its high-risk
+    nodal dissection is done."</b>​<cite class="src srb">SRB 26 &middot; p.1055</cite> Its high-risk
     group is <b>"invasive carcinoma; T2 and T3 tumours; with vascular
-    invasion"</b>.<cite class="src srb">SRB 26 &middot; p.1055</cite> And the terms:
+    invasion"</b>.​<cite class="src srb">SRB 26 &middot; p.1055</cite> And the terms:
     <b>"therapeutic inguinal block is done whenever FNAC of node shows positive
-    tumour."</b><cite class="src srb">SRB 26 &middot; p.1055</cite>
+    tumour."</b>​<cite class="src srb">SRB 26 &middot; p.1055</cite>
     <br><span class="label">SRB's staged alternative, which is elegant</span><b>"Superficial lymph
     node block is dissection superficial to fascia lata in N0 disease. It should undergo frozen
     section biopsy. If nodes are positive, then formal block dissection should be
-    done."</b><cite class="src srb">SRB 26 &middot; p.1055</cite> A limited dissection above the
+    done."</b>​<cite class="src srb">SRB 26 &middot; p.1055</cite> A limited dissection above the
     fascia lata, read on the table, deciding whether to go deeper. It is the same logic as sentinel
     node biopsy with a wider net.</dd>
     <dt>The named dissections</dt>
     <dd><b>Standard inguinal lymphadenectomy</b> is <b>"classical block
     dissection"</b>. <b>Modified inguinal block dissection (Catalona)</b> uses a <b>"small incision,
     limited dissection, preservation of saphenous
-    vein"</b>.<cite class="src srb">SRB 26 &middot; p.1055</cite> SRB illustrates an
+    vein"</b>.​<cite class="src srb">SRB 26 &middot; p.1055</cite> SRB illustrates an
     <b>S-shaped incision</b> for ilioinguinal block
-    dissection.<cite class="src srb">SRB 26 &middot; p.1055</cite>
+    dissection.​<cite class="src srb">SRB 26 &middot; p.1055</cite>
     <br><span class="label">Why preserve the saphenous vein</span>Because taking it worsens the
     lower-limb lymphoedema that follows a groin dissection. Catalona's modification exists to reduce
     exactly the complications listed next.</dd>
     <dt>Complications of ilioinguinal block dissection, which you must be able to list</dt>
     <dd>SRB, twice: <b>"flap necrosis, lymphoedema of lower limb, femoral blow out, infection,
     lymphorrhoea and haemorrhage"</b>, with <b>flap necrosis marked as
-    common</b>.<cite class="src srb">SRB 26 &middot; pp.1054, 1055</cite>
+    common</b>.​<cite class="src srb">SRB 26 &middot; pp.1054, 1055</cite>
     <br><span class="label out">Say "flap necrosis" first</span>It is the commonest, and naming it
     first shows you know which complication actually happens. <b>Femoral blow-out</b> is the one that
     kills; it follows skin loss over an exposed, irradiated or dissected femoral vessel.</dd>
     <dt>The pelvic nodes</dt>
     <dd>SRB: <b>"removal of iliac nodes does not alter the outcome. It is done to confirm the spread,
     so that further therapy can be planned and prognosis can be
-    predicted."</b><cite class="src srb">SRB 26 &middot; p.1055</cite> B&amp;L: <b>"management of the
+    predicted."</b>​<cite class="src srb">SRB 26 &middot; p.1055</cite> B&amp;L: <b>"management of the
     pelvic nodes is controversial. When they are involved on CT scanning, surgery probably has little
     role; however, when the iliac nodes are not enlarged in the presence of N2 disease, the options
     are observation, pelvic lymphadenectomy or
-    radiotherapy."</b><cite class="src bl">B&amp;L 85 &middot; p.1553</cite>
+    radiotherapy."</b>​<cite class="src bl">B&amp;L 85 &middot; p.1553</cite>
     <br><span class="label">The books agree here</span>Pelvic dissection is <b>staging, not
     therapy</b>. Say that and you have said what both books say.</dd>
   </dl>
@@ -1653,15 +1665,15 @@ body.guide { margin: 0; -webkit-text-size-adjust: 100%; }
       <dd><b>"Treatment of any associated enlarged inguinal lymph nodes should be delayed until at
       least 3 weeks after local treatment of the primary lesion. Enlargement caused by infection will
       usually show signs of subsiding with antibiotic
-      treatment."</b><cite class="src bl">B&amp;L 85 &middot; p.1553</cite> Note the wording:
+      treatment."</b>​<cite class="src bl">B&amp;L 85 &middot; p.1553</cite> Note the wording:
       <b>at least</b> three weeks, and <b>after local treatment of the primary</b>.</dd>
       <dt>SRB</dt>
       <dd><b>"Often a course of antibiotic is given and waited for 4 to 6
-      weeks"</b>,<cite class="src srb">SRB 26 &middot; p.1054</cite> and again <b>"a trial of
+      weeks"</b>,​<cite class="src srb">SRB 26 &middot; p.1054</cite> and again <b>"a trial of
       antibiotic therapy is given for 4 to 6 weeks to reduce the size of the inguinal
-      node."</b><cite class="src srb">SRB 26 &middot; p.1055</cite> SRB also gives names to the two
+      node."</b>​<cite class="src srb">SRB 26 &middot; p.1055</cite> SRB also gives names to the two
       timings: a <b>primary inguinal block</b> is done within 4 weeks of the primary surgery, a
-      <b>secondary inguinal block</b> after 4 weeks.<cite class="src srb">SRB 26 &middot; p.1054</cite></dd>
+      <b>secondary inguinal block</b> after 4 weeks.​<cite class="src srb">SRB 26 &middot; p.1054</cite></dd>
       <dt>They agree completely on why</dt>
       <dd>Both give the same reason and the same figure: only about half of palpable inguinal nodes
       are metastatic, so an interval of antibiotics and healing lets the reactive nodes settle and
@@ -1696,23 +1708,23 @@ body.guide { margin: 0; -webkit-text-size-adjust: 100%; }
       <dt>SRB</dt>
       <dd><b>Young's operation:</b> <b>"partial amputation of penis with bilateral ilioinguinal lymph
       node block dissection is called as Young's
-      operation."</b><cite class="src srb">SRB 26 &middot; p.1054</cite>
+      operation."</b>​<cite class="src srb">SRB 26 &middot; p.1054</cite>
       <br><b>Sir Piersey Gold operation:</b> <b>"total scrotectomy with orchidectomy is done along
       with total amputation of the penis, Sir Piersey Gold operation. It prevents frequent dermatitis
       of the scrotal skin because of the perineal urethrostomy and also reduces the sexual
-      desire."</b><cite class="src srb">SRB 26 &middot; p.1054</cite></dd>
+      desire."</b>​<cite class="src srb">SRB 26 &middot; p.1054</cite></dd>
       <dt>Bailey &amp; Love 28e</dt>
       <dd>Neither eponym appears. B&amp;L describes the same anatomy in plain terms: <b>total
       penectomy with perineal urethrostomy</b> for advanced
-      disease,<cite class="src bl">B&amp;L 85 &middot; p.1553</cite> and <b>block dissection of both
+      disease,​<cite class="src bl">B&amp;L 85 &middot; p.1553</cite> and <b>block dissection of both
       groins</b> for proven nodal
-      disease.<cite class="src bl">B&amp;L 85 &middot; p.1553</cite> It describes no scrotectomy or
+      disease.​<cite class="src bl">B&amp;L 85 &middot; p.1553</cite> It describes no scrotectomy or
       orchidectomy as part of the operation for penile cancer.</dd>
       <dt>The part worth thinking about</dt>
       <dd>The first of SRB's two stated reasons for scrotectomy with orchidectomy is a real surgical
       problem: ammoniacal dermatitis of the scrotal skin from a perineal urethrostomy. But SRB itself
       gives a simpler remedy for that two sentences earlier, namely that the patient <b>voids sitting
-      with the scrotum lifted</b>.<cite class="src srb">SRB 26 &middot; p.1054</cite> The second
+      with the scrotum lifted</b>.​<cite class="src srb">SRB 26 &middot; p.1054</cite> The second
       stated reason, that the operation <b>"reduces the sexual desire"</b>, is not a cancer
       indication at all; removing both testes from a man with a locoregional squamous carcinoma does
       nothing to his tumour. That is why no corresponding operation appears in B&amp;L 28e, which
@@ -1738,10 +1750,10 @@ body.guide { margin: 0; -webkit-text-size-adjust: 100%; }
     <dd>B&amp;L: <b>"the Buschke-L&ouml;wenstein tumour is uncommon. It has the histological pattern
     of a verrucous carcinoma. It is locally destructive and invasive but appears not to spread to
     lymph nodes or to metastasise. Treatment is by surgical
-    excision."</b><cite class="src bl">B&amp;L 85 &middot; p.1553</cite> SRB: <b>"it is verrucous
+    excision."</b>​<cite class="src bl">B&amp;L 85 &middot; p.1553</cite> SRB: <b>"it is verrucous
     carcinoma of penis (5 to 15% common). It is a curable malignancy. It is locally destructive,
     locally invasive. It is often large, exophytic, dry, verrucae-like growth. Neither spreads
-    through lymphatics nor blood."</b><cite class="src srb">SRB 26 &middot; p.1055</cite>
+    through lymphatics nor blood."</b>​<cite class="src srb">SRB 26 &middot; p.1055</cite>
     <br><span class="label">The teaching point in one line</span><b>A huge, destructive,
     frightening-looking penile tumour that does not metastasise.</b> So it needs local excision, not
     a groin dissection, and the prognosis is good.</dd>
@@ -1749,17 +1761,17 @@ body.guide { margin: 0; -webkit-text-size-adjust: 100%; }
     <dd>SRB: <b>"virus aetiology is proposed, HPV-6 and 11"</b>, which is the wart pair rather than
     the cancer pair. <b>"After biopsy and confirmation, surgical excision or partial amputation is
     the treatment of choice. Systemic interferon alpha therapy and Nd:YAG laser therapy is
-    successful."</b><cite class="src srb">SRB 26 &middot; p.1055</cite>
+    successful."</b>​<cite class="src srb">SRB 26 &middot; p.1055</cite>
     <br><span class="label out">And SRB's prohibition, which B&amp;L does not state</span>
     <b>"Radiotherapy should not be
-    given."</b><cite class="src srb">SRB 26 &middot; p.1055</cite> Verrucous carcinoma is classically
+    given."</b>​<cite class="src srb">SRB 26 &middot; p.1055</cite> Verrucous carcinoma is classically
     held to undergo anaplastic transformation after irradiation. Volunteering that rule is worth a
     mark, and the two books do not conflict on it: B&amp;L simply says excision and does not mention
     radiotherapy at all.</dd>
     <dt>And one other penile malignancy worth a sentence</dt>
     <dd><b>Malignant melanoma of the penis.</b> B&amp;L: <b>"this is an uncommon tumour with the
     principles of management being the same as for squamous cell carcinoma. Blood-borne metastatic
-    disease is, however, more common."</b><cite class="src bl">B&amp;L 85 &middot; p.1553</cite></dd>
+    disease is, however, more common."</b>​<cite class="src bl">B&amp;L 85 &middot; p.1553</cite></dd>
   </dl>
 
   <h2><span class="n">9</span>Rapid-fire viva</h2>
@@ -1768,9 +1780,9 @@ body.guide { margin: 0; -webkit-text-size-adjust: 100%; }
     <details>
       <summary>What is the commonest histological type, and where does it arise?</summary>
       <p class="ans">Squamous cell carcinoma, arising in the skin of the glans penis or the prepuce;
-      the glans is the commonest site.<cite class="src bl">B&amp;L 85 &middot; p.1552</cite><cite class="src srb">SRB 26 &middot; p.1053</cite>
+      the glans is the commonest site.​<cite class="src bl">B&amp;L 85 &middot; p.1552</cite>​<cite class="src srb">SRB 26 &middot; p.1053</cite>
       S Das adds that rarely a columnar carcinoma arises from Tyson's glands, which lie on either
-      side of the frenum.<cite class="src das">Das 40 &middot; p.638</cite></p>
+      side of the frenum.​<cite class="src das">Das 40 &middot; p.638</cite></p>
     </details>
 
     <details>
@@ -1778,15 +1790,15 @@ body.guide { margin: 0; -webkit-text-size-adjust: 100%; }
       <p class="ans">Lack of neonatal circumcision. Circumcision soon after birth confers near-total
       immunity, and circumcision later does not confer the same benefit, which supports the view
       that retained smegma under a non-retractile prepuce is the carcinogenic
-      stimulus.<cite class="src bl">B&amp;L 85 &middot; p.1551</cite><cite class="src srb">SRB 26 &middot; p.1052</cite></p>
+      stimulus.​<cite class="src bl">B&amp;L 85 &middot; p.1551</cite>​<cite class="src srb">SRB 26 &middot; p.1052</cite></p>
     </details>
 
     <details>
       <summary>Which HPV types?</summary>
       <p class="ans">Types 16 and 18 are the risk factors for
-      carcinoma.<cite class="src bl">B&amp;L 85 &middot; p.1551</cite> Types 6 and 11 cause genital
-      warts<cite class="src bl">B&amp;L 85 &middot; p.1546</cite> and are the proposed cause of the
-      Buschke-L&ouml;wenstein tumour.<cite class="src srb">SRB 26 &middot; p.1055</cite></p>
+      carcinoma.​<cite class="src bl">B&amp;L 85 &middot; p.1551</cite> Types 6 and 11 cause genital
+      warts​<cite class="src bl">B&amp;L 85 &middot; p.1546</cite> and are the proposed cause of the
+      Buschke-L&ouml;wenstein tumour.​<cite class="src srb">SRB 26 &middot; p.1055</cite></p>
     </details>
 
     <details>
@@ -1795,14 +1807,14 @@ body.guide { margin: 0; -webkit-text-size-adjust: 100%; }
       in situ; lichen sclerosus, also called balanitis xerotica obliterans; long-standing genital
       warts or condylomata acuminata; Paget's disease of the penis; erythroplasia of Queyrat; and
       chronic balanoposthitis with
-      phimosis.<cite class="src bl">B&amp;L 85 &middot; p.1551</cite><cite class="src srb">SRB 26 &middot; p.1052</cite><cite class="src das">Das 40 &middot; p.638</cite></p>
+      phimosis.​<cite class="src bl">B&amp;L 85 &middot; p.1551</cite>​<cite class="src srb">SRB 26 &middot; p.1052</cite>​<cite class="src das">Das 40 &middot; p.638</cite></p>
     </details>
 
     <details>
       <summary>Erythroplasia of Queyrat or Bowen's disease, which is which?</summary>
       <p class="ans">Both are penile intraepithelial neoplasia, carcinoma in situ, and the name is
       decided by the site: on the glans it is erythroplasia of Queyrat, on the shaft it is Bowen's
-      disease.<cite class="src bl">B&amp;L 85 &middot; p.1552</cite> Both look like a red cutaneous
+      disease.​<cite class="src bl">B&amp;L 85 &middot; p.1552</cite> Both look like a red cutaneous
       patch, and since there are benign causes of red patches on the penis, a biopsy is indicated
       when there is doubt.</p>
     </details>
@@ -1810,17 +1822,17 @@ body.guide { margin: 0; -webkit-text-size-adjust: 100%; }
     <details>
       <summary>An adult presents with phimosis of recent onset. What do you think?</summary>
       <p class="ans">Carcinoma of the penis growing under the
-      prepuce.<cite class="src srb">SRB 26 &middot; p.1053</cite> A long-standing tight prepuce is
+      prepuce.​<cite class="src srb">SRB 26 &middot; p.1053</cite> A long-standing tight prepuce is
       phimosis; a recently tight one in a man over forty is a tumour. He needs the prepuce retracted
       or, if that is impossible, a dorsal slit, so the lesion can be seen and
-      biopsied.<cite class="src das">Das 40 &middot; p.638</cite><cite class="src bl">B&amp;L 85 &middot; p.1552</cite></p>
+      biopsied.​<cite class="src das">Das 40 &middot; p.638</cite>​<cite class="src bl">B&amp;L 85 &middot; p.1552</cite></p>
     </details>
 
     <details>
       <summary>Why is this cancer so often diagnosed late?</summary>
       <p class="ans">Because it is painless, because patients are embarrassed, and because the
       purulent preputial discharge is misdiagnosed and treated as
-      balanoposthitis.<cite class="src bl">B&amp;L 85 &middot; p.1552</cite><cite class="src das">Das 40 &middot; p.638</cite>
+      balanoposthitis.​<cite class="src bl">B&amp;L 85 &middot; p.1552</cite>​<cite class="src das">Das 40 &middot; p.638</cite>
       The lesson is that you cannot diagnose what you have not seen: the prepuce must be retracted or
       split.</p>
     </details>
@@ -1831,14 +1843,14 @@ body.guide { margin: 0; -webkit-text-size-adjust: 100%; }
       inguinal nodes in this disease are reactive to infection of the primary rather than metastatic.
       So you treat the primary, give antibiotics, wait four to six weeks, and reassess; persistent
       nodes are sampled by ultrasound-guided
-      FNAC.<cite class="src bl">B&amp;L 85 &middot; p.1552, 1553</cite><cite class="src das">Das 40 &middot; p.638</cite><cite class="src srb">SRB 26 &middot; p.1054</cite></p>
+      FNAC.​<cite class="src bl">B&amp;L 85 &middot; p.1552, 1553</cite>​<cite class="src das">Das 40 &middot; p.638</cite>​<cite class="src srb">SRB 26 &middot; p.1054</cite></p>
     </details>
 
     <details>
       <summary>If you dissect the groin, which side?</summary>
       <p class="ans">Both. The lymphatics of the penis cross the midline, so a block dissection is
       bilateral and the nodes on either side may be
-      involved.<cite class="src bl">B&amp;L 85 &middot; p.1553</cite><cite class="src srb">SRB 26 &middot; p.1053</cite></p>
+      involved.​<cite class="src bl">B&amp;L 85 &middot; p.1553</cite>​<cite class="src srb">SRB 26 &middot; p.1053</cite></p>
     </details>
 
     <details>
@@ -1846,15 +1858,15 @@ body.guide { margin: 0; -webkit-text-size-adjust: 100%; }
       <p class="ans">Cabana's node, which lies above and medial to the junction of the saphenous and
       femoral veins. It is the first node involved, and sentinel node biopsy after isosulphan blue
       dye injection into the primary is used to decide whether a block dissection is
-      needed.<cite class="src srb">SRB 26 &middot; p.1053</cite> Bailey and Love uses sentinel node
+      needed.​<cite class="src srb">SRB 26 &middot; p.1053</cite> Bailey and Love uses sentinel node
       biopsy for exactly this, in the patient whose nodes are not
-      palpable.<cite class="src bl">B&amp;L 85 &middot; p.1553</cite></p>
+      palpable.​<cite class="src bl">B&amp;L 85 &middot; p.1553</cite></p>
     </details>
 
     <details>
       <summary>Would you do an open biopsy of an inguinal node?</summary>
       <p class="ans">No. SRB states it as a rule: FNAC of lymph nodes, no open
-      biopsy.<cite class="src srb">SRB 26 &middot; p.1053</cite> An incision contaminates the field
+      biopsy.​<cite class="src srb">SRB 26 &middot; p.1053</cite> An incision contaminates the field
       and compromises the skin flaps on which a later block dissection depends, in a groin where flap
       necrosis is already the commonest complication.</p>
     </details>
@@ -1864,7 +1876,7 @@ body.guide { margin: 0; -webkit-text-size-adjust: 100%; }
       <p class="ans">Stage I, glans or prepuce only, 90% five-year survival. Stage II, extending into
       the body of the penis, 70%. Stage III, with mobile inguinal nodes, 50%. Stage IV, invading
       adjacent structures or with fixed nodes,
-      5%.<cite class="src srb">SRB 26 &middot; p.1053</cite> The message is that nodal status, and
+      5%.​<cite class="src srb">SRB 26 &middot; p.1053</cite> The message is that nodal status, and
       whether the nodes are mobile or fixed, dominates the prognosis.</p>
     </details>
 
@@ -1873,16 +1885,16 @@ body.guide { margin: 0; -webkit-text-size-adjust: 100%; }
       <p class="ans">On AJCC 8: T1 invades lamina propria or dartos, subdivided into T1a without
       lymphovascular or perineural invasion and not high grade, and T1b with invasion or high grade;
       T2 invades corpus spongiosum; T3 invades corpora cavernosa; T4 invades adjacent structures such
-      as prostate, scrotum or pubic bone.<cite class="src srb">SRB 26 &middot; p.1054</cite> Bailey
+      as prostate, scrotum or pubic bone.​<cite class="src srb">SRB 26 &middot; p.1054</cite> Bailey
       and Love's prose version puts both erectile bodies in T2 and makes urethral invasion
-      T3.<cite class="src bl">B&amp;L 85 &middot; p.1552</cite></p>
+      T3.​<cite class="src bl">B&amp;L 85 &middot; p.1552</cite></p>
     </details>
 
     <details>
       <summary>Treatment of carcinoma in situ of the penis.</summary>
       <p class="ans">Topical 5-fluorouracil cream, laser ablation with CO2 or Nd:YAG, or limited
       surgical excision; SRB adds imiquimab and Mohs'
-      surgery.<cite class="src bl">B&amp;L 85 &middot; p.1552</cite><cite class="src srb">SRB 26 &middot; p.1055</cite>
+      surgery.​<cite class="src bl">B&amp;L 85 &middot; p.1552</cite>​<cite class="src srb">SRB 26 &middot; p.1055</cite>
       Radiotherapy is also an option in SRB.</p>
     </details>
 
@@ -1893,10 +1905,10 @@ body.guide { margin: 0; -webkit-text-size-adjust: 100%; }
       amputation; SRB teaches 2 cm clearance from the proximal extent with a 2.5 cm stump retained
       so the patient can direct his stream. If the proximal body is involved or the tumour is poorly
       differentiated, total amputation with perineal
-      urethrostomy.<cite class="src srb">SRB 26 &middot; p.1054</cite> Bailey and Love notes the
+      urethrostomy.​<cite class="src srb">SRB 26 &middot; p.1054</cite> Bailey and Love notes the
       traditional 2 cm margin has been superseded by penis-preserving surgery with much smaller
       margins, with glansectomy for glans tumours and Mohs' surgery or laser for small low-grade
-      lesions.<cite class="src bl">B&amp;L 85 &middot; p.1553</cite></p>
+      lesions.​<cite class="src bl">B&amp;L 85 &middot; p.1553</cite></p>
     </details>
 
     <details>
@@ -1904,13 +1916,13 @@ body.guide { margin: 0; -webkit-text-size-adjust: 100%; }
       <p class="ans">Sequential tissue excision under repeat microscopic control, which identifies
       the tumour margin accurately and maximally preserves uninvolved tissue. It is used for small,
       low-grade, low-stage penile tumours and for carcinoma in
-      situ.<cite class="src bl">B&amp;L 85 &middot; p.1553</cite></p>
+      situ.​<cite class="src bl">B&amp;L 85 &middot; p.1553</cite></p>
     </details>
 
     <details>
       <summary>What is Young's operation?</summary>
       <p class="ans">Partial amputation of the penis with bilateral ilioinguinal lymph node block
-      dissection.<cite class="src srb">SRB 26 &middot; p.1054</cite></p>
+      dissection.​<cite class="src srb">SRB 26 &middot; p.1054</cite></p>
     </details>
 
     <details>
@@ -1918,14 +1930,14 @@ body.guide { margin: 0; -webkit-text-size-adjust: 100%; }
       <p class="ans">Scrotal ammoniacal dermatitis, and stricture at the urethrostomy site. The
       dermatitis is prevented by teaching the patient to void sitting down with the scrotum lifted
       upwards; the stricture needs
-      dilatation.<cite class="src srb">SRB 26 &middot; p.1054</cite></p>
+      dilatation.​<cite class="src srb">SRB 26 &middot; p.1054</cite></p>
     </details>
 
     <details>
       <summary>Complications of ilioinguinal block dissection.</summary>
       <p class="ans">Flap necrosis, which is the commonest; lymphoedema of the lower limb;
       lymphorrhoea; infection; haemorrhage; and femoral blow-out, which is the one that
-      kills.<cite class="src srb">SRB 26 &middot; pp.1054, 1055</cite> Catalona's modified dissection
+      kills.​<cite class="src srb">SRB 26 &middot; pp.1054, 1055</cite> Catalona's modified dissection
       uses a smaller incision, a limited field and preservation of the saphenous vein specifically to
       reduce these.</p>
     </details>
@@ -1934,41 +1946,41 @@ body.guide { margin: 0; -webkit-text-size-adjust: 100%; }
       <summary>Is there any point in removing the iliac nodes?</summary>
       <p class="ans">For staging rather than cure. SRB: removal of iliac nodes does not alter the
       outcome and is done to confirm spread so that further therapy and prognosis can be
-      planned.<cite class="src srb">SRB 26 &middot; p.1055</cite> Bailey and Love calls the
+      planned.​<cite class="src srb">SRB 26 &middot; p.1055</cite> Bailey and Love calls the
       management of pelvic nodes controversial: where they are involved on CT, surgery probably has
       little role; where they are not enlarged in the presence of N2 disease, the options are
       observation, pelvic lymphadenectomy or
-      radiotherapy.<cite class="src bl">B&amp;L 85 &middot; p.1553</cite></p>
+      radiotherapy.​<cite class="src bl">B&amp;L 85 &middot; p.1553</cite></p>
     </details>
 
     <details>
       <summary>How does a patient with this disease die?</summary>
       <p class="ans">From erosion of the femoral or external iliac vessels by metastatic inguinal
       nodes that have ulcerated through the skin of the groin, causing torrential
-      haemorrhage.<cite class="src bl">B&amp;L 85 &middot; p.1552</cite><cite class="src das">Das 40 &middot; p.638</cite><cite class="src srb">SRB 26 &middot; p.1053</cite>
+      haemorrhage.​<cite class="src bl">B&amp;L 85 &middot; p.1552</cite>​<cite class="src das">Das 40 &middot; p.638</cite>​<cite class="src srb">SRB 26 &middot; p.1053</cite>
       That is also the reason palliative radiotherapy is given to fixed inguinal nodes, to pre-empt
       the bleed as well as to relieve pain and
-      fungation.<cite class="src srb">SRB 26 &middot; p.1055</cite></p>
+      fungation.​<cite class="src srb">SRB 26 &middot; p.1055</cite></p>
     </details>
 
     <details>
       <summary>Is there a role for chemotherapy?</summary>
       <p class="ans">A limited one. Bailey and Love: chemotherapy is relatively ineffective and
       currently reserved for palliation in metastatic
-      disease.<cite class="src bl">B&amp;L 85 &middot; p.1553</cite> SRB gives 5-FU, methotrexate,
+      disease.​<cite class="src bl">B&amp;L 85 &middot; p.1553</cite> SRB gives 5-FU, methotrexate,
       bleomycin, cisplatin and vincristine in combination, and notes bleomycin is a radiosensitiser
       so it helps if radiotherapy is
-      planned.<cite class="src srb">SRB 26 &middot; p.1055</cite> Surgery is the mainstay.</p>
+      planned.​<cite class="src srb">SRB 26 &middot; p.1055</cite> Surgery is the mainstay.</p>
     </details>
 
     <details>
       <summary>A huge warty destructive penile growth with no palpable nodes. What might it be?</summary>
       <p class="ans">A Buschke-L&ouml;wenstein tumour, which is a verrucous carcinoma. It is locally
       destructive and invasive but does not spread to lymph nodes or
-      metastasise.<cite class="src bl">B&amp;L 85 &middot; p.1553</cite><cite class="src srb">SRB 26 &middot; p.1055</cite>
+      metastasise.​<cite class="src bl">B&amp;L 85 &middot; p.1553</cite>​<cite class="src srb">SRB 26 &middot; p.1055</cite>
       Treatment is surgical excision or partial amputation after biopsy, with interferon alpha and
       Nd:YAG laser also successful, and SRB adds that radiotherapy should not be
-      given.<cite class="src srb">SRB 26 &middot; p.1055</cite></p>
+      given.​<cite class="src srb">SRB 26 &middot; p.1055</cite></p>
     </details>
 
     <details>
@@ -1977,7 +1989,7 @@ body.guide { margin: 0; -webkit-text-size-adjust: 100%; }
       upper border is the line joining the anterior superior iliac spine to the pubic tubercle;
       laterally, a line from the anterior superior iliac spine to a point 20 cm below it; medially,
       from the pubic tubercle to a point 15 cm below
-      it.<cite class="src srb">SRB 26 &middot; p.1055</cite></p>
+      it.​<cite class="src srb">SRB 26 &middot; p.1055</cite></p>
     </details>
   </div>
 

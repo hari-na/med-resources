@@ -24,6 +24,7 @@
   --ink-soft:    #5a6269;
   --rule:        #ddd8ce;
   --accent:      #005f73;
+  --on-accent:   #fff;
   --accent-soft: #e3eef0;
   --flag:        #8a5a2b;
   --flag-soft:   #f6ece0;
@@ -86,21 +87,21 @@
 
 .guide[data-theme="sepia"] {
   --paper: #f4ecd8; --ink: #433422; --ink-soft: #6f5f4a; --rule: #ddd0b4;
-  --accent: #7a4a1e; --accent-soft: #ece0c8; --flag: #8a5a2b; --flag-soft: #ece0c8;
+  --accent: #7a4a1e; --on-accent: #fff; --accent-soft: #ece0c8; --flag: #8a5a2b; --flag-soft: #ece0c8;
   --cite: #8a7b63; --mark: #f5d98a; --bl: #6a4a7a; --srb: #3f6b4a;
   color-scheme: light;
 }
 
 .guide[data-theme="dark"] {
   --paper: #15181a; --ink: #e8e6e1; --ink-soft: #a3abb2; --rule: #2e3338;
-  --accent: #6fc3d2; --accent-soft: #1b2a2e; --flag: #d9a36a; --flag-soft: #2a2119;
+  --accent: #6fc3d2; --on-accent: #0b1416; --accent-soft: #1b2a2e; --flag: #d9a36a; --flag-soft: #2a2119;
   --cite: #78828a; --mark: #4a4120; --bl: #a893dd; --srb: #6fc3a8;
   color-scheme: dark;
 }
 
 .guide[data-theme="contrast"] {
   --paper: #000000; --ink: #ffffff; --ink-soft: #d8d8d8; --rule: #6a6a6a;
-  --accent: #6fe3ff; --accent-soft: #10242b; --flag: #ffc46b; --flag-soft: #2a2008;
+  --accent: #6fe3ff; --on-accent: #000; --accent-soft: #10242b; --flag: #ffc46b; --flag-soft: #2a2008;
   --cite: #bdbdbd; --mark: #4a4a00; --bl: #d0b8ff; --srb: #7fe8c0;
   color-scheme: dark;
 }
@@ -109,7 +110,7 @@
 @media (prefers-color-scheme: dark) {
   .guide[data-theme="auto"] {
     --paper: #15181a; --ink: #e8e6e1; --ink-soft: #a3abb2; --rule: #2e3338;
-    --accent: #6fc3d2; --accent-soft: #1b2a2e; --flag: #d9a36a; --flag-soft: #2a2119;
+    --accent: #6fc3d2; --on-accent: #0b1416; --accent-soft: #1b2a2e; --flag: #d9a36a; --flag-soft: #2a2119;
     --cite: #78828a; --mark: #4a4120; --bl: #a893dd; --srb: #6fc3a8;
     color-scheme: dark;
   }
@@ -141,6 +142,7 @@ body.guide { margin: 0; -webkit-text-size-adjust: 100%; }
   font-family: var(--face-body);
   font-size: 2.1rem; font-weight: 600; line-height: 1.15;
   letter-spacing: -0.015em; text-wrap: balance; margin: 0 0 0.7rem;
+  overflow-wrap: break-word; hyphens: auto;
 }
 
 .guide .standfirst { font-size: 1.02rem; color: var(--ink-soft); margin: 0 0 1.6rem; }
@@ -311,7 +313,11 @@ body.guide { margin: 0; -webkit-text-size-adjust: 100%; }
 .guide cite.src {
   font-family: var(--face-ui); font-style: normal;
   font-size: 0.66em; font-weight: 600; letter-spacing: 0.02em;
-  color: var(--cite); white-space: nowrap;
+  color: var(--cite);
+  /* The chip stays on one line. build.py puts a zero-width space before each one,
+     which is what lets a chip that will not fit move to the next line whole
+     instead of widening the page past the phone. */
+  white-space: nowrap; max-width: 100%;
   border: 1px solid var(--rule); border-radius: 2px;
   padding: 0.05rem 0.28rem; margin-left: 0.3rem; vertical-align: 0.12em;
 }
@@ -331,7 +337,11 @@ body.guide { margin: 0; -webkit-text-size-adjust: 100%; }
   cursor: pointer; list-style: none; display: flex; gap: 0.55rem; align-items: baseline;
   padding: 0.7rem 0.9rem; font-family: var(--face-ui);
   font-size: 0.82em; line-height: 1.45; color: var(--ink);
+  flex-wrap: wrap;
 }
+/* A flex item defaults to min-width:auto and so refuses to shrink below its own
+   content width; a long source line in the summary then widened the whole page. */
+.guide details.conflict > summary > * { min-width: 0; overflow-wrap: break-word; }
 .guide details.conflict > summary::-webkit-details-marker { display: none; }
 .guide details.conflict > summary::before {
   content: "*"; color: var(--flag); font-size: 1em; font-weight: 700;
@@ -419,7 +429,7 @@ body.guide { margin: 0; -webkit-text-size-adjust: 100%; }
 @media print {
   .guide {
     --paper: #fff; --ink: #000; --ink-soft: #333; --rule: #bbb;
-    --accent: #004c5c; --accent-soft: #eef4f5; --cite: #666;
+    --accent: #004c5c; --on-accent: #fff; --accent-soft: #eef4f5; --cite: #666;
     --measure: none; --fs: 10.5pt; --lh: 1.45;
     --face-body: "Spectral", Georgia, serif;
     --face-ui: "Inter", system-ui, sans-serif;
@@ -785,7 +795,9 @@ body.guide { margin: 0; -webkit-text-size-adjust: 100%; }
   background: none; color: var(--ink, #222);
 }
 .rdr-ne-row .rdr-ok {
-  background: var(--accent, #005f73); border-color: var(--accent, #005f73); color: #fff;
+  background: var(--accent, #005f73); border-color: var(--accent, #005f73);
+  /* not #fff: the dark and high-contrast accents are pale, and white on them is 2:1 */
+  color: var(--on-accent, #fff);
 }
 .rdr-ne-row .rdr-del { color: var(--flag, #8a5a2b); }
 
@@ -989,26 +1001,26 @@ body.guide { margin: 0; -webkit-text-size-adjust: 100%; }
     <dd>B&amp;L: <b>"Incomplete descent of the testis, also known as cryptorchidism, occurs when
     one or both testes are arrested at some point in the normal path to the scrotum. An ectopic
     testis is a testis that is abnormally placed outside this
-    path."</b><cite class="src bl">B&amp;L 86 &middot; p.1558</cite>
+    path."</b>​<cite class="src bl">B&amp;L 86 &middot; p.1558</cite>
     <br><span class="label">The distinction</span><b>Undescended</b> is <i>on</i> the path but
     short of the scrotum. <b>Ectopic</b> is <i>off</i> the path.</dd>
     <dt>SRB's vocabulary, which is finer and often examined</dt>
     <dd><b>Undescended testis</b>: arrest of descent somewhere along its pathway to the scrotum.
     <b>Cryptorchidism</b>: SRB reserves this for <b>bilateral</b> undescended testis, meaning
     hidden testis. <b>Anorchism</b>: <b>complete agenesis of the testis</b>, and <b>the two can be
-    differentiated by an HCG test</b>.<cite class="src srb">SRB 26 &middot; p.1065</cite>
+    differentiated by an HCG test</b>.​<cite class="src srb">SRB 26 &middot; p.1065</cite>
     <br><span class="label">And the umbrella term</span><b>"Maldescended testis is one that cannot
     be made to touch the bottom of the scrotum. It can be undescended testis, cryptorchidism,
-    ectopic testis or anorchism."</b><cite class="src srb">SRB 26 &middot; p.1065</cite> That is the
+    ectopic testis or anorchism."</b>​<cite class="src srb">SRB 26 &middot; p.1065</cite> That is the
     cleanest definition in any of the three books: <b>it cannot be brought to the bottom of the
     scrotum.</b>
     <br><span class="label">One more</span><b>Vanishing testis</b>: the testis develops but
     disappears before birth, probably from prenatal
-    torsion.<cite class="src srb">SRB 26 &middot; p.1065</cite></dd>
+    torsion.​<cite class="src srb">SRB 26 &middot; p.1065</cite></dd>
     <dt>Where an ectopic testis goes</dt>
     <dd>B&amp;L: <b>"an ectopic testis is one that has ended up away from the normal path of
     descent. The commonest site is the superficial inguinal pouch, just inferior and medial to the
-    superficial inguinal ring."</b><cite class="src bl">B&amp;L 86 &middot; p.1559</cite> The other
+    superficial inguinal ring."</b>​<cite class="src bl">B&amp;L 86 &middot; p.1559</cite> The other
     sites are femoral, perineal, at the root of the penis and crossed to the opposite scrotum.</dd>
   </dl>
 
@@ -1018,13 +1030,13 @@ body.guide { margin: 0; -webkit-text-size-adjust: 100%; }
     testes undescended. About two-thirds of these reach the scrotum during the first 3 months of
     life, but full descent after that is uncommon. The incidence of testicular maldescent at the
     age of 1 year is around
-    1%."</b><cite class="src bl">B&amp;L 86 &middot; p.1558</cite>
+    1%."</b>​<cite class="src bl">B&amp;L 86 &middot; p.1558</cite>
     <br><br>Three per cent at term, thirty per cent if premature, one per cent at a year. Those
     three numbers tell you the whole management: wait through the first three months because most
     will descend, and do not wait past a year because almost none will.
     <br><br>And B&amp;L notes the practical problem: <b>"The condition is sometimes missed in the
     neonatal period and only discovered
-    later."</b><cite class="src bl">B&amp;L 86 &middot; p.1558</cite>
+    later."</b>​<cite class="src bl">B&amp;L 86 &middot; p.1558</cite>
   </div>
 
   <h2><span class="n">2</span>The differential that decides everything: retractile testis</h2>
@@ -1034,20 +1046,20 @@ body.guide { margin: 0; -webkit-text-size-adjust: 100%; }
     <span class="why">
       <span class="label">Why that setup</span>B&amp;L: <b>"When assessing a child with suspected
       testicular maldescent, it is helpful to have the boy as relaxed as possible in a warm room,
-      usually in a supine position."</b><cite class="src bl">B&amp;L 86 &middot; p.1559</cite> A
+      usually in a supine position."</b>​<cite class="src bl">B&amp;L 86 &middot; p.1559</cite> A
       cold room and a nervous child manufacture the diagnosis.
       <br><span class="label">The differential</span><b>"The important differential diagnosis is
       the so-called 'retractile testis'. During childhood the testes are mobile and the cremasteric
       reflex is active, so that, in some boys, any stimulation of the skin of the scrotum or thigh
-      caus"</b>es the testis to retract to the groin.<cite class="src bl">B&amp;L 86 &middot; p.1559</cite>
+      caus"</b>es the testis to retract to the groin.​<cite class="src bl">B&amp;L 86 &middot; p.1559</cite>
       <br><span class="label">The sign that separates them</span>A <b>retractile</b> testis can be
       coaxed into the scrotum and will stay there, at least briefly. A truly undescended testis
       <b>cannot be brought to the bottom of the
-      scrotum</b>.<cite class="src srb">SRB 26 &middot; p.1065</cite>
+      scrotum</b>.​<cite class="src srb">SRB 26 &middot; p.1065</cite>
       <br><span class="label">And the second sign, which is visual</span>B&amp;L: in bilateral
       undescended testes there is an <b>underdeveloped scrotum</b>, whereas <b>"in cases of
       retractile testis, the scrotum is relatively well
-      developed"</b>.<cite class="src bl">B&amp;L 86 &middot; p.1559</cite> The scrotum tells you
+      developed"</b>.​<cite class="src bl">B&amp;L 86 &middot; p.1559</cite> The scrotum tells you
       whether a testis has ever lived in it.
       <br><span class="label">Technique</span>Start at the anterior superior iliac spine and sweep
       downwards and medially along the inguinal canal with a flat hand, milking the testis towards
@@ -1067,30 +1079,30 @@ body.guide { margin: 0; -webkit-text-size-adjust: 100%; }
     <b>"Patients with bilateral undescended testes who receive orchidopexies as adults are almost
     always infertile and azoospermic; but there are reports of pregnancies achieved through sperm
     retrieval and assisted reproduction in this
-    group."</b><cite class="src bl">B&amp;L 86 &middot; p.1559</cite>
+    group."</b>​<cite class="src bl">B&amp;L 86 &middot; p.1559</cite>
     <br><span class="label">So</span>Unilateral: fertility much as the general population.
     Bilateral, operated in childhood: about 38% reduction. Bilateral, operated as an adult: almost
     always azoospermic. That gradient is the argument for early surgery, and B&amp;L says so:
     <b>"The recommendation for early surgery is due"</b> to the histological
-    change.<cite class="src bl">B&amp;L 86 &middot; p.1559</cite></dd>
+    change.​<cite class="src bl">B&amp;L 86 &middot; p.1559</cite></dd>
     <dt>2. Malignancy, and here the evidence surprises people</dt>
     <dd>See the conflict box below.</dd>
     <dt>3. Hernia</dt>
     <dd>B&amp;L: <b>"Around 90% of boys with an undescended testis have a patent processus
     vaginalis although the incidence of a clinically apparent hernia is much
-    lower."</b><cite class="src bl">B&amp;L 86 &middot; p.1559</cite> So the processus is almost
+    lower."</b>​<cite class="src bl">B&amp;L 86 &middot; p.1559</cite> So the processus is almost
     always patent and must be dealt with at orchidopexy.</dd>
     <dt>4. Torsion</dt>
     <dd>B&amp;L: <b>"The undescended testis is more prone to testicular torsion, largely as a
     consequence of a devel"</b>opmental
-    abnormality.<cite class="src bl">B&amp;L 86 &middot; p.1559</cite> So an undescended testis that
+    abnormality.​<cite class="src bl">B&amp;L 86 &middot; p.1559</cite> So an undescended testis that
     becomes acutely painful is a torsion until proved otherwise, and an impalpable testis with
     groin pain is a surgical emergency.</dd>
     <dt>And the associations to screen for</dt>
     <dd>SRB: cryptorchidism may be associated with <b>Klinefelter's syndrome, hypogonadotrophic
     hypogonadism, Prune-Belly syndrome, renal agenesis, bladder exstrophy, gastroschisis,
     horseshoe kidney and anorectal
-    malformations</b>.<cite class="src srb">SRB 26 &middot; p.1065</cite> Bilateral impalpable
+    malformations</b>.​<cite class="src srb">SRB 26 &middot; p.1065</cite> Bilateral impalpable
     testes in a newborn is a reason to think about disorders of sex development and to check the
     karyotype, not simply to book an operation.</dd>
   </dl>
@@ -1105,7 +1117,7 @@ body.guide { margin: 0; -webkit-text-size-adjust: 100%; }
       <dt>SRB</dt>
       <dd>Plainly: <b>"Orchidopexy may not alter the chances or risk of developing carcinoma of
       testis. But it makes easy observation and evaluation by ultrasound to detect the possible
-      changes early."</b><cite class="src srb">SRB 26 &middot; p.1067</cite> So the benefit it
+      changes early."</b>​<cite class="src srb">SRB 26 &middot; p.1067</cite> So the benefit it
       claims is <b>surveillance</b>, not prevention.</dd>
       <dt>Bailey &amp; Love 28e, with the numbers</dt>
       <dd>Agrees, and is more precise about what timing does and does not change: <b>"Overall, the
@@ -1113,13 +1125,13 @@ body.guide { margin: 0; -webkit-text-size-adjust: 100%; }
       that of the general population. It is five to six times higher when orchidopexy is done after
       puberty. The risk of cancer does not seem to be different when orchidopexy is done early in
       infancy compared with later in
-      childhood."</b><cite class="src bl">B&amp;L 86 &middot; p.1559</cite>
+      childhood."</b>​<cite class="src bl">B&amp;L 86 &middot; p.1559</cite>
       <br>And the histology changes with it: <b>"The most common type of testicular cancer in
       untreated undescended testes is seminoma"</b>, with a <b>peak age range of 15 to 45
       years</b>; whereas <b>"after orchidopexy, seminomas represent only 30% of testicular tumours
       in previously undescended testes"</b>. Its conclusion is about surveillance, not cure:
       <b>"It is treatable if caught early, so boys who had an orchidopexy as infants should be
-      taught testicular self-examination."</b><cite class="src bl">B&amp;L 86 &middot; p.1559</cite></dd>
+      taught testicular self-examination."</b>​<cite class="src bl">B&amp;L 86 &middot; p.1559</cite></dd>
     </dl>
     <span class="ruling"><b>The two books agree, and together they contradict the common teaching
     that early orchidopexy prevents cancer. Say it carefully, because the nuance is the whole
@@ -1131,7 +1143,7 @@ body.guide { margin: 0; -webkit-text-size-adjust: 100%; }
     childhood for that particular outcome. What early surgery does improve is fertility, and what
     orchidopexy always achieves is a testis in a palpable position, so that a tumour can be
     detected early. For that reason boys who have had an orchidopexy should be taught testicular
-    self-examination."</b><cite class="src bl">B&amp;L 86 &middot; p.1559</cite><cite class="src srb">SRB 26 &middot; p.1067</cite>
+    self-examination."</b>​<cite class="src bl">B&amp;L 86 &middot; p.1559</cite>​<cite class="src srb">SRB 26 &middot; p.1067</cite>
     <br><br><b>Why this is the better answer:</b> it separates the two reasons for operating early.
     <b>Fertility</b> is time-sensitive within childhood; <b>cancer risk</b> is sensitive to puberty
     but not to the year within childhood. A candidate who says "we operate early to prevent cancer"
@@ -1146,14 +1158,14 @@ body.guide { margin: 0; -webkit-text-size-adjust: 100%; }
     <dd>Wait through the first three months, because <b>two-thirds reach the scrotum during the
     first 3 months of life</b>, and then operate, because <b>full descent after that is
     uncommon</b> and the incidence at one year is already down to
-    1%.<cite class="src bl">B&amp;L 86 &middot; p.1558</cite> The argument for not delaying further
+    1%.​<cite class="src bl">B&amp;L 86 &middot; p.1558</cite> The argument for not delaying further
     is histological and relates to fertility: <b>the higher the testis, the greater the degree of
-    histological change</b>.<cite class="src bl">B&amp;L 86 &middot; p.1559</cite></dd>
+    histological change</b>.​<cite class="src bl">B&amp;L 86 &middot; p.1559</cite></dd>
     <dt>Orchidopexy for a palpable testis</dt>
     <dd>Mobilise the cord, divide the patent processus vaginalis, which is present in about 90%, and
     place the testis in a <b>subdartos pouch</b>. SRB: <b>the undescended testis is separated and
     placed in the scrotal pouch</b>, and the <b>laparoscopic approach has become a popular and
-    accepted method</b>.<cite class="src srb">SRB 26 &middot; p.1067</cite></dd>
+    accepted method</b>.​<cite class="src srb">SRB 26 &middot; p.1067</cite></dd>
     <dt>For an impalpable testis</dt>
     <dd>B&amp;L: <b>"For non-palpable testes under anaesthesia, diagnostic laparoscopy is
     recommended."</b> If a testis is found, the options are:
@@ -1161,28 +1173,28 @@ body.guide { margin: 0; -webkit-text-size-adjust: 100%; }
     dissected off a triangular pedicle containing the testicular vessels and the vas"</b>.
     <br><b>2. Laparoscopic one-stage Fowler-Stephens orchidopexy</b>, dividing the testicular
     vessels and relying on the collateral supply through the vasal and cremasteric
-    vessels.<cite class="src bl">B&amp;L 86 &middot; p.1560</cite>
+    vessels.​<cite class="src bl">B&amp;L 86 &middot; p.1560</cite>
     <br><span class="label">And the two-stage version</span>The vessels are clipped at the first
     operation and the testis brought down at a second, <b>six months later</b>, which is B&amp;L's
     stated interval, to allow the collateral supply to develop
-    fully.<cite class="src bl">B&amp;L 86 &middot; p.1560</cite> Bringing it down sooner risks
+    fully.​<cite class="src bl">B&amp;L 86 &middot; p.1560</cite> Bringing it down sooner risks
     atrophy.</dd>
     <dt>When to remove it instead</dt>
     <dd>B&amp;L: orchidectomy <b>"if the incompletely descended testis is atrophic and/or there is
     a suspicion of malignancy, particularly in the postpubertal boy if the other testis is
-    normal"</b>.<cite class="src bl">B&amp;L 86 &middot; p.1560</cite> SRB: <b>orchidectomy is
+    normal"</b>.​<cite class="src bl">B&amp;L 86 &middot; p.1560</cite> SRB: <b>orchidectomy is
     considered if there is atrophy, torsion, or inability to bring down an abdominal
-    testis</b>.<cite class="src srb">SRB 26 &middot; p.1067</cite>
+    testis</b>.​<cite class="src srb">SRB 26 &middot; p.1067</cite>
     <br><span class="label">The logic</span>In a postpubertal boy with a normal contralateral
     testis, an atrophic undescended testis contributes nothing to fertility and carries a cancer
     risk five to six times normal, so removing it is the rational
-    choice.<cite class="src bl">B&amp;L 86 &middot; p.1559, p.1560</cite></dd>
+    choice.​<cite class="src bl">B&amp;L 86 &middot; p.1559, p.1560</cite></dd>
     <dt>And afterwards</dt>
     <dd>Teach <b>testicular self-examination</b>, because the point of putting the testis in the
     scrotum is that a tumour in it can be
-    found.<cite class="src bl">B&amp;L 86 &middot; p.1559</cite> SRB's framing is the same: it
+    found.​<cite class="src bl">B&amp;L 86 &middot; p.1559</cite> SRB's framing is the same: it
     <b>makes easy observation and evaluation by ultrasound to detect possible changes
-    early</b>.<cite class="src srb">SRB 26 &middot; p.1067</cite></dd>
+    early</b>.​<cite class="src srb">SRB 26 &middot; p.1067</cite></dd>
   </dl>
 
   <h2><span class="n">5</span>Rapid-fire viva</h2>
@@ -1192,18 +1204,18 @@ body.guide { margin: 0; -webkit-text-size-adjust: 100%; }
       <summary>Define undescended, ectopic, cryptorchid and maldescended testis.</summary>
       <p class="ans">Incomplete descent, or cryptorchidism, is arrest of one or both testes at some
       point on the normal path to the scrotum; an ectopic testis is abnormally placed outside that
-      path.<cite class="src bl">B&amp;L 86 &middot; p.1558</cite> SRB reserves cryptorchidism for
+      path.​<cite class="src bl">B&amp;L 86 &middot; p.1558</cite> SRB reserves cryptorchidism for
       bilateral undescended testis, uses anorchism for complete agenesis, differentiated by an HCG
       test, and defines maldescended testis as one that cannot be made to touch the bottom of the
       scrotum, which may be undescended, cryptorchid, ectopic or
-      anorchic.<cite class="src srb">SRB 26 &middot; p.1065</cite> A vanishing testis develops but
+      anorchic.​<cite class="src srb">SRB 26 &middot; p.1065</cite> A vanishing testis develops but
       disappears before birth, probably from prenatal torsion.</p>
     </details>
 
     <details open>
       <summary>Where is the commonest ectopic site?</summary>
       <p class="ans">The superficial inguinal pouch, just inferior and medial to the superficial
-      inguinal ring.<cite class="src bl">B&amp;L 86 &middot; p.1559</cite> Others are femoral,
+      inguinal ring.​<cite class="src bl">B&amp;L 86 &middot; p.1559</cite> Others are femoral,
       perineal, at the root of the penis, and crossed to the opposite scrotum.</p>
     </details>
 
@@ -1212,7 +1224,7 @@ body.guide { margin: 0; -webkit-text-size-adjust: 100%; }
       <p class="ans">About 3% of full-term and 30% of premature male infants are born with one or
       both testes undescended; about two-thirds reach the scrotum in the first three months of
       life, but full descent after that is uncommon; and the incidence at one year is around
-      1%.<cite class="src bl">B&amp;L 86 &middot; p.1558</cite> Those numbers justify observing for
+      1%.​<cite class="src bl">B&amp;L 86 &middot; p.1558</cite> Those numbers justify observing for
       three months and operating thereafter.</p>
     </details>
 
@@ -1220,12 +1232,12 @@ body.guide { margin: 0; -webkit-text-size-adjust: 100%; }
       <summary>How do you distinguish a retractile from an undescended testis?</summary>
       <p class="ans">Examine the boy relaxed in a warm room, supine, because the cremasteric reflex
       is active in childhood and any stimulation of scrotal or thigh skin makes the testis
-      retract.<cite class="src bl">B&amp;L 86 &middot; p.1559</cite> A retractile testis can be
+      retract.​<cite class="src bl">B&amp;L 86 &middot; p.1559</cite> A retractile testis can be
       coaxed into the scrotum and will stay there; a truly undescended one cannot be brought to the
-      bottom of the scrotum.<cite class="src srb">SRB 26 &middot; p.1065</cite> And look at the
+      bottom of the scrotum.​<cite class="src srb">SRB 26 &middot; p.1065</cite> And look at the
       scrotum: it is underdeveloped in true undescent but relatively well developed in a retractile
       testis, because a retractile testis has lived in
-      it.<cite class="src bl">B&amp;L 86 &middot; p.1559</cite></p>
+      it.​<cite class="src bl">B&amp;L 86 &middot; p.1559</cite></p>
     </details>
 
     <details open>
@@ -1233,7 +1245,7 @@ body.guide { margin: 0; -webkit-text-size-adjust: 100%; }
       <p class="ans">Four: infertility, malignancy, hernia and torsion. Around 90% have a patent
       processus vaginalis, though clinically apparent hernia is much less common; and the
       undescended testis is more prone to
-      torsion.<cite class="src bl">B&amp;L 86 &middot; p.1559</cite></p>
+      torsion.​<cite class="src bl">B&amp;L 86 &middot; p.1559</cite></p>
     </details>
 
     <details open>
@@ -1243,7 +1255,7 @@ body.guide { margin: 0; -webkit-text-size-adjust: 100%; }
       cryptorchidism the fertility reduction is about 38%. Patients with bilateral undescended
       testes operated as adults are almost always infertile and azoospermic, though pregnancies
       have been reported through sperm retrieval and assisted
-      reproduction.<cite class="src bl">B&amp;L 86 &middot; p.1559</cite> B&amp;L's wording is <b>the higher the testis, the greater the histological change</b>, which is
+      reproduction.​<cite class="src bl">B&amp;L 86 &middot; p.1559</cite> B&amp;L's wording is <b>the higher the testis, the greater the histological change</b>, which is
       about position rather than delay. Delay still matters, but for the separate reason that a
       testis left undescended goes on being damaged.</p>
     </details>
@@ -1252,11 +1264,11 @@ body.guide { margin: 0; -webkit-text-size-adjust: 100%; }
       <summary>Does orchidopexy prevent testicular cancer?</summary>
       <p class="ans">Apparently not. SRB says orchidopexy may not alter the risk of developing
       carcinoma of the testis, but makes observation and ultrasound surveillance
-      easier.<cite class="src srb">SRB 26 &middot; p.1067</cite> Bailey and Love gives the figures:
+      easier.​<cite class="src srb">SRB 26 &middot; p.1067</cite> Bailey and Love gives the figures:
       the risk is two to three times the general population if orchidopexy is done before puberty
       and five to six times if after, but the risk does not seem different when it is done early in
       infancy compared with later in
-      childhood.<cite class="src bl">B&amp;L 86 &middot; p.1559</cite> So doing it before puberty
+      childhood.​<cite class="src bl">B&amp;L 86 &middot; p.1559</cite> So doing it before puberty
       matters, the year within childhood does not, and the real gains of early surgery are
       fertility and the ability to examine the testis.</p>
     </details>
@@ -1266,7 +1278,7 @@ body.guide { margin: 0; -webkit-text-size-adjust: 100%; }
       <p class="ans">In untreated undescended testes the commonest is seminoma, with a peak age
       range of 15 to 45 years. After orchidopexy, seminomas represent only 30% of testicular
       tumours in previously undescended
-      testes.<cite class="src bl">B&amp;L 86 &middot; p.1559</cite> It is treatable if caught early,
+      testes.​<cite class="src bl">B&amp;L 86 &middot; p.1559</cite> It is treatable if caught early,
       which is why boys who had an orchidopexy as infants should be taught testicular
       self-examination.</p>
     </details>
@@ -1278,18 +1290,18 @@ body.guide { margin: 0; -webkit-text-size-adjust: 100%; }
       vessels, dissecting the testis off a triangular pedicle containing the testicular vessels and
       the vas, or a laparoscopic one-stage Fowler-Stephens orchidopexy, dividing the testicular
       vessels and relying on the collateral vasal and cremasteric
-      supply.<cite class="src bl">B&amp;L 86 &middot; p.1560</cite> A two-stage Fowler-Stephens
+      supply.​<cite class="src bl">B&amp;L 86 &middot; p.1560</cite> A two-stage Fowler-Stephens
       clips the vessels first and brings the testis down <b>six months later</b>, once the collateral
-      supply has developed.<cite class="src bl">B&amp;L 86 &middot; p.1560</cite></p>
+      supply has developed.​<cite class="src bl">B&amp;L 86 &middot; p.1560</cite></p>
     </details>
 
     <details open>
       <summary>When would you remove rather than reposition the testis?</summary>
       <p class="ans">If the incompletely descended testis is atrophic or there is suspicion of
       malignancy, particularly in a postpubertal boy with a normal contralateral
-      testis.<cite class="src bl">B&amp;L 86 &middot; p.1560</cite> SRB adds atrophy, torsion, and
+      testis.​<cite class="src bl">B&amp;L 86 &middot; p.1560</cite> SRB adds atrophy, torsion, and
       inability to bring down an abdominal
-      testis.<cite class="src srb">SRB 26 &middot; p.1067</cite> The logic is that such a testis
+      testis.​<cite class="src srb">SRB 26 &middot; p.1067</cite> The logic is that such a testis
       contributes nothing to fertility and carries five to six times the normal cancer risk.</p>
     </details>
 
@@ -1298,7 +1310,7 @@ body.guide { margin: 0; -webkit-text-size-adjust: 100%; }
       <p class="ans">A disorder of sex development, and the associations SRB lists: Klinefelter's
       syndrome, hypogonadotrophic hypogonadism, Prune-Belly syndrome, renal agenesis, bladder
       exstrophy, gastroschisis, horseshoe kidney and anorectal
-      malformations.<cite class="src srb">SRB 26 &middot; p.1065</cite> An HCG test distinguishes
+      malformations.​<cite class="src srb">SRB 26 &middot; p.1065</cite> An HCG test distinguishes
       undescended testes from anorchism. So the first step is endocrine and genetic assessment, not
       an operation.</p>
     </details>
