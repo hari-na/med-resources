@@ -32,8 +32,22 @@ PAGE_RE = re.compile(r"\[\[ book p\.(-?\d+) \| pdf p\.(\d+) \]\]")
 
 try:
     from ligature_repairs import LIGATURE_REPAIRS
-except Exception:                                     # not generated yet
-    LIGATURE_REPAIRS = {}
+except ImportError:
+    # Python's isolated mode (-I, which also implies -P) drops this script's own directory
+    # from sys.path, so the import fails even though the file is sitting next to it. The
+    # old bare "except Exception: LIGATURE_REPAIRS = {}" then searched the Bailey text with
+    # its ligature damage intact and said nothing, which makes every --absent result on a
+    # word containing ff, fi or fl quietly wrong. Put the directory back, and if it is
+    # genuinely missing, say so.
+    sys.path.insert(0, str(HERE))
+    try:
+        from ligature_repairs import LIGATURE_REPAIRS
+    except ImportError:
+        print("warning: ligature_repairs.py not found. The Bailey text will be searched "
+              "with its ligature damage intact, so results for any word containing ff, fi "
+              "or fl, and every --absent check, are unreliable. Run derive_ligatures.py.",
+              file=sys.stderr)
+        LIGATURE_REPAIRS = {}
 
 _LIG_RE = (
     re.compile(r"\b(" + "|".join(sorted(LIGATURE_REPAIRS, key=len, reverse=True)) + r")\b")
@@ -113,13 +127,59 @@ def load(books=None):
     return pages
 
 
-def search(pages, phrase, limit=40):
+# A line from the other column can land in the middle of a sentence, so the words of a
+# phrase are on the page in order but not adjacent. One interleaved line is about ten
+# words, and ten is also tight enough not to match unrelated prose: at 15 this started
+# matching "the treatment of enuresis consists..." for a sentence about TURP.
+GAP_WORDS = 10
+
+
+TOKEN = re.compile(r"[a-z0-9]+")
+
+
+def loose_find(page, phrase):
+    """Where a phrase sits on a page, tolerating the extraction's interleaved columns.
+
+    Bailey is printed in two columns and the extraction takes them line by line, so
+    p.1530 reads "...The treatment assessment with cystoscopy and pressure studies
+    including consists of fluid restriction." An exact search for "the treatment consists
+    of fluid restriction" finds nothing, and that is a sentence the guide quotes. Matching
+    the words in order, allowing a bounded amount of intruding text, finds it.
+
+    Tokenising matters here: splitting on whitespace leaves "restriction." which never
+    equals "restriction", so the first version of this found nothing at all.
+
+    Returns the character offset of the first matching word, or -1.
+    """
+    want = TOKEN.findall(normalise(phrase))
+    if len(want) < 3:
+        return -1
+    have = [(m.group(0), m.start()) for m in TOKEN.finditer(page.norm)]
+    if len(have) < len(want):
+        return -1
+    limit = len(want) + GAP_WORDS
+    for start in range(len(have)):
+        if have[start][0] != want[0]:
+            continue
+        i, j = start + 1, 1
+        while i < len(have) and j < len(want) and i - start <= limit:
+            if have[i][0] == want[j]:
+                j += 1
+            i += 1
+        if j == len(want):
+            return have[start][1]
+    return -1
+
+
+def search(pages, phrase, limit=40, loose=True):
     want, want_tight = normalise(phrase), tighten(phrase)
     hits = []
     for p in pages:
         at = p.norm.find(want)
         if at == -1 and want_tight and want_tight in p.tight:
             at = 0                                    # split across lines; show the page top
+        if at == -1 and loose:
+            at = loose_find(p, phrase)
         if at != -1:
             hits.append((p, at))
             if len(hits) >= limit:
@@ -176,7 +236,9 @@ def main(argv=None) -> int:
         return 0
 
     if a.absent:
-        hits = search(pages, a.absent, limit=6)
+        # loose matching on purpose: the cost of a false "absent" is a claim in the guide
+        # that a book does not say something it does say, which is worse than a false hit
+        hits = search(pages, a.absent, limit=6, loose=True)
         if hits:
             print(f"  NOT ABSENT: '{a.absent}' appears in:")
             for p, _ in hits:

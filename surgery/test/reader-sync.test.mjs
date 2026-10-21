@@ -245,3 +245,42 @@ test("opening a case does not drag its old settings back over the reader's", asy
     "but the document's marks are still adopted");
   h.close();
 });
+
+test("one student's highlights never reach another student", async () => {
+  // DEFAULTS held literal arrays, so every student with no stored record was handed the
+  // same array object. The first highlight pushed into it belonged to everyone after,
+  // and their next edit uploaded it to the server under their own name. On a tablet
+  // shared by two students that is the whole isolation the design rests on.
+  let h;
+  h = await boot({
+    student: "alpha",
+    handler: async (url, init, e) =>
+      e.method === "GET" ? ok({ found: false })
+                         : ok({ ok: true, updatedAt: Date.now(), stored: true }),
+  });
+
+  // alpha annotates. Reader.state() returns the one live state object, so hold on to the
+  // array itself: comparing state objects before and after a remount compares a thing
+  // with itself and proves nothing.
+  const st = h.w.Reader.state();
+  const alphaMarks = st.marks;
+  st.marks.push({ id: "m-alpha", b: 0, s: 0, e: 5, kind: "hl", colour: "yellow" });
+  st.notes.push({ id: "n-alpha", b: 0, text: "alpha's note" });
+  h.edit();                      // a settings change calls save(), which persists the lot
+  await sleep(80);
+  assert.equal(h.w.Reader.state().marks.length, 1);
+
+  // beta signs in on the same device, having never annotated anything
+  h.w.Reader.remount({ student: "beta", doc: "case01" });
+  await sleep(120);
+  const beta = h.w.Reader.state();
+  assert.equal(beta.marks.length, 0, "beta must not inherit alpha's highlights");
+  assert.equal(beta.notes.length, 0, "beta must not inherit alpha's notes");
+  assert.notEqual(beta.marks, alphaMarks, "and must not share the same array object");
+
+  // and alpha's work is still alpha's
+  h.w.Reader.remount({ student: "alpha", doc: "case01" });
+  await sleep(120);
+  assert.equal(h.w.Reader.state().marks.length, 1, "alpha keeps their own work");
+  h.close();
+});

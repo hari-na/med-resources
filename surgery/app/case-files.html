@@ -29,6 +29,10 @@
   --flag:        #8a5a2b;
   --flag-soft:   #f6ece0;
   --cite:        var(--ink-soft);
+  /* The note editor's Save button reads var(--on-accent). That token is defined on .guide,
+     and the editor is appended to document.body, so it fell back to white on the pale
+     accent the dark themes use: 2.02:1. */
+  --on-accent:   #fff;
   --mark:        #fff3bf;
   --bl:          #5b4a8a;
   --srb:         #1f6b5c;
@@ -44,6 +48,7 @@
     --rule: #2d3338; --accent: #6fc3d2; --accent-dim: #16292f;
     --good: #7fc79b; --good-dim: #16281d; --miss: #e09a7c; --miss-dim: #2a1b15;
     --flag: #d8a46a; --flag-soft: #2a1f14; --mark: #6b5b1f;
+    --on-accent: #06191e;
     color-scheme: dark;
   }
 }
@@ -52,6 +57,7 @@
   --rule: #2d3338; --accent: #6fc3d2; --accent-dim: #16292f;
   --good: #7fc79b; --good-dim: #16281d; --miss: #e09a7c; --miss-dim: #2a1b15;
   --flag: #d8a46a; --flag-soft: #2a1f14; --mark: #6b5b1f;
+  --on-accent: #06191e;
   color-scheme: dark;
 }
 
@@ -255,8 +261,16 @@ label.fld {
 
 .grade { display: flex; gap: 0.6rem; }
 .grade button { flex: 1; }
-.grade .got:hover { border-color: var(--good); color: var(--good); }
-.grade .missed:hover { border-color: var(--miss); color: var(--miss); }
+/* These were coloured on hover only, so on a phone the two buttons were byte-identical
+   and the hover colour could stick to whichever was tapped last. Colour them always. */
+.grade .got { border-color: var(--good); color: var(--good); background: var(--good-dim); }
+.grade .missed { border-color: var(--miss); color: var(--miss); background: var(--miss-dim); }
+.grade .got:hover { background: var(--good); color: var(--paper); }
+.grade .missed:hover { background: var(--miss); color: var(--paper); }
+@media (hover: none) {
+  .grade .got:hover { background: var(--good-dim); color: var(--good); }
+  .grade .missed:hover { background: var(--miss-dim); color: var(--miss); }
+}
 
 .score { font-family: var(--serif); font-size: 3rem; font-weight: 600; line-height: 1;
          margin: 0.4rem 0 0.2rem; font-variant-numeric: tabular-nums; }
@@ -410,7 +424,7 @@ label.fld {
 
   var BANK = [
     {id:"h01", lv:1, type:"Anatomy", q:"Define a hernia.",
-     a:"S Das: the protrusion of the whole or a part of a viscus through the wall that contains it. Bailey & Love: the bulging of part of the contents of the abdominal cavity through a weakness in the abdominal wall.", ref:"Das 38 p.594 · B&L 64 p.1058"},
+     a:"S Das: a hernia is defined as protrusion of whole or a part of a viscus through the wall that contains it. Bailey & Love: a hernia is an abnormal protrusion of an organ or tissue through an opening in the layer that normally confines it. Either is accepted; S Das is the one an Indian examiner is most likely to be marking against.", ref:"Das 38 p.594 · B&L 64 p.1058"},
     {id:"h02", lv:1, type:"Anatomy", q:"Name the three parts of a hernia, and the four parts of its sac.",
      a:"Covering, sac and contents. The sac has a mouth, neck, body and fundus.", ref:"SRB 18 p.741"},
     {id:"h03", lv:1, type:"Anatomy", q:"By what route does an indirect inguinal hernia leave the abdomen?",
@@ -432,11 +446,11 @@ label.fld {
     {id:"h11", lv:1, type:"Classification", q:"Name the clinical types of hernia.",
      a:"Reducible, irreducible, obstructed, inflamed, strangulated, and SRB adds occult. B&L's complexity scale ends in infarcted.", ref:"Das 38 p.604–605 · SRB 18 p.742–743 · B&L 64 p.1060"},
     {id:"h12", lv:1, type:"Anatomy", q:"Where is the superficial inguinal ring, and what should it admit?",
-     a:"A triangular opening in the external oblique aponeurosis, 1.25 cm above the pubic tubercle, bounded by a superomedial and an inferolateral crus. Normally it does not, or only just, admits the tip of the little finger.", ref:"SRB 18 p.743"},
+     a:"A triangular opening in the external oblique aponeurosis, 1.25 cm above the pubic tubercle, bounded by a superomedial and an inferolateral crus. Normally it does not admit the tip of the little finger, or only just.", ref:"SRB 18 p.743"},
     {id:"h13", lv:1, type:"Examination", q:"Where does an inguinal hernia lie relative to the pubic tubercle? And a femoral hernia?",
      a:"Inguinal: above the inguinal ligament and medial to the pubic tubercle. Femoral: below the ligament and lateral to the tubercle. Edition note, not a live disagreement: B&L 26e said 'above and lateral' for the inguinal hernia and 28e has deleted that sentence, so the books now agree. The only relation 28e prints is the femoral one, and it matches S Das.", ref:"Das 38 p.597 · B&L 64 p.1071"},
     {id:"h14", lv:1, type:"History", q:"What proportion of adult hernia repairs are inguinal?",
-     a:"B&L 28e has dropped the 80% figure. What it says now is that inguinal hernia is the most common hernia in men and around 10 times more common in men than in women. More than 80% of inguinal hernias are indirect, and almost all hernias in children and women are indirect.", ref:"B&L 64 p.1065 · Das 38 p.603"},
+     a:"Inguinal hernia is by far the commonest, and the figure usually quoted is that it accounts for about 80% of all hernia repairs. Then the detail: B&L 28e no longer prints that 80% figure. What it says is that inguinal hernia is the most common hernia in men and around 10 times more common in men than in women, that more than 80% of inguinal hernias are indirect, and that almost all hernias in children and women are indirect.", ref:"B&L 64 p.1065 · Das 38 p.603"},
 
     {id:"h20", lv:2, type:"History", q:"Describe the pain of an early hernia. What does it mean when it stops?",
      a:"Dragging and aching, worse as the day passes, often appearing before the lump. It ceases once the hernia is fully formed: so settling pain means the hernia has finished forming, not that he is improving. B&L: sharp intermittent pain suggests pinching; severe pain means high risk of strangulation.", ref:"Das 38 p.594 · B&L 64 p.1061"},
@@ -894,7 +908,16 @@ label.fld {
 
   function paint() {
     var render = stack[stack.length - 1];
+    var wasGuide = inGuide;
     inGuide = (render === screenGuide);
+    // The reader's rail, studio, bubble, note editor and source pane are appended to
+    // document.body, while this swaps #app.innerHTML. Leaving a guide therefore removed
+    // the guide and left its chrome behind: the source pane covering the case list, the
+    // tool rail pinned over the viva with the pen still armed, and twelve tool buttons in
+    // the tab order of every screen.
+    if (wasGuide && !inGuide && window.Reader && window.Reader.unmount) {
+      window.Reader.unmount();
+    }
     backTo = stack.length > 1 ? back : null;
     renderTopbar();
     render();

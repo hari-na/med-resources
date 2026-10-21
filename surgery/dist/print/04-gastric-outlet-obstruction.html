@@ -340,7 +340,11 @@ body.guide { margin: 0; -webkit-text-size-adjust: 100%; }
 }
 .guide .rdr-toc a:hover { background: var(--accent-soft); }
 @media (hover: none) { .guide .rdr-toc a:hover { background: none; } }
-@media (pointer: coarse) { .guide .rdr-toc a { padding: 0.62rem 0.3rem; } }
+@media (pointer: coarse) {
+  .guide .rdr-toc a { padding: 0.62rem 0.3rem; }
+  /* the generated contents summary was 37px, under the 44px minimum */
+  .guide .rdr-toc summary { padding: 0.78rem 0; }
+}
 
 /* so a linked section is not hidden under anything, and lands with a little air */
 .guide h2[id] { scroll-margin-top: 1rem; }
@@ -1712,8 +1716,34 @@ body.guide { margin: 0; -webkit-text-size-adjust: 100%; }
     important</b>. <b>Intravenous potassium slowly under ECG monitoring</b>; intravenous
     <b>magnesium</b>; intravenous <b>calcium</b>. Plus <b>blood transfusion if anaemic</b> and
     <b>total parenteral nutrition
-    support</b>.​<cite class="src srb">SRB 20 &middot; p.819, p.820</cite> The nutritional point is
-    a real one: these patients have not eaten properly for weeks.</dd>
+    support</b>.​<cite class="src srb">SRB 20 &middot; p.819, p.820</cite>
+    <br><span class="label out">The books do not agree about the saline, and it matters</span>
+    B&amp;L's instruction is <b>isotonic</b> saline, and the pearl above explains why: you are
+    giving the kidney back chloride and volume. SRB's <b>double strength</b> saline is 1.8%, which
+    is hypertonic, and nothing in either book explains when one would use it in this patient.
+    <b>Give isotonic saline with potassium.</b> Quote SRB's phrase if you are asked what SRB says,
+    and say you would use isotonic saline, which is B&amp;L's instruction and the one your own
+    reasoning about chloride supports. <i>Outside the books, flagged as such:</i> hypertonic saline
+    in a dehydrated, hypochloraemic patient risks a sodium rise for no benefit.
+    <br><span class="label out">And the potassium has a ceiling, which SRB prints</span>
+    "Slowly under ECG monitoring" is not a prescription. SRB gives the numbers: <b>"IV KCl
+    40 mmol/l given in 5% dextrose or normal saline slowly, often under ECG monitoring [total dose
+    is 40 mmol (0.2 mmol/kg/hour). Maximum dose per hour is 20 mmol]."</b> And it names this very
+    patient in the next sentence: <b>"hypokalaemic alkalosis which occurs in pyloric stenosis
+    should be treated carefully by IV
+    potassium."</b>​<cite class="src srb">SRB 1 &middot; p.89</cite>
+    <br><b>Say the ceiling out loud: a maximum of 20 mmol in an hour, at a concentration of
+    40 mmol per litre, with ECG monitoring.</b> It is the number that separates replacing potassium
+    from stopping a heart, and it is the one an examiner will press you for after you say
+    "slowly".
+    <br><span class="label">The nutrition point needs its own caution</span>These patients have not
+    eaten properly for weeks, which is exactly the setting for refeeding syndrome, and B&amp;L says
+    what to do about it: in a patient at risk, <b>"nutrition should be started at no more than 50%
+    of the estimated target energy needs"</b>,​<cite class="src bl">B&amp;L 25 &middot; p.334</cite>
+    and <b>"nutritional support should include supplementary thiamine, vitamin B, multivitamins and
+    trace elements"</b>.​<cite class="src bl">B&amp;L 25 &middot; p.340</cite> So: feed slowly, give
+    thiamine before or with the first feed, and watch the potassium, phosphate and magnesium as you
+    start.</dd>
     <dt>Stomach wash</dt>
     <dd>With normal saline through a wide tube, which also <b>reduces the oedema of the stomach
     wall</b>.​<cite class="src srb">SRB 20 &middot; p.819</cite></dd>
@@ -2323,10 +2353,20 @@ body.guide { margin: 0; -webkit-text-size-adjust: 100%; }
     return p;
   }
 
+  // DEFAULTS holds literal arrays for marks, notes and ink. Assigning DEFAULTS[k] handed
+  // every student who had no stored record *the same array object*, so the first
+  // highlight pushed into it belonged to everyone afterwards: a second person signing in
+  // on the same tablet saw the first person's highlights and notes, and their next edit
+  // uploaded that work to the server under their own name. Copy, never share.
+  function defaultFor(k) {
+    var v = DEFAULTS[k];
+    return Array.isArray(v) ? v.slice() : v;
+  }
+
   var state = (function () {
     var s = load(), out = {}, p = loadPrefs();
     Object.keys(DEFAULTS).forEach(function (k) {
-      out[k] = (s[k] === undefined) ? DEFAULTS[k] : s[k];
+      out[k] = (s[k] === undefined) ? defaultFor(k) : s[k];
       // the reader's own settings win over whatever this case last recorded
       if (PREFS.indexOf(k) >= 0 && p[k] !== undefined) out[k] = p[k];
     });
@@ -2390,6 +2430,16 @@ body.guide { margin: 0; -webkit-text-size-adjust: 100%; }
       clearTimeout(pullTimer);
     }
     return sync;
+  }
+
+  function backupHint() {
+    var el = document.getElementById("rdrBackupHint");
+    if (!el) return;
+    el.textContent = syncOn()
+      ? "Your highlights, notes and drawings are kept on this device and copied to your name, "
+        + "so they follow you to another phone or browser. A file copy is still worth having."
+      : "Your highlights, notes and drawings are kept in this browser only. Save a copy if you "
+        + "clear your browsing data or change device.";
   }
 
   function syncSay(msg) {
@@ -2697,6 +2747,7 @@ body.guide { margin: 0; -webkit-text-size-adjust: 100%; }
     armRecall();
     if (state.face === "hyper" || state.face === "sans") ensureFont(state.face);
     syncHostTheme();
+    backupHint();
     layoutInk();
   }
 
@@ -2766,6 +2817,22 @@ body.guide { margin: 0; -webkit-text-size-adjust: 100%; }
     if (!el) return null;
     var b = el.closest("[data-b]");
     return (b && guide.contains(b)) ? b : null;
+  }
+
+  // A selection that begins exactly at the start of a paragraph is reported by the browser
+  // with startContainer set to an ancestor rather than to a text node inside the block, so
+  // blockOf came back null, the bubble stayed hidden and the phrase could not be
+  // highlighted at all. Look at what the range actually covers before giving up.
+  function blockOfRange(r) {
+    if (!r) return null;
+    var b = blockOf(r.startContainer);
+    if (b) return b;
+    var sc = r.startContainer;
+    if (sc && sc.nodeType === 1 && sc.childNodes[r.startOffset]) {
+      b = blockOf(sc.childNodes[r.startOffset]);
+      if (b) return b;
+    }
+    return blockOf(r.endContainer) || blockOf(r.commonAncestorContainer);
   }
 
   function textNodesIn(el) {
@@ -2854,7 +2921,7 @@ body.guide { margin: 0; -webkit-text-size-adjust: 100%; }
     var sel = window.getSelection();
     if (!sel || sel.isCollapsed || !sel.rangeCount) { hideBubble(); return; }
     var r = sel.getRangeAt(0);
-    if (!guide || !blockOf(r.startContainer)) { hideBubble(); return; }
+    if (!guide || !blockOfRange(r)) { hideBubble(); return; }
     showBubble(r);
   }
 
@@ -2877,7 +2944,7 @@ body.guide { margin: 0; -webkit-text-size-adjust: 100%; }
     var sel = window.getSelection();
     if (!sel || sel.isCollapsed || !sel.rangeCount) return;
     var r = sel.getRangeAt(0);
-    var first = blockOf(r.startContainer), last = blockOf(r.endContainer);
+    var first = blockOfRange(r), last = blockOf(r.endContainer) || first;
     if (!first) return;
 
     // one mark per block the selection touches, so dragging across paragraphs works
@@ -3680,8 +3747,10 @@ body.guide { margin: 0; -webkit-text-size-adjust: 100%; }
         '<div class="rdr-lock" id="rdrLock" hidden>Layout is locked because there is ink on ' +
           'this page. Writing is drawn at a fixed width: erase the ink to change the layout.</div>' +
         '<label>Backup</label>' +
-        '<p class="rdr-note-hint">Everything here is stored only in this browser, and it can ' +
-        'be cleared without warning. Keep a copy.</p>' +
+        // This used to say the work was stored only in this browser. That stopped being
+        // true when sync was added, and telling a reader their highlighting is about to
+        // vanish is why they would not bother highlighting.
+        '<p class="rdr-note-hint" id="rdrBackupHint"></p>' +
         '<div class="rdr-backup">' +
           '<button class="rdr-export">Save a copy</button>' +
           '<button class="rdr-import">Restore from a file</button>' +
@@ -3932,7 +4001,7 @@ body.guide { margin: 0; -webkit-text-size-adjust: 100%; }
   function reloadState() {
     var s = load();
     Object.keys(DEFAULTS).forEach(function (k) {
-      state[k] = (s[k] === undefined) ? DEFAULTS[k] : s[k];
+      state[k] = (s[k] === undefined) ? defaultFor(k) : s[k];
     });
     applyPrefsTo(state);
     // strokes saved before the highlighter existed carry no kind, and the old pixel
@@ -3981,6 +4050,27 @@ body.guide { margin: 0; -webkit-text-size-adjust: 100%; }
       reloadState();
       start();
     },
+    // The rail, studio, bubble, note editor and source pane are appended to document.body,
+    // while the hub swaps #app.innerHTML. So leaving a guide removed the guide and left its
+    // chrome behind: the source pane covering the case list, the tool rail pinned over the
+    // viva, the pen still armed, and twelve tool buttons in the tab order of every screen.
+    unmount: function () {
+      closeCite && closeCite();
+      hideBubble();
+      [".rdr-rail", ".rdr-studio", ".rdr-bubble", ".rdr-noteedit", ".rdr-srcpane"]
+        .forEach(function (sel) {
+          [].forEach.call(document.querySelectorAll(sel), function (n) {
+            if (n.parentNode) n.parentNode.removeChild(n);
+          });
+        });
+      bubble = null;
+      noteEditor = null;
+      citePane = null;
+      guide = null;
+      clearTimeout(syncTimer);
+      clearTimeout(pullTimer);
+    },
+
     state: function () { return state; }
   };
 })();

@@ -333,7 +333,11 @@ body.guide { margin: 0; -webkit-text-size-adjust: 100%; }
 }
 .guide .rdr-toc a:hover { background: var(--accent-soft); }
 @media (hover: none) { .guide .rdr-toc a:hover { background: none; } }
-@media (pointer: coarse) { .guide .rdr-toc a { padding: 0.62rem 0.3rem; } }
+@media (pointer: coarse) {
+  .guide .rdr-toc a { padding: 0.62rem 0.3rem; }
+  /* the generated contents summary was 37px, under the 44px minimum */
+  .guide .rdr-toc summary { padding: 0.78rem 0; }
+}
 
 /* so a linked section is not hidden under anything, and lands with a little air */
 .guide h2[id] { scroll-margin-top: 1rem; }
