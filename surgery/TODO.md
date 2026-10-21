@@ -1,109 +1,68 @@
 # Outstanding work
 
-Everything found by the nine-person review panel and the clinical re-review of all 25 cases,
-in the order it will be worked. Ticked items are fixed **and verified**, not just edited.
+Kept honest: this is what is known to be wrong or missing, not a wish list. Items are
+roughly in the order they would change a student's marks or their trust in the material.
 
-Editorial rule throughout: **the three books are the authority.** Where something differs from
-the book, the book's answer leads and the difference is stated with its source named. A typo
-the book contradicts elsewhere is reconciled to the book, and said to be a typo.
+## Content gaps, largest first
 
----
+- **The scored drill exists for one case out of twenty-five.** The hub offers "VIVA Viva
+  drill" on every case and 24 of them answer "No scored drill for this case yet." Every
+  reviewer raised it, and the student put it first. Each case needs a bank in the shape of
+  the hernia one, written from the books.
+- **No images anywhere.** Zero img, svg or figure in 25 guides. For surgery that is the
+  biggest single gap: the inguinal canal, Hesselbach's triangle, the fascial layers, the
+  Rutherford table as a picture, Goodsall's rule. Line drawings would do.
+- **Cases that are missing entirely**, named by the intern and the external examiner:
+  carcinoma rectum and colon with stoma, diabetic foot and gangrene, abdominal lump with
+  ascites and portal hypertension, acute appendicitis, stricture urethra, umbilical and
+  incisional hernia, keloid, ganglion, haemangioma.
+- **No presentation script.** Nothing says how to open a long case, in what order to
+  speak, or how to close. Marks go on this before any sign is found.
+- **Table viva has no home**: instruments, specimens, X-rays, operative steps.
 
-## 1. Ships a broken page
+## Known defects
 
-- [ ] **Viewport meta tag and doctype on the hub.** `app/case-files.html` has neither, so phones
-      lay out at ~980px and shrink to ~38%. Every `max-width:640px` rule is dead. This is the
-      originally reported bug.
-- [ ] **Dark mode chrome is white-on-white.** `--paper`, `--accent-soft`, `--flag`, `--flag-soft`
-      are defined on `.guide`, but the rail, studio, note editor, bubble and source pane are
-      appended to `document.body`. Measured 1.24:1 contrast.
-- [ ] **Canvas taller than 65,535px blanks the guide.** Chrome shows its placeholder over the
-      text. Reproduced on cases 01 and 02 at 320px. Also exceeds iOS Safari's ~16.7M px area.
-- [ ] **Rail is 416px wide on a 375px phone.** Settings button clipped off the left edge;
-      swatches off the right. Vertical rail is taller than a landscape phone.
-- [ ] **Note editor sits under the on-screen keyboard**, and its textarea is 14.7px so iOS
-      zooms on focus.
-- [ ] **Touch targets below 44px**, worst being the citation chips at ~16px, which are the main
-      interaction in the guide.
-- [ ] **Case 09 breaks the page width**: a `.who` with `display:flex` stretches the layout to
-      549px on a 360px phone.
-- [ ] **Hover states stick after a tap**; no `@media (hover:hover)` guard anywhere.
-- [ ] **Citation chips `white-space:nowrap`** overflow the column at larger text sizes.
-- [ ] **Conflict summary collapses into two squeezed columns** below ~480px.
+- **No History API.** Every screen is the same URL, so Android Back leaves the site, a
+  reload returns to the name screen, nothing can be bookmarked or shared, and the reading
+  position is lost. Named a top-three fix by the student.
+- **No offline.** No service worker and no manifest, so nothing works on bad hostel wifi
+  and the site cannot be added to a home screen. The whole hub, all 25 bodies and the
+  citations come to about 1 MB, so precaching is practical.
+- **citations.json is 1.6 MB** and is fetched whole on the first citation tap, with no
+  loading state: on a slow connection the tap looks like nothing happening. It should be
+  split per case and show that it is loading.
+- **"Layout is locked because there is ink on this page" is untrue.** No control is
+  disabled, and changing the text size moves every stroke off the text it was drawn over.
+  state.inkLayout is written and never read.
+- **The highlighter colours are off-screen on every phone width.** The rail scrolls but
+  all the affordances are hidden, and scrolling to the colours pushes the tools off.
+- **The citation pane does not return focus on close** and does not trap focus; it is an
+  aside with no dialog role.
+- **The drill progress bar never reaches 100%** while the counter beside it reads 14/14.
+- **Identity is a name with no password**, and anyone typing it on any device gets that
+  student's notes and scores from the server.
 
-## 2. Loses or corrupts data
+## Clinical, still outstanding from the surgeon's review
 
-- [ ] **Per-question history is write-only.** Nothing ever GETs `/api/answers`, so a second
-      device shows empty and its first answer overwrites the server's counters downward
-      (reproduced live, 5 -> 1). The progress page's claim that it follows you is false.
-- [ ] **A slow pull applies to whichever guide is open when it returns.** Reproduced: case 1's
-      note replaced case 2's, was persisted, and was pushed as case 2. `syncedAt`, `syncing`
-      and `retryMs` are module globals with no per-document scoping.
-- [ ] **Back from progress records the session again.** `screenSummary` writes on every render.
-- [ ] **Client clock is trusted without bound.** A future timestamp locks a row permanently;
-      the worker returns `ok:true` on a write it discarded, so the client marks it synced.
-- [ ] **localStorage failure is silent.** `save()` swallows quota errors and `pushAnswers`
-      reads back from storage, so nothing is stored and nothing is sent.
-- [ ] **A corrupt storage blob wipes every student on the device**: `store()` returns `{}` and
-      the next write replaces everything.
-- [ ] **Answers have no retry timer and no `online` listener.**
-- [ ] **Clear highlights/notes/ink** is one tap, no confirmation, no undo, and it syncs.
-- [ ] **Highlights anchor to a block index with no content hash**, so editing a guide silently
-      re-attaches a student's marks to different text.
+- Case 25: B and L's fistulotomy limits are missing, the 30% of external sphincter ceiling
+  and the exclusion of anterior fistulae in women.
+- Case 17: B and L's structural classification of hydrocele is mis-rendered; its infantile
+  hydrocele has been dropped and the B and L definition conflicts with SRB's, unflagged.
+  B and L also contradicts itself between its numbered list and its figure caption.
+- Case 09: SRB's compartment pressure "or above the mean arterial pressure" is passed on
+  without comment; as a fasciotomy trigger it is meaningless.
+- Case 19: B and L gives 3% of full-term infants in ch.86 and 4% in ch.17; only the 3% is
+  quoted.
+- Case 24: "1.5% glycine, hypo-osmolar" is in none of the three books and is not flagged.
+- Case 25: the claim that B and L's fistula percentages come from a specialist practice is
+  the author's inference stated as fact.
+- A quotation-fidelity pass is needed: in at least three places a closing quote mark lands
+  mid-word, so the guide's own paraphrase reads as the book's words.
 
-## 3. Wrong or missing clinically
+## Tooling
 
-- [ ] **Acute limb ischaemia (09) still has no management.** No heparin, Fogarty, thrombolysis,
-      analgesia, or reperfusion monitoring.
-- [ ] **TUR syndrome (24)**: mechanism only; no recognition, no treatment. Irrigant given as
-      1% in one place and 1.5% in another.
-- [ ] **Anorectal abscess (25) absent entirely**, including B&L's two explicit prohibitions on
-      probing and immediate fistulotomy in the acute stage.
-- [ ] **Cutting seton described as sphincter-sparing (25).**
-- [ ] **Circumcision "near-total immunity" (23)** overstated; the books overstate it too, so
-      state what they say and flag it.
-- [ ] **Gastric outlet obstruction (04)**: double-strength saline passed on without comment, no
-      potassium limits, no thiamine before glucose, no aspiration plan.
-- [ ] **Post-thyroidectomy hypocalcaemia (02)**: explained, never treated. No carbimazole
-      agranulocytosis counselling.
-- [ ] **~12 citations do not support the claim attached to them** (listed in the review
-      reports): hepatic artery ligation vs embolisation, Makuuchi 1984, the torch method,
-      secondary hydrocele "common", the varicocele cough impulse, and others.
-- [ ] **Case 19**: orchidopexy operative age; "cryptorchidism" used in SRB's bilateral-only
-      sense; the two books' figures presented as agreeing when they differ.
-- [ ] **Case 17**: the "big tense hydrocele is primary" rule needs the filarial exception.
-
-## 4. Structural
-
-- [ ] **Only 1 of 25 cases has a scored viva bank.** 48 questions, all hernia. The other 24
-      have untagged tap-to-reveal items and record nothing.
-- [ ] **Non-bank cases can start a drill** and record hernia questions under their own case id.
-- [ ] **Zero images across all 25 cases.** Finals have a spotter station.
-- [ ] **67 chips written `pp.X, Y` silently lose the second page**, and the build still reports
-      `unresolved refs: 0`.
-- [ ] **A build against empty sources exits 0** and would be published.
-- [ ] **`citations.json` is not part of the build** and nothing checks it is current.
-- [ ] **Reading settings are stored per case**, so they must be set again in each of 25 guides.
-- [ ] **The "layout is locked" message is false**: the attribute that would enforce it is never
-      emitted, so text reflows out from under ink.
-- [ ] **A failed `citations.json` fetch is cached forever**, killing every chip until reload.
-- [ ] **Dark theme prints washed out**: `.guide[data-theme="dark"]` outranks the print block.
-- [ ] **Docs still say B&L 26e** (README, BACKLOG offset +17, RESOURCES "not yet available").
-- [ ] **No history API**: browser back leaves the site; no deep links.
-
-## 5. Then
-
-- [ ] Rebuild, verify, publish, confirm live.
-- [ ] Start a fresh blank-slate review and repeat.
-
----
-
-## Blocked on you
-
-- [ ] **`wrangler` auth expired mid-session** (`code: 7403`, "the given account is not valid or
-      is not authorized"). Re-run `npm exec wrangler login` from `C:\Users\swaac\Coding\rx\worker`.
-      Until then I cannot deploy the Worker or run SQL. Two things are waiting on it:
-      - the clock-skew clamp on the Worker (reject or clamp a client timestamp far in the
-        future, and report a discarded write honestly instead of answering `ok`);
-      - clearing the underscore-prefixed test rows (`_pulltest` and friends) from D1. They are
-        test identities, not real students, so they are harmless meanwhile.
+- **S Das scans badly** and its quoted passages reach the reader with real OCR damage.
+  The citation pane now says so, which is honest but not a fix. Re-OCR, or hand-correct
+  the passages actually cited.
+- **check_quotes.py reports many false positives** for that reason; read its docstring
+  before believing a number from it.

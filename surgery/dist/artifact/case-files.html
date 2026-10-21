@@ -2565,7 +2565,16 @@ body.guide { margin: 0; -webkit-text-size-adjust: 100%; }
     citePane.querySelector(".rdr-src-book").textContent = book.title;
     citePane.querySelector(".rdr-src-meta").textContent =
       [book.edition, "chapter " + c.chapter].filter(Boolean).join(" · ");
-    citePane.querySelector(".rdr-src-body").innerHTML = body ||
+    // S Das is the worst scanned of the three books, and its passages come through with
+    // real OCR damage: broken words, spliced columns, numbers turned into letters. Saying
+    // so is better than letting a reader conclude the guide is quoting carelessly, or
+    // worse, trusting a mangled number.
+    var note = (c.book === "das")
+      ? '<p class="rdr-src-ctx">This book scans poorly, so the text below has OCR errors: ' +
+        'broken words, and columns that run into each other. The quotation in the guide is ' +
+        'what the printed page says. Check a number here against your own copy.</p>'
+      : "";
+    citePane.querySelector(".rdr-src-body").innerHTML = (note + body) ||
       '<p class="rdr-src-ctx">That page was not extracted.</p>';
     citePane.hidden = false;
     citePane.querySelector(".rdr-src-close").focus();

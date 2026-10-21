@@ -1125,11 +1125,15 @@ body.guide { margin: 0; -webkit-text-size-adjust: 100%; }
     likened to a <b>bag of worms</b>. It is separate from the testis, which should be palpable
     normally below it.</dd>
     <dt>Cough impulse</dt>
-    <dd>Present, and this matters because it is a shared false positive with hernia. B&amp;L's
-    hernia chapter lists it: a <b>varicocele</b>, like a saphena varix, gives a cough impulse and
-    is referred as a suspected hernia.​<cite class="src bl">B&amp;L 64 &middot; p.1061</cite>
-    S Das makes the same point: a cough impulse does not prove a
-    hernia.​<cite class="src das">Das 38 &middot; p.599</cite></dd>
+    <dd>Present, and this matters because it is a shared false positive with hernia. B&amp;L says
+    it plainly in its varicocele section: <b>"there may be a cough
+    impulse"</b>, and that the veins empty when the patient lies
+    down.​<cite class="src bl">B&amp;L 86 &middot; p.1563</cite> Its hernia chapter makes the
+    companion point about a different swelling: <b>"a cough impulse can also be appreciated in a
+    saphena varix."</b>​<cite class="src bl">B&amp;L 64 &middot; p.1061</cite>
+    <br><span class="label">So the sign does not settle anything on its own</span>A cough impulse
+    is shared by a hernia, a varicocele and a saphena varix, which is why the rest of the
+    examination, and not this sign, tells you which you are holding.</dd>
     <dt>Measure the testis, both sides</dt>
     <dd>Because testicular atrophy on the affected side is one of the accepted indications for
     repair in an adolescent, and because it is objective evidence of harm.</dd>
@@ -2659,7 +2663,16 @@ body.guide { margin: 0; -webkit-text-size-adjust: 100%; }
     citePane.querySelector(".rdr-src-book").textContent = book.title;
     citePane.querySelector(".rdr-src-meta").textContent =
       [book.edition, "chapter " + c.chapter].filter(Boolean).join(" · ");
-    citePane.querySelector(".rdr-src-body").innerHTML = body ||
+    // S Das is the worst scanned of the three books, and its passages come through with
+    // real OCR damage: broken words, spliced columns, numbers turned into letters. Saying
+    // so is better than letting a reader conclude the guide is quoting carelessly, or
+    // worse, trusting a mangled number.
+    var note = (c.book === "das")
+      ? '<p class="rdr-src-ctx">This book scans poorly, so the text below has OCR errors: ' +
+        'broken words, and columns that run into each other. The quotation in the guide is ' +
+        'what the printed page says. Check a number here against your own copy.</p>'
+      : "";
+    citePane.querySelector(".rdr-src-body").innerHTML = (note + body) ||
       '<p class="rdr-src-ctx">That page was not extracted.</p>';
     citePane.hidden = false;
     citePane.querySelector(".rdr-src-close").focus();

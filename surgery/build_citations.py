@@ -66,10 +66,13 @@ CONTEXT_CHARS = 400  # size of the `before` / `after` excerpts
 # to, found by matching the guide's own wording against the page. Truncating from the top of
 # the page instead would be simpler and much worse, because the cited fact is usually not in
 # the first paragraph and would often be cut away entirely.
-WINDOW_CHARS = 600      # kept either side of the matched passage
-WINDOW_MAX = 2600       # ceiling when several chips cite the same page far apart
-WINDOW_FALLBACK = 1200  # when nothing in the page matches, keep this much from the top
-CLAIM_CHARS = 320       # guide text before a chip, read as the claim it is backing
+# A student taps a chip to read the sentence the guide just quoted, so the window has to
+# contain the whole of it. At 600 either side of the match a long quotation ran off the end
+# of the excerpt: 44 of them stopped mid-sentence, which looks exactly like a misquotation.
+WINDOW_CHARS = 900      # kept either side of the matched passage
+WINDOW_MAX = 3600       # ceiling when several chips cite the same page far apart
+WINDOW_FALLBACK = 1400  # when nothing in the page matches, keep this much from the top
+CLAIM_CHARS = 700       # guide text before a chip, read as the claim it is backing
 ELLIPSIS = "… "
 
 # ---------------------------------------------------------------------------

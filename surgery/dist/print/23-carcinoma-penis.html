@@ -1133,7 +1133,15 @@ body.guide { margin: 0; -webkit-text-size-adjust: 100%; }
     boundary you cannot defend. "Neonatal circumcision confers near-total immunity against carcinoma
     of the penis. Circumcision performed later in life does not confer the same protection, which
     supports the view that retained smegma under a non-retractile prepuce is the carcinogenic
-    stimulus." Do not volunteer "early infancy does not protect", because SRB says the opposite and
+    stimulus."
+    <br><span class="label out">Say it as the books say it, and know that "immunity" overstates
+    it</span>The phrase is the books' own, which is why it is the answer to give, but it is not
+    literally true: carcinoma of the penis does occur in circumcised men, and B&amp;L names
+    <b>infection with HPV types 16 and 18</b> among the risk factors in the same
+    passage.​<cite class="src bl">B&amp;L 85 &middot; p.1551</cite> <i>That qualification is outside
+    the three books and is flagged as such.</i> If an examiner presses on "immunity", say that the
+    protection is very strong rather than absolute, and that HPV is a risk factor independent of the
+    prepuce. Do not open with that: open with the book's sentence. Do not volunteer "early infancy does not protect", because SRB says the opposite and
     an examiner working from SRB will mark it wrong.
     <br><br>On the age: say <b>"the majority are over forty, but a substantial minority are younger,
     quoted between about 10 and 30% depending on the series"</b>, or give whichever book's figure the
@@ -3292,7 +3300,16 @@ body.guide { margin: 0; -webkit-text-size-adjust: 100%; }
     citePane.querySelector(".rdr-src-book").textContent = book.title;
     citePane.querySelector(".rdr-src-meta").textContent =
       [book.edition, "chapter " + c.chapter].filter(Boolean).join(" · ");
-    citePane.querySelector(".rdr-src-body").innerHTML = body ||
+    // S Das is the worst scanned of the three books, and its passages come through with
+    // real OCR damage: broken words, spliced columns, numbers turned into letters. Saying
+    // so is better than letting a reader conclude the guide is quoting carelessly, or
+    // worse, trusting a mangled number.
+    var note = (c.book === "das")
+      ? '<p class="rdr-src-ctx">This book scans poorly, so the text below has OCR errors: ' +
+        'broken words, and columns that run into each other. The quotation in the guide is ' +
+        'what the printed page says. Check a number here against your own copy.</p>'
+      : "";
+    citePane.querySelector(".rdr-src-body").innerHTML = (note + body) ||
       '<p class="rdr-src-ctx">That page was not extracted.</p>';
     citePane.hidden = false;
     citePane.querySelector(".rdr-src-close").focus();

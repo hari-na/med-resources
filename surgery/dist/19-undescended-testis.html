@@ -1132,6 +1132,16 @@ body.guide { margin: 0; -webkit-text-size-adjust: 100%; }
       retractile testis, the scrotum is relatively well
       developed"</b>.​<cite class="src bl">B&amp;L 86 &middot; p.1559</cite> The scrotum tells you
       whether a testis has ever lived in it.
+      <br><span class="label out">Calling it retractile is not the end of it</span>The natural
+      reading of this section is "it is not undescended, so nothing need be done", and B&amp;L
+      closes that door: <b>"for retractile testes, a yearly physical examination is recommended
+      because of the 2&ndash;50% reported risk of a retractile testis becoming an acquired
+      undescended testis."</b>​<cite class="src bl">B&amp;L 86 &middot; p.1559</cite> Its paediatric
+      chapter says the same in a line: <b>"follow-up is needed because some permanently ascend and
+      require an orchidopexy."</b>​<cite class="src bl">B&amp;L 17 &middot; p.257</cite>
+      <br><b>So the answer is "retractile, and I would review him yearly", not "retractile, so
+      discharge".</b> A boy sent away at five can return at nine with an acquired undescended
+      testis, and the examiner asking "what would you do about it" is asking for exactly this.
       <br><span class="label">Technique</span>Start at the anterior superior iliac spine and sweep
       downwards and medially along the inguinal canal with a flat hand, milking the testis towards
       the scrotum, and hold it there with the other hand. Warm hands, and no soap.
@@ -1337,7 +1347,9 @@ body.guide { margin: 0; -webkit-text-size-adjust: 100%; }
       both testes undescended; about two-thirds reach the scrotum in the first three months of
       life, but full descent after that is uncommon; and the incidence at one year is around
       1%.​<cite class="src bl">B&amp;L 86 &middot; p.1558</cite> Those numbers justify observing for
-      three months and operating thereafter.</p>
+      three months before deciding it will not descend. <b>It is not the age of operation</b>,
+      which is 6 to 18 months in B&amp;L and two to four years in SRB; see the amber box in the
+      management section.</p>
     </details>
 
     <details>
@@ -2651,7 +2663,16 @@ body.guide { margin: 0; -webkit-text-size-adjust: 100%; }
     citePane.querySelector(".rdr-src-book").textContent = book.title;
     citePane.querySelector(".rdr-src-meta").textContent =
       [book.edition, "chapter " + c.chapter].filter(Boolean).join(" · ");
-    citePane.querySelector(".rdr-src-body").innerHTML = body ||
+    // S Das is the worst scanned of the three books, and its passages come through with
+    // real OCR damage: broken words, spliced columns, numbers turned into letters. Saying
+    // so is better than letting a reader conclude the guide is quoting carelessly, or
+    // worse, trusting a mangled number.
+    var note = (c.book === "das")
+      ? '<p class="rdr-src-ctx">This book scans poorly, so the text below has OCR errors: ' +
+        'broken words, and columns that run into each other. The quotation in the guide is ' +
+        'what the printed page says. Check a number here against your own copy.</p>'
+      : "";
+    citePane.querySelector(".rdr-src-body").innerHTML = (note + body) ||
       '<p class="rdr-src-ctx">That page was not extracted.</p>';
     citePane.hidden = false;
     citePane.querySelector(".rdr-src-close").focus();
