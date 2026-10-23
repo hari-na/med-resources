@@ -345,9 +345,60 @@ label.fld {
 
 /* ---------- the study guide, rendered inside this page ---------- */
 
+/* The guide carries its own measure, and the shell's 40rem was clamping it: Narrow fitted
+   inside the shell and every wider setting came out identical, so the control looked
+   broken. In the guide the shell follows whatever width the reader chose, a little wider
+   than the guide's own measure so that the guide stays the binding constraint. */
+body[data-screen="guide"] .shell { max-width: var(--guide-measure, 40rem); }
+body[data-width="narrow"] { --guide-measure: 37rem; }
+body[data-width="medium"] { --guide-measure: 45rem; }
+body[data-width="wide"]   { --guide-measure: 57rem; }
+body[data-width="full"]   { --guide-measure: none; }
+
 .readerwrap { margin: 0 -1.5rem -1.5rem; }
 .readerwrap .guide { border-radius: 0 0 10px 10px; }
 .readerwrap .guide .wrap { padding-block: 1.5rem 3rem; }
+/* The brownie debt. Sits out of the way, waits to be tapped, and turns into what it is
+   actually about. */
+.brownie {
+  position: fixed;
+  left: 50%;
+  bottom: 1.1rem;
+  transform: translate(-50%, 14px);
+  z-index: 70;
+  max-width: min(27rem, calc(100vw - 2rem));
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 44px;
+  padding: 0.68rem 1rem;
+  border: 1px solid var(--rule);
+  border-radius: 999px;
+  background: var(--card);
+  color: var(--ink);
+  box-shadow: 0 6px 22px rgba(0, 0, 0, 0.14);
+  font-family: var(--sans);
+  font-size: 0.86rem;
+  line-height: 1.35;
+  text-align: center;
+  cursor: pointer;
+  opacity: 0;
+  transition: opacity 0.28s ease, transform 0.28s ease;
+}
+.brownie.in { opacity: 1; transform: translate(-50%, 0); }
+.brownie.paid {
+  min-height: 0;
+  padding: 0.5rem 0.9rem;
+  border-color: transparent;
+  background: none;
+  box-shadow: none;
+}
+.brownie.gone { opacity: 0; transform: translate(-50%, -10px) scale(0.86); }
+.brownie:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+@media (prefers-reduced-motion: reduce) {
+  .brownie, .brownie.gone { transition: opacity 0.2s ease; transform: translate(-50%, 0); }
+}
+
 .loading { color: var(--ink-soft); font-size: 0.9rem; padding: 2rem 0; text-align: center; }
 
 @media (prefers-reduced-motion: reduce) { * { transition: none !important; } }
@@ -1839,7 +1890,17 @@ body.guide { margin: 0; -webkit-text-size-adjust: 100%; }
   // Inside the artifact the guide sits in a page with its own chrome. Two independent
   // theme switches read as a bug, so the reader's colour choice drives both. Sepia and
   // high contrast have no chrome equivalent, so the chrome takes the nearest of the two.
+  // The guide sets its own measure, but inside the hub it is mounted in a shell with a
+  // max-width of its own, which clamped Medium, Wide and Full to the same width: changing
+  // the setting appeared to do nothing at all on anything bigger than a phone. Mirror the
+  // choice onto the host so the shell can follow it.
+  function syncHostWidth() {
+    if (!cfg.syncRoot) return;
+    document.body.setAttribute("data-width", state.width || "medium");
+  }
+
   function syncHostTheme() {
+    syncHostWidth();
     if (!cfg.syncRoot) return;
     var map = { auto: "", light: "light", sepia: "light", dark: "dark", contrast: "dark" };
     var v = map[state.theme];
@@ -2176,7 +2237,7 @@ body.guide { margin: 0; -webkit-text-size-adjust: 100%; }
     return Math.max(0.08, s);
   }
 
-  function sizeCanvas(c, w, h, left, top) {
+  function sizeCanvas(c, w, h, left, top, originY) {
     // CSS size is always the true size, so stroke coordinates remain document pixels
     c.style.width = w + "px";
     c.style.height = h + "px";
@@ -2187,8 +2248,11 @@ body.guide { margin: 0; -webkit-text-size-adjust: 100%; }
     c.width = Math.max(1, Math.round(w * s));
     c.height = Math.max(1, Math.round(h * s));
     c.inkScale = s;
+    // The canvas covers a window onto the page, not the whole page, so shift the context
+    // by where that window starts. Strokes stay in guide coordinates throughout.
+    c.inkOriginY = originY || 0;
     var g = c.getContext("2d");
-    if (g) g.setTransform(s, 0, 0, s, 0, 0);
+    if (g) g.setTransform(s, 0, 0, s, 0, -c.inkOriginY * s);
     return s;
   }
 
@@ -2201,15 +2265,45 @@ body.guide { margin: 0; -webkit-text-size-adjust: 100%; }
     g.restore();
   }
 
+  // How much page above and below the viewport the ink canvas also covers, so that an
+  // ordinary scroll does not need a new canvas on every frame.
+  var INK_MARGIN = 600;
+
+  // The ink canvases used to span the whole document. On a long case that is a canvas
+  // 48,000px tall, which does two bad things on an iPad. The browser caps a canvas at
+  // about 16 million pixels, so the backing store was forced below screen resolution and
+  // the ink came out soft and blotchy. And every pointermove cleared the whole of it,
+  // fifteen million pixels at a time, which is why writing skipped. A canvas the size of
+  // the viewport is sharp at full device pixel ratio and costs almost nothing to clear.
   function layoutInk() {
     if (!canvas || !guide) return;
     var wrap = guide.querySelector(".wrap") || guide;
     var r = wrap.getBoundingClientRect();
     var w = Math.round(r.width);
-    var h = Math.round(wrap.scrollHeight || r.height);
-    sizeCanvas(canvas, w, h, wrap.offsetLeft, wrap.offsetTop);
-    sizeCanvas(live, w, h, wrap.offsetLeft, wrap.offsetTop);
+    var pageH = Math.round(wrap.scrollHeight || r.height);
+    var view = window.innerHeight || 800;
+
+    // where the visible slice starts, measured from the top of the wrap
+    var originY = Math.max(0, Math.round(-r.top) - INK_MARGIN);
+    var h = Math.min(pageH - originY, view + INK_MARGIN * 2);
+    if (h < 1) { originY = Math.max(0, pageH - 1); h = Math.min(pageH, view); }
+
+    sizeCanvas(canvas, w, h, wrap.offsetLeft, wrap.offsetTop + originY, originY);
+    sizeCanvas(live, w, h, wrap.offsetLeft, wrap.offsetTop + originY, originY);
     redrawInk();
+  }
+
+  // Re-aim the canvases when the page has scrolled far enough that the window they cover
+  // is about to run out. Never while a stroke is in progress: moving the canvas would
+  // wipe what is being drawn.
+  function inkFollowScroll() {
+    if (!canvas || !guide || drawing) return;
+    var wrap = guide.querySelector(".wrap") || guide;
+    var r = wrap.getBoundingClientRect();
+    var want = Math.max(0, Math.round(-r.top) - INK_MARGIN);
+    var have = canvas.inkOriginY || 0;
+    var slack = INK_MARGIN / 2;
+    if (Math.abs(want - have) > slack) layoutInk();
   }
 
   function pathStroke(c, s) {
@@ -2228,15 +2322,70 @@ body.guide { margin: 0; -webkit-text-size-adjust: 100%; }
     c.restore();
   }
 
+  function strokeBox(s) {
+    if (s.__box && s.__n === s.pts.length) return s.__box;
+    var lo = Infinity, hi = -Infinity;
+    for (var i = 0; i < s.pts.length; i++) {
+      if (s.pts[i][1] < lo) lo = s.pts[i][1];
+      if (s.pts[i][1] > hi) hi = s.pts[i][1];
+    }
+    s.__box = [lo, hi];
+    s.__n = s.pts.length;
+    return s.__box;
+  }
+
+  function inWindow(c, s) {
+    if (!s.pts || !s.pts.length) return false;
+    var box = strokeBox(s), pad = (s.w || 2) + 4;
+    var top = c.inkOriginY || 0;
+    return box[1] + pad >= top && box[0] - pad <= top + (parseFloat(c.style.height) || 0);
+  }
+
+  // Draw only the tail of a stroke, from `from` onwards. Opaque ink can be extended in
+  // place like this; translucent ink cannot, because the overlap would darken.
+  function pathTail(c, s, from) {
+    if (s.pts.length - from < 2) return;
+    c.save();
+    c.globalAlpha = INK[s.k || "pen"].alpha;
+    c.strokeStyle = s.c;
+    c.lineWidth = s.w;
+    c.lineCap = "round";
+    c.lineJoin = "round";
+    c.beginPath();
+    c.moveTo(s.pts[from][0], s.pts[from][1]);
+    for (var i = from + 1; i < s.pts.length; i++) c.lineTo(s.pts[i][0], s.pts[i][1]);
+    c.stroke();
+    c.restore();
+  }
+
+  // Clear just the rectangle a stroke covers, rather than the whole canvas.
+  function clearStrokeBox(c, g, s) {
+    if (!s.pts.length) return;
+    var x0 = Infinity, y0 = Infinity, x1 = -Infinity, y1 = -Infinity;
+    for (var i = 0; i < s.pts.length; i++) {
+      var pt = s.pts[i];
+      if (pt[0] < x0) x0 = pt[0];
+      if (pt[0] > x1) x1 = pt[0];
+      if (pt[1] < y0) y0 = pt[1];
+      if (pt[1] > y1) y1 = pt[1];
+    }
+    var pad = (s.w || 2) + 4;
+    g.clearRect(x0 - pad, y0 - pad, (x1 - x0) + pad * 2, (y1 - y0) + pad * 2);
+  }
+
   function redrawInk() {
     if (!ctx) return;
     wipe(canvas, ctx);
     // highlighter first, so pen marks sit on top of it rather than under
     for (var i = 0; i < state.ink.length; i++) {
-      if (state.ink[i].k === "hl") pathStroke(ctx, state.ink[i]);
+      if (state.ink[i].k === "hl" && inWindow(canvas, state.ink[i])) {
+        pathStroke(ctx, state.ink[i]);
+      }
     }
     for (var j = 0; j < state.ink.length; j++) {
-      if (state.ink[j].k !== "hl") pathStroke(ctx, state.ink[j]);
+      if (state.ink[j].k !== "hl" && inWindow(canvas, state.ink[j])) {
+        pathStroke(ctx, state.ink[j]);
+      }
     }
   }
 
@@ -2248,7 +2397,8 @@ body.guide { margin: 0; -webkit-text-size-adjust: 100%; }
 
   function penPoint(ev) {
     var r = live.getBoundingClientRect();
-    return [ev.clientX - r.left, ev.clientY - r.top];
+    // the canvas is a window onto the page now, so add where that window starts
+    return [ev.clientX - r.left, ev.clientY - r.top + (live.inkOriginY || 0)];
   }
 
   // ---- erasing -------------------------------------------------------------
@@ -2319,6 +2469,10 @@ body.guide { margin: 0; -webkit-text-size-adjust: 100%; }
   function penDown(ev) {
     if (tool.kind !== "pen" && tool.kind !== "ink-hl" && tool.kind !== "erase") return;
     ev.preventDefault();
+    // Aim the ink window before the stroke starts rather than trusting that a scroll
+    // event arrived. If the canvas is stale the pointer coordinates are offset by the
+    // scroll, and the stroke lands somewhere else entirely.
+    inkFollowScroll();
     drawing = true;
     // setPointerCapture throws on a pointer the element does not currently own, and an
     // exception here would abort the rest of the handler, so the stroke never starts
@@ -2350,10 +2504,21 @@ body.guide { margin: 0; -webkit-text-size-adjust: 100%; }
       return;
     }
     if (!stroke) return;          // a move with no stroke in progress
+    var from = Math.max(0, stroke.pts.length - 1);
     stroke.pts.push.apply(stroke.pts, pts);
-    // the whole stroke, redrawn on the live layer only, so alpha applies once
-    wipe(live, lctx);
-    pathStroke(lctx, stroke);
+
+    if (INK[stroke.k || "pen"].alpha >= 1) {
+      // Opaque ink: extend the line in place and draw only the new piece. Clearing the
+      // canvas and re-drawing the whole stroke on every pointer event made the cost grow
+      // with the length of the stroke, and an Apple Pencil sends events at 120Hz, which
+      // is why writing skipped and broke up.
+      pathTail(lctx, stroke, from);
+    } else {
+      // Translucent ink has to be redrawn whole or the overlaps darken, but only the
+      // rectangle it covers needs clearing, not the whole canvas.
+      clearStrokeBox(live, lctx, stroke);
+      pathStroke(lctx, stroke);
+    }
   }
 
   function penUp() {
@@ -3046,7 +3211,22 @@ body.guide { margin: 0; -webkit-text-size-adjust: 100%; }
     });
 
     window.addEventListener("resize", function () { clearTimeout(wireUI._r); wireUI._r = setTimeout(layoutInk, 150); });
-    window.addEventListener("scroll", hideBubble, { passive: true });
+    // The ink canvas covers a window onto the page, so it has to follow the scroll. One
+    // frame at a time, and never mid-stroke.
+    document.addEventListener("visibilitychange", function () {
+      if (!document.hidden) inkFollowScroll();
+    });
+    // A plain time throttle rather than requestAnimationFrame: this has to keep working
+    // in a backgrounded tab and anywhere rAF is throttled, and inkFollowScroll already
+    // does nothing unless the window has drifted far enough to matter.
+    var inkLast = 0;
+    window.addEventListener("scroll", function () {
+      hideBubble();
+      var now = Date.now();
+      if (now - inkLast < 80) return;
+      inkLast = now;
+      inkFollowScroll();
+    }, { passive: true });
 
     markActiveSwatch();
   }
@@ -3169,6 +3349,130 @@ body.guide { margin: 0; -webkit-text-size-adjust: 100%; }
   };
 })();
 </script>
+<script>// Scored viva question banks, one array per case id, inlined into the hub at build time by
+// build.py. Kept out of app/case-files.html because the banks are the bulk of the words in
+// this project and the hub is the bulk of its logic, and because a question is edited far
+// more often than the drill around it.
+//
+// Each question:
+//   id    unique across every bank, because a student's answers are stored against it and
+//         a reused id would merge two questions' histories. Prefix per case.
+//   lv    1 Foundation, 2 Clinical, 3 Examiner's edge. Level 1 and 2 are what an Indian
+//         final-year examiner actually asks at the bedside; level 3 is the hardest of those,
+//         not registrar material.
+//   type  the topic the progress screen groups by: Anatomy, Examination, History,
+//         Classification, Investigation, Management, Treatment, Complications, Pathology.
+//   q     the question, as an examiner would put it. Never "what does the book say".
+//   a     the answer. It answers the question in its first clause, and only then adds any
+//         note about where the three books disagree.
+//   ref   the page citation, in the same form the guides use: "Das 38 p.594 · B&L 64 p.1060".
+//         Every one is checked by check_bank.py against the chapter and page it names.
+
+var VIVA_BANKS = {
+
+  "inguinal-hernia": [
+      {id:"h01", lv:1, type:"Anatomy", q:"Define a hernia.",
+       a:"S Das: a hernia is defined as protrusion of whole or a part of a viscus through the wall that contains it. Bailey & Love: a hernia is an abnormal protrusion of an organ or tissue through an opening in the layer that normally confines it. Either is accepted; S Das is the one an Indian examiner is most likely to be marking against.", ref:"Das 38 p.594 · B&L 64 p.1058"},
+      {id:"h02", lv:1, type:"Anatomy", q:"Name the three parts of a hernia, and the four parts of its sac.",
+       a:"Covering, sac and contents. The sac has a mouth, neck, body and fundus.", ref:"SRB 18 p.741"},
+      {id:"h03", lv:1, type:"Anatomy", q:"By what route does an indirect inguinal hernia leave the abdomen?",
+       a:"Through the deep inguinal ring, lateral to the inferior epigastric vessels, obliquely along the inguinal canal, emerging at the superficial ring. Lateral by origin, oblique by course.", ref:"Das 38 p.594 · B&L 64 p.1066"},
+      {id:"h04", lv:1, type:"Anatomy", q:"Give the boundaries of Hesselbach's triangle.",
+       a:"Lateral border of rectus abdominis medially, inferior epigastric vessels laterally, inguinal ligament below. B&L names the pubic bone and iliopubic tract as the lower border. The neck of a direct sac lies medial to the inferior epigastric vessels.", ref:"Das 38 p.603 · B&L 64 p.1066"},
+      {id:"h05", lv:1, type:"Examination", q:"What are the two classical signs of an uncomplicated hernia, and the two caveats?",
+       a:"Impulse on coughing and reducibility. Caveats: a swelling with a cough impulse is not necessarily a hernia, and a swelling with no cough impulse may still be one.", ref:"Das 38 p.598 · B&L 64 p.1061"},
+      {id:"h06", lv:1, type:"Classification", q:"When is an inguinal hernia 'complete'?",
+       a:"Only when the contents reach the bottom of the scrotum. Short of that, incomplete; still inside the superficial ring, a bubonocele.", ref:"Das 38 p.594, p.603"},
+      {id:"h07", lv:1, type:"History", q:"Which inguinal hernia is typical of the young, and which of the old?",
+       a:"Indirect in the young, and always the congenital type in neonates and young children. Direct mostly in older subjects, more common above 40.", ref:"Das 38 p.594, p.604 · B&L 64 p.1066"},
+      {id:"h08", lv:1, type:"Classification", q:"Name the possible contents of a hernial sac.",
+       a:"Omentum (omentocele/epiplocele), intestine (enterocele), bladder (cystocele), Meckel's diverticulum (Littre's), part of the bowel circumference (Richter's), appendix (Amyand's), ovary with fallopian tube, and fluid.", ref:"SRB 18 p.741–742"},
+      {id:"h09", lv:1, type:"Examination", q:"Why must the patient be examined standing?",
+       a:"A direct hernia disappears the moment he lies down. S Das examines standing first; B&L lies the patient down first to reduce and assess. Do both: standing to demonstrate, supine to assess the defect.", ref:"Das 38 p.596 · B&L 64 p.1061"},
+      {id:"h10", lv:1, type:"Examination", q:"How far must you expose the patient?",
+       a:"Both inguinal regions, from the umbilicus to mid-thigh. Inadequate exposure of this area is exactly why femoral hernias are missed.", ref:"Das 38 p.595 · B&L 64 p.1071"},
+      {id:"h11", lv:1, type:"Classification", q:"Name the clinical types of hernia.",
+       a:"Reducible, irreducible, obstructed, inflamed, strangulated, and SRB adds occult. B&L's complexity scale ends in infarcted.", ref:"Das 38 p.604–605 · SRB 18 p.742–743 · B&L 64 p.1060"},
+      {id:"h12", lv:1, type:"Anatomy", q:"Where is the superficial inguinal ring, and what should it admit?",
+       a:"A triangular opening in the external oblique aponeurosis, 1.25 cm above the pubic tubercle, bounded by a superomedial and an inferolateral crus. Normally it does not admit the tip of the little finger, or only just.", ref:"SRB 18 p.743"},
+      {id:"h13", lv:1, type:"Examination", q:"Where does an inguinal hernia lie relative to the pubic tubercle? And a femoral hernia?",
+       a:"Inguinal: above the inguinal ligament and medial to the pubic tubercle. Femoral: below the ligament and lateral to the tubercle. Edition note, not a live disagreement: B&L 26e said 'above and lateral' for the inguinal hernia and 28e has deleted that sentence, so the books now agree. The only relation 28e prints is the femoral one, and it matches S Das.", ref:"Das 38 p.597 · B&L 64 p.1071"},
+      {id:"h14", lv:1, type:"History", q:"What proportion of adult hernia repairs are inguinal?",
+       a:"Inguinal hernia is by far the commonest, and the figure usually quoted is that it accounts for about 80% of all hernia repairs. Then the detail: B&L 28e no longer prints that 80% figure. What it says is that inguinal hernia is the most common hernia in men and around 10 times more common in men than in women, that more than 80% of inguinal hernias are indirect, and that almost all hernias in children and women are indirect.", ref:"B&L 64 p.1065 · Das 38 p.603"},
+
+      {id:"h20", lv:2, type:"History", q:"Describe the pain of an early hernia. What does it mean when it stops?",
+       a:"Dragging and aching, worse as the day passes, often appearing before the lump. It ceases once the hernia is fully formed: so settling pain means the hernia has finished forming, not that he is improving. B&L: sharp intermittent pain suggests pinching; severe pain means high risk of strangulation.", ref:"Das 38 p.594 · B&L 64 p.1061"},
+      {id:"h21", lv:2, type:"History", q:"Give the four set questions for any inguinoscrotal swelling.",
+       a:"How did it start: on straining? Where did it first appear: groin descending, or below the crease ascending? What size when first seen, bottom of scrotum at once, or gradual? Does it disappear on lying down?", ref:"Das 38 p.594–595"},
+      {id:"h22", lv:2, type:"History", q:"Is a hernia caused by heavy lifting?",
+       a:"Classically yes. But B&L 28e begins from the premise that a normal abdominal wall has sufficient strength to resist high pressure, so the strain brings the hernia to the patient's attention rather than causing it. The evidence favours an inherited imbalance of collagen types, supported by the association with aortic aneurysm, by the difficulty of repair in Ehlers-Danlos syndrome, and by smoking raising risk through impaired collagen maturation. SRB agrees in its own words, 'metastatic emphysema of Read'. Edition note: the Olympic weightlifters line was 26e's way of making this argument and has been removed from 28e, so quote the mechanism, not the weightlifters.", ref:"B&L 64 p.1060 · SRB 18 p.741"},
+      {id:"h23", lv:2, type:"Examination", q:"A hernia with no cough impulse. What does that mean?",
+       a:"A complication, strangulated or incarcerated: or a neck blocked by adhesions. It is also typical of femoral hernia, where its absence leads to misdiagnosis as a lymph node. A saphena varix and a varicocele give false positives.", ref:"Das 38 p.597, p.599 · B&L 64 p.1061, p.1071"},
+      {id:"h24", lv:2, type:"Examination", q:"Describe Zieman's technique and its precondition.",
+       a:"Index on the deep ring (indirect), middle on the superficial ring (direct), ring finger on the saphenous opening 4 cm below and lateral to the pubic tubercle (femoral); the patient holds his nose and blows, or coughs. Only valid with no obvious swelling, or after complete reduction.", ref:"Das 38 p.599"},
+      {id:"h25", lv:2, type:"Examination", q:"In the invagination test, what does the direction of the finger tell you?",
+       a:"Directly backwards, direct. Upwards, backwards and outwards: indirect. Impulse on the pulp means direct; on the tip, oblique.", ref:"Das 38 p.600–601"},
+      {id:"h26", lv:2, type:"Examination", q:"Explain the ring occlusion test and its logic.",
+       a:"Standing, hernia reduced, thumb over the deep ring, cough. An indirect hernia comes through that ring so it is blocked; a direct one comes medial to it and bulges medial to your finger. B&L warns even experienced surgeons cannot distinguish the two with certainty.", ref:"Das 38 p.601 · B&L 64 p.1067"},
+      {id:"h27", lv:2, type:"Examination", q:"Distinguish an enterocele from an omentocele at the bedside.",
+       a:"Enterocele: elastic, resonant, reduces with a gurgle, first part difficult and last part easy, may show peristalsis. Omentocele: doughy and granular, dull, no gurgle, first part easy and last part resists.", ref:"Das 38 p.598, p.600 · SRB 18 p.742"},
+      {id:"h28", lv:2, type:"Examination", q:"Why is rectal examination obligatory in a case of hernia?",
+       a:"To exclude chronic constipation and an enlarged prostate, causes of straining that recur the hernia. And prostatic symptoms predict postoperative urinary retention.", ref:"Das 38 p.603 · B&L 64 p.1070"},
+      {id:"h29", lv:2, type:"Complications", q:"Differentiate an irreducible from a strangulated hernia.",
+       a:"Both are irreducible. The strangulated one is extremely tense and tender, may have red overlying skin, and has lost its cough impulse. All absent in pure irreducibility.", ref:"Das 38 p.604–605"},
+      {id:"h30", lv:2, type:"Complications", q:"Define obstructed hernia, and say why the diagnosis is dangerous.",
+       a:"Irreducibility plus intestinal obstruction with blood supply intact. It shares two of the three features of strangulation, so calling a strangulated hernia 'obstructed' wastes the time that would have saved the patient.", ref:"Das 38 p.604–605"},
+      {id:"h31", lv:2, type:"Examination", q:"Why examine abdominal muscle tone, and how?",
+       a:"To choose the operation, herniorrhaphy if tone is good, hernioplasty if poor. Observe in profile; the rising test, where weak obliques give Malgaigne's bulgings; and a finger in the superficial ring during a cough.", ref:"Das 38 p.602"},
+      {id:"h32", lv:2, type:"History", q:"A hernia that enlarges before micturition and shrinks after. What is in it?",
+       a:"Urinary bladder: a cystocele, only in a direct or sliding hernia. Pressing it provokes a desire to micturate. The medially placed bladder is pulled into a direct hernia.", ref:"Das 38 p.604 · B&L 64 p.1066"},
+      {id:"h33", lv:2, type:"Management", q:"Which investigation establishes the diagnosis?",
+       a:"None, it is clinical. Investigations are for fitness and cause. In doubt: ultrasound first, low cost but highly operator dependent; CT for complex or incisional hernia, and for planning abdominal wall reconstruction; MRI for sportsman's groin; laparoscopy for an occult contralateral hernia, though it will not show an intraparietal hernia. Plain x-ray is of little value. Herniography is SRB's answer, not B&L 28e's. And a negative scan does not exclude the hernia you felt, because groin hernias tend to reduce in a supine patient.", ref:"B&L 64 p.1061, p.1062"},
+      {id:"h34", lv:2, type:"Management", q:"State the four principles of any hernia repair.",
+       a:"Reduce the contents and remove non-viable tissue; excise and close the peritoneal sac, though small sacs may be reduced intact; close the defect if possible; reinforce with mesh, since closure alone has a high recurrence rate and mesh reduces but does not prevent recurrence. B&L 28e adds a fifth: excise redundant skin if necessary for cosmesis.", ref:"B&L 64 p.1062"},
+      {id:"h35", lv:2, type:"History", q:"A right direct hernia in a man with a right iliac fossa scar. Connect them.",
+       a:"Appendicectomy through a McBurney incision injured the ilioinguinal nerve, weakening the inguinal region and producing a right-sided direct hernia.", ref:"SRB 18 p.741 · Das 38 p.595"},
+
+      {id:"h40", lv:3, type:"Anatomy", q:"Where exactly is the deep inguinal ring?",
+       a:"S Das and SRB: 1.25 cm above the mid-inguinal point, midway between the ASIS and the symphysis pubis. B&L: midway between the ASIS and the pubic tubercle, the midpoint of the inguinal ligament: 2–3 cm above the femoral pulse. The mid-inguinal point overlies the femoral artery; the midpoint of the ligament overlies the deep ring.", ref:"Das 38 p.599 · SRB 18 p.743 · B&L 64 p.1065"},
+      {id:"h41", lv:3, type:"Complications", q:"Which hernia strangulates most often?",
+       a:"Two answers to two questions. The most common strangulated hernia is the indirect inguinal, because inguinal hernias are far more numerous. The highest rate of strangulation is in the femoral hernia. Fifty per cent of femoral hernias present as an emergency, against five per cent of inguinal.", ref:"SRB 18 p.743 · B&L 64 p.1070, p.1071"},
+      {id:"h42", lv:3, type:"Complications", q:"Why can a small hernia be more dangerous than a large one?",
+       a:"Risk depends on the neck, not the bulk. A small rigid-walled defect traps contents, acts as a constriction ring, impedes venous return and progresses to strangulation. A wide-necked direct hernia rarely strangulates.", ref:"B&L 64 p.1060, p.1062"},
+      {id:"h43", lv:3, type:"Complications", q:"What is Garrey's stricture?",
+       a:"An ischaemic narrowing of small bowel that has been reduced from an obstructed hernia, a stricture forming later at the site of the constriction ring.", ref:"SRB 18 p.742–743"},
+      {id:"h44", lv:3, type:"Classification", q:"What is Amyand's hernia? And Littre's?",
+       a:"Amyand's, the appendix in an inguinal hernial sac, often incarcerated. Littre's: a Meckel's diverticulum in the sac; Littre described it 81 years before Meckel was born.", ref:"SRB 18 p.742–743"},
+      {id:"h45", lv:3, type:"Complications", q:"What is Richter's hernia, and why is it treacherous?",
+       a:"Strangulation of only part of the circumference of the bowel, often complicating a femoral hernia. It mimics gastroenteritis: colic, bowels opening normally, sometimes diarrhoea, so operation is delayed. It may be impossible to detect clinically, yet the bowel can necrose and perforate.", ref:"Das 38 p.605–606 · B&L 64 p.1060"},
+      {id:"h46", lv:3, type:"Classification", q:"Classify a hernia by the European Hernia Society system.",
+       a:"Primary or recurrent (P/R); lateral, medial or femoral (L/M/F); defect size in finger breadths at 1.5 cm each. A primary indirect hernia with a 3 cm defect is PL2.", ref:"B&L 64 p.1067"},
+      {id:"h47", lv:3, type:"Classification", q:"What is a sliding hernia, and what is the surgical danger?",
+       a:"Extraperitoneal viscus, caecum on the right, sigmoid on the left, bladder either side, slides outside the sac and forms part of its wall. B&L: the sac forms secondarily, which distinguishes it from a classic indirect hernia; the large bowel wall may not be covered by peritoneum and can be damaged at operation.", ref:"Das 38 p.605 · B&L 64 p.1066"},
+      {id:"h48", lv:3, type:"Management", q:"Choose the operation, and justify it.",
+       a:"Herniotomy in a child: the wall is normal and in infants the rings are superimposed with no obliquity. Herniorrhaphy in a young adult with good tone. Hernioplasty with mesh where tone is poor, Malgaigne's bulgings are present, or the hernia is large or recurrent. Lichtenstein is commonest worldwide; laparoscopic TEP or TAPP for bilateral or recurrent hernia.", ref:"SRB 18 p.743 · Das 38 p.602 · B&L 64 p.1068-1069"},
+      {id:"h49", lv:3, type:"Management", q:"Describe the Shouldice repair and how it differs from Bassini.",
+       a:"Bassini sutures conjoint tendon to inguinal ligament from pubic tubercle to deep ring. Shouldice first incises the transversalis fascia from deep ring to pubic tubercle and closes it as a double-thick, two-layered posterior wall, double breasting: then the external oblique likewise. The only one of 150+ modifications with benefit; under 2% lifetime failure in expert hands, identical to Bassini in general hands.", ref:"B&L 64 p.1068"},
+      {id:"h50", lv:3, type:"Management", q:"What size mesh, and what must it cover?",
+       a:"Lichtenstein: 8 × 15 cm over the posterior wall, split around the cord at the deep ring. Laparoscopic: 10 × 15 cm crossing the midline into the retropubic space and 5 cm lateral to the deep ring, covering Hesselbach's triangle, the deep ring and the femoral canal together. At least 2 cm overlap, up to 5 cm.", ref:"B&L 64 p.1068, p.1069"},
+      {id:"h51", lv:3, type:"Management", q:"Why are lightweight large-pore meshes preferred?",
+       a:"Better integration, less contracture, less foreign body reaction, more flexibility and better comfort. Heavyweight mesh provokes a greater fibrous reaction, with collagen contraction and stiffening, impaired abdominal wall mobility, foreign body sensation and pain. Note the vocabulary: the mesh does not shrink, the fibrous tissue grown into it contracts, so 'mesh contracture' is the accurate term, and it can exceed 50% of area. Edition note: 28e has dropped the weight thresholds in g/m² and argues from pore size instead, favouring at least 1 mm in all directions.", ref:"B&L 64 p.1063, p.1064"},
+      {id:"h52", lv:3, type:"Management", q:"Groin pain four months after a Lichtenstein repair. What is it?",
+       a:"Chronic pain: defined as pain at three months, the commonest complication of open flat mesh repair, reported up to 20%. Most severe form is neuralgic, from injury to or irritation of the ilioinguinal, iliohypogastric or genital branch of the genitofemoral nerve, or from mesh shrinkage.", ref:"B&L 64 p.1069, p.1070"},
+      {id:"h53", lv:3, type:"Management", q:"Laparoscopic or open, what does the evidence say?",
+       a:"Laparoscopic repair gives less pain both immediately and up to five years later, faster return to full activity, and fewer wound complications: infection, bleeding and seroma. Particular benefit in bilateral hernias and in recurrence after open repair. Note what is not claimed: recurrence is no different between open and laparoscopic, nor between mesh types. The limit is a long learning curve. Robot assistance has shown little additional patient benefit so far and is hard to justify on cost for a simple repair. Edition note: 28e no longer cites the 'over 60 randomised trials' figure.", ref:"B&L 64 p.1069, p.1070"},
+      {id:"h54", lv:3, type:"Management", q:"Would you repair the asymptomatic other side?",
+       a:"Occult contralateral hernias are present in up to 20% of patients, so the other groin must always be examined, and a patient with a single hernia has a 50% lifetime risk of developing one on the other side. Some surgeons have suggested offering bilateral repair, especially if laparoscopic surgery is planned, but that is not widespread practice. Edition note: the lifetime risk was 33% in 26e and is 50% in 28e.", ref:"B&L 64 p.1061, p.1067"},
+      {id:"h55", lv:3, type:"Examination", q:"List the differential diagnosis of a groin swelling.",
+       a:"Integument: sebaceous cyst, lipoma, neurofibroma. Hernia: inguinal, femoral. Lymphatic: inguinal lymphadenopathy. Vascular: saphena varix, aneurysm. Inguinal canal: ectopic testis, lipoma or hydrocele of the cord, hydrocele of the canal of Nuck. Deep: psoas abscess. The common four are inguinal hernia, femoral hernia, inguinal lymphadenopathy and saphena varix.", ref:"SRB 18 p.741"},
+      {id:"h56", lv:3, type:"Complications", q:"A patient has unexplained small bowel obstruction. What must you do?",
+       a:"Examine the groins carefully for a femoral hernia. It is missed because the area is inadequately exposed, it may be only 1–2 cm, it loses its cough impulse early, and it is mistaken for a lymph node. CT in obstruction can identify one the clinician missed.", ref:"B&L 64 p.1071"},
+      {id:"h57", lv:3, type:"Management", q:"Does every hernia need repair?",
+       a:"No. Small hernias can be more dangerous than large, because risk follows the defect and not the lump. Femoral hernia should always be repaired. Recommend repair when complications are likely, for symptomatic or irreducible hernias, when reduction is getting harder or the hernia is enlarging, and in younger adults. Watchful waiting in an asymptomatic inguinal hernia in an elderly patient appears generally safe, with an annual crossover to surgery of around 10% as symptoms develop. Trusses are not recommended.", ref:"B&L 64 p.1062"}
+  ]
+
+};
+</script>
 <script>
 (function () {
   "use strict";
@@ -3184,10 +3488,10 @@ body.guide { margin: 0; -webkit-text-size-adjust: 100%; }
   // fragment keeps its number prefix, the PDF loses it.
   //   id   must equal the guide's data-doc attribute, because the reader stores a student's
   //        highlights and notes against it.
-  //   bank is true only where this hub has a scored question bank for the case. The guides all
-  //        carry their own viva as tap-to-reveal questions; the scored drill is separate.
+  // The guides all carry their own viva as tap-to-reveal questions; the scored drill is
+  // separate, and a case has one wherever app/viva-banks.js holds a bank under its id.
   var CASES = [
-    {num:"01", id:"inguinal-hernia", name:"Inguinal Hernia", kind:"long", bank:true},
+    {num:"01", id:"inguinal-hernia", name:"Inguinal Hernia", kind:"long"},
     {num:"02", id:"thyroid-swelling", name:"Thyroid Swelling", kind:"long"},
     {num:"03", id:"breast-lump", name:"Breast Lump", kind:"long"},
     {num:"04", id:"gastric-outlet-obstruction", name:"Gastric Outlet Obstruction", kind:"long"},
@@ -3239,106 +3543,11 @@ body.guide { margin: 0; -webkit-text-size-adjust: 100%; }
   function guideBodyFile(c) { return c.num + "-" + c.id + ".body.html"; }
   function pdfFile(c)       { return c.id + ".pdf"; }
 
-  var BANK = [
-    {id:"h01", lv:1, type:"Anatomy", q:"Define a hernia.",
-     a:"S Das: a hernia is defined as protrusion of whole or a part of a viscus through the wall that contains it. Bailey & Love: a hernia is an abnormal protrusion of an organ or tissue through an opening in the layer that normally confines it. Either is accepted; S Das is the one an Indian examiner is most likely to be marking against.", ref:"Das 38 p.594 · B&L 64 p.1058"},
-    {id:"h02", lv:1, type:"Anatomy", q:"Name the three parts of a hernia, and the four parts of its sac.",
-     a:"Covering, sac and contents. The sac has a mouth, neck, body and fundus.", ref:"SRB 18 p.741"},
-    {id:"h03", lv:1, type:"Anatomy", q:"By what route does an indirect inguinal hernia leave the abdomen?",
-     a:"Through the deep inguinal ring, lateral to the inferior epigastric vessels, obliquely along the inguinal canal, emerging at the superficial ring. Lateral by origin, oblique by course.", ref:"Das 38 p.594 · B&L 64 p.1066"},
-    {id:"h04", lv:1, type:"Anatomy", q:"Give the boundaries of Hesselbach's triangle.",
-     a:"Lateral border of rectus abdominis medially, inferior epigastric vessels laterally, inguinal ligament below. B&L names the pubic bone and iliopubic tract as the lower border. The neck of a direct sac lies medial to the inferior epigastric vessels.", ref:"Das 38 p.603 · B&L 64 p.1066"},
-    {id:"h05", lv:1, type:"Examination", q:"What are the two classical signs of an uncomplicated hernia, and the two caveats?",
-     a:"Impulse on coughing and reducibility. Caveats: a swelling with a cough impulse is not necessarily a hernia, and a swelling with no cough impulse may still be one.", ref:"Das 38 p.598 · B&L 64 p.1061"},
-    {id:"h06", lv:1, type:"Classification", q:"When is an inguinal hernia 'complete'?",
-     a:"Only when the contents reach the bottom of the scrotum. Short of that, incomplete; still inside the superficial ring, a bubonocele.", ref:"Das 38 p.594, p.603"},
-    {id:"h07", lv:1, type:"History", q:"Which inguinal hernia is typical of the young, and which of the old?",
-     a:"Indirect in the young, and always the congenital type in neonates and young children. Direct mostly in older subjects, more common above 40.", ref:"Das 38 p.594, p.604 · B&L 64 p.1066"},
-    {id:"h08", lv:1, type:"Classification", q:"Name the possible contents of a hernial sac.",
-     a:"Omentum (omentocele/epiplocele), intestine (enterocele), bladder (cystocele), Meckel's diverticulum (Littre's), part of the bowel circumference (Richter's), appendix (Amyand's), ovary with fallopian tube, and fluid.", ref:"SRB 18 p.741–742"},
-    {id:"h09", lv:1, type:"Examination", q:"Why must the patient be examined standing?",
-     a:"A direct hernia disappears the moment he lies down. S Das examines standing first; B&L lies the patient down first to reduce and assess. Do both: standing to demonstrate, supine to assess the defect.", ref:"Das 38 p.596 · B&L 64 p.1061"},
-    {id:"h10", lv:1, type:"Examination", q:"How far must you expose the patient?",
-     a:"Both inguinal regions, from the umbilicus to mid-thigh. Inadequate exposure of this area is exactly why femoral hernias are missed.", ref:"Das 38 p.595 · B&L 64 p.1071"},
-    {id:"h11", lv:1, type:"Classification", q:"Name the clinical types of hernia.",
-     a:"Reducible, irreducible, obstructed, inflamed, strangulated, and SRB adds occult. B&L's complexity scale ends in infarcted.", ref:"Das 38 p.604–605 · SRB 18 p.742–743 · B&L 64 p.1060"},
-    {id:"h12", lv:1, type:"Anatomy", q:"Where is the superficial inguinal ring, and what should it admit?",
-     a:"A triangular opening in the external oblique aponeurosis, 1.25 cm above the pubic tubercle, bounded by a superomedial and an inferolateral crus. Normally it does not admit the tip of the little finger, or only just.", ref:"SRB 18 p.743"},
-    {id:"h13", lv:1, type:"Examination", q:"Where does an inguinal hernia lie relative to the pubic tubercle? And a femoral hernia?",
-     a:"Inguinal: above the inguinal ligament and medial to the pubic tubercle. Femoral: below the ligament and lateral to the tubercle. Edition note, not a live disagreement: B&L 26e said 'above and lateral' for the inguinal hernia and 28e has deleted that sentence, so the books now agree. The only relation 28e prints is the femoral one, and it matches S Das.", ref:"Das 38 p.597 · B&L 64 p.1071"},
-    {id:"h14", lv:1, type:"History", q:"What proportion of adult hernia repairs are inguinal?",
-     a:"Inguinal hernia is by far the commonest, and the figure usually quoted is that it accounts for about 80% of all hernia repairs. Then the detail: B&L 28e no longer prints that 80% figure. What it says is that inguinal hernia is the most common hernia in men and around 10 times more common in men than in women, that more than 80% of inguinal hernias are indirect, and that almost all hernias in children and women are indirect.", ref:"B&L 64 p.1065 · Das 38 p.603"},
+  // The scored banks are inlined here from app/viva-banks.js by build.py. A case has a drill
+  // only where it has a bank, so nothing has to be flagged by hand in CASES.
+  var BANKS = (typeof VIVA_BANKS === "object" && VIVA_BANKS) ? VIVA_BANKS : {};
 
-    {id:"h20", lv:2, type:"History", q:"Describe the pain of an early hernia. What does it mean when it stops?",
-     a:"Dragging and aching, worse as the day passes, often appearing before the lump. It ceases once the hernia is fully formed: so settling pain means the hernia has finished forming, not that he is improving. B&L: sharp intermittent pain suggests pinching; severe pain means high risk of strangulation.", ref:"Das 38 p.594 · B&L 64 p.1061"},
-    {id:"h21", lv:2, type:"History", q:"Give the four set questions for any inguinoscrotal swelling.",
-     a:"How did it start: on straining? Where did it first appear: groin descending, or below the crease ascending? What size when first seen, bottom of scrotum at once, or gradual? Does it disappear on lying down?", ref:"Das 38 p.594–595"},
-    {id:"h22", lv:2, type:"History", q:"Is a hernia caused by heavy lifting?",
-     a:"Classically yes. But B&L 28e begins from the premise that a normal abdominal wall has sufficient strength to resist high pressure, so the strain brings the hernia to the patient's attention rather than causing it. The evidence favours an inherited imbalance of collagen types, supported by the association with aortic aneurysm, by the difficulty of repair in Ehlers-Danlos syndrome, and by smoking raising risk through impaired collagen maturation. SRB agrees in its own words, 'metastatic emphysema of Read'. Edition note: the Olympic weightlifters line was 26e's way of making this argument and has been removed from 28e, so quote the mechanism, not the weightlifters.", ref:"B&L 64 p.1060 · SRB 18 p.741"},
-    {id:"h23", lv:2, type:"Examination", q:"A hernia with no cough impulse. What does that mean?",
-     a:"A complication, strangulated or incarcerated: or a neck blocked by adhesions. It is also typical of femoral hernia, where its absence leads to misdiagnosis as a lymph node. A saphena varix and a varicocele give false positives.", ref:"Das 38 p.597, p.599 · B&L 64 p.1061, p.1071"},
-    {id:"h24", lv:2, type:"Examination", q:"Describe Zieman's technique and its precondition.",
-     a:"Index on the deep ring (indirect), middle on the superficial ring (direct), ring finger on the saphenous opening 4 cm below and lateral to the pubic tubercle (femoral); the patient holds his nose and blows, or coughs. Only valid with no obvious swelling, or after complete reduction.", ref:"Das 38 p.599"},
-    {id:"h25", lv:2, type:"Examination", q:"In the invagination test, what does the direction of the finger tell you?",
-     a:"Directly backwards, direct. Upwards, backwards and outwards: indirect. Impulse on the pulp means direct; on the tip, oblique.", ref:"Das 38 p.600–601"},
-    {id:"h26", lv:2, type:"Examination", q:"Explain the ring occlusion test and its logic.",
-     a:"Standing, hernia reduced, thumb over the deep ring, cough. An indirect hernia comes through that ring so it is blocked; a direct one comes medial to it and bulges medial to your finger. B&L warns even experienced surgeons cannot distinguish the two with certainty.", ref:"Das 38 p.601 · B&L 64 p.1067"},
-    {id:"h27", lv:2, type:"Examination", q:"Distinguish an enterocele from an omentocele at the bedside.",
-     a:"Enterocele: elastic, resonant, reduces with a gurgle, first part difficult and last part easy, may show peristalsis. Omentocele: doughy and granular, dull, no gurgle, first part easy and last part resists.", ref:"Das 38 p.598, p.600 · SRB 18 p.742"},
-    {id:"h28", lv:2, type:"Examination", q:"Why is rectal examination obligatory in a case of hernia?",
-     a:"To exclude chronic constipation and an enlarged prostate, causes of straining that recur the hernia. And prostatic symptoms predict postoperative urinary retention.", ref:"Das 38 p.603 · B&L 64 p.1070"},
-    {id:"h29", lv:2, type:"Complications", q:"Differentiate an irreducible from a strangulated hernia.",
-     a:"Both are irreducible. The strangulated one is extremely tense and tender, may have red overlying skin, and has lost its cough impulse. All absent in pure irreducibility.", ref:"Das 38 p.604–605"},
-    {id:"h30", lv:2, type:"Complications", q:"Define obstructed hernia, and say why the diagnosis is dangerous.",
-     a:"Irreducibility plus intestinal obstruction with blood supply intact. It shares two of the three features of strangulation, so calling a strangulated hernia 'obstructed' wastes the time that would have saved the patient.", ref:"Das 38 p.604–605"},
-    {id:"h31", lv:2, type:"Examination", q:"Why examine abdominal muscle tone, and how?",
-     a:"To choose the operation, herniorrhaphy if tone is good, hernioplasty if poor. Observe in profile; the rising test, where weak obliques give Malgaigne's bulgings; and a finger in the superficial ring during a cough.", ref:"Das 38 p.602"},
-    {id:"h32", lv:2, type:"History", q:"A hernia that enlarges before micturition and shrinks after. What is in it?",
-     a:"Urinary bladder: a cystocele, only in a direct or sliding hernia. Pressing it provokes a desire to micturate. The medially placed bladder is pulled into a direct hernia.", ref:"Das 38 p.604 · B&L 64 p.1066"},
-    {id:"h33", lv:2, type:"Management", q:"Which investigation establishes the diagnosis?",
-     a:"None, it is clinical. Investigations are for fitness and cause. In doubt: ultrasound first, low cost but highly operator dependent; CT for complex or incisional hernia, and for planning abdominal wall reconstruction; MRI for sportsman's groin; laparoscopy for an occult contralateral hernia, though it will not show an intraparietal hernia. Plain x-ray is of little value. Herniography is SRB's answer, not B&L 28e's. And a negative scan does not exclude the hernia you felt, because groin hernias tend to reduce in a supine patient.", ref:"B&L 64 p.1061, p.1062"},
-    {id:"h34", lv:2, type:"Management", q:"State the four principles of any hernia repair.",
-     a:"Reduce the contents and remove non-viable tissue; excise and close the peritoneal sac, though small sacs may be reduced intact; close the defect if possible; reinforce with mesh, since closure alone has a high recurrence rate and mesh reduces but does not prevent recurrence. B&L 28e adds a fifth: excise redundant skin if necessary for cosmesis.", ref:"B&L 64 p.1062"},
-    {id:"h35", lv:2, type:"History", q:"A right direct hernia in a man with a right iliac fossa scar. Connect them.",
-     a:"Appendicectomy through a McBurney incision injured the ilioinguinal nerve, weakening the inguinal region and producing a right-sided direct hernia.", ref:"SRB 18 p.741 · Das 38 p.595"},
-
-    {id:"h40", lv:3, type:"Anatomy", q:"Where exactly is the deep inguinal ring?",
-     a:"S Das and SRB: 1.25 cm above the mid-inguinal point, midway between the ASIS and the symphysis pubis. B&L: midway between the ASIS and the pubic tubercle, the midpoint of the inguinal ligament: 2–3 cm above the femoral pulse. The mid-inguinal point overlies the femoral artery; the midpoint of the ligament overlies the deep ring.", ref:"Das 38 p.599 · SRB 18 p.743 · B&L 64 p.1065"},
-    {id:"h41", lv:3, type:"Complications", q:"Which hernia strangulates most often?",
-     a:"Two answers to two questions. The most common strangulated hernia is the indirect inguinal, because inguinal hernias are far more numerous. The highest rate of strangulation is in the femoral hernia. Fifty per cent of femoral hernias present as an emergency, against five per cent of inguinal.", ref:"SRB 18 p.743 · B&L 64 p.1070, p.1071"},
-    {id:"h42", lv:3, type:"Complications", q:"Why can a small hernia be more dangerous than a large one?",
-     a:"Risk depends on the neck, not the bulk. A small rigid-walled defect traps contents, acts as a constriction ring, impedes venous return and progresses to strangulation. A wide-necked direct hernia rarely strangulates.", ref:"B&L 64 p.1060, p.1062"},
-    {id:"h43", lv:3, type:"Complications", q:"What is Garrey's stricture?",
-     a:"An ischaemic narrowing of small bowel that has been reduced from an obstructed hernia, a stricture forming later at the site of the constriction ring.", ref:"SRB 18 p.742–743"},
-    {id:"h44", lv:3, type:"Classification", q:"What is Amyand's hernia? And Littre's?",
-     a:"Amyand's, the appendix in an inguinal hernial sac, often incarcerated. Littre's: a Meckel's diverticulum in the sac; Littre described it 81 years before Meckel was born.", ref:"SRB 18 p.742–743"},
-    {id:"h45", lv:3, type:"Complications", q:"What is Richter's hernia, and why is it treacherous?",
-     a:"Strangulation of only part of the circumference of the bowel, often complicating a femoral hernia. It mimics gastroenteritis: colic, bowels opening normally, sometimes diarrhoea, so operation is delayed. It may be impossible to detect clinically, yet the bowel can necrose and perforate.", ref:"Das 38 p.605–606 · B&L 64 p.1060"},
-    {id:"h46", lv:3, type:"Classification", q:"Classify a hernia by the European Hernia Society system.",
-     a:"Primary or recurrent (P/R); lateral, medial or femoral (L/M/F); defect size in finger breadths at 1.5 cm each. A primary indirect hernia with a 3 cm defect is PL2.", ref:"B&L 64 p.1067"},
-    {id:"h47", lv:3, type:"Classification", q:"What is a sliding hernia, and what is the surgical danger?",
-     a:"Extraperitoneal viscus, caecum on the right, sigmoid on the left, bladder either side, slides outside the sac and forms part of its wall. B&L: the sac forms secondarily, which distinguishes it from a classic indirect hernia; the large bowel wall may not be covered by peritoneum and can be damaged at operation.", ref:"Das 38 p.605 · B&L 64 p.1066"},
-    {id:"h48", lv:3, type:"Management", q:"Choose the operation, and justify it.",
-     a:"Herniotomy in a child: the wall is normal and in infants the rings are superimposed with no obliquity. Herniorrhaphy in a young adult with good tone. Hernioplasty with mesh where tone is poor, Malgaigne's bulgings are present, or the hernia is large or recurrent. Lichtenstein is commonest worldwide; laparoscopic TEP or TAPP for bilateral or recurrent hernia.", ref:"SRB 18 p.743 · Das 38 p.602 · B&L 64 p.1068-1069"},
-    {id:"h49", lv:3, type:"Management", q:"Describe the Shouldice repair and how it differs from Bassini.",
-     a:"Bassini sutures conjoint tendon to inguinal ligament from pubic tubercle to deep ring. Shouldice first incises the transversalis fascia from deep ring to pubic tubercle and closes it as a double-thick, two-layered posterior wall, double breasting: then the external oblique likewise. The only one of 150+ modifications with benefit; under 2% lifetime failure in expert hands, identical to Bassini in general hands.", ref:"B&L 64 p.1068"},
-    {id:"h50", lv:3, type:"Management", q:"What size mesh, and what must it cover?",
-     a:"Lichtenstein: 8 × 15 cm over the posterior wall, split around the cord at the deep ring. Laparoscopic: 10 × 15 cm crossing the midline into the retropubic space and 5 cm lateral to the deep ring, covering Hesselbach's triangle, the deep ring and the femoral canal together. At least 2 cm overlap, up to 5 cm.", ref:"B&L 64 p.1068, p.1069"},
-    {id:"h51", lv:3, type:"Management", q:"Why are lightweight large-pore meshes preferred?",
-     a:"Better integration, less contracture, less foreign body reaction, more flexibility and better comfort. Heavyweight mesh provokes a greater fibrous reaction, with collagen contraction and stiffening, impaired abdominal wall mobility, foreign body sensation and pain. Note the vocabulary: the mesh does not shrink, the fibrous tissue grown into it contracts, so 'mesh contracture' is the accurate term, and it can exceed 50% of area. Edition note: 28e has dropped the weight thresholds in g/m² and argues from pore size instead, favouring at least 1 mm in all directions.", ref:"B&L 64 p.1063, p.1064"},
-    {id:"h52", lv:3, type:"Management", q:"Groin pain four months after a Lichtenstein repair. What is it?",
-     a:"Chronic pain: defined as pain at three months, the commonest complication of open flat mesh repair, reported up to 20%. Most severe form is neuralgic, from injury to or irritation of the ilioinguinal, iliohypogastric or genital branch of the genitofemoral nerve, or from mesh shrinkage.", ref:"B&L 64 p.1069, p.1070"},
-    {id:"h53", lv:3, type:"Management", q:"Laparoscopic or open, what does the evidence say?",
-     a:"Laparoscopic repair gives less pain both immediately and up to five years later, faster return to full activity, and fewer wound complications: infection, bleeding and seroma. Particular benefit in bilateral hernias and in recurrence after open repair. Note what is not claimed: recurrence is no different between open and laparoscopic, nor between mesh types. The limit is a long learning curve. Robot assistance has shown little additional patient benefit so far and is hard to justify on cost for a simple repair. Edition note: 28e no longer cites the 'over 60 randomised trials' figure.", ref:"B&L 64 p.1069, p.1070"},
-    {id:"h54", lv:3, type:"Management", q:"Would you repair the asymptomatic other side?",
-     a:"Occult contralateral hernias are present in up to 20% of patients, so the other groin must always be examined, and a patient with a single hernia has a 50% lifetime risk of developing one on the other side. Some surgeons have suggested offering bilateral repair, especially if laparoscopic surgery is planned, but that is not widespread practice. Edition note: the lifetime risk was 33% in 26e and is 50% in 28e.", ref:"B&L 64 p.1061, p.1067"},
-    {id:"h55", lv:3, type:"Examination", q:"List the differential diagnosis of a groin swelling.",
-     a:"Integument: sebaceous cyst, lipoma, neurofibroma. Hernia: inguinal, femoral. Lymphatic: inguinal lymphadenopathy. Vascular: saphena varix, aneurysm. Inguinal canal: ectopic testis, lipoma or hydrocele of the cord, hydrocele of the canal of Nuck. Deep: psoas abscess. The common four are inguinal hernia, femoral hernia, inguinal lymphadenopathy and saphena varix.", ref:"SRB 18 p.741"},
-    {id:"h56", lv:3, type:"Complications", q:"A patient has unexplained small bowel obstruction. What must you do?",
-     a:"Examine the groins carefully for a femoral hernia. It is missed because the area is inadequately exposed, it may be only 1–2 cm, it loses its cough impulse early, and it is mistaken for a lymph node. CT in obstruction can identify one the clinician missed.", ref:"B&L 64 p.1071"},
-    {id:"h57", lv:3, type:"Management", q:"Does every hernia need repair?",
-     a:"No. Small hernias can be more dangerous than large, because risk follows the defect and not the lump. Femoral hernia should always be repaired. Recommend repair when complications are likely, for symptomatic or irreducible hernias, when reduction is getting harder or the hernia is enlarging, and in younger adults. Watchful waiting in an asymptomatic inguinal hernia in an elderly patient appears generally safe, with an annual crossover to surgery of around 10% as symptoms develop. Trusses are not recommended.", ref:"B&L 64 p.1062"}
-  ];
+  function bankFor(c) { return (c && BANKS[c.id]) || []; }
 
   var LEVELS = [
     {n:1, name:"Foundation", desc:"Definitions, anatomy and the signs you must never fumble."},
@@ -3735,6 +3944,7 @@ body.guide { margin: 0; -webkit-text-size-adjust: 100%; }
     if (wasGuide && !inGuide && window.Reader && window.Reader.unmount) {
       window.Reader.unmount();
     }
+    document.body.setAttribute("data-screen", inGuide ? "guide" : "app");
     backTo = stack.length > 1 ? back : null;
     renderTopbar();
     render();
@@ -3784,7 +3994,7 @@ body.guide { margin: 0; -webkit-text-size-adjust: 100%; }
              '<span class="ico">' + c.num + '</span>' +
              '<span class="t-name">' + esc(c.name) + '</span>' +
              '<span class="t-desc">' + (c.kind === "long" ? "Long case" : "Short case") +
-             '. Study guide and printable PDF' + (c.bank ? ', plus the scored viva drill' : '') +
+             '. Study guide and printable PDF' + (bankFor(c).length ? ', plus the scored viva drill' : '') +
              '.</span><span class="t-go">&rarr;</span></button>';
     }).join("");
   }
@@ -3840,10 +4050,10 @@ body.guide { margin: 0; -webkit-text-size-adjust: 100%; }
           'finding, investigation and treatment decision. Set it up how you like to read, and ' +
           'highlight, annotate or write on it.</span>' +
           '<span class="t-go">&rarr;</span></button>' +
-        (CASE.bank
+        (bankFor(CASE).length
           ? '<button class="tile" id="goViva">' +
             '<span class="ico">VIVA</span><span class="t-name">Viva drill</span>' +
-            '<span class="t-desc">' + BANK.length + ' questions across three levels. Tracks ' +
+            '<span class="t-desc">' + bankFor(CASE).length + ' questions across three levels. Tracks ' +
             'which kinds of question you miss and tells you what to revise.</span>' +
             '<span class="t-go">&rarr;</span></button>'
           : '<div class="tile muted">' +
@@ -3867,7 +4077,7 @@ body.guide { margin: 0; -webkit-text-size-adjust: 100%; }
 
     on("goGuide", "click", function () { go(screenGuide); });
     on("goPdf", "click", savePdf);
-    if (CASE.bank) on("goViva", "click", function () { go(screenLevels); });
+    if (bankFor(CASE).length) on("goViva", "click", function () { go(screenLevels); });
     on("goProgress", "click", function () { go(screenProgress); });
   }
 
@@ -3877,14 +4087,14 @@ body.guide { margin: 0; -webkit-text-size-adjust: 100%; }
   // ------------------------------------------------------------------ levels
 
   function screenLevels() {
-    // Only case 01 has a bank. Without this, "Start a session" on any other case ran the
-    // hernia questions and filed them under that case's id.
-    if (!CASE.bank) {
+    // A case with no bank cannot be drilled. Without this, "Start a session" on such a case
+    // ran another case's questions and filed them under this one's id.
+    if (!bankFor(CASE).length) {
       app.innerHTML =
         '<div class="who"><span>' + esc(CASE.name) + '</span></div>' +
         '<h2>No scored drill yet</h2>' +
         '<p class="sub">This case has its study guide and its PDF. The scored viva, with ' +
-        'levels and progress, has only been written for Inguinal Hernia so far.</p>' +
+        'levels and progress, has not been written for it yet.</p>' +
         '<div class="row"><button class="btn primary" id="read">Open the study guide</button>' +
         '<button class="btn" id="back2">Back</button></div>' + askHtml();
       on("read", "click", function () { replace(screenGuide); });
@@ -3903,7 +4113,7 @@ body.guide { margin: 0; -webkit-text-size-adjust: 100%; }
       'if the marking is.</p><div class="levels">';
 
     LEVELS.forEach(function (L) {
-      var n = BANK.filter(function (q) { return q.lv === L.n; }).length;
+      var n = bankFor(CASE).filter(function (q) { return q.lv === L.n; }).length;
       var past = mine.filter(function (s) { return s.level === L.n; });
       var meta = n + " questions";
       if (past.length) {
@@ -3930,7 +4140,7 @@ body.guide { margin: 0; -webkit-text-size-adjust: 100%; }
 
   function startDrill(lv, inPlace) {
     level = lv;
-    queue = shuffle(BANK.filter(function (q) { return q.lv === lv; }).slice());
+    queue = shuffle(bankFor(CASE).filter(function (q) { return q.lv === lv; }).slice());
     idx = 0; results = []; results.recorded = false;
     // back from any question returns to the level list, not the previous question
     if (inPlace) replace(screenQuestion); else go(screenQuestion);
@@ -4086,14 +4296,15 @@ body.guide { margin: 0; -webkit-text-size-adjust: 100%; }
     });
 
     var seenCount = qids.length;
-    var coverage = BANK.length ? Math.round(seenCount / BANK.length * 100) : 0;
+    var bankSize = bankFor(CASE).length;
+    var coverage = bankSize ? Math.round(seenCount / bankSize * 100) : 0;
     var overall = totalQ ? Math.round(totalOk / totalQ * 100) : 0;
     var best = sessions.length
       ? Math.max.apply(null, sessions.map(function (s) { return s.pct; })) : null;
 
     html += '<div class="stats">' +
       '<div class="stat"><div class="sv">' + seenCount +
-        '<span style="font-size:.6em;color:var(--ink-soft)">/' + BANK.length + '</span></div>' +
+        '<span style="font-size:.6em;color:var(--ink-soft)">/' + bankSize + '</span></div>' +
         '<div class="sl">questions met (' + coverage + '%)</div></div>' +
       '<div class="stat"><div class="sv">' + overall + '%</div>' +
         '<div class="sl">answered right, all attempts</div></div>' +
@@ -4118,7 +4329,7 @@ body.guide { margin: 0; -webkit-text-size-adjust: 100%; }
               '. These are the ones worth going back to first.</div>';
     }
 
-    if (seenCount >= BANK.length) {
+    if (bankSize && seenCount >= bankSize) {
       html += '<div class="verdict info"><b>You have been through every question in this case.</b> ' +
               'Repeating them now tests retention rather than recall, which is the more useful ' +
               'thing this close to an exam. If you want more, ask for the bank to be extended, ' +
@@ -4167,6 +4378,171 @@ body.guide { margin: 0; -webkit-text-size-adjust: 100%; }
     on("again", "click", function () { replace(screenLevels); });
     on("switch", "click", function () { reset(screenWelcome); });
     wireAsk();
+  }
+
+  // ------------------------------------------------- the brownie debt
+  //
+  // Hitha said she would make brownies and cookies if this got built. It got built. This
+  // says so, once per sign-in, in a different way each time, and will not repeat a line
+  // until it has worked through all hundred of them. Clicking it turns it into a brownie,
+  // which then goes the way of all brownies.
+
+  var BROWNIE_LINES = [
+    "Brownies were mentioned. Brownies have not arrived.",
+    "This is your periodic brownie reminder.",
+    "Somewhere, harnar is still waiting for brownies.",
+    "A deal is a deal. The deal was brownies.",
+    "No pressure. Just brownies.",
+    "Differential diagnosis for a sad harnar: hunger. Treatment: brownies.",
+    "Rapid-fire viva: who owes whom brownies?",
+    "Indication for brownies: absolute.",
+    "Brownies: the only intervention with a 100% success rate.",
+    "Investigation of choice: open the oven.",
+    "This condition responds poorly to excuses and well to brownies.",
+    "Contraindications to brownies: none recorded.",
+    "The brownie deficit is now palpable.",
+    "Classic triad: a website, a promise, no brownies.",
+    "Conservative management has failed. Proceed to baking.",
+    "Prognosis excellent, provided brownies are given early.",
+    "Brownie levels are low. Recommend urgent correction.",
+    "Examination reveals an empty plate, non-tender.",
+    "A brownie a day keeps the reminders away.",
+    "Golden period for brownies: whenever you are free.",
+    "Grade I brownie craving. It progresses.",
+    "The literature is clear: brownies work.",
+    "First line, brownies. Second line, more brownies.",
+    "Cookies were also mentioned, for the record.",
+    "Deferred brownies have a high recurrence rate.",
+    "This site was built on the promise of chocolate.",
+    "Consent was given. Brownies were the consideration.",
+    "Postoperative instructions: bake.",
+    "Pathognomonic sign of a kept promise: brownies.",
+    "An unfulfilled brownie is a surgical emergency.",
+    "Study hard. Also, brownies.",
+    "After this case, brownies.",
+    "Revision goes better with brownies. So does harnar.",
+    "You are doing well. harnar is doing hungry.",
+    "Twenty-five cases built. Zero brownies baked.",
+    "Finish the chapter. Start the batter.",
+    "One of you is revising. One of you is waiting for brownies.",
+    "Break time? Brownie time.",
+    "Hitha. Brownies. You know the rest.",
+    "The guides are ready. The oven is not.",
+    "Not nagging. Reminding.",
+    "Just leaving this here: brownies.",
+    "A gentle reminder, chocolate flavoured.",
+    "A small note about a large debt. Brownies.",
+    "Still outstanding: brownies.",
+    "Your move. Preheat to 180.",
+    "Tick tock. Bake bake.",
+    "Reminder number many: brownies.",
+    "We both know what this is about.",
+    "You said brownies. Everyone heard it.",
+    "The site runs on hope and anticipated brownies.",
+    "Every citation checked. Still no brownies.",
+    "Somebody promised brownies and it was not Swarna.",
+    "harnar has built 25 case guides and eaten 0 brownies.",
+    "Brownies: still theoretical.",
+    "Nobody has yet observed these brownies.",
+    "The brownies remain hypothetical.",
+    "Rumours of brownies persist. Evidence is lacking.",
+    "Brownie, noun: a thing said to exist.",
+    "Current brownie count zero. Target: more than zero.",
+    "Remember the brownies.",
+    "Brownies, please.",
+    "Do not forget: brownies.",
+    "Today's reminder is chocolate based.",
+    "Hello. Brownies.",
+    "Small ask. Big brownie.",
+    "The deal included baked goods.",
+    "Two students, one website, several brownies owed.",
+    "harnar accepts payment in brownies.",
+    "Invoice: brownies. Status: unpaid.",
+    "Payment due, in chocolate.",
+    "Terms of service: brownies.",
+    "The licence fee is brownies.",
+    "Free site. Brownie funded.",
+    "Open source, brownie licence.",
+    "Viva question: what do you owe harnar?",
+    "Long case: the missing brownies.",
+    "Short case: a plate, empty.",
+    "Spot diagnosis: brownie deficiency.",
+    "Examiner's edge: name the baked good you promised.",
+    "Level 1, brownies. Level 2, cookies.",
+    "This question is worth one brownie.",
+    "Marks are awarded for brownies.",
+    "Pass criteria: brownies.",
+    "You scored well. Now bake.",
+    "Good luck with the revision. And the baking.",
+    "You will do great. Bring brownies anyway.",
+    "Studying hard? Reward everyone with brownies.",
+    "Brownies would really help morale.",
+    "Morale is low. Brownies would fix it.",
+    "This is a friendly, brownie shaped nudge.",
+    "Sending encouragement. Expecting brownies.",
+    "Keep going. Then bake.",
+    "Almost exam time. Definitely brownie time.",
+    "After the exam, brownies. Before the exam, also brownies.",
+    "One batch would settle this entirely.",
+    "The oven is right there.",
+    "Chocolate resolves most disputes.",
+    "That is all. Except the brownies.",
+    "End of message. Beginning of baking.",
+    "Dismissing this does not dismiss the brownies.",
+    "You can close this. The debt is unaffected."
+  ];
+
+  function brownieLine() {
+    var s = store();
+    var seen = Array.isArray(s.brownieSeen) ? s.brownieSeen : [];
+    if (seen.length >= BROWNIE_LINES.length) seen = [];     // been through them all, start again
+    var pool = [];
+    for (var i = 0; i < BROWNIE_LINES.length; i++) {
+      if (seen.indexOf(i) === -1) pool.push(i);
+    }
+    var pick = pool[Math.floor(Math.random() * pool.length)];
+    seen.push(pick);
+    s.brownieSeen = seen;
+    save(s);
+    return BROWNIE_LINES[pick];
+  }
+
+  var BROWNIE_SVG =
+    '<svg viewBox="0 0 40 30" width="40" height="30" aria-hidden="true">' +
+    '<rect x="1" y="4" width="38" height="24" rx="4" fill="#5a3620"></rect>' +
+    '<rect x="1" y="4" width="38" height="7" rx="4" fill="#6b422a"></rect>' +
+    '<circle cx="11" cy="15" r="2.4" fill="#2f1b10"></circle>' +
+    '<circle cx="24" cy="12" r="2" fill="#2f1b10"></circle>' +
+    '<circle cx="30" cy="20" r="2.6" fill="#2f1b10"></circle>' +
+    '<circle cx="17" cy="22" r="1.8" fill="#2f1b10"></circle>' +
+    '</svg>';
+
+  function showBrownieNote() {
+    if (student.key !== "hitha") return;
+    if (document.querySelector(".brownie")) return;
+
+    var box = document.createElement("div");
+    box.className = "brownie";
+    box.setAttribute("role", "button");
+    box.tabIndex = 0;
+    box.innerHTML = '<span class="brownie-txt"></span>';
+    box.querySelector(".brownie-txt").textContent = brownieLine();
+    document.body.appendChild(box);
+    setTimeout(function () { box.classList.add("in"); }, 16);
+
+    var done = false;
+    function dismiss() {
+      if (done) return;
+      done = true;
+      box.classList.add("paid");
+      box.innerHTML = BROWNIE_SVG;
+      setTimeout(function () { box.classList.add("gone"); }, 1500);
+      setTimeout(function () { if (box.parentNode) box.parentNode.removeChild(box); }, 2100);
+    }
+    box.addEventListener("click", dismiss);
+    box.addEventListener("keydown", function (e) {
+      if (e.key === "Enter" || e.key === " ") { e.preventDefault(); dismiss(); }
+    });
   }
 
   // ------------------------------------------------- asking for better questions
@@ -4359,6 +4735,7 @@ body.guide { margin: 0; -webkit-text-size-adjust: 100%; }
       pullAnswers();
       sendAsks();
       reset(screenIndex);
+      showBrownieNote();
     }
     on("go", "click", function () { enter(document.getElementById("nm").value); });
     document.getElementById("nm").addEventListener("keydown", function (e) {

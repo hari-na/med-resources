@@ -2566,7 +2566,17 @@ body.guide { margin: 0; -webkit-text-size-adjust: 100%; }
   // Inside the artifact the guide sits in a page with its own chrome. Two independent
   // theme switches read as a bug, so the reader's colour choice drives both. Sepia and
   // high contrast have no chrome equivalent, so the chrome takes the nearest of the two.
+  // The guide sets its own measure, but inside the hub it is mounted in a shell with a
+  // max-width of its own, which clamped Medium, Wide and Full to the same width: changing
+  // the setting appeared to do nothing at all on anything bigger than a phone. Mirror the
+  // choice onto the host so the shell can follow it.
+  function syncHostWidth() {
+    if (!cfg.syncRoot) return;
+    document.body.setAttribute("data-width", state.width || "medium");
+  }
+
   function syncHostTheme() {
+    syncHostWidth();
     if (!cfg.syncRoot) return;
     var map = { auto: "", light: "light", sepia: "light", dark: "dark", contrast: "dark" };
     var v = map[state.theme];
@@ -2903,7 +2913,7 @@ body.guide { margin: 0; -webkit-text-size-adjust: 100%; }
     return Math.max(0.08, s);
   }
 
-  function sizeCanvas(c, w, h, left, top) {
+  function sizeCanvas(c, w, h, left, top, originY) {
     // CSS size is always the true size, so stroke coordinates remain document pixels
     c.style.width = w + "px";
     c.style.height = h + "px";
@@ -2914,8 +2924,11 @@ body.guide { margin: 0; -webkit-text-size-adjust: 100%; }
     c.width = Math.max(1, Math.round(w * s));
     c.height = Math.max(1, Math.round(h * s));
     c.inkScale = s;
+    // The canvas covers a window onto the page, not the whole page, so shift the context
+    // by where that window starts. Strokes stay in guide coordinates throughout.
+    c.inkOriginY = originY || 0;
     var g = c.getContext("2d");
-    if (g) g.setTransform(s, 0, 0, s, 0, 0);
+    if (g) g.setTransform(s, 0, 0, s, 0, -c.inkOriginY * s);
     return s;
   }
 
@@ -2928,15 +2941,45 @@ body.guide { margin: 0; -webkit-text-size-adjust: 100%; }
     g.restore();
   }
 
+  // How much page above and below the viewport the ink canvas also covers, so that an
+  // ordinary scroll does not need a new canvas on every frame.
+  var INK_MARGIN = 600;
+
+  // The ink canvases used to span the whole document. On a long case that is a canvas
+  // 48,000px tall, which does two bad things on an iPad. The browser caps a canvas at
+  // about 16 million pixels, so the backing store was forced below screen resolution and
+  // the ink came out soft and blotchy. And every pointermove cleared the whole of it,
+  // fifteen million pixels at a time, which is why writing skipped. A canvas the size of
+  // the viewport is sharp at full device pixel ratio and costs almost nothing to clear.
   function layoutInk() {
     if (!canvas || !guide) return;
     var wrap = guide.querySelector(".wrap") || guide;
     var r = wrap.getBoundingClientRect();
     var w = Math.round(r.width);
-    var h = Math.round(wrap.scrollHeight || r.height);
-    sizeCanvas(canvas, w, h, wrap.offsetLeft, wrap.offsetTop);
-    sizeCanvas(live, w, h, wrap.offsetLeft, wrap.offsetTop);
+    var pageH = Math.round(wrap.scrollHeight || r.height);
+    var view = window.innerHeight || 800;
+
+    // where the visible slice starts, measured from the top of the wrap
+    var originY = Math.max(0, Math.round(-r.top) - INK_MARGIN);
+    var h = Math.min(pageH - originY, view + INK_MARGIN * 2);
+    if (h < 1) { originY = Math.max(0, pageH - 1); h = Math.min(pageH, view); }
+
+    sizeCanvas(canvas, w, h, wrap.offsetLeft, wrap.offsetTop + originY, originY);
+    sizeCanvas(live, w, h, wrap.offsetLeft, wrap.offsetTop + originY, originY);
     redrawInk();
+  }
+
+  // Re-aim the canvases when the page has scrolled far enough that the window they cover
+  // is about to run out. Never while a stroke is in progress: moving the canvas would
+  // wipe what is being drawn.
+  function inkFollowScroll() {
+    if (!canvas || !guide || drawing) return;
+    var wrap = guide.querySelector(".wrap") || guide;
+    var r = wrap.getBoundingClientRect();
+    var want = Math.max(0, Math.round(-r.top) - INK_MARGIN);
+    var have = canvas.inkOriginY || 0;
+    var slack = INK_MARGIN / 2;
+    if (Math.abs(want - have) > slack) layoutInk();
   }
 
   function pathStroke(c, s) {
@@ -2955,15 +2998,70 @@ body.guide { margin: 0; -webkit-text-size-adjust: 100%; }
     c.restore();
   }
 
+  function strokeBox(s) {
+    if (s.__box && s.__n === s.pts.length) return s.__box;
+    var lo = Infinity, hi = -Infinity;
+    for (var i = 0; i < s.pts.length; i++) {
+      if (s.pts[i][1] < lo) lo = s.pts[i][1];
+      if (s.pts[i][1] > hi) hi = s.pts[i][1];
+    }
+    s.__box = [lo, hi];
+    s.__n = s.pts.length;
+    return s.__box;
+  }
+
+  function inWindow(c, s) {
+    if (!s.pts || !s.pts.length) return false;
+    var box = strokeBox(s), pad = (s.w || 2) + 4;
+    var top = c.inkOriginY || 0;
+    return box[1] + pad >= top && box[0] - pad <= top + (parseFloat(c.style.height) || 0);
+  }
+
+  // Draw only the tail of a stroke, from `from` onwards. Opaque ink can be extended in
+  // place like this; translucent ink cannot, because the overlap would darken.
+  function pathTail(c, s, from) {
+    if (s.pts.length - from < 2) return;
+    c.save();
+    c.globalAlpha = INK[s.k || "pen"].alpha;
+    c.strokeStyle = s.c;
+    c.lineWidth = s.w;
+    c.lineCap = "round";
+    c.lineJoin = "round";
+    c.beginPath();
+    c.moveTo(s.pts[from][0], s.pts[from][1]);
+    for (var i = from + 1; i < s.pts.length; i++) c.lineTo(s.pts[i][0], s.pts[i][1]);
+    c.stroke();
+    c.restore();
+  }
+
+  // Clear just the rectangle a stroke covers, rather than the whole canvas.
+  function clearStrokeBox(c, g, s) {
+    if (!s.pts.length) return;
+    var x0 = Infinity, y0 = Infinity, x1 = -Infinity, y1 = -Infinity;
+    for (var i = 0; i < s.pts.length; i++) {
+      var pt = s.pts[i];
+      if (pt[0] < x0) x0 = pt[0];
+      if (pt[0] > x1) x1 = pt[0];
+      if (pt[1] < y0) y0 = pt[1];
+      if (pt[1] > y1) y1 = pt[1];
+    }
+    var pad = (s.w || 2) + 4;
+    g.clearRect(x0 - pad, y0 - pad, (x1 - x0) + pad * 2, (y1 - y0) + pad * 2);
+  }
+
   function redrawInk() {
     if (!ctx) return;
     wipe(canvas, ctx);
     // highlighter first, so pen marks sit on top of it rather than under
     for (var i = 0; i < state.ink.length; i++) {
-      if (state.ink[i].k === "hl") pathStroke(ctx, state.ink[i]);
+      if (state.ink[i].k === "hl" && inWindow(canvas, state.ink[i])) {
+        pathStroke(ctx, state.ink[i]);
+      }
     }
     for (var j = 0; j < state.ink.length; j++) {
-      if (state.ink[j].k !== "hl") pathStroke(ctx, state.ink[j]);
+      if (state.ink[j].k !== "hl" && inWindow(canvas, state.ink[j])) {
+        pathStroke(ctx, state.ink[j]);
+      }
     }
   }
 
@@ -2975,7 +3073,8 @@ body.guide { margin: 0; -webkit-text-size-adjust: 100%; }
 
   function penPoint(ev) {
     var r = live.getBoundingClientRect();
-    return [ev.clientX - r.left, ev.clientY - r.top];
+    // the canvas is a window onto the page now, so add where that window starts
+    return [ev.clientX - r.left, ev.clientY - r.top + (live.inkOriginY || 0)];
   }
 
   // ---- erasing -------------------------------------------------------------
@@ -3046,6 +3145,10 @@ body.guide { margin: 0; -webkit-text-size-adjust: 100%; }
   function penDown(ev) {
     if (tool.kind !== "pen" && tool.kind !== "ink-hl" && tool.kind !== "erase") return;
     ev.preventDefault();
+    // Aim the ink window before the stroke starts rather than trusting that a scroll
+    // event arrived. If the canvas is stale the pointer coordinates are offset by the
+    // scroll, and the stroke lands somewhere else entirely.
+    inkFollowScroll();
     drawing = true;
     // setPointerCapture throws on a pointer the element does not currently own, and an
     // exception here would abort the rest of the handler, so the stroke never starts
@@ -3077,10 +3180,21 @@ body.guide { margin: 0; -webkit-text-size-adjust: 100%; }
       return;
     }
     if (!stroke) return;          // a move with no stroke in progress
+    var from = Math.max(0, stroke.pts.length - 1);
     stroke.pts.push.apply(stroke.pts, pts);
-    // the whole stroke, redrawn on the live layer only, so alpha applies once
-    wipe(live, lctx);
-    pathStroke(lctx, stroke);
+
+    if (INK[stroke.k || "pen"].alpha >= 1) {
+      // Opaque ink: extend the line in place and draw only the new piece. Clearing the
+      // canvas and re-drawing the whole stroke on every pointer event made the cost grow
+      // with the length of the stroke, and an Apple Pencil sends events at 120Hz, which
+      // is why writing skipped and broke up.
+      pathTail(lctx, stroke, from);
+    } else {
+      // Translucent ink has to be redrawn whole or the overlaps darken, but only the
+      // rectangle it covers needs clearing, not the whole canvas.
+      clearStrokeBox(live, lctx, stroke);
+      pathStroke(lctx, stroke);
+    }
   }
 
   function penUp() {
@@ -3773,7 +3887,22 @@ body.guide { margin: 0; -webkit-text-size-adjust: 100%; }
     });
 
     window.addEventListener("resize", function () { clearTimeout(wireUI._r); wireUI._r = setTimeout(layoutInk, 150); });
-    window.addEventListener("scroll", hideBubble, { passive: true });
+    // The ink canvas covers a window onto the page, so it has to follow the scroll. One
+    // frame at a time, and never mid-stroke.
+    document.addEventListener("visibilitychange", function () {
+      if (!document.hidden) inkFollowScroll();
+    });
+    // A plain time throttle rather than requestAnimationFrame: this has to keep working
+    // in a backgrounded tab and anywhere rAF is throttled, and inkFollowScroll already
+    // does nothing unless the window has drifted far enough to matter.
+    var inkLast = 0;
+    window.addEventListener("scroll", function () {
+      hideBubble();
+      var now = Date.now();
+      if (now - inkLast < 80) return;
+      inkLast = now;
+      inkFollowScroll();
+    }, { passive: true });
 
     markActiveSwatch();
   }

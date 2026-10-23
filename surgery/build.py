@@ -214,8 +214,12 @@ def build_artifact() -> pathlib.Path | None:
     html = src.read_text(encoding="utf-8")
     css = (ROOT / "assets" / "study.css").read_text(encoding="utf-8")
     js = (ROOT / "assets" / "reader.js").read_text(encoding="utf-8")
+    banks = (ROOT / "app" / "viva-banks.js").read_text(encoding="utf-8")
     html = html.replace("/* INJECT:GUIDE_CSS */", css)
     html = html.replace("/* INJECT:READER_JS */", js)
+    # The banks are the question text for the scored drill, one array per case. Inlined
+    # rather than linked because the published artifact cannot fetch a sibling script.
+    html = html.replace("/* INJECT:VIVA_BANKS */", banks)
     art = OUT / "artifact"
     art.mkdir(parents=True, exist_ok=True)
     out = art / "case-files.html"
