@@ -64,5 +64,23 @@ roughly in the order they would change a student's marks or their trust in the m
 - **S Das scans badly** and its quoted passages reach the reader with real OCR damage.
   The citation pane now says so, which is honest but not a fix. Re-OCR, or hand-correct
   the passages actually cited.
-- **check_quotes.py reports many false positives** for that reason; read its docstring
-  before believing a number from it.
+- **citations.json is 1.78 MB** and grew when the excerpt windows were widened to stop
+  them cutting quotations in half. Splitting it per case is the fix, and would take the
+  first-tap download from about 540 KB to 10-50 KB.
+
+### Checks that exist, and what each proves
+
+    python build_citations.py    every chip resolves to a page            0 unresolved
+    python check_quotes.py       every quoted sentence is on that page    0 suspect, 0 cut
+    python check_absence.py      every "the book does not say X" claim    22 of 22 hold
+    npm test                     the reader and the hub                   13 tests
+
+check_quotes scores similarity rather than answering yes or no, because the books are OCR
+and a verbatim quotation often does not match character for character. Genuine quotations
+score 0.79 to 1.00 and invented ones 0.35 to 0.42, so the thresholds sit in that gap. A
+"damaged" verdict means recognisable through bad OCR, which is expected in S Das; a
+"suspect" verdict means it does not look like that page at all and needs reading by a
+person.
+
+check_absence is a hand-written table, because no regex reliably pulls the claimed term
+out of the prose around it. Add a row whenever a guide makes a new absence claim.

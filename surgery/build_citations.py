@@ -68,9 +68,12 @@ CONTEXT_CHARS = 400  # size of the `before` / `after` excerpts
 # the first paragraph and would often be cut away entirely.
 # A student taps a chip to read the sentence the guide just quoted, so the window has to
 # contain the whole of it. At 600 either side of the match a long quotation ran off the end
-# of the excerpt: 44 of them stopped mid-sentence, which looks exactly like a misquotation.
+# of the excerpt, and the ceiling then squeezed the windows on a heavily cited page: 47
+# quotations were served an excerpt that did not contain them, which looks exactly like a
+# misquotation. check_quotes.py counts these, and the count is now zero. The cost is a
+# bigger citations.json, which wants splitting per case rather than narrowing further.
 WINDOW_CHARS = 900      # kept either side of the matched passage
-WINDOW_MAX = 3600       # ceiling when several chips cite the same page far apart
+WINDOW_MAX = 7000       # ceiling when several chips cite the same page far apart
 WINDOW_FALLBACK = 1400  # when nothing in the page matches, keep this much from the top
 CLAIM_CHARS = 700       # guide text before a chip, read as the claim it is backing
 ELLIPSIS = "… "
@@ -476,6 +479,59 @@ def claim_terms(claim: str) -> list[str]:
     return out
 
 
+QUOTE_RUN = re.compile(r"[\"“”]([^\"“”]{25,})[\"“”]")
+
+
+def tight_index(body_lower: str):
+    """The page as letters and digits only, with a map back to real offsets."""
+    chars, idx = [], []
+    for i, ch in enumerate(body_lower):
+        if ch.isalnum():
+            chars.append(ch)
+            idx.append(i)
+    return "".join(chars), idx
+
+
+def quoted_anchor(tight_body: str, idx: list[int], claim: str) -> int | None:
+    """Where the claim's own quotation sits on the page.
+
+    When the guide quotes the book, that quotation is verbatim page text, which locates
+    the passage far better than voting on the words of the surrounding prose. The word
+    vote was picking a different part of the page for 47 citations, so the excerpt a
+    student saw on tapping the chip did not contain the sentence they had just read.
+
+    Matched on letters and digits only, so hyphenation and the line breaks in the
+    extraction do not matter, and on a prefix, so that a line from the other column
+    landing inside the quotation does not defeat it.
+    """
+    # The quotation this chip is backing is the one that ends where the claim ends,
+    # between the last two quote marks. Taking the longest run instead matched the text
+    # *between* two quotations when the claim window happened to start on a closing mark,
+    # which is why 29 citations still served the wrong part of the page.
+    marks = [i for i, ch in enumerate(claim) if ch in "\"“”"]
+    runs = []
+    if len(marks) >= 2:
+        runs.append(claim[marks[-2] + 1:marks[-1]])
+    runs += sorted((m.group(1) for m in QUOTE_RUN.finditer(claim)), key=len, reverse=True)[:2]
+    for run in runs:
+        t = re.sub(r"[^a-z0-9]", "", run.lower())
+        for width in (140, 90, 60, 40):
+            if len(t) < width:
+                continue
+            at = tight_body.find(t[:width])
+            if at != -1:
+                # report the length too, so the window can be made wide enough to hold the
+                # whole quotation: shrinking every window to fit WINDOW_MAX was cutting
+                # quotations in half, which to a reader looks like a misquotation
+                end = min(len(idx) - 1, at + len(t))
+                run = idx[end] - idx[at]
+                # the midpoint, not the start: the window is centred on its anchor, so
+                # anchoring at the first character covered only the first half of a long
+                # quotation and cut the rest
+                return idx[at] + run // 2, run // 2 + 160
+    return None
+
+
 def anchor_of(body_lower: str, claim: str) -> int | None:
     """Where in the page this claim is talking about, or None if nothing matches.
 
@@ -511,7 +567,20 @@ def narrow(body: str, claims: list[str]) -> str:
         return body
 
     lower = body.lower()
-    anchors = [a for a in (anchor_of(lower, c) for c in claims) if a is not None]
+    tbody, tidx = tight_index(lower)
+    # A quotation in the claim is verbatim page text, so prefer it; fall back to the word
+    # vote for claims that only paraphrase. Each anchor carries the half-width it needs,
+    # which for a quotation is enough to hold the whole of it.
+    anchors: list[tuple[int, int]] = []
+    for c in claims:
+        q = quoted_anchor(tbody, tidx, c)
+        if q is not None:
+            pos, run = q
+            anchors.append((pos, run // 2 + 160))
+        else:
+            a = anchor_of(lower, c)
+            if a is not None:
+                anchors.append((a, 0))
     if not anchors:
         # nothing recognisable: keep the top of the page rather than guessing
         return head_context(body, WINDOW_FALLBACK) + ELLIPSIS.rstrip()
@@ -522,7 +591,11 @@ def narrow(body: str, claims: list[str]) -> str:
     # supposed to avoid.
     def windows(half: int) -> list[list[int]]:
         out: list[list[int]] = []
-        for lo, hi in sorted((max(0, a - half), min(len(body), a + half)) for a in anchors):
+        spans = []
+        for pos, need in anchors:
+            h = max(half, need)          # never shrink below what the quotation needs
+            spans.append((max(0, pos - h), min(len(body), pos + h)))
+        for lo, hi in sorted(spans):
             if out and lo <= out[-1][1]:
                 out[-1][1] = max(out[-1][1], hi)
             else:
