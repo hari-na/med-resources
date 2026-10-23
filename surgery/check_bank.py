@@ -71,7 +71,9 @@ would your""".split())
 
 WORD = re.compile(r"[a-z][a-z0-9'’\-]{4,}")
 
-ENTRY = re.compile(r"\{\s*id:\s*\"(?:[^\"\\]|\\.)*\".*?\}(?=\s*,\s*\{|\s*\])", re.S)
+#   ...}(?=  ,{ | , ] | ] )   — the trailing comma is optional, because the last entry of a
+# block carries one too, and a lookahead that insisted on a following "{" dropped it silently.
+ENTRY = re.compile(r"\{\s*id:\s*\"(?:[^\"\\]|\\.)*\".*?\}(?=\s*,?\s*[\{\]])", re.S)
 FIELD = re.compile(r"(\w+)\s*:\s*(\"(?:[^\"\\]|\\.)*\"|\d+)")
 CASE_KEY = re.compile(r"^\s{2}\"([a-z0-9\-]+)\":\s*\[", re.M)
 
