@@ -1561,8 +1561,11 @@
       '<div class="rdr-st-head"><b>Reading settings</b>' +
         '<button class="rdr-close" aria-label="Close">&times;</button></div>' +
       '<div class="rdr-st-body">' +
-        '<label>Line width</label>' +
+        // Wrapped so it can be hidden whole on a phone, where the window is the measure
+        // and every option would do the same thing.
+        '<div class="rdr-widthrow"><label>Line width</label>' +
         seg("width", [["narrow","Narrow"],["medium","Medium"],["wide","Wide"],["full","Full"]], state.width) +
+        '</div>' +
         '<label>Text size</label>' +
         seg("size", [["1","XS"],["2","S"],["3","M"],["4","L"],["5","XL"],["6","XXL"]], state.size) +
         '<label>Line spacing</label>' +

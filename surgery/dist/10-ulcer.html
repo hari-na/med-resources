@@ -53,10 +53,22 @@
 }
 
 /* ---------- reader: line width ---------- */
-.guide[data-width="narrow"] { --measure: 34rem; }
-.guide[data-width="medium"] { --measure: 42rem; }
-.guide[data-width="wide"]   { --measure: 54rem; }
+/* Each step is also a share of the window, not only a fixed measure. With fixed measures
+   alone the steps collapsed into each other on anything but a large screen: below about
+   900px Wide and Full were the same width, and below about 730px Medium, Wide and Full
+   were all the same, so picking a wider setting did nothing at all. The fixed value still
+   wins on a big screen, which keeps the comfortable reading measure there. */
+.guide[data-width="narrow"] { --measure: min(34rem, 64vw); }
+.guide[data-width="medium"] { --measure: min(42rem, 78vw); }
+.guide[data-width="wide"]   { --measure: min(54rem, 90vw); }
 .guide[data-width="full"]   { --measure: 100%; }
+
+/* On a phone the window is the measure, so the control is hidden rather than offered and
+   left to do nothing. */
+@media (max-width: 640px) {
+  .guide[data-width] { --measure: 100%; }
+  .rdr-widthrow { display: none; }
+}
 
 /* ---------- reader: type size ---------- */
 .guide[data-size="1"] { --fs: 15px; }
@@ -3041,8 +3053,11 @@ body.guide { margin: 0; -webkit-text-size-adjust: 100%; }
       '<div class="rdr-st-head"><b>Reading settings</b>' +
         '<button class="rdr-close" aria-label="Close">&times;</button></div>' +
       '<div class="rdr-st-body">' +
-        '<label>Line width</label>' +
+        // Wrapped so it can be hidden whole on a phone, where the window is the measure
+        // and every option would do the same thing.
+        '<div class="rdr-widthrow"><label>Line width</label>' +
         seg("width", [["narrow","Narrow"],["medium","Medium"],["wide","Wide"],["full","Full"]], state.width) +
+        '</div>' +
         '<label>Text size</label>' +
         seg("size", [["1","XS"],["2","S"],["3","M"],["4","L"],["5","XL"],["6","XXL"]], state.size) +
         '<label>Line spacing</label>' +

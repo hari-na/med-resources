@@ -349,11 +349,21 @@ label.fld {
    inside the shell and every wider setting came out identical, so the control looked
    broken. In the guide the shell follows whatever width the reader chose, a little wider
    than the guide's own measure so that the guide stays the binding constraint. */
-body[data-screen="guide"] .shell { max-width: var(--guide-measure, 40rem); }
-body[data-width="narrow"] { --guide-measure: 37rem; }
-body[data-width="medium"] { --guide-measure: 45rem; }
-body[data-width="wide"]   { --guide-measure: 57rem; }
-body[data-width="full"]   { --guide-measure: none; }
+/* In the guide the shell steps out of the way entirely and the guide's own measure
+   decides the width. Having both constrain it is what made Wide and Full identical:
+   whichever was smaller won, and on most windows that was the shell. */
+body[data-screen="guide"] .shell {
+  max-width: none;
+  padding-left: 0;
+  padding-right: 0;
+}
+body[data-screen="guide"] .readerwrap { margin: 0; }
+body[data-screen="guide"] .topbar {
+  max-width: 60rem;
+  margin-left: auto;
+  margin-right: auto;
+  padding: 0 max(16px, env(safe-area-inset-left, 0px));
+}
 
 .readerwrap { margin: 0 -1.5rem -1.5rem; }
 .readerwrap .guide { border-radius: 0 0 10px 10px; }
@@ -451,10 +461,22 @@ body[data-width="full"]   { --guide-measure: none; }
 }
 
 /* ---------- reader: line width ---------- */
-.guide[data-width="narrow"] { --measure: 34rem; }
-.guide[data-width="medium"] { --measure: 42rem; }
-.guide[data-width="wide"]   { --measure: 54rem; }
+/* Each step is also a share of the window, not only a fixed measure. With fixed measures
+   alone the steps collapsed into each other on anything but a large screen: below about
+   900px Wide and Full were the same width, and below about 730px Medium, Wide and Full
+   were all the same, so picking a wider setting did nothing at all. The fixed value still
+   wins on a big screen, which keeps the comfortable reading measure there. */
+.guide[data-width="narrow"] { --measure: min(34rem, 64vw); }
+.guide[data-width="medium"] { --measure: min(42rem, 78vw); }
+.guide[data-width="wide"]   { --measure: min(54rem, 90vw); }
 .guide[data-width="full"]   { --measure: 100%; }
+
+/* On a phone the window is the measure, so the control is hidden rather than offered and
+   left to do nothing. */
+@media (max-width: 640px) {
+  .guide[data-width] { --measure: 100%; }
+  .rdr-widthrow { display: none; }
+}
 
 /* ---------- reader: type size ---------- */
 .guide[data-size="1"] { --fs: 15px; }
@@ -2984,8 +3006,11 @@ body.guide { margin: 0; -webkit-text-size-adjust: 100%; }
       '<div class="rdr-st-head"><b>Reading settings</b>' +
         '<button class="rdr-close" aria-label="Close">&times;</button></div>' +
       '<div class="rdr-st-body">' +
-        '<label>Line width</label>' +
+        // Wrapped so it can be hidden whole on a phone, where the window is the measure
+        // and every option would do the same thing.
+        '<div class="rdr-widthrow"><label>Line width</label>' +
         seg("width", [["narrow","Narrow"],["medium","Medium"],["wide","Wide"],["full","Full"]], state.width) +
+        '</div>' +
         '<label>Text size</label>' +
         seg("size", [["1","XS"],["2","S"],["3","M"],["4","L"],["5","XL"],["6","XXL"]], state.size) +
         '<label>Line spacing</label>' +
@@ -3469,7 +3494,238 @@ var VIVA_BANKS = {
        a:"Examine the groins carefully for a femoral hernia. It is missed because the area is inadequately exposed, it may be only 1–2 cm, it loses its cough impulse early, and it is mistaken for a lymph node. CT in obstruction can identify one the clinician missed.", ref:"B&L 64 p.1071"},
       {id:"h57", lv:3, type:"Management", q:"Does every hernia need repair?",
        a:"No. Small hernias can be more dangerous than large, because risk follows the defect and not the lump. Femoral hernia should always be repaired. Recommend repair when complications are likely, for symptomatic or irreducible hernias, when reduction is getting harder or the hernia is enlarging, and in younger adults. Watchful waiting in an asymptomatic inguinal hernia in an elderly patient appears generally safe, with an annual crossover to surgery of around 10% as symptoms develop. Trusses are not recommended.", ref:"B&L 64 p.1062"}
-  ]
+  ],
+
+  "lipoma-and-sebaceous-cyst": [
+    {id:"lip01", lv:1, type:"Pathology", q:"What is a lipoma?",
+     a:"A benign neoplasm arising from yellow fat, composed of mature adipocytes with uniform nuclei identical to normal adult fat. S Das adds the structure you can feel: normal fat with overactive fat cells, arranged in lobules separated by fibrous septa and enclosed in a delicate capsule.", ref:"SRB 1 p.68 · Das 3 p.48"},
+    {id:"lip02", lv:1, type:"Pathology", q:"Why is a lipoma called the universal or ubiquitous tumour?",
+     a:"Because it can occur anywhere in the body except the brain. It is the commonest benign tumour, with a karyotype 12q change, and a prevalence of 2.1 per 100 people.", ref:"SRB 1 p.68"},
+    {id:"lip03", lv:1, type:"Examination", q:"Give the signs of a lipoma.",
+     a:"Soft, lobulated, mobile, non-transilluminant, with the edges slipping between the palpating fingers, the slip sign, and the skin free over it. It may be pedunculated, and it is rare in children.", ref:"SRB 1 p.69"},
+    {id:"lip04", lv:1, type:"Examination", q:"What is the slip sign?",
+     a:"Press the edge of the swelling and the margin slips away from under the palpating finger, because the lobulated fat is soft and the capsule thin. S Das gives its value: in a cyst the edge does not slip away but yields to the finger, so the sign separates a solid fatty swelling from a cystic one.", ref:"Das 3 p.48 · SRB 1 p.69"},
+    {id:"lip05", lv:1, type:"Examination", q:"Where do lipomas commonly occur, and at what age?",
+     a:"Anywhere, but commonly in the neck, the back, around the shoulder and in the upper limbs. Any age, but rarely in children, so a soft subcutaneous swelling in a child deserves a wider differential.", ref:"Das 3 p.48 · SRB 1 p.69"},
+    {id:"lip06", lv:1, type:"Pathology", q:"What is a sebaceous cyst, and what is in it?",
+     a:"S Das: a cyst of the sebaceous gland caused by blockage of its duct, which opens mostly into the hair follicle, so the gland becomes distended by its own secretion. It contains sebum, a yellowish-white cheesy pultaceous material, and it can be squeezed out through the punctum.", ref:"Das 3 p.56"},
+    {id:"lip07", lv:1, type:"Examination", q:"What is the punctum, how often is it present, and why is it black?",
+     a:"A depressed black spot over the summit of the cyst, which is the blocked duct opening. Present in 70% of cases, because there the sebaceous duct opens directly into the skin and gets blocked. It is black because of the denuded squamous epithelium, that is keratin.", ref:"SRB 1 p.75"},
+    {id:"lip08", lv:1, type:"Examination", q:"One manoeuvre to separate a lipoma from a sebaceous cyst. What is it?",
+     a:"Move the skin over the swelling. A sebaceous cyst is fixed to the skin and cannot be separated from it, and usually has a punctum; a lipoma lies beneath the skin, so the skin can be pinched up and moved freely over it. Then confirm the lipoma with its two signs, a lobulated surface and a positive slip sign.", ref:"B&L 45 p.645 · SRB 1 p.69, p.75"},
+    {id:"lip09", lv:1, type:"Examination", q:"Where do sebaceous cysts occur, and where do they never occur?",
+     a:"Anywhere in the body except the palm and the sole, which have no sebaceous glands. Commonly on the scalp, the face and the scrotum, in young adults, single or multiple.", ref:"Das 3 p.57"},
+    {id:"lip10", lv:1, type:"Examination", q:"Is a sebaceous cyst fluctuant? Does it transilluminate?",
+     a:"Fluctuation is always present; transillumination is always negative, because the contents are opaque pultaceous material and not clear fluid. S Das groups it with the dermoid cyst for exactly that reason.", ref:"Das 3 p.57, p.31"},
+    {id:"lip11", lv:1, type:"Examination", q:"Is a sebaceous cyst mobile?",
+     a:"It is fixed to the skin but quite movable over the deeper structures, because it arises in the skin itself and has no attachment below. That pattern, fixed above and free below, is the diagnosis.", ref:"Das 3 p.56 · B&L 45 p.645"},
+    {id:"lip12", lv:1, type:"Diagnosis", q:"Distinguish swelling, mass and lump.",
+     a:"A swelling is an obvious enlargement of a part of the body, from congenital, inflammatory or neoplastic causes. A mass is a lesion whose extent is difficult to define, as in a mass per abdomen. A lump is a defined lesion within an organ, or one that alters the gross shape of a part or organ, as in a breast lump.", ref:"SRB 1 p.68"},
+    {id:"lip13", lv:1, type:"Examination", q:"What do you do before you touch this patient?",
+     a:"Hand hygiene, introduce yourself and check the patient's name and date of birth, request a chaperone as appropriate, explain what you are going to do, obtain verbal consent, and make sure the patient is comfortable. Expose what you need and cover the rest.", ref:"B&L 35 p.472 · B&L 21 p.285"},
+
+    {id:"lip20", lv:2, type:"Examination", q:"How do you elicit fluctuation, and what is Paget's test?",
+     a:"Fix the swelling with two fingers of the left hand, the watching fingers, and press on it with the right index finger, the displacing finger, so that fluid inside is displaced and felt by the watching fingers. Repeat in two planes at right angles. On a small swelling, pressure from a single finger merely displaces the whole swelling, so the test cannot be done that way. SRB's wording: the swelling is fixed with two fingers and the summit is indented to get a yielding sensation due to fluid.", ref:"Das 3 p.30 · SRB 1 p.72"},
+    {id:"lip21", lv:2, type:"Examination", q:"What is the moulding sign?",
+     a:"The cyst moulds on finger indentation, keeping the shape of your finger for a moment, because its contents are putty-like keratin rather than free fluid. It sits alongside fluctuation, a positive Paget's test and absent transillumination.", ref:"SRB 1 p.75"},
+    {id:"lip22", lv:2, type:"Examination", q:"There is no punctum. Can this still be a sebaceous cyst?",
+     a:"Yes. The punctum is present in only 70% of cases; in the other 30% the duct opens into a hair follicle rather than directly onto the skin, so no punctum is seen. S Das notes the same difficulty and gives the alternative origins proposed for a cyst without a punctum: a fragment of epidermal cell nest following blunt or penetrating injury, or the hair follicle.", ref:"SRB 1 p.75 · Das 3 p.57"},
+    {id:"lip23", lv:2, type:"Examination", q:"Why is the skin fixed over one of these swellings and free over the other?",
+     a:"Because the cyst arises from the skin itself, from a hair follicle infundibulum, so it cannot be separated from it; the lipoma lies under the skin, so the skin moves over it.", ref:"B&L 45 p.645 · SRB 1 p.69"},
+    {id:"lip24", lv:2, type:"Examination", q:"You move the skin over a lipoma and the skin dimples. Does that make it a cyst?",
+     a:"No. Fibrous strands connect the capsule of the lipoma to the skin, so moving the overlying skin dimples it, and S Das describes this in a swelling that is otherwise clearly not attached to the skin. Dimpling on traction is not the same as fixity: you can still pinch the skin up away from a lipoma.", ref:"Das 3 p.48"},
+    {id:"lip25", lv:2, type:"Examination", q:"How do you show that a swelling on the back of the neck is subcutaneous and not deep to the muscle?",
+     a:"Make the underlying muscle taut, trapezius by shrugging the shoulder up against resistance, and move the swelling with the other hand. A subcutaneous lipoma stays freely mobile over the contracted muscle, along its long axis and at right angles to it. For the abdominal wall the equivalent is the muscle-contraction test: an intra-abdominal mass becomes less prominent, a parietal one persists and becomes less mobile.", ref:"Das 3 p.48 · SRB 16 p.723"},
+    {id:"lip26", lv:2, type:"History", q:"The patient has lost a great deal of weight. Will the lipoma have shrunk?",
+     a:"No. The fat in a lipoma is considered unavailable for general metabolism, so it persists and may look more prominent in a patient who has lost weight.", ref:"SRB 1 p.68"},
+    {id:"lip27", lv:2, type:"Classification", q:"Which lipoma is difficult to remove, and why?",
+     a:"The diffuse type. It is neither encapsulated nor localised, is common in the palm, the sole, the head and the neck, and lies in subcutaneous and intermuscular tissue, so it is difficult to remove surgically and recurrence is high after incomplete removal. The localised type is encapsulated and yellowish-orange and shells out easily, which is the whole difference between a five-minute excision and a recurrence.", ref:"SRB 1 p.68"},
+    {id:"lip28", lv:2, type:"Examination", q:"The scalp over this swelling is bald and there is an unpleasant smell. Explain both.",
+     a:"Hair loss over the surface is common, from constant pressure on the roots of the hair follicles, and the unpleasant odour of the sebum content is typical of a sebaceous cyst. Both are found before you touch the patient.", ref:"SRB 1 p.76 · Das 3 p.57"},
+    {id:"lip29", lv:2, type:"Treatment", q:"How would you treat this lipoma?",
+     a:"Excision, usually under local anaesthetic for a small localised one, and the capsule makes enucleation easy. A diffuse lipoma must be excised completely and the patient warned, because recurrence is high after incomplete removal.", ref:"SRB 1 p.68"},
+    {id:"lip30", lv:2, type:"Treatment", q:"How would you treat this sebaceous cyst, and what if it were infected?",
+     a:"Excise the cyst with its wall intact, including the punctum, because any retained wall recurs. If it is infected, drain it first and excise later once the inflammation has settled; infection and abscess formation are its commonest complications.", ref:"SRB 1 p.76"},
+    {id:"lip31", lv:2, type:"Complications", q:"List the complications of a sebaceous cyst.",
+     a:"S Das gives seven: infection, when the cyst becomes enlarged and painful; ulceration; rupture and sinus formation; calcification; carcinomatous change; Cock's peculiar tumour; and sebaceous horn. SRB's shorter list is infection and abscess formation, surface ulceration, Cock's peculiar tumour and sebaceous horn. Carcinomatous change is in S Das and not in SRB's list, so give S Das's seven to an Indian examiner.", ref:"Das 3 p.57 · SRB 1 p.76"},
+
+    {id:"lip40", lv:3, type:"Complications", q:"What is Cock's peculiar tumour?",
+     a:"An ulcerated sebaceous cyst that forms a painful fungating mass with discharge, closely resembling an epithelioma. It is a misnomer: it is not a tumour at all but a chronic granuloma on the ulcerated surface of a sebaceous cyst. Because it looks like a squamous carcinoma, biopsy it, and excise once the diagnosis is secure. S Das adds that it follows rupture of the cyst with chronic infection spreading into the surrounding tissue.", ref:"SRB 1 p.76 · Das 3 p.57"},
+    {id:"lip41", lv:3, type:"Complications", q:"What is a sebaceous horn?",
+     a:"A projection formed by hardening of slowly discharged sebum through the punctum, a horn being something with greater length than breadth.", ref:"SRB 1 p.76 · Das 3 p.57"},
+    {id:"lip42", lv:3, type:"Examination", q:"A soft swelling that seems to fluctuate, and a big one that transilluminates. Can it still be a lipoma?",
+     a:"Yes, and this is the trap in the case. S Das: at body temperature the fat is almost semiliquid, so slight fluctuation may be elicited and lipoma is often called a semifluctuant swelling; very soft swellings, lipoma among them, give a false positive fluctuation test, and the way to tell is that they yield to pressure but fail to expand in the other parts of the swelling as a truly fluctuant swelling does. He also records that a large lipoma may transilluminate with an ordinary torch. SRB flatly lists a lipoma as non-transilluminant. The books disagree, and the safe answer is SRB's for the small lipoma in front of you with S Das's caveat attached.", ref:"Das 3 p.48, p.30 · SRB 1 p.69"},
+    {id:"lip43", lv:3, type:"Diagnosis", q:"Is \"sebaceous cyst\" the correct name?",
+     a:"Clinically yes, strictly no, and the honest answer gives the clinical name first. B&L 28e calls these epidermoid cysts, derived from hair follicle infundibuli or from traumatic inclusion, and says they are commonly known as sebaceous cysts, fixed to the skin and usually with a central punctum. The contents are keratin rather than sebum, which is why the name is regarded as a misnomer, and why the punctum is black with denuded squamous epithelium. SRB and S Das use sebaceous cyst throughout, and so will your examiner, so do not refuse the term.", ref:"B&L 45 p.645 · SRB 1 p.75 · Das 3 p.56"},
+    {id:"lip44", lv:3, type:"Diagnosis", q:"A midline swelling over the bridge of the nose in a child. Would you simply excise it?",
+     a:"No. Consider a dermoid cyst: skin free, no punctum, often extending into a deeper plane or cavity through a suture line, commonly with bone resorption and indentation, with restricted mobility. It needs proper evaluation with a radiograph or CT first, and excision under general anaesthesia. Restricted mobility, or a position over a suture line, means image before you cut, because of possible deep or intracranial extension. That is the one way this short case can go badly wrong.", ref:"SRB 1 p.76"},
+    {id:"lip45", lv:3, type:"Complications", q:"When would you worry about a fatty swelling?",
+     a:"If it is large, rapidly growing, deep, painful, intermuscular or retroperitoneal: raise liposarcoma, and image and biopsy rather than shelling it out. S Das lists the changes a long-standing lipoma may undergo, particularly in the thigh, buttock or retroperitoneum: myxomatous degeneration, saponification, calcification, infection, ulceration from repeated trauma, and malignant change. He adds the counter-view that certain authorities believe a lipoma never turns malignant, and that liposarcoma, commonest in retroperitoneal tissue, arises de novo rather than in a benign lipoma.", ref:"Das 3 p.49"},
+    {id:"lip46", lv:3, type:"Classification", q:"Name the varieties of lipoma that have their own names.",
+     a:"Naevolipoma, which contains dilated blood vessels; fibrolipoma, with excessive fibrous tissue; and neurolipoma, which contains nerve tissue and is therefore painful. The diffuse variety, having none of the typical features, is often called pseudolipoma, is seen in subcutaneous and intermuscular tissue of the neck spreading to the cheek, has no capsule, and is often found in people taking excessive alcohol.", ref:"Das 3 p.48, p.49"},
+    {id:"lip47", lv:3, type:"Classification", q:"What is Dercum's disease?",
+     a:"A variety of multiple lipomatosis in which there are tender lipomatous swellings, particularly affecting the trunk, and it is commoner in women. Multiple lipomas, lipomatosis, otherwise stay small or moderate, lie mostly in the limbs and trunk, and are no different from a solitary lipoma macroscopically or microscopically; when they contain nerve tissue and hurt they are called neurolipomatosis.", ref:"Das 3 p.49"},
+    {id:"lip48", lv:3, type:"Examination", q:"Separate a lipoma, a sebaceous cyst and a dermoid cyst, sign by sign.",
+     a:"Lipoma: skin free and moves over it, no punctum, lobulated surface, soft, slip sign positive, no fluctuation, subcutaneous or intermuscular, bone beneath normal. Sebaceous cyst: fixed to skin, punctum in 70%, smooth, moulds on indentation, fluctuant with a positive Paget's test, lies in the skin, bone normal. Dermoid: skin free, no punctum, smooth and often tense, fluctuant, but it extends into a deeper plane through a suture line, mobility is restricted, and bone resorption and indentation are common. None of the three transilluminates.", ref:"SRB 1 p.68, p.69, p.75, p.76 · Das 3 p.57"},
+  ],
+
+  "oral-cavity-lesions": [
+    {id:"orc01", lv:1, type:"Anatomy", q:"What does the oral cavity include?",
+     a:"B&L, following ICD-11: the lip, gum, tongue, palate and floor of the mouth, as well as the rest of the mouth. The nasopharynx, hypopharynx and major salivary glands are excluded, and the base of the tongue belongs to the oropharynx. SRB's list is lips, buccal mucosa, alveolar margins or gingiva, retromolar area and the rest.", ref:"B&L 53 p.813 · SRB 3 p.356"},
+    {id:"orc02", lv:1, type:"Pathology", q:"How common is oral cancer in India, and where in the mouth does it sit?",
+     a:"It is one of the commonest cancers in India, with an age-adjusted incidence of 20 per 100 000, over one-third of all cancers in India, and 100 000 new cases a year. Two-thirds of the world's oral cancers occur in low-income countries, half of those in South Asia. The subsite differs from the West: buccogingival and retromolar cancers account for over 40% of cases in India and South East Asia, reflecting betel quid, gutka and smokeless tobacco.", ref:"B&L 53 p.813"},
+    {id:"orc03", lv:1, type:"Pathology", q:"Define leukoplakia and erythroplakia.",
+     a:"A leukoplakia is a white patch or plaque that cannot be rubbed off; an erythroplakia is a bright red velvety plaque; and neither can be characterised clinically or pathologically as any other recognisable condition. Both are diagnoses of exclusion, and \"cannot be rubbed off\" is the clause that excludes candidiasis. SRB adds that leukoplakia is hyperkeratotic, irreversible, persistent and adherent, and the commonest premalignant lesion of the oral cavity.", ref:"B&L 53 p.815 · SRB 3 p.359"},
+    {id:"orc04", lv:1, type:"Classification", q:"Name the premalignant lesions of the oral cavity.",
+     a:"Leukoplakia, erythroplakia, erythroleukoplakia, proliferative verrucous leukoplakia, oral submucous fibrosis, oral lichen planus and lupus erythematosus, plus the inherited conditions epidermolysis bullosa and dyskeratosis congenita.", ref:"B&L 53 p.815"},
+    {id:"orc05", lv:1, type:"Pathology", q:"What causes leukoplakia?",
+     a:"SRB's list is a set of S's: smoking, spirit, sepsis, superficial glossitis, syphilis, spices, sharp tooth, and susceptibility with vitamin deficiencies. Add pan chewing with areca, tobacco and slaked lime, and chronic hypertrophic candidiasis. Eighty per cent occur after the age of 40.", ref:"SRB 3 p.359"},
+    {id:"orc06", lv:1, type:"Classification", q:"Give the types of leukoplakia.",
+     a:"Homogeneous: uniform white patches, the commonest type, prevalent in buccal mucosa, with the least malignant potential. Nodular: fine nodules on the surface, more potential. Speckled: white flecks with fine nodules on an atrophic erythematous base, much higher potential but less common.", ref:"SRB 3 p.359"},
+    {id:"orc07", lv:1, type:"Pathology", q:"What is oral submucous fibrosis?",
+     a:"A progressive fibrosis deep to the mucosa of the oral cavity which causes trismus and ankyloglossia, with a mottled or marbled pallor of the mucosa of cheek, gingivae, palate and tongue. It is common among Asians and Indians, it is premalignant, and it appears on B&L's list of lesions from which oral cancer arises. It was described in five Indian women from Kenya, and S.G. Joshi coined the term in 1953.", ref:"SRB 3 p.360 · B&L 53 p.815"},
+    {id:"orc08", lv:1, type:"Pathology", q:"Where does carcinoma of the tongue arise, and in what proportions?",
+     a:"The lateral margin is commonest at 47 to 50%, then the posterior third at 20%, the tip at 10%, the ventral surface at 9% and the dorsum at 6.5%. Incidence is equal in both sexes, and it is rising in women with the number of women smoking.", ref:"SRB 3 p.382"},
+    {id:"orc09", lv:1, type:"Classification", q:"Which ulcers of the tongue are painful and which are painless?",
+     a:"Painful: dental, aphthous and tuberculous ulcers. Painless: syphilitic ulcers, ulcers of lichen planus, and the malignant ulcer. So a painless ulcer is the one that should worry you.", ref:"SRB 3 p.379"},
+    {id:"orc10", lv:1, type:"Anatomy", q:"Give the lymphatic drainage of the tongue.",
+     a:"From the tip to the submental nodes and the jugulo-omohyoid; from the margin to the submandibular nodes and the upper deep cervical group; from the back to the jugulodigastric and jugulo-omohyoid nodes. The posterior third also drains to the pharyngeal group. The lymph vessels decussate, so both sides must be examined even when the lesion is unilateral.", ref:"Das 24 p.347, p.348 · SRB 3 p.379"},
+    {id:"orc11", lv:1, type:"Examination", q:"How do you inspect the inside of the mouth?",
+     a:"In daylight or good light, always with a spatula. Retract the lips to see their mucosal surface, retract the cheeks to see the buccal mucosa and the buccal side of the gum, push the tongue to one side to see the gum and floor of the mouth, ask the patient to protrude the tongue to see the anterior two-thirds and push it aside with the spatula for the lateral aspect of the posterior third, and depress the tongue to see the fauces, tonsils and the beginning of the pharynx. Gauze aids the examination, and intraoral palpation may be needed, done gently.", ref:"Das 24 p.342 · B&L 52 p.778"},
+    {id:"orc12", lv:1, type:"Examination", q:"Give the clinical features of carcinoma of the tongue.",
+     a:"A painless ulcer or swelling that later becomes painful; pain from infection, ulceration or lingual nerve involvement, referred to the ear; excessive salivation, often blood-stained; dysphagia; a visible ulcer in the anterior two-thirds that bleeds on touch, with an indurated edge, base and surrounding area; inability to articulate; foetor; change in voice with posterior third tumours; and hard nodular neck nodes, fixed in advanced disease. Aspiration may give bronchopneumonia of a lower segment.", ref:"SRB 3 p.382, p.383"},
+    {id:"orc13", lv:1, type:"Examination", q:"What do you do before you examine this patient's mouth?",
+     a:"Hand hygiene, introduce yourself and check the patient's name and date of birth, request a chaperone as appropriate, explain what you are going to do, obtain verbal consent, and make sure the patient is comfortable. For the mouth you also need good light, a spatula, gloves and gauze.", ref:"B&L 35 p.472 · B&L 52 p.778"},
+
+    {id:"orc20", lv:2, type:"Examination", q:"How do you palpate a tongue ulcer for induration?",
+     a:"With the tongue relaxed and at rest inside the mouth. S Das is explicit that this is the one that goes wrong: if the tongue is kept protruded the contracted muscles give a false impression of induration and lead to error in diagnosis. Note also whether the ulcer bleeds readily on palpation, which happens in a malignant ulcer, and feel for a sharp tooth or denture against it.", ref:"Das 24 p.346, p.347"},
+    {id:"orc21", lv:2, type:"Examination", q:"What does induration mean in an oral ulcer?",
+     a:"It is an important clinical sign of epithelioma, and induration is best felt in squamous cell carcinoma. It may be present in a gummatous ulcer but it is absent in a tuberculous ulcer. In the mouth an everted edge with induration is a squamous carcinoma.", ref:"Das 24 p.347 · SRB 1 p.15"},
+    {id:"orc22", lv:2, type:"Examination", q:"The site of a tongue ulcer tells you the diagnosis. How?",
+     a:"A dental ulcer lies on the side of the tongue where it meets a sharp tooth or denture. Tuberculous ulcers are on the tip and sides. A gummatous ulcer is on the dorsum. A carcinomatous ulcer is usually on the margin, or on the dorsum where it is superimposed on chronic superficial glossitis.", ref:"Das 24 p.343"},
+    {id:"orc23", lv:2, type:"History", q:"An elderly man has an ulcer on his tongue and no pain at all. What does that tell you?",
+     a:"It is an ominous sign. Pain is conspicuously absent in leukoplakia, in a mucous retention cyst and in the early stage of carcinoma of the lip or tongue, although in late cases pain does appear. If pain is referred to the ear of the affected side, that is because the lingual and auriculotemporal nerves are both branches of the mandibular nerve.", ref:"Das 24 p.341"},
+    {id:"orc24", lv:2, type:"History", q:"An old man sits in the clinic holding a handkerchief to his mouth. What is he likely to have?",
+     a:"Carcinoma of the tongue. Excessive salivation is a very common and specific complaint, and SRB adds that the saliva is often blood-stained. Inability to protrude the tongue suggests either tongue-tie or a late carcinoma invading the floor of the mouth, and deviation of the tip towards the side of the lesion on protrusion is a sign of carcinoma.", ref:"Das 24 p.341 · SRB 3 p.382"},
+    {id:"orc25", lv:2, type:"Examination", q:"Which leukoplakia would worry you, and where would you take the biopsy from?",
+     a:"SRB's five dangerous features: the speckled type, a hard and indurated patch, the nodular type, the presence of epithelial dysplasia, and erosions or ulcerations. B&L agrees that speckled leukoplakia or erythroleukoplakia carries the greatest risk. Biopsy the most suspicious part, which is the speckled, nodular, indurated, eroded or ulcerated area, with a margin of normal mucosa.", ref:"SRB 3 p.359 · B&L 53 p.815"},
+    {id:"orc26", lv:2, type:"Pathology", q:"Why does betel nut cause submucous fibrosis?",
+     a:"Two steps from one habit: arecoline stimulates collagen synthesis, and tannin stabilises the collagen fibrils and makes them resistant to degradation. So the nut both lays collagen down and prevents its removal, which is why the fibrosis is progressive. Hypersensitivity to chilli, betel nut, tobacco and vitamin deficiencies alters collagen metabolism, producing juxtaepithelial progressive inflammatory fibrosis of the submucosa with epithelial atrophy and dysplasia.", ref:"SRB 3 p.360"},
+    {id:"orc27", lv:2, type:"Examination", q:"This patient can barely open his mouth. What does that tell you, and what do you do about it?",
+     a:"Trismus means either oral submucous fibrosis, where progressive submucosal fibrosis causes trismus and ankyloglossia, or a carcinoma invading deeply. B&L puts trismus with reduced tongue movement, sensory nerve deficit, otalgia and dysphagia as features of late-stage disease, and trismus from tumour involvement of the pterygoid musculature as a poor prognostic sign. Either way it is a problem in itself: it makes clinical examination of the mouth inadequate, and it is one of the indications for nasal rather than oral intubation. Measure and record the interincisal opening.", ref:"SRB 3 p.360 · B&L 53 p.818 · B&L 52 p.784, p.781, p.798"},
+    {id:"orc28", lv:2, type:"Examination", q:"Which neck nodes would you expect this cancer to involve?",
+     a:"Level I for the lip, anterior tongue and floor of the mouth; level II for the posterolateral oral cavity, tonsil and oropharynx, which is the commonest site of nodal enlargement and holds the jugulodigastric node. Examine both sides, because midline tongue and floor-of-mouth lesions drain bilaterally. For the lip, S Das's method for the submandibular nodes is to bend the head towards the side being palpated with one hand, relaxing platysma, and palpate with the other.", ref:"B&L 52 p.778 · Das 24 p.345"},
+    {id:"orc29", lv:2, type:"Diagnosis", q:"A bluish translucent swelling in the floor of the mouth. What is it, and what else could it be?",
+     a:"A ranula: a unilateral bluish translucent cyst over which Wharton's duct can often be seen, fluctuant with positive translucency. The alternative is a sublingual dermoid, which is opaque and not translucent, lies exactly in the midline, is tense and fluctuant, and may extend into the submental region.", ref:"Das 24 p.345, p.347"},
+    {id:"orc30", lv:2, type:"Examination", q:"How do you work out the extent of a swelling in the floor of the mouth?",
+     a:"Bimanual palpation, a finger in the floor of the mouth and the other hand on the submandibular triangle. It is how you find a deep or plunging ranula, which has a cervical prolongation into the submandibular region and can be obvious in the submandibular triangle. Carcinoma of the floor of the mouth shows itself by an indurated base and probable fixation to the structures beneath.", ref:"Das 24 p.345, p.347"},
+    {id:"orc31", lv:2, type:"Investigation", q:"How would you investigate this lesion?",
+     a:"Biopsy, always: an incisional or wedge biopsy of the lesion with a margin of normal mucosa, because biopsy is advocated for accurate diagnosis. The neck is assessed by ultrasound with guided sampling, preferring a core biopsy of a node because immunohistochemistry needs tissue. CT or MRI for the primary, for bone invasion and for the neck, and CT of the thorax where head and neck malignancy is suspected, to detect distant metastases. SRB adds laryngoscopy for a posterior third growth and an orthopantomogram for the mandible.", ref:"B&L 53 p.815 · B&L 52 p.780, p.781 · SRB 3 p.383"},
+    {id:"orc32", lv:2, type:"Management", q:"A white patch in a 30-year-old who has never chewed or smoked. Does it still need a biopsy?",
+     a:"Yes. Biopsy is advocated for accurate diagnosis whatever the history, and B&L records a rising incidence of oral cancer in patients of 45 years or younger, many of whom lack exposure to the traditional risk factors. Proliferative verrucous leukoplakia is itself not tobacco-related, so the absence of a habit is not reassurance.", ref:"B&L 53 p.815, p.813 · SRB 3 p.359"},
+
+    {id:"orc40", lv:3, type:"Pathology", q:"Which premalignant lesion carries the highest risk, and what is the transformation rate?",
+     a:"The highest-risk lesions are erythroleukoplakia or speckled leukoplakia, proliferative verrucous leukoplakia, and dyskeratosis congenita. On the rate, give the range and not a single figure: a 2016 review of observational studies found malignant transformation in oral leukoplakia varying from 0.13% to 34%, because the natural history remains unclear and the nomenclature is inconsistent internationally. SRB is the one that gives a hard number, for one lesion: proliferative verrucous leukoplakia, rare but aggressive, with 85% malignant potential, common in elderly women and not associated with tobacco. So B&L refuses a number and SRB gives one; answer with both, then with B&L's principle, that risk assessment of the individual lesion by size, location and carcinogen exposure, with biopsy, is the cornerstone of management.", ref:"B&L 53 p.815 · SRB 3 p.359"},
+    {id:"orc41", lv:3, type:"Management", q:"What is the survival in oral cancer, and what would change it?",
+     a:"Eighty per cent at five years for early-stage disease but 50% overall, and in South Asia often below 50%, with a reported five-year survival of 35% in India. The gap between 80% and 50% is stage at presentation, so what changes the figure is earlier presentation and stopping the habit, not any operative refinement. India's national screening programme includes cancer of the mouth alongside breast and cervix for all women aged 30 to 65.", ref:"B&L 53 p.813 · B&L 58 p.943"},
+    {id:"orc42", lv:3, type:"Anatomy", q:"Where does the oral cavity end and the oropharynx begin, and why does the line matter?",
+     a:"The anterior two-thirds of the tongue is oral cavity; the base of the tongue is oropharynx. It matters because the two differ in lymphatic drainage, in staging and in treatment, and because the posterior third drains early to the pharyngeal nodes, which carries a poor prognosis. SRB's anatomy explains why: the anterior two-thirds develops from the first arch and is supplied by the lingual nerve, with taste by the chorda tympani, while the posterior third develops from the third arch and is supplied by the glossopharyngeal nerve for both sensation and taste.", ref:"B&L 53 p.813 · SRB 3 p.379"},
+    {id:"orc43", lv:3, type:"Diagnosis", q:"This patient has a massive tongue. What causes macroglossia?",
+     a:"Lymphangioma, haemangioma and neurofibroma, and muscular macroglossia, which is commonly seen in cretins.", ref:"Das 24 p.342"},
+    {id:"orc44", lv:3, type:"Examination", q:"The patient cannot protrude his tongue. Work through the possibilities.",
+     a:"Tongue-tie, where the frenum linguae is short, thick and fibrous, so that on protrusion the lateral margin and tip evert with the dorsal mid part heaping up, causing a speech defect and difficulty cleaning the teeth; look for the short frenum. Or a late carcinoma of the tongue invading the floor of the mouth, in which case the tip deviates towards the side of the lesion. Or submucous fibrosis with ankyloglossia.", ref:"Das 24 p.341, p.344 · SRB 3 p.381, p.360"},
+    {id:"orc45", lv:3, type:"Diagnosis", q:"An angioma-like swelling at the foramen caecum. What is it, and what is the trap?",
+     a:"A lingual thyroid. The trap is that it may be the only thyroid gland the patient possesses, so it should not simply be removed.", ref:"Das 24 p.343"},
+    {id:"orc46", lv:3, type:"Pathology", q:"What is hairy leukoplakia?",
+     a:"A dense pigmented friable lesion, commonly on the tongue, common in patients with AIDS, and caused usually by Epstein-Barr virus. The name is a misnomer: there are no hairs, and the surface only looks hairy because of thickening and corrugation from severe hyperkeratosis and acanthosis.", ref:"SRB 3 p.359"},
+    {id:"orc47", lv:3, type:"Diagnosis", q:"There are pigmented patches on the lips and buccal mucosa. What does that suggest?",
+     a:"Pigmentation of the lips and buccal mucous membrane is seen in Addison's disease, and small bluish-black spots on the lips and the buccal and palatal mucosa are seen in Peutz-Jeghers syndrome, a familial autosomal dominant condition whose main pathology is adenomatous polyps of the small bowel, which may cause intussusception or intestinal colic but rarely turn malignant.", ref:"Das 24 p.342, p.345"},
+    {id:"orc48", lv:3, type:"Diagnosis", q:"What is cancrum oris, and how does it start?",
+     a:"It starts as a painful purple-red indurated papule on the alveolar margin near the molar or premolar teeth. An ulcer then forms which rapidly exposes the underlying bone and extends to the cheek and lip, with a foul smell. SRB classes it with phagedena, destruction without proliferation, and treats it with improved nutrition, penicillin and metronidazole; squamous cell carcinoma can occasionally develop in it.", ref:"Das 24 p.344 · SRB 1 p.27"},
+    {id:"orc49", lv:3, type:"Pathology", q:"How does carcinoma of the tongue spread?",
+     a:"Locally, from the anterior two-thirds into genioglossus, the floor of the mouth, the opposite side and the mandible; from the posterior third into tonsil, side of pharynx, soft palate, epiglottis, larynx and cervical spine. By lymphatics, from the tip to submental nodes, from the lateral margin to submandibular and then deep cervical nodes, and from the posterior third to pharyngeal and upper deep cervical nodes. SRB's four notes: a lesion more than 4 mm deep has a 30% chance of nodal metastasis; carcinoma tongue is the most aggressive of the oral cancers and has the highest incidence of nodal spread; bilateral spread is common because the lymph vessels cross; and the lingual node between tongue and submandibular gland should be cleared because it may hold micrometastasis.", ref:"SRB 3 p.383"},
+    {id:"orc50", lv:3, type:"Examination", q:"What do you look for in the gums?",
+     a:"Healthy gums are bright pink. The earliest sign of pyorrhoea alveolaris is a deep red line along the free edge. Vincent's stomatitis gives ulceration of the gingival margin with a pseudomembrane and a very bad smell. Gums become swollen, spongy, tender and bleeding in scurvy, and may bleed in uraemia without being as spongy. A blue line suggests lead exposure, and a swollen gum may be a dental abscess. An epulis is a swelling of the alveolar margin, and its margin, consistency, surface and mobility decide the type. Each lip must be everted fully, with a spatula and torch for the posterior gums.", ref:"Das 24 p.344, p.347"},
+    {id:"orc51", lv:3, type:"Diagnosis", q:"A man's voice has changed and he has pain in one ear. Where is the tumour?",
+     a:"In the posterior third of the tongue. Alteration of voice may be the first symptom of carcinoma of the posterior third and can go unnoticed for some time; pain on swallowing and pain referred to the ear belong there too, and tumours of the posterior third are more aggressive. They drain early to the pharyngeal nodes as well as the upper deep cervical nodes, and early pharyngeal nodal spread carries a poor prognosis.", ref:"Das 24 p.341 · SRB 3 p.379, p.383"},
+  ],
+
+  "cervical-lymphadenopathy": [
+    {id:"cln01", lv:1, type:"Anatomy", q:"Give the levels of the cervical lymph nodes.",
+     a:"Level I submental (Ia) and submandibular (Ib). Level II upper jugular, base of skull to hyoid. Level III middle jugular, hyoid to omohyoid or the cricothyroid membrane. Level IV lower jugular, down to the clavicle. Level V posterior triangle, including the supraclavicular nodes, between the posterior border of sternocleidomastoid and the anterior border of trapezius. Level VI anterior compartment, the central group including the thyroid, Delphian and paratracheal nodes. Level VII superior mediastinal. SRB calls it the Memorial Sloan Kettering levelling.", ref:"SRB 5 p.435 · B&L 52 p.778"},
+    {id:"cln02", lv:1, type:"Anatomy", q:"Which level is the commonest site of enlargement, and what does it drain?",
+     a:"Level II, which contains the jugulodigastric node and is also the most readily palpated. It drains the naso- and oropharynx including the tonsils, the posterolateral aspects of the oral cavity, and the superior aspects of the larynx and the piriform fossae.", ref:"B&L 52 p.778"},
+    {id:"cln03", lv:1, type:"Diagnosis", q:"Give the differential diagnosis of cervical lymphadenopathy.",
+     a:"Tuberculous lymphadenitis, secondaries in lymph nodes, HIV infection and lymphoma carry almost all the cases. Then chronic lymphatic leukaemia, non-specific lymphadenitis, infectious mononucleosis, sarcoidosis, actinomycosis, brucellosis and toxoplasmosis. In India add filarial lymphadenitis.", ref:"SRB 5 p.431 · Das 35 p.535"},
+    {id:"cln04", lv:1, type:"Pathology", q:"Give the stages of tuberculous lymphadenitis.",
+     a:"Five. One, infection and lymphadenitis. Two, periadenitis with matting. Three, caseating necrosis with cold abscess formation. Four, collar stud abscess. Five, formation of a sinus, which discharges. Every physical sign in the case belongs to one of those five stages, so name the stage rather than just the disease.", ref:"SRB 5 p.432"},
+    {id:"cln05", lv:1, type:"Examination", q:"What does the consistency of the nodes tell you?",
+     a:"Lymphoma: smooth, non-tender, firm, of India-rubber consistency, and discrete. Tuberculous: matted, and fluctuant once a cold abscess has formed. Secondary carcinoma: hard and nodular, discrete at first and fixed later. Acute pyogenic lymphadenitis: tender and warm.", ref:"SRB 5 p.431 · Das 35 p.535"},
+    {id:"cln06", lv:1, type:"Examination", q:"What is matting, and what causes it?",
+     a:"Adjacent nodes adherent to each other and to the surrounding tissue, so that they move as one mass. It is caused by periadenitis, inflammation spreading beyond the node capsule, and it is stage 2 of five. B&L calls a matted nodal mass the typical clinical feature of tuberculous cervical lymphadenitis, and it is the single most useful sign in this case.", ref:"SRB 5 p.432 · B&L 6 p.87"},
+    {id:"cln07", lv:1, type:"Examination", q:"How do you palpate an enlarged lymph node?",
+     a:"With the palmar aspects of three fingers, rolling them against the swelling with slight pressure maintained, so that you feel the actual consistency. Note the number, the situation, the local temperature, tenderness, the surface and the margin. For cervical nodes the patient sits on a stool and you palpate from behind, with the neck slightly flexed, because a patient who extends the neck obscures the swelling.", ref:"Das 8 p.111 · Das 26 p.366"},
+    {id:"cln08", lv:1, type:"Anatomy", q:"Give the lymphatic drainage of the skin of the body.",
+     a:"S Das divides the body by two horizontal lines, at the clavicle and at the umbilicus. Cervical nodes take the head, face, mouth, pharynx and neck. Axillary nodes take that upper limb and the trunk from clavicle to umbilicus, including the breast. Inguinal nodes take the whole lower limb and the skin below the umbilicus, with penis, scrotum, perineum, vulva, anus, buttock and the lower back, plus the ectodermal terminal parts of the anal canal, urethra and vagina. The left supraclavicular node takes the left upper limb, the left chest including the breast, and the abdominal viscera including both testes.", ref:"Das 8 p.113, p.112"},
+    {id:"cln09", lv:1, type:"Diagnosis", q:"A hard node in the left supraclavicular fossa. What is it called?",
+     a:"Virchow's node, and its presence is Troisier's sign. Classically it comes from carcinoma of the stomach, but also from pancreas, oesophagus, lung and testis. It is level IV or V, and it sends you to the abdomen.", ref:"SRB 20 p.841 · Das 8 p.112"},
+    {id:"cln10", lv:1, type:"History", q:"Which group of nodes is affected first in which disease?",
+     a:"The cervical group first in Hodgkin's disease and in tuberculosis; the inguinal group first in filariasis and lymphogranuloma inguinale; the epitrochlear and occipital groups in the secondary stage of syphilis. S Das's own caveat: do not lay too much stress on this point.", ref:"Das 8 p.109, p.110"},
+    {id:"cln11", lv:1, type:"Examination", q:"What must you establish and record about a lump in the neck?",
+     a:"B&L's printed list: the history; the physical signs; size; site; shape; surface; consistency; fixation, deep or superficial; pulsatility; compressibility; transillumination; and bruit. Run that list and nothing is left out.", ref:"B&L 52 p.805"},
+    {id:"cln12", lv:1, type:"Examination", q:"What do you do before you touch this patient?",
+     a:"Hand hygiene, introduce yourself and check the patient's name and date of birth, request a chaperone as appropriate, explain what you are going to do, obtain verbal consent, and make sure the patient is comfortable.", ref:"B&L 35 p.472 · B&L 21 p.285"},
+
+    {id:"cln20", lv:2, type:"History", q:"What does the pattern of fever tell you?",
+     a:"An evening rise in temperature is characteristic of tuberculosis, and B&L lists evening pyrexia with cough and malaise, and failure to thrive in a child. In filariasis a periodic fever is common, especially at the full or new moon. In Hodgkin's disease intermittent bouts of remittent fever, Pel-Ebstein fever, are peculiar to the disease.", ref:"Das 8 p.109 · B&L 6 p.87"},
+    {id:"cln21", lv:2, type:"History", q:"Are these nodes painful? What does the answer mean?",
+     a:"Nodes are painful in both acute and chronic lymphadenitis, and painless in syphilis, in primary malignant lymphomas and in secondary carcinoma. So a painless node is the one to be suspicious of, and a tender warm one is more likely to be reactive.", ref:"Das 8 p.109"},
+    {id:"cln22", lv:2, type:"Pathology", q:"What is a collar stud abscess?",
+     a:"A cold abscess that lies deep to the deep fascia and bursts through it into the space just beneath the superficial fascia, giving a bilocular or hourglass mass with cross-fluctuation: a deep collection and a superficial one joined by a narrow neck through the fascia. It is stage 4 of five, and if it bursts through the skin it discharges pus and becomes a tuberculous sinus.", ref:"B&L 6 p.87 · SRB 5 p.431, p.432"},
+    {id:"cln23", lv:2, type:"Treatment", q:"How would you aspirate a cold abscess, and why that way?",
+     a:"Zig-zag aspiration with a wide-bore needle through a non-dependent area, to prevent sinus formation. Wide bore because the pus is thick; zig-zag so the needle track does not become a straight channel to the surface; non-dependent so that gravity does not keep it draining. If it must be drained formally, use a non-dependent incision and close the wound later without placing a drain, because a drain track becomes a sinus. Send the pus for culture and sensitivity.", ref:"SRB 5 p.433 · B&L 6 p.87"},
+    {id:"cln24", lv:2, type:"Examination", q:"What does the skin over the swelling tell you?",
+     a:"In acute lymphadenitis the skin is inflamed, with redness, oedema and brawny induration. In chronic lymphadenitis it shows no such angriness. Over a tuberculous node or cold abscess it stays cold in the true sense until the abscess is at the point of bursting, when it becomes red and glossy. Over a rapidly growing lymphosarcoma it is tense and shining with dilated subcutaneous veins. In secondary carcinoma it is free early and becomes fixed late, when the disease is beyond the scope of surgery. A scar beside the swelling often means a cold abscess burst there, or a previous operation.", ref:"Das 8 p.111"},
+    {id:"cln25", lv:2, type:"Diagnosis", q:"Periodic fever with simultaneous tenderness and swelling of the nodes, in an endemic area.",
+     a:"Filarial lymphadenitis. Eosinophilia and the demonstration of microfilariae in blood drawn at night will clinch the diagnosis. The night sample is the detail that earns the mark, because of the nocturnal periodicity of the microfilariae.", ref:"Das 35 p.535"},
+    {id:"cln26", lv:2, type:"Diagnosis", q:"Rapidly enlarging painless nodes in an otherwise well young patient.",
+     a:"Lymphoma. S Das's wording is that lymphosarcoma gives rapid enlargement of the nodes without other complaints in a young subject. The nodes are smooth, non-tender, firm and of India-rubber consistency. Get a core biopsy rather than an FNAC, because the subtype determines the treatment, and examine every other node group with the liver and the spleen.", ref:"Das 35 p.535 · SRB 5 p.431 · B&L 52 p.781"},
+    {id:"cln27", lv:2, type:"Examination", q:"The node is at level II. Where do you look for the primary?",
+     a:"Level II sends you to the tonsil, nasopharynx and oropharynx, the posterolateral oral cavity, the superior larynx and the piriform fossa. Level I sends you to the lip, anterior tongue, floor of mouth and cheek; levels III and IV to the larynx, hypopharynx and thyroid; level IV or V on the left to the stomach, pancreas and lung; level VI to the thyroid. Say the level, then say where you are going to look.", ref:"B&L 52 p.778"},
+    {id:"cln28", lv:2, type:"Examination", q:"You have examined the node. What else do you examine?",
+     a:"The whole upper aerodigestive mucosa: lip, buccal mucosa, gingiva, hard and soft palate, anterior two-thirds and base of tongue, floor of mouth, tonsil and posterior pharyngeal wall, using gauze to aid the examination and palpating intraorally where needed. Then the thyroid, the breast and the abdomen, then every other node group with the liver and the spleen, because generalised lymphadenopathy with splenomegaly moves you towards lymphoma, leukaemia or systemic infection. And always the drainage area of the node, where an insignificant abrasion may be the whole explanation.", ref:"B&L 52 p.778 · Das 8 p.113"},
+    {id:"cln29", lv:2, type:"Investigation", q:"How would you get a diagnosis from this node?",
+     a:"An ultrasound-guided needle biopsy, and for a node prefer a core biopsy to an FNAC. B&L: needle sampling is the investigation of choice when determining the nature of a neck or thyroid mass, ultrasound-guided FNAC or core biopsy is the standard of care in many units, with CT guidance for deep-seated lesions, and core biopsy is the preferred technique for a neck node because immunohistochemistry can be performed on it. SRB uses FNAC throughout. Both are needling the node; the disagreement is only about which needle, and the reason settles it: FNAC can confirm a carcinoma but cannot subtype a lymphoma.", ref:"B&L 52 p.781 · SRB 5 p.433"},
+    {id:"cln30", lv:2, type:"Investigation", q:"You think this is tuberculosis. What do you send, and what do you treat with?",
+     a:"FNAC, acid-fast bacilli and culture are SRB's useful investigations, and B&L adds raised ESR and CRP, low haemoglobin, a Mantoux or an interferon-gamma release assay, sputum for Ziehl-Neelsen staining and culture, and aspiration of pus from a cold abscess for culture and sensitivity. Treatment is antituberculous drugs: mainly medical, with surgery for the abscess and not for the disease. Involvement of other systems must be excluded.", ref:"SRB 5 p.433 · B&L 6 p.87, p.88"},
+    {id:"cln31", lv:2, type:"Examination", q:"What pressure effects would you look for?",
+     a:"Swelling and venous engorgement of the face and neck from nodes at the root of the neck or in the superior mediastinum; oedema of the upper or lower limb from axillary or inguinal nodes; oedema and venous congestion of the legs from retroperitoneal and para-aortic nodes in Hodgkin's disease; dyspnoea from pressure on trachea or bronchus; and dysphagia from pressure on the oesophagus.", ref:"Das 8 p.109, p.111"},
+    {id:"cln32", lv:2, type:"Investigation", q:"Would you test this patient for HIV?",
+     a:"Yes. SRB lists HIV infection with lymph node involvement alongside tuberculous lymphadenitis and lymphoma in the differential diagnosis of neck node enlargement, and B&L notes that the increased prevalence of HIV worldwide has made tuberculosis more common. In India the two travel together, so offer the test.", ref:"SRB 5 p.431, p.433 · B&L 6 p.88"},
+
+    {id:"cln40", lv:3, type:"Investigation", q:"Would you ever simply excise the node?",
+     a:"Yes, in one situation the books name: B&L says that if a tuberculous nodal mass is still in the early stages of adenitis, excision biopsy should be done, with part of the node sent fresh and unfixed to a laboratory that has been warned of its arrival so the tissue is processed immediately. For a node that may be a metastasis from a head and neck primary, the first step is ultrasound-guided needle sampling, with core biopsy preferred, and the primary hunted by panendoscopy with biopsy of the likely sites. The familiar teaching that an open biopsy of such a node prejudices a later neck dissection is not stated in these three books, so do not attribute it to them.", ref:"B&L 6 p.87 · B&L 52 p.781"},
+    {id:"cln41", lv:3, type:"Investigation", q:"The node is EBV positive and you cannot find a primary. Where do you look?",
+     a:"The nasopharynx. B&L: biopsy of the fossa of Rosenmüller will reveal the site of the primary tumour in a patient with a malignant neck lump that shows EBV positivity. Nasopharyngeal carcinoma also gives unilateral deafness from Eustachian tube obstruction with secretory otitis media in about 20% of patients, and cranial nerve palsies from skull base disease occur late and are a poor prognostic sign, as is trismus from involvement of the pterygoid musculature.", ref:"B&L 52 p.784"},
+    {id:"cln42", lv:3, type:"Examination", q:"The tongue deviates to the right on protrusion and there is a hard node high in the right neck. Explain it.",
+     a:"Secondary carcinoma in the upper deep cervical nodes has involved the hypoglossal nerve, giving hemiparesis of that half of the tongue, which therefore deviates towards the side of the lesion on protrusion. S Das records the same nerve being involved by nodes of Hodgkin's disease or secondary carcinoma.", ref:"Das 8 p.113, p.111"},
+    {id:"cln43", lv:3, type:"Pathology", q:"What would the histology of a tuberculous node show?",
+     a:"Caseating material with Langhans-type giant cells, and the caseating type is more common than the hyperplastic type. The cut specimen shows yellowish caseating material with periadenitis, which is what you feel as matting. The cold abscess is the clinical manifestation of that underlying caseation.", ref:"SRB 5 p.432 · B&L 6 p.87"},
+    {id:"cln44", lv:3, type:"Anatomy", q:"Why does an abdominal cancer declare itself in the left supraclavicular fossa, and is the node or the sign the eponym?",
+     a:"Because the thoracic duct enters the venous system at that point, so malignant cells from an abdominal primary disseminate into that node easily. The node is Virchow's and the sign is Troisier's: Virchow described the node, and Troisier, forty years later, reported many abdominal cancers presenting with left supraclavicular involvement as an external indicator. S Das adds the laterality rule: supraclavicular nodes are involved on the same side in carcinoma of the breast or lung, but only on the left in carcinoma of the stomach or the testis.", ref:"SRB 20 p.841 · Das 8 p.112"},
+    {id:"cln45", lv:3, type:"Diagnosis", q:"Which conditions give generalised lymphadenopathy?",
+     a:"Hodgkin's disease, tuberculosis, lymphosarcoma, lymphatic leukaemia, brucellosis and sarcoidosis. S Das's instruction is that a general examination should always be done in any case of lymph node involvement, because it not infrequently reveals hidden generalised involvement of the lymphatic system.", ref:"Das 8 p.111, p.113"},
+    {id:"cln46", lv:3, type:"Investigation", q:"What would an ultrasound add before you needle anything?",
+     a:"It separates solid from cystic. B&L: ultrasound is useful in differentiating solid lesions, for example malignant lymph nodes, from cystic lesions such as a branchial cyst, and is particularly helpful when fine-needle aspiration is needed to establish the diagnosis; it is also invaluable in salivary gland pathology. SRB's differential for a tuberculous node is exactly those two, branchial cyst and lymph cyst.", ref:"B&L 52 p.780 · SRB 5 p.433"},
+    {id:"cln47", lv:3, type:"Anatomy", q:"Divide level II, and say what the dividing structure is.",
+     a:"The spinal accessory nerve. Level IIa lies below and in front of the nerve, level IIb above and posterior to it. Level II runs from the base of the skull to the hyoid, bounded by the lateral border of sternohyoid and the posterior border of sternocleidomastoid.", ref:"SRB 5 p.435 · B&L 52 p.778"},
+    {id:"cln48", lv:3, type:"Investigation", q:"What would you do with a chest radiograph in this case?",
+     a:"Look for pulmonary tuberculosis, for mediastinal nodes and for metastases. B&L adds that if a head and neck malignancy is suspected, CT imaging of the thorax should also be performed to detect distant metastases.", ref:"B&L 52 p.780"},
+    {id:"cln49", lv:3, type:"Investigation", q:"The Mantoux test is positive. Does that settle it?",
+     a:"No. B&L is explicit that a positive Mantoux is usual but is not significant in a patient from an endemic area, which in India means most patients. It has now been superseded by interferon-gamma release assays, an in vitro test of cellular immune response in which antigens unique to M. tuberculosis stimulate T-cell release of interferon-gamma, which earmarks latent or subclinical infection. The diagnosis is clinched by culture of the pus and biopsy of the node.", ref:"B&L 6 p.87"},
+    {id:"cln50", lv:3, type:"Examination", q:"There is a discharging sinus in the neck. How would you describe the ulcer it leaves?",
+     a:"A tuberculous ulcer with a watery discharge and undermined, overhanging edges, following a collar stud abscess that has burst through the skin. It is stage 5, the last of SRB's five, and it is usually iatrogenic in the sense that it follows drainage through a dependent incision or a drain track.", ref:"B&L 6 p.87 · SRB 5 p.432, p.433"},
+  ],
 
 };
 </script>

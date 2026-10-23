@@ -341,11 +341,21 @@ label.fld {
    inside the shell and every wider setting came out identical, so the control looked
    broken. In the guide the shell follows whatever width the reader chose, a little wider
    than the guide's own measure so that the guide stays the binding constraint. */
-body[data-screen="guide"] .shell { max-width: var(--guide-measure, 40rem); }
-body[data-width="narrow"] { --guide-measure: 37rem; }
-body[data-width="medium"] { --guide-measure: 45rem; }
-body[data-width="wide"]   { --guide-measure: 57rem; }
-body[data-width="full"]   { --guide-measure: none; }
+/* In the guide the shell steps out of the way entirely and the guide's own measure
+   decides the width. Having both constrain it is what made Wide and Full identical:
+   whichever was smaller won, and on most windows that was the shell. */
+body[data-screen="guide"] .shell {
+  max-width: none;
+  padding-left: 0;
+  padding-right: 0;
+}
+body[data-screen="guide"] .readerwrap { margin: 0; }
+body[data-screen="guide"] .topbar {
+  max-width: 60rem;
+  margin-left: auto;
+  margin-right: auto;
+  padding: 0 max(16px, env(safe-area-inset-left, 0px));
+}
 
 .readerwrap { margin: 0 -1.5rem -1.5rem; }
 .readerwrap .guide { border-radius: 0 0 10px 10px; }
